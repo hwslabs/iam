@@ -2,14 +2,14 @@ group "org.hypto"
 version "1.0.0"
 
 wrapper {
-    gradleVersion = "6.9"
+    gradleVersion = "7.3"
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
 
 buildscript {
-    ext.kotlin_version = "1.4.32"
-    ext.ktor_version = "1.5.4"
-    ext.shadow_version = "6.1.0"
+    ext.kotlin_version = '1.6.10'
+    ext.ktor_version = '1.6.5'
+    ext.shadow_version = '6.1.0'
 
     repositories {
         maven { url "https://repo1.maven.org/maven2" }
