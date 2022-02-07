@@ -11,10 +11,11 @@ buildscript {
     ext.ktor_version = '1.6.7'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
-    ext.h2Version = "1.4.200"
-    ext.hikari_cp_version = "5.0.0"
+    ext.h2Version = "2.1.210"
+    ext.hikari_cp_version = "4.0.3"
     ext.junit_version = "5.8.2"
-    ext.flyway_version = "8.1.0"
+    ext.flyway_version = "8.4.3"
+    ext.casbin_version = "1.22.1"
 
     repositories {
         maven { url "https://plugins.gradle.org/m2/" }
@@ -30,7 +31,8 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'application'
 
-mainClassName = "io.ktor.server.netty.DevelopmentEngine"
+//mainClassName = "io.ktor.server.netty.DevelopmentEngine"
+mainClassName = "com.hypto.iam.server.Application"
 
 apply plugin: 'com.github.johnrengelman.shadow'
 
@@ -64,26 +66,30 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
-    implementation "io.ktor:ktor-server-netty:$ktor_version"
-    implementation "io.ktor:ktor-metrics:$ktor_version"
-    implementation "io.ktor:ktor-locations:$ktor_version"
-    implementation "io.ktor:ktor-gson:$ktor_version"
-    implementation "io.ktor:ktor-client-core:$ktor_version"
-    implementation "io.ktor:ktor-client-apache:$ktor_version"
-    implementation "io.ktor:ktor-auth:$ktor_version"
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
+    implementation("io.ktor:ktor-metrics:$ktor_version")
+    implementation("io.ktor:ktor-locations:$ktor_version")
+    implementation("io.ktor:ktor-gson:$ktor_version")
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-apache:$ktor_version")
+    implementation("io.ktor:ktor-auth:$ktor_version")
     implementation("io.ktor:ktor-auth-jwt:$ktor_version")
-    implementation "ch.qos.logback:logback-classic:1.2.9"
+    implementation("ch.qos.logback:logback-classic:1.2.10")
 
-    implementation("com.zaxxer:HikariCP:$hikari_cp_version")
-    implementation("org.flywaydb:flyway-core:$flyway_version")
-    implementation("com.h2database:h2:$h2Version")
+    implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
+    implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
+    implementation("org.postgresql:postgresql:42.3.2") // DB JDBC driver
 
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
+    testImplementation("com.h2database:h2:$h2Version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    // deps for exposed
+    // dependencies for Exposed - ORM
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
+    implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version") // Datetime column support
+
+    implementation("org.casbin:jcasbin:$casbin_version") // Policy management
 }
