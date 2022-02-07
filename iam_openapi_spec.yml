@@ -1,0 +1,1440 @@
+openapi: 3.0.1
+info:
+  title: Hypto IAM
+  version: 1.0.0
+  description: APIs for Hypto IAM Service.
+  contact:
+    email: engineering@hypto.in
+    name: Engineering
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  - url: https://{environment}.{region}.hypto.com/v1
+    variables:
+      environment:
+        default: sandbox-iam
+        enum:
+          - sandbox-iam
+          - iam
+      region:
+        default: us
+        enum:
+          - us
+          - eu
+          - apac
+
+paths:
+
+  # organization
+  /organizations:
+    post:
+      tags:
+        - organization
+      summary: Create an organization
+      description: Create an organization
+      operationId: createOrganization
+      requestBody:
+        $ref: '#/components/requestBodies/CreateOrganizationRequest'
+
+
+      responses:
+        '201':
+          $ref: '#/components/responses/OrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # organization:create
+
+  /organization/{id}:
+    get:
+      tags:
+        - organization
+      summary: Get an organization
+      description: Get an organization
+      operationId: getOrganization
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/OrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # organization:get
+
+    patch:
+      tags:
+        - organization
+      summary: Update an organization
+      description: Update an organization
+      operationId: updateOrganization
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateOrganizationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/OrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # organization:update
+
+    delete:
+      tags:
+        - organization
+      summary: Delete an organization
+      description: Delete an organization
+      operationId: deleteOrganization
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # organization:delete
+
+  /users:
+    post:
+      tags:
+        - users
+      summary: Create a user
+      description: Create a user
+      operationId: createUser
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUserRequest'
+
+
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateUserResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # user:create
+
+  /users/{id}:
+    get:
+      tags:
+        - users
+      summary: Get a User
+      description: Get a User
+      operationId: getUser
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetUserResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+        # security:
+        # - access_token: [] # user:get
+
+    patch:
+      tags:
+        - users
+      summary: Update a User
+      description: Update a User
+      operationId: updateUser
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUserRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/CreateUserResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # user:update
+
+    delete:
+      tags:
+        - users
+      summary: Delete a User
+      description: Delete a User
+      operationId: deleteUser
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # user:delete
+
+  /users/{id}/policies:
+    get:
+      tags:
+        - policy
+      summary: Get policies of a user
+      description: Get policies of a user
+      operationId: getUserPolicies
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetUserPoliciesResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # user:get_policies
+
+
+  /users/{id}/attach_policies:
+    put:
+      tags:
+        - users
+      summary: Attach policies to user
+      description: Attach policies to user
+      operationId: attachPolicies
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/PolicyAssociationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # user:attach_policy and policy:attach_policy
+
+  /users/{id}/detach_policies:
+    put:
+      tags:
+        - users
+      summary: Detach policies to user
+      description: Detach policies to user
+      operationId: detachPolicies
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/PolicyAssociationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # user:detach_policy and policy:detach_policy
+
+  # credential
+  /users/{user_id}/credential:
+    post:
+      tags:
+        - credential
+      summary: Create a Credential
+      description: Create a Credential
+      operationId: createCredential
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateCredentialRequest'
+
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # credential:create
+
+
+  /users/{user_id}/credential/{id}:
+    get:
+      tags:
+        - credential
+      summary: Get a credential
+      description: Get a credential
+      operationId: getCredential
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # credential:get
+
+    patch:
+      tags:
+        - credential
+      summary: Update a credential
+      description: Update a credential
+      operationId: updateCredential
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateCredentialRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UpdateCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # credential:update
+
+    delete:
+      tags:
+        - credential
+      summary: Delete a credential
+      description: Delete a credential
+      operationId: deleteCredential
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # credential:delete
+
+  # resource
+  /resource_types:
+    post:
+      tags:
+        - resource_type
+      summary: Create a resource type
+      description: Create a resource type
+      operationId: createResourceType
+      requestBody:
+        $ref: '#/components/requestBodies/CreateResourceRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/ResourceTypeResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # resource_type:create
+
+  /resource_types/{id}:
+    get:
+      tags:
+        - resource_type
+      summary: Get a resource type
+      description: Get a resource type
+      operationId: getResourceType
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResourceTypeResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # resource_type:get
+
+    patch:
+      tags:
+        - resource_type
+      summary: Update a resource type
+      description: Update a resource type
+      operationId: updateResourceType
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateResourceRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResourceTypeResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+        # security:
+        # - access_token: [] # resource_type:update
+
+    delete:
+      tags:
+        - resource_type
+      summary: Delete a resource type
+      description: Delete a resource type
+      operationId: deleteResourceType
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # resource_type:get
+
+  # action
+  /resources/{resource_id}/action:
+    post:
+      tags:
+        - action
+      summary: Create an action
+      description: Create an action
+      operationId: createAction
+      parameters:
+        - $ref: '#/components/parameters/resource_id'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateActionRequest'
+
+      responses:
+        '201':
+          $ref: '#/components/responses/ActionResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # action:create
+
+
+  /resources/{resource_id}/action/{id}:
+    get:
+      tags:
+        - action
+      summary: Get an action
+      description: Get an action
+      operationId: getAction
+      parameters:
+        - $ref: '#/components/parameters/resource_id'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActionResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # action:get
+
+    patch:
+      tags:
+        - action
+      summary: Update an action
+      description: Update an action
+      operationId: updateAction
+      parameters:
+        - $ref: '#/components/parameters/resource_id'
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateActionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ActionResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # action:update
+
+    delete:
+      tags:
+        - action
+      summary: Delete an action
+      description: Delete an action
+      operationId: deleteAction
+      parameters:
+        - $ref: '#/components/parameters/resource_id'
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # action:delete
+
+  # policy
+  /policies:
+    post:
+      tags:
+        - policy
+      summary: Create a policy
+      description: Create a policy
+      operationId: createPolicy
+      requestBody:
+        $ref: '#/components/requestBodies/CreatePolicyRequest'
+
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # policy:create
+
+  /policies/{id}:
+    get:
+      tags:
+        - policy
+      summary: Get a policy
+      description: Get a policy
+      operationId: getPolicy
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # policy:get
+
+    patch:
+      tags:
+        - policy
+      summary: Update a policy
+      description: Update a policy
+      operationId: updatePolicy
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdatePolicyRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # policy:update
+
+    delete:
+      tags:
+        - policy
+      summary: Delete a policy
+      description: Delete a policy
+      operationId: deletePolicy
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - access_token: [] # policy:delete
+
+  /token:
+    post:
+      tags:
+        - token
+      summary: Generate a token
+      description: Generate a token
+      operationId: getToken
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      # security:
+      #   - refresh_token: [] # token:generate
+
+components:
+
+  # securitySchemes:
+  #   refresh_token:
+  #     type: http
+  #     scheme: bearer
+  #     bearerFormat: AccessToken
+
+  #   access_token:
+  #     type: http
+  #     scheme: bearer
+  #     bearerFormat: JWT
+
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9]{3,50}$
+    user_id:
+      in: path
+      name: user_id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9]{3,50}$
+
+    resource_id:
+      in: path
+      name: resource_id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9]{3,50}$
+
+  requestBodies:
+
+    CreateOrganizationRequest:
+      description: Payload to create organization
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateOrganizationRequest'
+
+    UpdateOrganizationRequest:
+      description: Payload to update organization
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateOrganizationRequest'
+
+    CreateUserRequest:
+      description: Payload to create user
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateUserRequest'
+
+
+    UpdateUserRequest:
+      description: Payload to update user
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateUserRequest'
+
+    CreateCredentialRequest:
+      description: Payload to create credential
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateCredentialRequest'
+
+    UpdateCredentialRequest:
+      description: Payload to update credential
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateCredentialRequest'
+
+    CreateResourceRequest:
+      description: Payload to create resource
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateResourceRequest'
+
+    UpdateResourceRequest:
+      description: Payload to update resource
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateResourceRequest'
+
+    CreateActionRequest:
+      description: Payload to create action
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateActionRequest'
+
+    UpdateActionRequest:
+      description: Payload to update action
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateActionRequest'
+
+    CreatePolicyRequest:
+      description: Payload to create policy
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreatePolicyRequest'
+
+    UpdatePolicyRequest:
+      description: Payload to update policy
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdatePolicyRequest'
+
+    PolicyAssociationRequest:
+      description: Payload to attach / detach a policy to a user / resource
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PolicyAssociationRequest'
+
+  responses:
+
+    BaseSuccessResponse:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              success:
+                type: boolean
+                example: true
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    OrganizationResponse:
+      description: Response for Organization requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Organization'
+
+    CreateUserResponse:
+      description: Response for CreateUserRequest
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+
+    GetUserResponse:
+      description: Response for GetUserRequest
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+
+    CreateCredentialResponse:
+      description: Response for CreateCredentialRequest
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Credential'
+
+    GetCredentialResponse:
+      description: Response for GetCredentialRequest
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CredentialWithoutSecret'
+
+    UpdateCredentialResponse:
+      description: Response for UpdateCredentialRequest
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CredentialWithoutSecret'
+
+    ResourceTypeResponse:
+      description: Response for resource type requests returning a resource type entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResourceType'
+
+    ActionResponse:
+      description: Response for action requests returning an action entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Action'
+
+    PolicyResponse:
+      description: Response for policy requests returning an policy entity
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Policy'
+
+    GetUserPoliciesResponse:
+      description: Response for list user policy API
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              policies:
+                type: array
+                maxItems: 50
+                items:
+                  $ref: '#/components/schemas/Policy'
+
+    TokenResponse:
+      description: Response for generate token request
+      content:
+        application/json:
+          schema:
+            title: TokenResponse
+            type: string
+
+
+  schemas:
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: error code
+          maxLength: 20
+          pattern: ^[A-Z0-9_]{3,20}$
+        message:
+          type: string
+          description: error description
+          maxLength: 500
+
+    CreateOrganizationRequest:
+      description: Payload to create organization
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9]{3,50}$
+        description:
+          type: string
+          maxLength: 500
+
+    UpdateOrganizationRequest:
+      description: Payload to update organization
+      type: object
+      additionalProperties: false
+      properties:
+        description:
+          type: string
+          maxLength: 500
+
+    CreateUserRequest:
+      description: Payload to create ledger account
+      type: object
+      additionalProperties: false
+      required:
+        - username
+        - password_hash
+        - email
+        - user_type
+        - status
+      properties:
+        username:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9]{3,50}$
+        password_hash:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_+]{8,100}$
+        phone:
+          type: string
+          maxLength: 30
+        user_type:
+          type: string
+          enum:
+            - normal
+            - admin
+            - api_only
+            - system
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+
+    UpdateUserRequest:
+      description: Payload to create ledger account
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          maxLength: 50
+        phone:
+          type: string
+          maxLength: 30
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - deleted
+
+    CreateCredentialRequest:
+      description: Payload to create credential
+      type: object
+      additionalProperties: false
+      properties:
+        valid_until: # Default: No validity
+          type: string
+          format: timestamp
+          maxLength: 20
+
+    UpdateCredentialRequest:
+      description: Payload to update credential
+      type: object
+      additionalProperties: false
+      properties:
+        valid_until: # No validity if null
+          type: string
+          format: timestamp
+          maxLength: 20
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+
+    CreateResourceRequest:
+      description: Payload to create resource
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 500
+
+    UpdateResourceRequest:
+      description: Payload to update resource
+      type: object
+      additionalProperties: false
+      properties:
+        description:
+          type: string
+          maxLength: 500
+
+    CreateActionRequest:
+      description: Payload to create action
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 500
+    UpdateActionRequest:
+      description: Payload to update action
+      type: object
+      additionalProperties: false
+      properties:
+        description:
+          type: string
+          maxLength: 500
+
+    CreatePolicyRequest:
+      description: Payload to update action
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        statements:
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/PolicyStatement'
+
+    UpdatePolicyRequest:
+      description: Payload to update action
+      type: object
+      additionalProperties: false
+      properties:
+        statements:
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/PolicyStatement'
+
+    PolicyAssociationRequest:
+      description: Payload to attach / detach a policy to a user / resource
+      type: object
+      additionalProperties: false
+      properties:
+        policies:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 50
+
+
+
+
+    # Entities:
+    Organization:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 500
+
+    User:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        username:
+          type: string
+          maxLength: 50
+        organization_id:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          maxLength: 50
+        phone:
+          type: string
+          maxLength: 20
+        login_access:
+          type: boolean
+        user_type:
+          type: string
+          enum:
+            - normal
+            - admin
+            - api_only
+            - system
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - deleted
+        created_at:
+          type: string
+          format: timestamp
+          maxLength: 20
+        created_by:
+          type: string
+          maxLength: 50
+
+    Credential:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        valid_until:
+          type: string
+          format: timestamp
+          maxLength: 20
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+        secret:
+          type: string
+          maxLength: 50
+
+    CredentialWithoutSecret:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        valid_until:
+          type: string
+          format: timestamp
+          maxLength: 20
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+
+    ResourceType:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 50
+        organization_id:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 500
+
+    Action:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        resource_id:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 500
+
+    Policy:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 50
+        version:
+          type: string
+          maxLength: 5
+        statements:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/PolicyStatement'
+
+    PolicyStatement:
+      type: object
+      additionalProperties: false
+      required:
+        - resource_type
+        - action
+        - effect
+      properties:
+        resource_type:
+          type: string
+          maxLength: 50
+        action:
+          type: string
+          maxLength: 50
+        effect:
+          type: string
+          enum:
+            - allow
+            - deny
+
+externalDocs:
+  description: Find out more about IAM
+  url: https://www.notion.so/IAM-Service-394850c79d8f46db879185636bc8000f

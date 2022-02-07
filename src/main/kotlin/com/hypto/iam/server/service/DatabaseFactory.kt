@@ -20,14 +20,30 @@ object DatabaseFactory {
     }
 
     private fun hikari(): HikariDataSource {
+        // TODO: Configure H2 database for unit tests
+//        val config = HikariConfig().apply {
+//            driverClassName = "org.h2.Driver"
+//            jdbcUrl = "jdbc:h2:mem:test"
+//            maximumPoolSize = 3
+//            isAutoCommit = false
+//            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+//            validate()
+//        }
+
+        // TODO: Read from config file instead of hardcoding
         val config = HikariConfig().apply {
-            driverClassName = "org.h2.Driver"
-            jdbcUrl = "jdbc:h2:mem:test"
+            driverClassName = "org.postgresql.Driver"
+            jdbcUrl = "jdbc:postgresql://localhost:5435/iam"
             maximumPoolSize = 3
+            minimumIdle = 3
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            username = "root"
+            password = "password"
             validate()
         }
+
+
         return HikariDataSource(config)
     }
 
