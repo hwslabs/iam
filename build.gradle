@@ -1,30 +1,48 @@
-group 'com.hypto'
-version '1.0.0'
 
-wrapper {
-    gradleVersion = '6.1.1'
-    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
-}
 
 buildscript {
     ext.kotlin_version = '1.6.0'
     ext.ktor_version = '1.6.7'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
+    ext.jooq_version = "3.16.3"
     ext.h2Version = "2.1.210"
     ext.hikari_cp_version = "4.0.3"
     ext.junit_version = "5.8.2"
     ext.flyway_version = "8.4.3"
     ext.casbin_version = "1.22.1"
+    ext.postgres_jdbc_driver = "42.3.2"
 
     repositories {
         maven { url "https://plugins.gradle.org/m2/" }
-
+        jcenter()
+        google()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.github.jengelman.gradle.plugins:shadow:$shadow_version"
     }
+
+    configurations['classpath'].resolutionStrategy.eachDependency {
+        if (requested.group == 'org.jooq') {
+            useVersion "$jooq_version"
+        }
+    }
+}
+
+plugins {
+    id('org.flywaydb.flyway') version "$flyway_version"
+    id("nu.studer.jooq") version "7.1"
+}
+
+//apply from: 'db.gradle'
+
+group 'com.hypto'
+version '1.0.0'
+
+wrapper {
+    gradleVersion = '6.1.1'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
 
 apply plugin: 'java'
@@ -36,14 +54,14 @@ mainClassName = "com.hypto.iam.server.Application"
 
 apply plugin: 'com.github.johnrengelman.shadow'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 11
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "11"
 }
 
 kotlin {
@@ -60,8 +78,66 @@ shadowJar {
 
 repositories {
     mavenCentral()
+    jcenter()
     maven { url  "https://dl.bintray.com/kotlin/ktor" }
     maven { url "https://dl.bintray.com/kotlin/kotlinx" }
+}
+
+configurations {
+    flywayMigration
+}
+
+flyway {
+    configurations = ['flywayMigration']
+    url = "jdbc:postgresql://localhost:5435/iam"
+    user = 'root'
+    password = 'password'
+}
+
+jooq {
+    version = "$jooq_version"
+    configurations {
+        main {
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.WARN
+                jdbc {
+                    driver = 'org.postgresql.Driver'
+                    url = flyway.url
+                    user = flyway.user
+                    password = flyway.password
+                }
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+                        inputSchema = 'public'
+//                        forcedTypes {
+//                            forcedType {
+//                                name = 'varchar'
+//                                includeExpression = '.*'
+//                                includeTypes = 'JSONB?'
+//                            }
+//                            forcedType {
+//                                name = 'varchar'
+//                                includeExpression = '.*'
+//                                includeTypes = 'INET'
+//                            }
+//                        }
+                    }
+
+                    generate {
+                        deprecated = false
+                        records = true
+                        immutablePojos = true
+                        fluentSetters = true
+                    }
+                    target {
+                        packageName = 'com.hypto.iam.server.db.models'
+                    }
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -78,18 +154,36 @@ dependencies {
 
     implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
     implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
-    implementation("org.postgresql:postgresql:42.3.2") // DB JDBC driver
+    implementation("org.postgresql:postgresql:$postgres_jdbc_driver") // DB JDBC driver
 
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
     testImplementation("com.h2database:h2:$h2Version")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    // dependencies for Exposed - ORM
-    implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-java-time:$exposed_version") // Datetime column support
+    // JooQ ORM
+    implementation("org.jooq:jooq:$jooq_version")
+    implementation("org.jooq:jooq-codegen:$jooq_version")
+    implementation("org.jooq:jooq-meta:$jooq_version")
+    flywayMigration("org.postgresql:postgresql:$postgres_jdbc_driver")
+    jooqGenerator("org.postgresql:postgresql:$postgres_jdbc_driver")
 
     implementation("org.casbin:jcasbin:$casbin_version") // Policy management
+}
+
+// configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources
+// - the jOOQ configuration has changed (Jdbc, Generator, Strategy, etc.)
+// - the classpath used to execute the jOOQ generation tool has changed (jOOQ library, database driver, strategy classes, etc.)
+// - the schema files from which the schema is generated and which is used by jOOQ to generate the sources have changed (scripts added, modified, etc.)
+tasks.named('generateJooq').configure {
+    // ensure database schema has been prepared by Flyway before generating the jOOQ sources
+    dependsOn tasks.named('flywayMigrate')
+
+    // declare Flyway migration scripts as inputs on the jOOQ task
+    inputs.files(fileTree('src/main/resources/db/migration'))
+            .withPropertyName('migrations')
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    // make jOOQ task participate in incremental builds (and build caching)
+    allInputsDeclared = true
 }
