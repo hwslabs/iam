@@ -2,24 +2,10 @@ package com.hypto.iam.server.service
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.slf4j.LoggerFactory
-import javax.sql.DataSource
+import java.sql.Connection
 
-object DatabaseFactory {
-
-    private val log = LoggerFactory.getLogger(this::class.java)
-
-    fun connectAndMigrate() {
-        log.info("Initialising database")
-        val pool = hikari() // Create Hikari DataSource (connection pool)
-        Database.connect(pool) // Wire connection pool to be used by exposed
-        runFlyway(pool) // Use same pool to execute flyway migrations
-    }
-
-    private fun hikari(): HikariDataSource {
+class DatabaseFactory {
+    companion object {
         // TODO: Configure H2 database for unit tests
 //        val config = HikariConfig().apply {
 //            driverClassName = "org.h2.Driver"
@@ -31,7 +17,7 @@ object DatabaseFactory {
 //        }
 
         // TODO: Read from config file instead of hardcoding
-        val config = HikariConfig().apply {
+        var pool: HikariDataSource = HikariDataSource(HikariConfig().apply {
             driverClassName = "org.postgresql.Driver"
             jdbcUrl = "jdbc:postgresql://localhost:5435/iam"
             maximumPoolSize = 3
@@ -41,29 +27,11 @@ object DatabaseFactory {
             username = "root"
             password = "password"
             validate()
+        })
+
+        fun getConnection(): Connection {
+            return pool.connection
         }
-
-
-        return HikariDataSource(config)
     }
-
-    private fun runFlyway(datasource: DataSource) {
-        val flyway = Flyway.configure()
-            .dataSource(datasource)
-            .load()
-        try {
-            flyway.info()
-            flyway.migrate()
-        } catch (e: Exception) {
-            log.error("Exception running flyway migration", e)
-            throw e
-        }
-        log.info("Flyway migration has finished")
-    }
-
-    suspend fun <T> dbQuery(
-        block: suspend () -> T
-    ): T =
-        newSuspendedTransaction { block() }
-
+//    private val log = LoggerFactory.getLogger(this::class.java)
 }
