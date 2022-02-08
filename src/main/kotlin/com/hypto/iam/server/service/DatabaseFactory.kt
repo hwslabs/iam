@@ -14,9 +14,9 @@ object DatabaseFactory {
 
     fun connectAndMigrate() {
         log.info("Initialising database")
-        val pool = hikari()
-        Database.connect(pool)
-        runFlyway(pool)
+        val pool = hikari() // Create Hikari DataSource (connection pool)
+        Database.connect(pool) // Wire connection pool to be used by exposed
+        runFlyway(pool) // Use same pool to execute flyway migrations
     }
 
     private fun hikari(): HikariDataSource {
