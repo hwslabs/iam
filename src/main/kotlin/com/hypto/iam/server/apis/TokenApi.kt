@@ -10,21 +10,17 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Paths
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
-import io.ktor.locations.get
 import io.ktor.locations.post
 import io.ktor.response.respond
 import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
-fun Route.TokenApi() {
-    val gson = Gson()
-    val empty = mutableMapOf<String, Any?>()
-    post<Paths.getToken> { _: Paths.getToken ->
+fun Route.tokenApi() {
+    post { _: Paths.GetToken ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

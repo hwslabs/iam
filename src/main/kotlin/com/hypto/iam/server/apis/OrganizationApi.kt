@@ -23,9 +23,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
-fun Route.OrganizationApi() {
+fun Route.organizationApi() {
 
-    post<Paths.createOrganization> { _: Paths.createOrganization ->
+    post { _: Paths.CreateOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -33,7 +33,7 @@ fun Route.OrganizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteOrganization> { _: Paths.deleteOrganization ->
+    delete { _: Paths.DeleteOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -41,7 +41,7 @@ fun Route.OrganizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getOrganization> { _: Paths.getOrganization ->
+    get { _: Paths.GetOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -54,7 +54,7 @@ fun Route.OrganizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateOrganization> { _: Paths.updateOrganization ->
+    patch { _: Paths.UpdateOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

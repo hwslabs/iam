@@ -10,7 +10,6 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Paths
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -23,10 +22,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
-fun Route.ResourceTypeApi() {
-    val gson = Gson()
-    val empty = mutableMapOf<String, Any?>()
-    post<Paths.createResourceType> { _: Paths.createResourceType ->
+fun Route.resourceTypeApi() {
+
+    post { _: Paths.CreateResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -34,7 +32,7 @@ fun Route.ResourceTypeApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteResourceType> { _: Paths.deleteResourceType ->
+    delete { _: Paths.DeleteResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -42,7 +40,7 @@ fun Route.ResourceTypeApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getResourceType> { _: Paths.getResourceType ->
+    get { _: Paths.GetResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -50,7 +48,7 @@ fun Route.ResourceTypeApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateResourceType> { _: Paths.updateResourceType ->
+    patch { _: Paths.UpdateResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

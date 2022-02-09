@@ -23,10 +23,10 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
-fun Route.CredentialApi() {
+fun Route.credentialApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    post<Paths.createCredential> { _: Paths.createCredential ->
+    post { _: Paths.CreateCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -34,7 +34,7 @@ fun Route.CredentialApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteCredential> { _: Paths.deleteCredential ->
+    delete { _: Paths.DeleteCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -42,7 +42,7 @@ fun Route.CredentialApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getCredential> { _: Paths.getCredential ->
+    get { _: Paths.GetCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -50,7 +50,7 @@ fun Route.CredentialApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateCredential> { _: Paths.updateCredential ->
+    patch { _: Paths.UpdateCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

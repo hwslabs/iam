@@ -1,13 +1,13 @@
 package com.hypto.iam.server
 
 import com.codahale.metrics.Slf4jReporter
-import com.hypto.iam.server.apis.ActionApi
-import com.hypto.iam.server.apis.CredentialApi
-import com.hypto.iam.server.apis.OrganizationApi
-import com.hypto.iam.server.apis.PolicyApi
-import com.hypto.iam.server.apis.ResourceTypeApi
-import com.hypto.iam.server.apis.TokenApi
-import com.hypto.iam.server.apis.UsersApi
+import com.hypto.iam.server.apis.actionApi
+import com.hypto.iam.server.apis.credentialApi
+import com.hypto.iam.server.apis.organizationApi
+import com.hypto.iam.server.apis.policyApi
+import com.hypto.iam.server.apis.resourceTypeApi
+import com.hypto.iam.server.apis.tokenApi
+import com.hypto.iam.server.apis.usersApi
 import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.auth.Authentication
@@ -53,13 +53,13 @@ fun Application.module() {
     }
 
     install(Routing) {
-        ActionApi()
-        CredentialApi()
-        OrganizationApi()
-        PolicyApi()
-        ResourceTypeApi()
-        TokenApi()
-        UsersApi()
+        actionApi()
+        credentialApi()
+        organizationApi()
+        policyApi()
+        resourceTypeApi()
+        tokenApi()
+        usersApi()
     }
 }
 
