@@ -1,17 +1,30 @@
 package com.hypto.iam.server
 
 import com.codahale.metrics.Slf4jReporter
-import com.hypto.iam.server.apis.*
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.features.*
-import io.ktor.gson.*
-import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.metrics.dropwizard.*
-import io.ktor.routing.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import com.hypto.iam.server.apis.ActionApi
+import com.hypto.iam.server.apis.CredentialApi
+import com.hypto.iam.server.apis.OrganizationApi
+import com.hypto.iam.server.apis.PolicyApi
+import com.hypto.iam.server.apis.ResourceTypeApi
+import com.hypto.iam.server.apis.TokenApi
+import com.hypto.iam.server.apis.UsersApi
+import io.ktor.application.Application
+import io.ktor.application.install
+import io.ktor.auth.Authentication
+import io.ktor.features.AutoHeadResponse
+import io.ktor.features.CallLogging
+import io.ktor.features.Compression
+import io.ktor.features.ContentNegotiation
+import io.ktor.features.DefaultHeaders
+import io.ktor.features.HSTS
+import io.ktor.gson.GsonConverter
+import io.ktor.http.ContentType
+import io.ktor.locations.KtorExperimentalLocationsAPI
+import io.ktor.locations.Locations
+import io.ktor.metrics.dropwizard.DropwizardMetrics
+import io.ktor.routing.Routing
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import java.util.concurrent.TimeUnit
 
 @KtorExperimentalLocationsAPI
@@ -20,7 +33,7 @@ fun Application.module() {
     install(CallLogging)
     install(DropwizardMetrics) {
         val reporter = Slf4jReporter.forRegistry(registry)
-            .outputTo(log)
+//            .outputTo(log)
             .convertRatesTo(TimeUnit.SECONDS)
             .convertDurationsTo(TimeUnit.MILLISECONDS)
             .build()

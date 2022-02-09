@@ -2,34 +2,31 @@ package com.hypto.iam.server.service
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import javax.sql.DataSource
-import org.flywaydb.core.Flyway
+import java.sql.Connection
+import org.jooq.Configuration
+import org.jooq.SQLDialect
+import org.jooq.impl.DefaultConfiguration
 
-class DatabaseFactory {
-    companion object {
-        // TODO: Read from config file instead of hardcoding
-        val pool: HikariDataSource = HikariDataSource(HikariConfig().apply {
-            driverClassName = "org.postgresql.Driver"
-            jdbcUrl = "jdbc:postgresql://localhost:5435/iam"
-            maximumPoolSize = 3
-            minimumIdle = 3
-            isAutoCommit = false
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            username = "root"
-            password = "password"
-        })
-        val dataSource = HikariDataSource(pool)
+object DatabaseFactory {
+    // TODO: Read from config file instead of hardcoding
+    private val pool: HikariDataSource = HikariDataSource(HikariConfig().apply {
+        driverClassName = "org.postgresql.Driver"
+        jdbcUrl = "jdbc:postgresql://localhost:5435/iam"
+        maximumPoolSize = 3
+        minimumIdle = 3
+        isAutoCommit = false
+        transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+        username = "root"
+        password = "password"
+    })
+
+    private val daoConfiguration = DefaultConfiguration().derive(SQLDialect.POSTGRES).derive(pool)
+
+    fun getConfiguration(): Configuration {
+        return daoConfiguration
     }
 
-    private fun runFlyway(datasource: DataSource) {
-        val flyway = Flyway.configure()
-            .dataSource(datasource)
-            .load()
-        try {
-            flyway.info()
-            flyway.migrate()
-        } catch (e: Exception) {
-            throw e
-        }
+    fun getConnection(): Connection {
+        return pool.connection
     }
 }

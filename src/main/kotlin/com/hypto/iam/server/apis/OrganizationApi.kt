@@ -10,8 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Paths
+import com.hypto.iam.server.db.repositories.OrganizationRepo
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
@@ -24,8 +24,7 @@ import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
 fun Route.OrganizationApi() {
-    val gson = Gson()
-    val empty = mutableMapOf<String, Any?>()
+
     post<Paths.createOrganization> { _: Paths.createOrganization ->
         var principal = ""
         if (principal == null) {
@@ -47,6 +46,11 @@ fun Route.OrganizationApi() {
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
         } else {
+
+            val org = OrganizationRepo.fetchOneById("a")
+            println(org.toString())
+//            call.respond()
+
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
