@@ -10,26 +10,35 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  *  * @param id  * @param username  * @param organizationId  * @param email  * @param phone  * @param loginAccess  * @param userType  * @param status  * @param createdAt  * @param createdBy */
-data class User (    val id: kotlin.String? = null,    val username: kotlin.String? = null,    val organizationId: kotlin.String? = null,    val email: kotlin.String? = null,    val phone: kotlin.String? = null,    val loginAccess: kotlin.Boolean? = null,    val userType: User.UserType? = null,    val status: User.Status? = null,    val createdAt: kotlin.String? = null,    val createdBy: kotlin.String? = null
+data class User(
+    val id: kotlin.String? = null,
+    val username: kotlin.String? = null,
+    val organizationId: kotlin.String? = null,
+    val email: kotlin.String? = null,
+    val phone: kotlin.String? = null,
+    val loginAccess: kotlin.Boolean? = null,
+    val userType: User.UserType? = null,
+    val status: User.Status? = null,
+    val createdAt: kotlin.String? = null,
+    val createdBy: kotlin.String? = null
 ) {
     /**
-    * 
+    *
     * Values: NORMAL,ADMIN,APIONLY,SYSTEM
     */
-    enum class UserType(val value: kotlin.String){
+    enum class UserType(val value: kotlin.String) {
         NORMAL("normal"),
         ADMIN("admin"),
         APIONLY("api_only"),
         SYSTEM("system");
     }
     /**
-    * 
+    *
     * Values: ACTIVE,INACTIVE,DELETED
     */
-    enum class Status(val value: kotlin.String){
+    enum class Status(val value: kotlin.String) {
         ACTIVE("active"),
         INACTIVE("inactive"),
         DELETED("deleted");

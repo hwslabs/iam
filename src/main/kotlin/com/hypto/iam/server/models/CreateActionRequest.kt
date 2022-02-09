@@ -10,9 +10,9 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to create action * @param name  * @param description */
-data class CreateActionRequest (        val name: kotlin.String,    val description: kotlin.String? = null
-) {
-}
+data class CreateActionRequest(
+    val name: kotlin.String,
+    val description: kotlin.String? = null
+)

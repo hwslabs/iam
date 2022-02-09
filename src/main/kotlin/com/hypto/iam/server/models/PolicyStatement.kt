@@ -10,16 +10,18 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  *  * @param resourceType  * @param action  * @param effect */
-data class PolicyStatement (        val resourceType: kotlin.String,        val action: kotlin.String,        val effect: PolicyStatement.Effect
+data class PolicyStatement(
+    val resourceType: kotlin.String,
+    val action: kotlin.String,
+    val effect: PolicyStatement.Effect
 ) {
     /**
-    * 
+    *
     * Values: ALLOW,DENY
     */
-    enum class Effect(val value: kotlin.String){
+    enum class Effect(val value: kotlin.String) {
         ALLOW("allow"),
         DENY("deny");
     }

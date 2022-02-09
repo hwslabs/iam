@@ -18,10 +18,8 @@ enum class ApiKeyLocation(val location: String) {
     QUERY("query"),
     HEADER("header")
 }
-data class ApiKeyCredential(val value: String): Credential
+data class ApiKeyCredential(val value: String) : Credential
 data class ApiPrincipal(val apiKeyCredential: ApiKeyCredential?) : Principal
-
-
 
 /**
 * Represents a Api Key authentication provider
@@ -30,9 +28,9 @@ data class ApiPrincipal(val apiKeyCredential: ApiKeyCredential?) : Principal
 class ApiKeyAuthenticationProvider(config: Configuration) : AuthenticationProvider(config) {
     internal var authenticationFunction: suspend ApplicationCall.(ApiKeyCredential) -> Principal? = { null }
 
-    var apiKeyName: String = "";
+    var apiKeyName: String = ""
 
-    var apiKeyLocation: ApiKeyLocation = ApiKeyLocation.QUERY;
+    var apiKeyLocation: ApiKeyLocation = ApiKeyLocation.QUERY
 
     /**
     * Sets a validation function that will check given [ApiKeyCredential] instance and return [Principal],
@@ -44,7 +42,7 @@ class ApiKeyAuthenticationProvider(config: Configuration) : AuthenticationProvid
 }
 
 class ApiKeyConfiguration(name: String?) : AuthenticationProvider.Configuration(name) {
-    //todo
+    // todo
 }
 
 fun Authentication.Configuration.apiKeyAuth(name: String? = null, configure: ApiKeyAuthenticationProvider.() -> Unit) {
@@ -78,7 +76,7 @@ fun Authentication.Configuration.apiKeyAuth(name: String? = null, configure: Api
 }
 
 fun ApplicationRequest.apiKeyAuthenticationCredentials(apiKeyName: String, apiKeyLocation: ApiKeyLocation): ApiKeyCredential? {
-    val value: String? = when(apiKeyLocation) {
+    val value: String? = when (apiKeyLocation) {
         ApiKeyLocation.QUERY -> this.queryParameters[apiKeyName]
         ApiKeyLocation.HEADER -> this.headers[apiKeyName]
     }

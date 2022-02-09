@@ -11,40 +11,22 @@
 */package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Paths
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.delete
 import io.ktor.locations.get
-import io.ktor.locations.post
 import io.ktor.locations.patch
+import io.ktor.locations.post
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.Route
-import io.ktor.routing.route
-
-import com.hypto.iam.server.Paths
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-
-
-import com.hypto.iam.server.models.CreatePolicyRequest
-import com.hypto.iam.server.models.ErrorResponse
-import com.hypto.iam.server.models.InlineResponse200
-import com.hypto.iam.server.models.InlineResponse2001
-import com.hypto.iam.server.models.Policy
-import com.hypto.iam.server.models.UpdatePolicyRequest
 
 @KtorExperimentalLocationsAPI
 fun Route.PolicyApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    post<Paths.createPolicy> {  _: Paths.createPolicy ->
+    post<Paths.createPolicy> { _: Paths.createPolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -52,7 +34,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deletePolicy> {  _: Paths.deletePolicy ->
+    delete<Paths.deletePolicy> { _: Paths.deletePolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -60,7 +42,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getPolicy> {  _: Paths.getPolicy ->
+    get<Paths.getPolicy> { _: Paths.getPolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -68,7 +50,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getUserPolicies> {  _: Paths.getUserPolicies ->
+    get<Paths.getUserPolicies> { _: Paths.getUserPolicies ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -76,7 +58,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updatePolicy> {  _: Paths.updatePolicy ->
+    patch<Paths.updatePolicy> { _: Paths.updatePolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
