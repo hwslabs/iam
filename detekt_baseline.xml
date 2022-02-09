@@ -34,7 +34,7 @@
     <ID>ForbiddenComment:ApiKeyAuth.kt$// TODO: Verify correct response structure here.</ID>
     <ID>ForbiddenComment:Application.kt$// TODO: Add support for Bearer token authentication</ID>
     <ID>ForbiddenComment:Application.kt$// TODO: Switch to kotlinx.serialization</ID>
-    <ID>ForbiddenComment:DatabaseFactory.kt$DatabaseFactory.Companion$// TODO: Read from config file instead of hardcoding</ID>
+    <ID>ForbiddenComment:DatabaseFactory.kt$DatabaseFactory$// TODO: Read from config file instead of hardcoding</ID>
     <ID>FunctionNaming:ActionApi.kt$@KtorExperimentalLocationsAPI fun Route.ActionApi()</ID>
     <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationCompressionConfiguration(): Compression.Configuration.() -&gt; Unit</ID>
     <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationHstsConfiguration(): HSTS.Configuration.() -&gt; Unit</ID>
@@ -51,6 +51,7 @@
     <ID>MagicNumber:Configuration.kt$365</ID>
     <ID>MagicNumber:Configuration.kt$4</ID>
     <ID>MagicNumber:Configuration.kt$60</ID>
+    <ID>MagicNumber:DatabaseFactory.kt$DatabaseFactory$3</ID>
     <ID>MatchingDeclarationName:Inline_response_200.kt$InlineResponse200</ID>
     <ID>MatchingDeclarationName:Inline_response_200_1.kt$InlineResponse2001</ID>
     <ID>MaxLineLength:ApiKeyAuth.kt$call.respond(UnauthorizedResponse(HttpAuthHeader.Parameterized("API_KEY", mapOf("key" to apiKeyName), HeaderValueEncoding.QUOTED_ALWAYS)))</ID>
@@ -67,16 +68,10 @@
     <ID>MaxLineLength:Paths.kt$Paths.updateCredential$@Location("/users/{userId}/credential/{id}")</ID>
     <ID>MaxLineLength:Paths.kt$inline</ID>
     <ID>MaxLineLength:User.kt$User</ID>
-    <ID>TooGenericExceptionCaught:DatabaseFactory.kt$DatabaseFactory$e: Exception</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.application.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.auth.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.features.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.gson.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.http.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.locations.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.routing.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.server.engine.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.server.netty.*</ID>
+    <ID>SpreadOperator:OrganizationRepo.kt$OrganizationRepo$(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER, *values)</ID>
+    <ID>SpreadOperator:OrganizationRepo.kt$OrganizationRepo$(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.NAME, *values)</ID>
+    <ID>SpreadOperator:UserRepo.kt$UserRepo$(com.hypto.iam.server.db.tables.Users.USERS.ID, *values)</ID>
+    <ID>SpreadOperator:UserRepo.kt$UserRepo$(com.hypto.iam.server.db.tables.Users.USERS.ORGANIZATION_ID, *values)</ID>
     <ID>WildcardImport:Paths.kt$import com.hypto.iam.server.models.*</ID>
   </Whitelist>
 </SmellBaseline>
