@@ -10,7 +10,6 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Paths
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -23,10 +22,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
-fun Route.PolicyApi() {
-    val gson = Gson()
-    val empty = mutableMapOf<String, Any?>()
-    post<Paths.createPolicy> { _: Paths.createPolicy ->
+fun Route.policyApi() {
+
+    post { _: Paths.CreatePolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -34,7 +32,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deletePolicy> { _: Paths.deletePolicy ->
+    delete { _: Paths.DeletePolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -42,7 +40,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getPolicy> { _: Paths.getPolicy ->
+    get { _: Paths.GetPolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -50,7 +48,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getUserPolicies> { _: Paths.getUserPolicies ->
+    get { _: Paths.GetUserPolicies ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -58,7 +56,7 @@ fun Route.PolicyApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updatePolicy> { _: Paths.updatePolicy ->
+    patch { _: Paths.UpdatePolicy ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

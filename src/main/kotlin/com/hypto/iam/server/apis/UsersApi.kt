@@ -10,7 +10,6 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Paths
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -24,10 +23,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
-fun Route.UsersApi() {
-    val gson = Gson()
-    val empty = mutableMapOf<String, Any?>()
-    put<Paths.attachPolicies> { _: Paths.attachPolicies ->
+fun Route.usersApi() {
+
+    put { _: Paths.AttachPolicies ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -35,7 +33,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    post<Paths.createUser> { _: Paths.createUser ->
+    post { _: Paths.CreateUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -43,7 +41,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteUser> { _: Paths.deleteUser ->
+    delete { _: Paths.DeleteUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -51,7 +49,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    put<Paths.detachPolicies> { _: Paths.detachPolicies ->
+    put { _: Paths.DetachPolicies ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -59,7 +57,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getUser> { _: Paths.getUser ->
+    get { _: Paths.GetUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -67,7 +65,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateUser> { _: Paths.updateUser ->
+    patch { req: Paths.UpdateUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

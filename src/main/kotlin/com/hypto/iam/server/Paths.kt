@@ -10,9 +10,22 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server
 
-import com.hypto.iam.server.models.*
+import com.hypto.iam.server.models.CreateActionRequest
+import com.hypto.iam.server.models.CreateCredentialRequest
+import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreatePolicyRequest
+import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.PolicyAssociationRequest
+import com.hypto.iam.server.models.UpdateActionRequest
+import com.hypto.iam.server.models.UpdateCredentialRequest
+import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.models.UpdatePolicyRequest
+import com.hypto.iam.server.models.UpdateResourceRequest
+import com.hypto.iam.server.models.UpdateUserRequest
 import io.ktor.application.ApplicationCall
 import io.ktor.http.HttpMethod
+import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Location
 import io.ktor.locations.handle
 import io.ktor.locations.location
@@ -28,7 +41,7 @@ inline fun <reified T : Any> Route.delete(noinline body: suspend PipelineContext
         }
     }
 }
-
+@KtorExperimentalLocationsAPI
 object Paths {
     /**
      * Create an action
@@ -36,7 +49,8 @@ object Paths {
      * @param body Payload to create action
      * @param resourceId
      */
-    @Location("/resources/{resourceId}/action") class createAction(val body: CreateActionRequest, val resourceId: kotlin.String)
+    @Location("/resources/{resourceId}/action")
+    class CreateAction(val body: CreateActionRequest, val resourceId: String)
 
     /**
      * Delete an action
@@ -44,7 +58,8 @@ object Paths {
      * @param resourceId
      * @param id
      */
-    @Location("/resources/{resourceId}/action/{id}") class deleteAction(val resourceId: kotlin.String, val id: kotlin.String)
+    @Location("/resources/{resourceId}/action/{id}")
+    class DeleteAction(val resourceId: String, val id: String)
 
     /**
      * Get an action
@@ -52,7 +67,8 @@ object Paths {
      * @param resourceId
      * @param id
      */
-    @Location("/resources/{resourceId}/action/{id}") class getAction(val resourceId: kotlin.String, val id: kotlin.String)
+    @Location("/resources/{resourceId}/action/{id}")
+    class GetAction(val resourceId: String, val id: String)
 
     /**
      * Update an action
@@ -61,7 +77,8 @@ object Paths {
      * @param resourceId
      * @param id
      */
-    @Location("/resources/{resourceId}/action/{id}") class updateAction(val body: UpdateActionRequest, val resourceId: kotlin.String, val id: kotlin.String)
+    @Location("/resources/{resourceId}/action/{id}")
+    class UpdateAction(val body: UpdateActionRequest, val resourceId: String, val id: String)
 
     /**
      * Create a Credential
@@ -69,7 +86,8 @@ object Paths {
      * @param body Payload to create credential
      * @param userId
      */
-    @Location("/users/{userId}/credential") class createCredential(val body: CreateCredentialRequest, val userId: kotlin.String)
+    @Location("/users/{userId}/credential")
+    class CreateCredential(val body: CreateCredentialRequest, val userId: String)
 
     /**
      * Delete a credential
@@ -77,7 +95,8 @@ object Paths {
      * @param userId
      * @param id
      */
-    @Location("/users/{userId}/credential/{id}") class deleteCredential(val userId: kotlin.String, val id: kotlin.String)
+    @Location("/users/{userId}/credential/{id}")
+    class DeleteCredential(val userId: String, val id: String)
 
     /**
      * Get a credential
@@ -85,7 +104,8 @@ object Paths {
      * @param userId
      * @param id
      */
-    @Location("/users/{userId}/credential/{id}") class getCredential(val userId: kotlin.String, val id: kotlin.String)
+    @Location("/users/{userId}/credential/{id}")
+    class GetCredential(val userId: String, val id: String)
 
     /**
      * Update a credential
@@ -94,28 +114,32 @@ object Paths {
      * @param userId
      * @param id
      */
-    @Location("/users/{userId}/credential/{id}") class updateCredential(val body: UpdateCredentialRequest, val userId: kotlin.String, val id: kotlin.String)
+    @Location("/users/{userId}/credential/{id}")
+    class UpdateCredential(val body: UpdateCredentialRequest, val userId: String, val id: String)
 
     /**
      * Create an organization
      * Create an organization
      * @param body Payload to create organization
      */
-    @Location("/organizations") class createOrganization(val body: CreateOrganizationRequest)
+    @Location("/organizations")
+    class CreateOrganization(val body: CreateOrganizationRequest)
 
     /**
      * Delete an organization
      * Delete an organization
      * @param id
      */
-    @Location("/organization/{id}") class deleteOrganization(val id: kotlin.String)
+    @Location("/organization/{id}")
+    class DeleteOrganization(val id: String)
 
     /**
      * Get an organization
      * Get an organization
      * @param id
      */
-    @Location("/organization/{id}") class getOrganization(val id: kotlin.String)
+    @Location("/organization/{id}")
+    class GetOrganization(val id: String)
 
     /**
      * Update an organization
@@ -123,35 +147,40 @@ object Paths {
      * @param body Payload to update organization
      * @param id
      */
-    @Location("/organization/{id}") class updateOrganization(val body: UpdateOrganizationRequest, val id: kotlin.String)
+    @Location("/organization/{id}")
+    class UpdateOrganization(val body: UpdateOrganizationRequest, val id: String)
 
     /**
      * Create a policy
      * Create a policy
      * @param body Payload to create policy
      */
-    @Location("/policies") class createPolicy(val body: CreatePolicyRequest)
+    @Location("/policies")
+    class CreatePolicy(val body: CreatePolicyRequest)
 
     /**
      * Delete a policy
      * Delete a policy
      * @param id
      */
-    @Location("/policies/{id}") class deletePolicy(val id: kotlin.String)
+    @Location("/policies/{id}")
+    class DeletePolicy(val id: String)
 
     /**
      * Get a policy
      * Get a policy
      * @param id
      */
-    @Location("/policies/{id}") class getPolicy(val id: kotlin.String)
+    @Location("/policies/{id}")
+    class GetPolicy(val id: String)
 
     /**
      * Get policies of a user
      * Get policies of a user
      * @param id
      */
-    @Location("/users/{id}/policies") class getUserPolicies(val id: kotlin.String)
+    @Location("/users/{id}/policies")
+    class GetUserPolicies(val id: String)
 
     /**
      * Update a policy
@@ -159,28 +188,32 @@ object Paths {
      * @param body Payload to update policy
      * @param id
      */
-    @Location("/policies/{id}") class updatePolicy(val body: UpdatePolicyRequest, val id: kotlin.String)
+    @Location("/policies/{id}")
+    class UpdatePolicy(val body: UpdatePolicyRequest, val id: String)
 
     /**
      * Create a resource type
      * Create a resource type
      * @param body Payload to create resource
      */
-    @Location("/resource_types") class createResourceType(val body: CreateResourceRequest)
+    @Location("/resource_types")
+    class CreateResourceType(val body: CreateResourceRequest)
 
     /**
      * Delete a resource type
      * Delete a resource type
      * @param id
      */
-    @Location("/resource_types/{id}") class deleteResourceType(val id: kotlin.String)
+    @Location("/resource_types/{id}")
+    class DeleteResourceType(val id: String)
 
     /**
      * Get a resource type
      * Get a resource type
      * @param id
      */
-    @Location("/resource_types/{id}") class getResourceType(val id: kotlin.String)
+    @Location("/resource_types/{id}")
+    class GetResourceType(val id: String)
 
     /**
      * Update a resource type
@@ -188,13 +221,15 @@ object Paths {
      * @param body Payload to update resource
      * @param id
      */
-    @Location("/resource_types/{id}") class updateResourceType(val body: UpdateResourceRequest, val id: kotlin.String)
+    @Location("/resource_types/{id}")
+    class UpdateResourceType(val body: UpdateResourceRequest, val id: String)
 
     /**
      * Generate a token
      * Generate a token
      */
-    @Location("/token") class getToken()
+    @Location("/token")
+    class GetToken()
 
     /**
      * Attach policies to user
@@ -202,21 +237,24 @@ object Paths {
      * @param body Payload to attach / detach a policy to a user / resource
      * @param id
      */
-    @Location("/users/{id}/attach_policies") class attachPolicies(val body: PolicyAssociationRequest, val id: kotlin.String)
+    @Location("/users/{id}/attach_policies")
+    class AttachPolicies(val body: PolicyAssociationRequest, val id: String)
 
     /**
      * Create a user
      * Create a user
      * @param body Payload to create user
      */
-    @Location("/users") class createUser(val body: CreateUserRequest)
+    @Location("/users")
+    class CreateUser(val body: CreateUserRequest)
 
     /**
      * Delete a User
      * Delete a User
      * @param id
      */
-    @Location("/users/{id}") class deleteUser(val id: kotlin.String)
+    @Location("/users/{id}")
+    class DeleteUser(val id: String)
 
     /**
      * Detach policies to user
@@ -224,14 +262,16 @@ object Paths {
      * @param body Payload to attach / detach a policy to a user / resource
      * @param id
      */
-    @Location("/users/{id}/detach_policies") class detachPolicies(val body: PolicyAssociationRequest, val id: kotlin.String)
+    @Location("/users/{id}/detach_policies")
+    class DetachPolicies(val body: PolicyAssociationRequest, val id: String)
 
     /**
      * Get a User
      * Get a User
      * @param id
      */
-    @Location("/users/{id}") class getUser(val id: kotlin.String)
+    @Location("/users/{id}")
+    class GetUser(val id: String)
 
     /**
      * Update a User
@@ -239,5 +279,6 @@ object Paths {
      * @param body Payload to update user
      * @param id
      */
-    @Location("/users/{id}") class updateUser(val body: UpdateUserRequest, val id: kotlin.String)
+    @Location("/users/{id}")
+    class UpdateUser(val body: UpdateUserRequest, val id: String)
 }

@@ -10,7 +10,6 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Paths
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -23,10 +22,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
-fun Route.ActionApi() {
-    val gson = Gson()
-    val empty = mutableMapOf<String, Any?>()
-    post<Paths.createAction> { _: Paths.createAction ->
+fun Route.actionApi() {
+
+    post { _: Paths.CreateAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -34,7 +32,7 @@ fun Route.ActionApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteAction> { _: Paths.deleteAction ->
+    delete { _: Paths.DeleteAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -42,7 +40,7 @@ fun Route.ActionApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getAction> { _: Paths.getAction ->
+    get { _: Paths.GetAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -50,7 +48,7 @@ fun Route.ActionApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateAction> { _: Paths.updateAction ->
+    patch { _: Paths.UpdateAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
