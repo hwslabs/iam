@@ -10,11 +10,9 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  *  * @param code error code * @param message error description*/
-data class ErrorResponse (        /* error code */
-        val code: kotlin.String,        /* error description */
-        val message: kotlin.String
-) {
-}
+data class ErrorResponse(/* error code */
+    val code: kotlin.String, /* error description */
+    val message: kotlin.String
+)

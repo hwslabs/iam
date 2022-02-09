@@ -10,9 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to create credential * @param validUntil */
-data class CreateCredentialRequest (    val validUntil: kotlin.String? = null
-) {
-}
+data class CreateCredentialRequest(
+    val validUntil: kotlin.String? = null
+)

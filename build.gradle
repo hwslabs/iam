@@ -1,5 +1,3 @@
-
-
 buildscript {
     ext.kotlin_version = '1.6.0'
     ext.ktor_version = '1.6.7'
@@ -14,9 +12,9 @@ buildscript {
     ext.postgres_jdbc_driver = "42.3.2"
 
     repositories {
-        maven { url "https://plugins.gradle.org/m2/" }
         jcenter()
         google()
+        maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -33,9 +31,10 @@ buildscript {
 plugins {
     id('org.flywaydb.flyway') version "$flyway_version"
     id("nu.studer.jooq") version "7.1"
+    id "io.gitlab.arturbosch.detekt" version "1.3.1"
+    id "org.jlleitschuh.gradle.ktlint" version "9.1.1"
+    id "jacoco"
 }
-
-//apply from: 'db.gradle'
 
 group 'com.hypto'
 version '1.0.0'
@@ -48,13 +47,16 @@ wrapper {
 apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'application'
-
-//mainClassName = "io.ktor.server.netty.DevelopmentEngine"
-mainClassName = "com.hypto.iam.server.Application"
-
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
+mainClassName = "com.hypto.iam.server.Application"
 sourceCompatibility = 11
+
+sourceSets {
+    main.kotlin.srcDirs += 'src/main/kotlin'
+    test.kotlin.srcDirs += 'src/test/kotlin'
+}
 
 compileKotlin {
     kotlinOptions.jvmTarget = "11"
@@ -70,14 +72,27 @@ kotlin {
     }
 }
 
+test {
+    useJUnitPlatform()
+    testLogging.showStandardStreams(true)
+    finalizedBy jacocoTestReport // report is always generated after tests run
+}
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+}
+jacoco {
+    toolVersion = "0.8.7"
+    reportsDir = file("$buildDir/jacoco")
+}
+
 shadowJar {
-    baseName = 'kotlin-server'
-    classifier = null
-    version = null
+    baseName = 'hypto-iam-server'
+    version = '1.0.0'
 }
 
 repositories {
     mavenCentral()
+    google()
     jcenter()
     maven { url  "https://dl.bintray.com/kotlin/ktor" }
     maven { url "https://dl.bintray.com/kotlin/kotlinx" }
@@ -111,18 +126,6 @@ jooq {
                     database {
                         name = 'org.jooq.meta.postgres.PostgresDatabase'
                         inputSchema = 'public'
-//                        forcedTypes {
-//                            forcedType {
-//                                name = 'varchar'
-//                                includeExpression = '.*'
-//                                includeTypes = 'JSONB?'
-//                            }
-//                            forcedType {
-//                                name = 'varchar'
-//                                includeExpression = '.*'
-//                                includeTypes = 'INET'
-//                            }
-//                        }
                     }
 
                     generate {
@@ -138,6 +141,41 @@ jooq {
             }
         }
     }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+    finalizedBy jacocoTestReport
+    violationRules {
+        rule {
+            element = 'CLASS'
+            excludes = [
+                    "com.hypto.iam.server.db.models.*",
+                    "com.hypto.iam.server.models.*",
+            ]
+            limit {
+                counter = 'INSTRUCTION'
+                value = 'MISSEDRATIO'
+                maximum = 0.1
+            }
+        }
+        rule {
+            element = 'CLASS'
+            excludes = [
+                    "com.hypto.iam.server.db.models.*",
+                    "com.hypto.iam.server.models.*",
+            ]
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.9
+            }
+        }
+    }
+}
+
+detekt {
+    baseline = file("detekt_baseline.xml")
 }
 
 dependencies {

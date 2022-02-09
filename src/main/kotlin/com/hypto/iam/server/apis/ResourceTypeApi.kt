@@ -11,39 +11,22 @@
 */package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Paths
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.delete
 import io.ktor.locations.get
-import io.ktor.locations.post
 import io.ktor.locations.patch
+import io.ktor.locations.post
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.Route
-import io.ktor.routing.route
-
-import com.hypto.iam.server.Paths
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-
-
-import com.hypto.iam.server.models.CreateResourceRequest
-import com.hypto.iam.server.models.ErrorResponse
-import com.hypto.iam.server.models.InlineResponse200
-import com.hypto.iam.server.models.ResourceType
-import com.hypto.iam.server.models.UpdateResourceRequest
 
 @KtorExperimentalLocationsAPI
 fun Route.ResourceTypeApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    post<Paths.createResourceType> {  _: Paths.createResourceType ->
+    post<Paths.createResourceType> { _: Paths.createResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -51,7 +34,7 @@ fun Route.ResourceTypeApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteResourceType> {  _: Paths.deleteResourceType ->
+    delete<Paths.deleteResourceType> { _: Paths.deleteResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -59,7 +42,7 @@ fun Route.ResourceTypeApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getResourceType> {  _: Paths.getResourceType ->
+    get<Paths.getResourceType> { _: Paths.getResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -67,7 +50,7 @@ fun Route.ResourceTypeApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateResourceType> {  _: Paths.updateResourceType ->
+    patch<Paths.updateResourceType> { _: Paths.updateResourceType ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

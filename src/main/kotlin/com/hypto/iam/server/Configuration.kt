@@ -11,7 +11,6 @@ import io.ktor.util.KtorExperimentalAPI
 import java.time.Duration
 import java.util.concurrent.Executors
 
-
 /**
  * Application block for [HSTS] configuration.
  *

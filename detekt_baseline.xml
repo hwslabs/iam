@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <Blacklist></Blacklist>
+  <Whitelist>
+    <ID>ClassNaming:Paths.kt$Paths.attachPolicies$attachPolicies</ID>
+    <ID>ClassNaming:Paths.kt$Paths.createAction$createAction</ID>
+    <ID>ClassNaming:Paths.kt$Paths.createCredential$createCredential</ID>
+    <ID>ClassNaming:Paths.kt$Paths.createOrganization$createOrganization</ID>
+    <ID>ClassNaming:Paths.kt$Paths.createPolicy$createPolicy</ID>
+    <ID>ClassNaming:Paths.kt$Paths.createResourceType$createResourceType</ID>
+    <ID>ClassNaming:Paths.kt$Paths.createUser$createUser</ID>
+    <ID>ClassNaming:Paths.kt$Paths.deleteAction$deleteAction</ID>
+    <ID>ClassNaming:Paths.kt$Paths.deleteCredential$deleteCredential</ID>
+    <ID>ClassNaming:Paths.kt$Paths.deleteOrganization$deleteOrganization</ID>
+    <ID>ClassNaming:Paths.kt$Paths.deletePolicy$deletePolicy</ID>
+    <ID>ClassNaming:Paths.kt$Paths.deleteResourceType$deleteResourceType</ID>
+    <ID>ClassNaming:Paths.kt$Paths.deleteUser$deleteUser</ID>
+    <ID>ClassNaming:Paths.kt$Paths.detachPolicies$detachPolicies</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getAction$getAction</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getCredential$getCredential</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getOrganization$getOrganization</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getPolicy$getPolicy</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getResourceType$getResourceType</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getToken$getToken</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getUser$getUser</ID>
+    <ID>ClassNaming:Paths.kt$Paths.getUserPolicies$getUserPolicies</ID>
+    <ID>ClassNaming:Paths.kt$Paths.updateAction$updateAction</ID>
+    <ID>ClassNaming:Paths.kt$Paths.updateCredential$updateCredential</ID>
+    <ID>ClassNaming:Paths.kt$Paths.updateOrganization$updateOrganization</ID>
+    <ID>ClassNaming:Paths.kt$Paths.updatePolicy$updatePolicy</ID>
+    <ID>ClassNaming:Paths.kt$Paths.updateResourceType$updateResourceType</ID>
+    <ID>ClassNaming:Paths.kt$Paths.updateUser$updateUser</ID>
+    <ID>EmptyDefaultConstructor:Paths.kt$Paths.getToken$()</ID>
+    <ID>ForbiddenComment:ApiKeyAuth.kt$// TODO: Verify correct response structure here.</ID>
+    <ID>ForbiddenComment:Application.kt$// TODO: Add support for Bearer token authentication</ID>
+    <ID>ForbiddenComment:Application.kt$// TODO: Switch to kotlinx.serialization</ID>
+    <ID>ForbiddenComment:DatabaseFactory.kt$DatabaseFactory.Companion$// TODO: Read from config file instead of hardcoding</ID>
+    <ID>FunctionNaming:ActionApi.kt$@KtorExperimentalLocationsAPI fun Route.ActionApi()</ID>
+    <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationCompressionConfiguration(): Compression.Configuration.() -&gt; Unit</ID>
+    <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationHstsConfiguration(): HSTS.Configuration.() -&gt; Unit</ID>
+    <ID>FunctionNaming:CredentialApi.kt$@KtorExperimentalLocationsAPI fun Route.CredentialApi()</ID>
+    <ID>FunctionNaming:OrganizationApi.kt$@KtorExperimentalLocationsAPI fun Route.OrganizationApi()</ID>
+    <ID>FunctionNaming:PolicyApi.kt$@KtorExperimentalLocationsAPI fun Route.PolicyApi()</ID>
+    <ID>FunctionNaming:ResourceTypeApi.kt$@KtorExperimentalLocationsAPI fun Route.ResourceTypeApi()</ID>
+    <ID>FunctionNaming:TokenApi.kt$@KtorExperimentalLocationsAPI fun Route.TokenApi()</ID>
+    <ID>FunctionNaming:UsersApi.kt$@KtorExperimentalLocationsAPI fun Route.UsersApi()</ID>
+    <ID>MagicNumber:Application.kt$10</ID>
+    <ID>MagicNumber:Application.kt$8081</ID>
+    <ID>MagicNumber:Configuration.kt$10.0</ID>
+    <ID>MagicNumber:Configuration.kt$1024</ID>
+    <ID>MagicNumber:Configuration.kt$365</ID>
+    <ID>MagicNumber:Configuration.kt$4</ID>
+    <ID>MagicNumber:Configuration.kt$60</ID>
+    <ID>MatchingDeclarationName:Inline_response_200.kt$InlineResponse200</ID>
+    <ID>MatchingDeclarationName:Inline_response_200_1.kt$InlineResponse2001</ID>
+    <ID>MaxLineLength:ApiKeyAuth.kt$call.respond(UnauthorizedResponse(HttpAuthHeader.Parameterized("API_KEY", mapOf("key" to apiKeyName), HeaderValueEncoding.QUOTED_ALWAYS)))</ID>
+    <ID>MaxLineLength:ApiKeyAuth.kt$fun ApplicationRequest.apiKeyAuthenticationCredentials(apiKeyName: String, apiKeyLocation: ApiKeyLocation): ApiKeyCredential?</ID>
+    <ID>MaxLineLength:CreateUserRequest.kt$CreateUserRequest</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.attachPolicies$@Location("/users/{id}/attach_policies")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.createAction$@Location("/resources/{resourceId}/action")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.createCredential$@Location("/users/{userId}/credential")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.deleteAction$@Location("/resources/{resourceId}/action/{id}")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.deleteCredential$@Location("/users/{userId}/credential/{id}")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.detachPolicies$@Location("/users/{id}/detach_policies")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.getAction$@Location("/resources/{resourceId}/action/{id}")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.updateAction$@Location("/resources/{resourceId}/action/{id}")</ID>
+    <ID>MaxLineLength:Paths.kt$Paths.updateCredential$@Location("/users/{userId}/credential/{id}")</ID>
+    <ID>MaxLineLength:Paths.kt$inline</ID>
+    <ID>MaxLineLength:User.kt$User</ID>
+    <ID>TooGenericExceptionCaught:DatabaseFactory.kt$DatabaseFactory$e: Exception</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.application.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.auth.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.features.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.gson.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.http.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.locations.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.routing.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.server.engine.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.server.netty.*</ID>
+    <ID>WildcardImport:Paths.kt$import com.hypto.iam.server.models.*</ID>
+  </Whitelist>
+</SmellBaseline>

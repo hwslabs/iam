@@ -10,9 +10,9 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to create resource * @param name  * @param description */
-data class CreateResourceRequest (        val name: kotlin.String,    val description: kotlin.String? = null
-) {
-}
+data class CreateResourceRequest(
+    val name: kotlin.String,
+    val description: kotlin.String? = null
+)

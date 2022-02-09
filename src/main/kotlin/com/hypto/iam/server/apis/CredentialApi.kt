@@ -11,40 +11,22 @@
 */package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Paths
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.delete
 import io.ktor.locations.get
-import io.ktor.locations.post
 import io.ktor.locations.patch
+import io.ktor.locations.post
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.Route
-import io.ktor.routing.route
-
-import com.hypto.iam.server.Paths
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-
-
-import com.hypto.iam.server.models.CreateCredentialRequest
-import com.hypto.iam.server.models.Credential
-import com.hypto.iam.server.models.CredentialWithoutSecret
-import com.hypto.iam.server.models.ErrorResponse
-import com.hypto.iam.server.models.InlineResponse200
-import com.hypto.iam.server.models.UpdateCredentialRequest
 
 @KtorExperimentalLocationsAPI
 fun Route.CredentialApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    post<Paths.createCredential> {  _: Paths.createCredential ->
+    post<Paths.createCredential> { _: Paths.createCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -52,7 +34,7 @@ fun Route.CredentialApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteCredential> {  _: Paths.deleteCredential ->
+    delete<Paths.deleteCredential> { _: Paths.deleteCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -60,7 +42,7 @@ fun Route.CredentialApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getCredential> {  _: Paths.getCredential ->
+    get<Paths.getCredential> { _: Paths.getCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -68,7 +50,7 @@ fun Route.CredentialApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateCredential> {  _: Paths.updateCredential ->
+    patch<Paths.updateCredential> { _: Paths.updateCredential ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

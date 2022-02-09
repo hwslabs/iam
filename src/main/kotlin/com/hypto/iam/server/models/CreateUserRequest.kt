@@ -10,26 +10,31 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to create ledger account * @param username  * @param passwordHash  * @param email  * @param phone  * @param userType  * @param status */
-data class CreateUserRequest (        val username: kotlin.String,        val passwordHash: kotlin.String,        val email: kotlin.String,        val userType: CreateUserRequest.UserType,        val status: CreateUserRequest.Status,    val phone: kotlin.String? = null
+data class CreateUserRequest(
+    val username: kotlin.String,
+    val passwordHash: kotlin.String,
+    val email: kotlin.String,
+    val userType: CreateUserRequest.UserType,
+    val status: CreateUserRequest.Status,
+    val phone: kotlin.String? = null
 ) {
     /**
-    * 
+    *
     * Values: NORMAL,ADMIN,APIONLY,SYSTEM
     */
-    enum class UserType(val value: kotlin.String){
+    enum class UserType(val value: kotlin.String) {
         NORMAL("normal"),
         ADMIN("admin"),
         APIONLY("api_only"),
         SYSTEM("system");
     }
     /**
-    * 
+    *
     * Values: ACTIVE,INACTIVE
     */
-    enum class Status(val value: kotlin.String){
+    enum class Status(val value: kotlin.String) {
         ACTIVE("active"),
         INACTIVE("inactive");
     }

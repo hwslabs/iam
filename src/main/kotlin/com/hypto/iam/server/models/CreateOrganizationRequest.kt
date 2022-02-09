@@ -10,9 +10,9 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to create organization * @param name  * @param description */
-data class CreateOrganizationRequest (        val name: kotlin.String,    val description: kotlin.String? = null
-) {
-}
+data class CreateOrganizationRequest(
+    val name: kotlin.String,
+    val description: kotlin.String? = null
+)

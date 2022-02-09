@@ -10,9 +10,11 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  *  * @param id  * @param name  * @param organizationId  * @param description */
-data class ResourceType (    val id: kotlin.String? = null,    val name: kotlin.String? = null,    val organizationId: kotlin.String? = null,    val description: kotlin.String? = null
-) {
-}
+data class ResourceType(
+    val id: kotlin.String? = null,
+    val name: kotlin.String? = null,
+    val organizationId: kotlin.String? = null,
+    val description: kotlin.String? = null
+)

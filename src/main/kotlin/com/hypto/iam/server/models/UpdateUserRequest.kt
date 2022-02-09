@@ -10,16 +10,18 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to create ledger account * @param email  * @param phone  * @param status */
-data class UpdateUserRequest (    val email: kotlin.String? = null,    val phone: kotlin.String? = null,    val status: UpdateUserRequest.Status? = null
+data class UpdateUserRequest(
+    val email: kotlin.String? = null,
+    val phone: kotlin.String? = null,
+    val status: UpdateUserRequest.Status? = null
 ) {
     /**
-    * 
+    *
     * Values: ACTIVE,INACTIVE,DELETED
     */
-    enum class Status(val value: kotlin.String){
+    enum class Status(val value: kotlin.String) {
         ACTIVE("active"),
         INACTIVE("inactive"),
         DELETED("deleted");
