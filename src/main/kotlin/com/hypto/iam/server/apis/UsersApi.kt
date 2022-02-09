@@ -11,41 +11,23 @@
 */package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Paths
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.delete
 import io.ktor.locations.get
+import io.ktor.locations.patch
 import io.ktor.locations.post
 import io.ktor.locations.put
-import io.ktor.locations.patch
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.Route
-import io.ktor.routing.route
-
-import com.hypto.iam.server.Paths
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-
-
-import com.hypto.iam.server.models.CreateUserRequest
-import com.hypto.iam.server.models.ErrorResponse
-import com.hypto.iam.server.models.InlineResponse200
-import com.hypto.iam.server.models.PolicyAssociationRequest
-import com.hypto.iam.server.models.UpdateUserRequest
-import com.hypto.iam.server.models.User
 
 @KtorExperimentalLocationsAPI
 fun Route.UsersApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    put<Paths.attachPolicies> {  _: Paths.attachPolicies ->
+    put<Paths.attachPolicies> { _: Paths.attachPolicies ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -53,7 +35,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    post<Paths.createUser> {  _: Paths.createUser ->
+    post<Paths.createUser> { _: Paths.createUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -61,7 +43,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteUser> {  _: Paths.deleteUser ->
+    delete<Paths.deleteUser> { _: Paths.deleteUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -69,7 +51,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    put<Paths.detachPolicies> {  _: Paths.detachPolicies ->
+    put<Paths.detachPolicies> { _: Paths.detachPolicies ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -77,7 +59,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getUser> {  _: Paths.getUser ->
+    get<Paths.getUser> { _: Paths.getUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -85,7 +67,7 @@ fun Route.UsersApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateUser> {  _: Paths.updateUser ->
+    patch<Paths.updateUser> { _: Paths.updateUser ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

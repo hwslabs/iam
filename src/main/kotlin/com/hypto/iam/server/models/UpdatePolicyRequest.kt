@@ -10,10 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-import com.hypto.iam.server.models.PolicyStatement
-
 /**
  * Payload to update action * @param statements */
-data class UpdatePolicyRequest (    val statements: kotlin.Array<PolicyStatement>? = null
-) {
-}
+data class UpdatePolicyRequest(
+    val statements: kotlin.Array<PolicyStatement>? = null
+)

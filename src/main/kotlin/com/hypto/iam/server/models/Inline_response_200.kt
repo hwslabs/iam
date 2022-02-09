@@ -10,9 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  *  * @param success */
-data class InlineResponse200 (    val success: kotlin.Boolean? = null
-) {
-}
+data class InlineResponse200(
+    val success: kotlin.Boolean? = null
+)

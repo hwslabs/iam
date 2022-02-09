@@ -10,9 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to update action * @param description */
-data class UpdateActionRequest (    val description: kotlin.String? = null
-) {
-}
+data class UpdateActionRequest(
+    val description: kotlin.String? = null
+)

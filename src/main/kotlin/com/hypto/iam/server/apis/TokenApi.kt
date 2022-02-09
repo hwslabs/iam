@@ -11,35 +11,20 @@
 */package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Paths
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
-import io.ktor.locations.delete
 import io.ktor.locations.get
 import io.ktor.locations.post
-import io.ktor.locations.put
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.Route
-import io.ktor.routing.route
-
-import com.hypto.iam.server.Paths
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-
-
-import com.hypto.iam.server.models.ErrorResponse
 
 @KtorExperimentalLocationsAPI
 fun Route.TokenApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    post<Paths.getToken> {  _: Paths.getToken ->
+    post<Paths.getToken> { _: Paths.getToken ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

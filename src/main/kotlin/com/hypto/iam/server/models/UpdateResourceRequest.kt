@@ -10,9 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to update resource * @param description */
-data class UpdateResourceRequest (    val description: kotlin.String? = null
-) {
-}
+data class UpdateResourceRequest(
+    val description: kotlin.String? = null
+)

@@ -10,16 +10,19 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  *  * @param id  * @param validUntil  * @param status  * @param secret */
-data class Credential (    val id: kotlin.String? = null,    val validUntil: kotlin.String? = null,    val status: Credential.Status? = null,    val secret: kotlin.String? = null
+data class Credential(
+    val id: kotlin.String? = null,
+    val validUntil: kotlin.String? = null,
+    val status: Credential.Status? = null,
+    val secret: kotlin.String? = null
 ) {
     /**
-    * 
+    *
     * Values: ACTIVE,INACTIVE
     */
-    enum class Status(val value: kotlin.String){
+    enum class Status(val value: kotlin.String) {
         ACTIVE("active"),
         INACTIVE("inactive");
     }

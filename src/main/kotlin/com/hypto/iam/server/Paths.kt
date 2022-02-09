@@ -10,16 +10,15 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server
 
+import com.hypto.iam.server.models.*
 import io.ktor.application.ApplicationCall
 import io.ktor.http.HttpMethod
+import io.ktor.locations.Location
 import io.ktor.locations.handle
 import io.ktor.locations.location
-import io.ktor.locations.Location
-import io.ktor.util.pipeline.PipelineContext
 import io.ktor.routing.Route
 import io.ktor.routing.method
-import com.hypto.iam.server.models.*;
-
+import io.ktor.util.pipeline.PipelineContext
 
 // NOTE: ktor-location@0.9.0 is missing extension for Route.delete. This includes it.
 inline fun <reified T : Any> Route.delete(noinline body: suspend PipelineContext<Unit, ApplicationCall>.(T) -> Unit): Route {
@@ -34,160 +33,160 @@ object Paths {
     /**
      * Create an action
      * Create an action
-     * @param body Payload to create action 
-     * @param resourceId  
+     * @param body Payload to create action
+     * @param resourceId
      */
     @Location("/resources/{resourceId}/action") class createAction(val body: CreateActionRequest, val resourceId: kotlin.String)
 
     /**
      * Delete an action
      * Delete an action
-     * @param resourceId  
-     * @param id  
+     * @param resourceId
+     * @param id
      */
     @Location("/resources/{resourceId}/action/{id}") class deleteAction(val resourceId: kotlin.String, val id: kotlin.String)
 
     /**
      * Get an action
      * Get an action
-     * @param resourceId  
-     * @param id  
+     * @param resourceId
+     * @param id
      */
     @Location("/resources/{resourceId}/action/{id}") class getAction(val resourceId: kotlin.String, val id: kotlin.String)
 
     /**
      * Update an action
      * Update an action
-     * @param body Payload to update action 
-     * @param resourceId  
-     * @param id  
+     * @param body Payload to update action
+     * @param resourceId
+     * @param id
      */
     @Location("/resources/{resourceId}/action/{id}") class updateAction(val body: UpdateActionRequest, val resourceId: kotlin.String, val id: kotlin.String)
 
     /**
      * Create a Credential
      * Create a Credential
-     * @param body Payload to create credential 
-     * @param userId  
+     * @param body Payload to create credential
+     * @param userId
      */
     @Location("/users/{userId}/credential") class createCredential(val body: CreateCredentialRequest, val userId: kotlin.String)
 
     /**
      * Delete a credential
      * Delete a credential
-     * @param userId  
-     * @param id  
+     * @param userId
+     * @param id
      */
     @Location("/users/{userId}/credential/{id}") class deleteCredential(val userId: kotlin.String, val id: kotlin.String)
 
     /**
      * Get a credential
      * Get a credential
-     * @param userId  
-     * @param id  
+     * @param userId
+     * @param id
      */
     @Location("/users/{userId}/credential/{id}") class getCredential(val userId: kotlin.String, val id: kotlin.String)
 
     /**
      * Update a credential
      * Update a credential
-     * @param body Payload to update credential 
-     * @param userId  
-     * @param id  
+     * @param body Payload to update credential
+     * @param userId
+     * @param id
      */
     @Location("/users/{userId}/credential/{id}") class updateCredential(val body: UpdateCredentialRequest, val userId: kotlin.String, val id: kotlin.String)
 
     /**
      * Create an organization
      * Create an organization
-     * @param body Payload to create organization 
+     * @param body Payload to create organization
      */
     @Location("/organizations") class createOrganization(val body: CreateOrganizationRequest)
 
     /**
      * Delete an organization
      * Delete an organization
-     * @param id  
+     * @param id
      */
     @Location("/organization/{id}") class deleteOrganization(val id: kotlin.String)
 
     /**
      * Get an organization
      * Get an organization
-     * @param id  
+     * @param id
      */
     @Location("/organization/{id}") class getOrganization(val id: kotlin.String)
 
     /**
      * Update an organization
      * Update an organization
-     * @param body Payload to update organization 
-     * @param id  
+     * @param body Payload to update organization
+     * @param id
      */
     @Location("/organization/{id}") class updateOrganization(val body: UpdateOrganizationRequest, val id: kotlin.String)
 
     /**
      * Create a policy
      * Create a policy
-     * @param body Payload to create policy 
+     * @param body Payload to create policy
      */
     @Location("/policies") class createPolicy(val body: CreatePolicyRequest)
 
     /**
      * Delete a policy
      * Delete a policy
-     * @param id  
+     * @param id
      */
     @Location("/policies/{id}") class deletePolicy(val id: kotlin.String)
 
     /**
      * Get a policy
      * Get a policy
-     * @param id  
+     * @param id
      */
     @Location("/policies/{id}") class getPolicy(val id: kotlin.String)
 
     /**
      * Get policies of a user
      * Get policies of a user
-     * @param id  
+     * @param id
      */
     @Location("/users/{id}/policies") class getUserPolicies(val id: kotlin.String)
 
     /**
      * Update a policy
      * Update a policy
-     * @param body Payload to update policy 
-     * @param id  
+     * @param body Payload to update policy
+     * @param id
      */
     @Location("/policies/{id}") class updatePolicy(val body: UpdatePolicyRequest, val id: kotlin.String)
 
     /**
      * Create a resource type
      * Create a resource type
-     * @param body Payload to create resource 
+     * @param body Payload to create resource
      */
     @Location("/resource_types") class createResourceType(val body: CreateResourceRequest)
 
     /**
      * Delete a resource type
      * Delete a resource type
-     * @param id  
+     * @param id
      */
     @Location("/resource_types/{id}") class deleteResourceType(val id: kotlin.String)
 
     /**
      * Get a resource type
      * Get a resource type
-     * @param id  
+     * @param id
      */
     @Location("/resource_types/{id}") class getResourceType(val id: kotlin.String)
 
     /**
      * Update a resource type
      * Update a resource type
-     * @param body Payload to update resource 
-     * @param id  
+     * @param body Payload to update resource
+     * @param id
      */
     @Location("/resource_types/{id}") class updateResourceType(val body: UpdateResourceRequest, val id: kotlin.String)
 
@@ -200,46 +199,45 @@ object Paths {
     /**
      * Attach policies to user
      * Attach policies to user
-     * @param body Payload to attach / detach a policy to a user / resource 
-     * @param id  
+     * @param body Payload to attach / detach a policy to a user / resource
+     * @param id
      */
     @Location("/users/{id}/attach_policies") class attachPolicies(val body: PolicyAssociationRequest, val id: kotlin.String)
 
     /**
      * Create a user
      * Create a user
-     * @param body Payload to create user 
+     * @param body Payload to create user
      */
     @Location("/users") class createUser(val body: CreateUserRequest)
 
     /**
      * Delete a User
      * Delete a User
-     * @param id  
+     * @param id
      */
     @Location("/users/{id}") class deleteUser(val id: kotlin.String)
 
     /**
      * Detach policies to user
      * Detach policies to user
-     * @param body Payload to attach / detach a policy to a user / resource 
-     * @param id  
+     * @param body Payload to attach / detach a policy to a user / resource
+     * @param id
      */
     @Location("/users/{id}/detach_policies") class detachPolicies(val body: PolicyAssociationRequest, val id: kotlin.String)
 
     /**
      * Get a User
      * Get a User
-     * @param id  
+     * @param id
      */
     @Location("/users/{id}") class getUser(val id: kotlin.String)
 
     /**
      * Update a User
      * Update a User
-     * @param body Payload to update user 
-     * @param id  
+     * @param body Payload to update user
+     * @param id
      */
     @Location("/users/{id}") class updateUser(val body: UpdateUserRequest, val id: kotlin.String)
-
 }

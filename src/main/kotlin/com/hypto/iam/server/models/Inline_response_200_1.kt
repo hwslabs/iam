@@ -10,10 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-import com.hypto.iam.server.models.Policy
-
 /**
  *  * @param policies */
-data class InlineResponse2001 (    val policies: kotlin.Array<Policy>? = null
-) {
-}
+data class InlineResponse2001(
+    val policies: kotlin.Array<Policy>? = null
+)

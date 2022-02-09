@@ -10,9 +10,11 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  *  * @param id  * @param resourceId  * @param name  * @param description */
-data class Action (    val id: kotlin.String? = null,    val resourceId: kotlin.String? = null,    val name: kotlin.String? = null,    val description: kotlin.String? = null
-) {
-}
+data class Action(
+    val id: kotlin.String? = null,
+    val resourceId: kotlin.String? = null,
+    val name: kotlin.String? = null,
+    val description: kotlin.String? = null
+)

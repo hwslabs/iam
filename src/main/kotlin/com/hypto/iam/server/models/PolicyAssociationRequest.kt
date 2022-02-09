@@ -10,9 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to attach / detach a policy to a user / resource * @param policies */
-data class PolicyAssociationRequest (    val policies: kotlin.Array<kotlin.String>? = null
-) {
-}
+data class PolicyAssociationRequest(
+    val policies: kotlin.Array<kotlin.String>? = null
+)

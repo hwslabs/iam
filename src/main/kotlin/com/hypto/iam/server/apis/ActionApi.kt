@@ -11,37 +11,22 @@
 */package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Paths
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.delete
 import io.ktor.locations.get
-import io.ktor.locations.post
 import io.ktor.locations.patch
+import io.ktor.locations.post
 import io.ktor.response.respond
 import io.ktor.routing.Route
-
-import com.hypto.iam.server.Paths
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-
-
-import com.hypto.iam.server.models.Action
-import com.hypto.iam.server.models.CreateActionRequest
-import com.hypto.iam.server.models.ErrorResponse
-import com.hypto.iam.server.models.InlineResponse200
-import com.hypto.iam.server.models.UpdateActionRequest
 
 @KtorExperimentalLocationsAPI
 fun Route.ActionApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    post<Paths.createAction> {  _: Paths.createAction ->
+    post<Paths.createAction> { _: Paths.createAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -49,7 +34,7 @@ fun Route.ActionApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteAction> {  _: Paths.deleteAction ->
+    delete<Paths.deleteAction> { _: Paths.deleteAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -57,7 +42,7 @@ fun Route.ActionApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getAction> {  _: Paths.getAction ->
+    get<Paths.getAction> { _: Paths.getAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -65,7 +50,7 @@ fun Route.ActionApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateAction> {  _: Paths.updateAction ->
+    patch<Paths.updateAction> { _: Paths.updateAction ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

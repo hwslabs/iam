@@ -10,16 +10,17 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to update credential * @param validUntil  * @param status */
-data class UpdateCredentialRequest (    val validUntil: kotlin.String? = null,    val status: UpdateCredentialRequest.Status? = null
+data class UpdateCredentialRequest(
+    val validUntil: kotlin.String? = null,
+    val status: UpdateCredentialRequest.Status? = null
 ) {
     /**
-    * 
+    *
     * Values: ACTIVE,INACTIVE
     */
-    enum class Status(val value: kotlin.String){
+    enum class Status(val value: kotlin.String) {
         ACTIVE("active"),
         INACTIVE("inactive");
     }

@@ -11,39 +11,22 @@
 */package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Paths
 import io.ktor.application.call
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authentication
-import io.ktor.auth.authenticate
-import io.ktor.auth.OAuthAccessTokenResponse
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.delete
 import io.ktor.locations.get
-import io.ktor.locations.post
 import io.ktor.locations.patch
+import io.ktor.locations.post
 import io.ktor.response.respond
-import io.ktor.response.respondText
 import io.ktor.routing.Route
-import io.ktor.routing.route
-
-import com.hypto.iam.server.Paths
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-
-
-import com.hypto.iam.server.models.CreateOrganizationRequest
-import com.hypto.iam.server.models.ErrorResponse
-import com.hypto.iam.server.models.InlineResponse200
-import com.hypto.iam.server.models.Organization
-import com.hypto.iam.server.models.UpdateOrganizationRequest
 
 @KtorExperimentalLocationsAPI
 fun Route.OrganizationApi() {
     val gson = Gson()
     val empty = mutableMapOf<String, Any?>()
-    post<Paths.createOrganization> {  _: Paths.createOrganization ->
+    post<Paths.createOrganization> { _: Paths.createOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -51,7 +34,7 @@ fun Route.OrganizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    delete<Paths.deleteOrganization> {  _: Paths.deleteOrganization ->
+    delete<Paths.deleteOrganization> { _: Paths.deleteOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -59,7 +42,7 @@ fun Route.OrganizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get<Paths.getOrganization> {  _: Paths.getOrganization ->
+    get<Paths.getOrganization> { _: Paths.getOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -67,7 +50,7 @@ fun Route.OrganizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch<Paths.updateOrganization> {  _: Paths.updateOrganization ->
+    patch<Paths.updateOrganization> { _: Paths.updateOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

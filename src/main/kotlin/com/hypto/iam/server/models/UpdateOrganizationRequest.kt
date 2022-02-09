@@ -10,9 +10,8 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.models
 
-
 /**
  * Payload to update organization * @param description */
-data class UpdateOrganizationRequest (    val description: kotlin.String? = null
-) {
-}
+data class UpdateOrganizationRequest(
+    val description: kotlin.String? = null
+)
