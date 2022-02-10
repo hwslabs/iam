@@ -2,9 +2,9 @@ package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.db.tables.pojos.UsersAuthProviders
 import com.hypto.iam.server.db.tables.records.UsersAuthProvidersRecord
-import org.jooq.impl.DAOImpl
 import java.util.Optional
 import java.util.UUID
+import org.jooq.impl.DAOImpl
 
 object UserAuthProvidersRepo : DAOImpl<UsersAuthProvidersRecord, UsersAuthProviders, Int>(
     com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS,

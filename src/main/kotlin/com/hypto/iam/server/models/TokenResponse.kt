@@ -13,13 +13,11 @@ package com.hypto.iam.server.models
 
 import java.io.Serializable
 /**
- * Payload to create resource
- * @param name
- * @param description
+ *
+ * @param token
  */
-data class CreateResourceRequest(
-    val name: kotlin.String,
-    val description: kotlin.String? = null
+data class TokenResponse(
+    val token: kotlin.String
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

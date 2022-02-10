@@ -2,9 +2,9 @@ package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
-import org.jooq.impl.DAOImpl
 import java.util.Optional
 import java.util.UUID
+import org.jooq.impl.DAOImpl
 
 object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
     com.hypto.iam.server.db.tables.Credentials.CREDENTIALS,
