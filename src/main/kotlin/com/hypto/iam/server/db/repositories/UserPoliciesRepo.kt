@@ -2,9 +2,9 @@ package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
-import org.jooq.impl.DAOImpl
 import java.util.Optional
 import java.util.UUID
+import org.jooq.impl.DAOImpl
 
 object UserPoliciesRepo : DAOImpl<UserPoliciesRecord, UserPolicies, UUID>(
     com.hypto.iam.server.db.tables.UserPolicies.USER_POLICIES,

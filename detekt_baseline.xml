@@ -2,48 +2,37 @@
 <SmellBaseline>
   <Blacklist></Blacklist>
   <Whitelist>
-    <ID>ClassNaming:Paths.kt$Paths.attachPolicies$attachPolicies</ID>
-    <ID>ClassNaming:Paths.kt$Paths.createAction$createAction</ID>
-    <ID>ClassNaming:Paths.kt$Paths.createCredential$createCredential</ID>
-    <ID>ClassNaming:Paths.kt$Paths.createOrganization$createOrganization</ID>
-    <ID>ClassNaming:Paths.kt$Paths.createPolicy$createPolicy</ID>
-    <ID>ClassNaming:Paths.kt$Paths.createResourceType$createResourceType</ID>
-    <ID>ClassNaming:Paths.kt$Paths.createUser$createUser</ID>
-    <ID>ClassNaming:Paths.kt$Paths.deleteAction$deleteAction</ID>
-    <ID>ClassNaming:Paths.kt$Paths.deleteCredential$deleteCredential</ID>
-    <ID>ClassNaming:Paths.kt$Paths.deleteOrganization$deleteOrganization</ID>
-    <ID>ClassNaming:Paths.kt$Paths.deletePolicy$deletePolicy</ID>
-    <ID>ClassNaming:Paths.kt$Paths.deleteResourceType$deleteResourceType</ID>
-    <ID>ClassNaming:Paths.kt$Paths.deleteUser$deleteUser</ID>
-    <ID>ClassNaming:Paths.kt$Paths.detachPolicies$detachPolicies</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getAction$getAction</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getCredential$getCredential</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getOrganization$getOrganization</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getPolicy$getPolicy</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getResourceType$getResourceType</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getToken$getToken</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getUser$getUser</ID>
-    <ID>ClassNaming:Paths.kt$Paths.getUserPolicies$getUserPolicies</ID>
-    <ID>ClassNaming:Paths.kt$Paths.updateAction$updateAction</ID>
-    <ID>ClassNaming:Paths.kt$Paths.updateCredential$updateCredential</ID>
-    <ID>ClassNaming:Paths.kt$Paths.updateOrganization$updateOrganization</ID>
-    <ID>ClassNaming:Paths.kt$Paths.updatePolicy$updatePolicy</ID>
-    <ID>ClassNaming:Paths.kt$Paths.updateResourceType$updateResourceType</ID>
-    <ID>ClassNaming:Paths.kt$Paths.updateUser$updateUser</ID>
-    <ID>EmptyDefaultConstructor:Paths.kt$Paths.getToken$()</ID>
+    <ID>EmptyDefaultConstructor:Paths.kt$Paths.GetToken$()</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.active$active</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.inactive$inactive</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.admin$admin</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.apiOnly$apiOnly</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.normal$normal</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.system$system</ID>
+    <ID>EnumNaming:Credential.kt$Credential.Status.active$active</ID>
+    <ID>EnumNaming:Credential.kt$Credential.Status.inactive$inactive</ID>
+    <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.active$active</ID>
+    <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.inactive$inactive</ID>
+    <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.allow$allow</ID>
+    <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.deny$deny</ID>
+    <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.active$active</ID>
+    <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.inactive$inactive</ID>
+    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.active$active</ID>
+    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.deleted$deleted</ID>
+    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.inactive$inactive</ID>
+    <ID>EnumNaming:User.kt$User.Status.active$active</ID>
+    <ID>EnumNaming:User.kt$User.Status.deleted$deleted</ID>
+    <ID>EnumNaming:User.kt$User.Status.inactive$inactive</ID>
+    <ID>EnumNaming:User.kt$User.UserType.admin$admin</ID>
+    <ID>EnumNaming:User.kt$User.UserType.apiOnly$apiOnly</ID>
+    <ID>EnumNaming:User.kt$User.UserType.normal$normal</ID>
+    <ID>EnumNaming:User.kt$User.UserType.system$system</ID>
     <ID>ForbiddenComment:ApiKeyAuth.kt$// TODO: Verify correct response structure here.</ID>
     <ID>ForbiddenComment:Application.kt$// TODO: Add support for Bearer token authentication</ID>
     <ID>ForbiddenComment:Application.kt$// TODO: Switch to kotlinx.serialization</ID>
     <ID>ForbiddenComment:DatabaseFactory.kt$DatabaseFactory$// TODO: Read from config file instead of hardcoding</ID>
-    <ID>FunctionNaming:ActionApi.kt$@KtorExperimentalLocationsAPI fun Route.ActionApi()</ID>
     <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationCompressionConfiguration(): Compression.Configuration.() -&gt; Unit</ID>
     <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationHstsConfiguration(): HSTS.Configuration.() -&gt; Unit</ID>
-    <ID>FunctionNaming:CredentialApi.kt$@KtorExperimentalLocationsAPI fun Route.CredentialApi()</ID>
-    <ID>FunctionNaming:OrganizationApi.kt$@KtorExperimentalLocationsAPI fun Route.OrganizationApi()</ID>
-    <ID>FunctionNaming:PolicyApi.kt$@KtorExperimentalLocationsAPI fun Route.PolicyApi()</ID>
-    <ID>FunctionNaming:ResourceTypeApi.kt$@KtorExperimentalLocationsAPI fun Route.ResourceTypeApi()</ID>
-    <ID>FunctionNaming:TokenApi.kt$@KtorExperimentalLocationsAPI fun Route.TokenApi()</ID>
-    <ID>FunctionNaming:UsersApi.kt$@KtorExperimentalLocationsAPI fun Route.UsersApi()</ID>
     <ID>MagicNumber:Application.kt$10</ID>
     <ID>MagicNumber:Application.kt$8081</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
@@ -56,22 +45,10 @@
     <ID>MatchingDeclarationName:Inline_response_200_1.kt$InlineResponse2001</ID>
     <ID>MaxLineLength:ApiKeyAuth.kt$call.respond(UnauthorizedResponse(HttpAuthHeader.Parameterized("API_KEY", mapOf("key" to apiKeyName), HeaderValueEncoding.QUOTED_ALWAYS)))</ID>
     <ID>MaxLineLength:ApiKeyAuth.kt$fun ApplicationRequest.apiKeyAuthenticationCredentials(apiKeyName: String, apiKeyLocation: ApiKeyLocation): ApiKeyCredential?</ID>
-    <ID>MaxLineLength:CreateUserRequest.kt$CreateUserRequest</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.attachPolicies$@Location("/users/{id}/attach_policies")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.createAction$@Location("/resources/{resourceId}/action")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.createCredential$@Location("/users/{userId}/credential")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.deleteAction$@Location("/resources/{resourceId}/action/{id}")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.deleteCredential$@Location("/users/{userId}/credential/{id}")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.detachPolicies$@Location("/users/{id}/detach_policies")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.getAction$@Location("/resources/{resourceId}/action/{id}")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.updateAction$@Location("/resources/{resourceId}/action/{id}")</ID>
-    <ID>MaxLineLength:Paths.kt$Paths.updateCredential$@Location("/users/{userId}/credential/{id}")</ID>
     <ID>MaxLineLength:Paths.kt$inline</ID>
-    <ID>MaxLineLength:User.kt$User</ID>
     <ID>SpreadOperator:OrganizationRepo.kt$OrganizationRepo$(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER, *values)</ID>
     <ID>SpreadOperator:OrganizationRepo.kt$OrganizationRepo$(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.NAME, *values)</ID>
     <ID>SpreadOperator:UserRepo.kt$UserRepo$(com.hypto.iam.server.db.tables.Users.USERS.ID, *values)</ID>
     <ID>SpreadOperator:UserRepo.kt$UserRepo$(com.hypto.iam.server.db.tables.Users.USERS.ORGANIZATION_ID, *values)</ID>
-    <ID>WildcardImport:Paths.kt$import com.hypto.iam.server.models.*</ID>
   </Whitelist>
 </SmellBaseline>

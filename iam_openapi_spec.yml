@@ -964,12 +964,8 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            additionalProperties: false
-            properties:
-              success:
-                type: boolean
-                example: true
+            $ref: '#/components/schemas/BaseSuccessResponse'
+
     ErrorResponse:
       description: Error response
       content:
@@ -1044,22 +1040,14 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            additionalProperties: false
-            properties:
-              policies:
-                type: array
-                maxItems: 50
-                items:
-                  $ref: '#/components/schemas/Policy'
+            $ref: '#/components/schemas/GetUserPoliciesResponse'
 
     TokenResponse:
       description: Response for generate token request
       content:
         application/json:
           schema:
-            title: TokenResponse
-            type: string
+            $ref: '#/components/schemas/TokenResponse'
 
 
   schemas:
@@ -1080,6 +1068,16 @@ components:
           description: error description
           maxLength: 500
 
+    BaseSuccessResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          example: true
+
     CreateOrganizationRequest:
       description: Payload to create organization
       type: object
@@ -1099,6 +1097,8 @@ components:
       description: Payload to update organization
       type: object
       additionalProperties: false
+      required:
+        - description
       properties:
         description:
           type: string
@@ -1203,6 +1203,8 @@ components:
       description: Payload to update resource
       type: object
       additionalProperties: false
+      required:
+        - description
       properties:
         description:
           type: string
@@ -1225,6 +1227,8 @@ components:
       description: Payload to update action
       type: object
       additionalProperties: false
+      required:
+        - description
       properties:
         description:
           type: string
@@ -1234,6 +1238,9 @@ components:
       description: Payload to update action
       type: object
       additionalProperties: false
+      required:
+        - name
+        - statements
       properties:
         name:
           type: string
@@ -1247,6 +1254,8 @@ components:
       description: Payload to update action
       type: object
       additionalProperties: false
+      required:
+        - statements
       properties:
         statements:
           maxItems: 20
@@ -1257,6 +1266,8 @@ components:
       description: Payload to attach / detach a policy to a user / resource
       type: object
       additionalProperties: false
+      required:
+        - policies
       properties:
         policies:
           type: array
@@ -1265,13 +1276,35 @@ components:
             type: string
             maxLength: 50
 
+    # Responses:
+    GetUserPoliciesResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - policies
+      properties:
+        policies:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/Policy'
 
+    TokenResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
 
 
     # Entities:
     Organization:
       type: object
       additionalProperties: false
+      required:
+        - id
+        - name
       properties:
         id:
           type: string
@@ -1286,6 +1319,14 @@ components:
     User:
       type: object
       additionalProperties: false
+      required:
+        - id
+        - username
+        - organization_id
+        - email
+        - phone
+        - user_type
+        - status
       properties:
         id:
           type: string
@@ -1328,6 +1369,10 @@ components:
     Credential:
       type: object
       additionalProperties: false
+      required:
+        - id
+        - status
+        - secret
       properties:
         id:
           type: string
@@ -1348,6 +1393,9 @@ components:
     CredentialWithoutSecret:
       type: object
       additionalProperties: false
+      required:
+        - id
+        - status
       properties:
         id:
           type: string
@@ -1365,6 +1413,10 @@ components:
     ResourceType:
       type: object
       additionalProperties: false
+      required:
+        - id
+        - name
+        - organization_id
       properties:
         id:
           type: string
@@ -1382,6 +1434,10 @@ components:
     Action:
       type: object
       additionalProperties: false
+      required:
+        - id
+        - resource_id
+        - name
       properties:
         id:
           type: string
@@ -1399,6 +1455,11 @@ components:
     Policy:
       type: object
       additionalProperties: false
+      required:
+        - id
+        - name
+        - version
+        - statements
       properties:
         id:
           type: string

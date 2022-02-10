@@ -12,6 +12,7 @@
 
 import com.hypto.iam.server.Paths
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.tables.pojos.Organizations
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
@@ -21,16 +22,21 @@ import io.ktor.locations.patch
 import io.ktor.locations.post
 import io.ktor.response.respond
 import io.ktor.routing.Route
+import java.time.LocalDateTime
 
 @KtorExperimentalLocationsAPI
 fun Route.organizationApi() {
 
-    post { _: Paths.CreateOrganization ->
+    post { createOrganizationRequest: Paths.CreateOrganization ->
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
         } else {
-            call.respond(HttpStatusCode.NotImplemented)
+            val body = createOrganizationRequest.body
+            createOrganizationRequest.body.description
+            OrganizationRepo.insert(Organizations("aaa", body.name, null, LocalDateTime.now(), LocalDateTime.now()))
+//            OrganizationResponse
+//            call.respond(HttpStatusCode.NotImplemented)
         }
     }
     delete { _: Paths.DeleteOrganization ->
