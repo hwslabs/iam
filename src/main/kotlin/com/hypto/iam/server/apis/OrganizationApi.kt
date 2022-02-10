@@ -14,6 +14,7 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import io.ktor.application.call
+import io.ktor.auth.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
@@ -24,21 +25,25 @@ import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
 import java.time.LocalDateTime
+import org.koin.ktor.ext.inject
 
-fun Route.organizationApi() {
+/**
+ * API to create organization in IAM.
+ * NOTE: This api is restricted. Clients are forbidden to use this api to create organizations.
+ * Only "hypto-root" user having access to the secret can use this api.
+ */
+fun Route.createOrganizationApi() {
+    val repo: OrganizationRepo by inject()
 
     post<CreateOrganizationRequest>("/organizations") {
-        var principal = ""
-        if (principal == null) {
-            call.respond(HttpStatusCode.Unauthorized)
-        } else {
-            var id = OrganizationRepo
-                .insert(Organizations("aaa", it.name, null, LocalDateTime.now(), LocalDateTime.now()))
-
-            call.respondText("{success: true, id: $id}", ContentType.Application.Json)
-        }
+        assert(call.authentication.principal != null) { "Unable to validate principal making the request." }
+        var id = repo.insert(Organizations("aaa", it.name, null, LocalDateTime.now(), LocalDateTime.now()))
+        call.respondText("{success: true, id: $id}", ContentType.Application.Json)
     }
+}
 
+fun Route.organizationApi() {
+    val repo: OrganizationRepo by inject()
     delete("/organizations/{id}") {
         var principal = ""
         if (principal == null) {

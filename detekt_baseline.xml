@@ -27,9 +27,10 @@
     <ID>EnumNaming:User.kt$User.UserType.apiOnly$apiOnly</ID>
     <ID>EnumNaming:User.kt$User.UserType.normal$normal</ID>
     <ID>EnumNaming:User.kt$User.UserType.system$system</ID>
-    <ID>ForbiddenComment:ApiKeyAuth.kt$// TODO: Verify correct response structure here.</ID>
-    <ID>ForbiddenComment:Application.kt$// TODO: Add support for Bearer token authentication</ID>
+    <ID>ForbiddenComment:Application.kt$// TODO: Logic to update error message</ID>
     <ID>ForbiddenComment:Application.kt$// TODO: Switch to kotlinx.serialization</ID>
+    <ID>ForbiddenComment:Application.kt$//TODO: Get secret key from db or cache</ID>
+    <ID>ForbiddenComment:Application.kt$//TODO: Validate bearer token from db</ID>
     <ID>ForbiddenComment:DatabaseFactory.kt$DatabaseFactory$// TODO: Read from config file instead of hardcoding</ID>
     <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationCompressionConfiguration(): Compression.Configuration.() -&gt; Unit</ID>
     <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationHstsConfiguration(): HSTS.Configuration.() -&gt; Unit</ID>
@@ -43,12 +44,22 @@
     <ID>MagicNumber:DatabaseFactory.kt$DatabaseFactory$3</ID>
     <ID>MatchingDeclarationName:Inline_response_200.kt$InlineResponse200</ID>
     <ID>MatchingDeclarationName:Inline_response_200_1.kt$InlineResponse2001</ID>
-    <ID>MaxLineLength:ApiKeyAuth.kt$call.respond(UnauthorizedResponse(HttpAuthHeader.Parameterized("API_KEY", mapOf("key" to apiKeyName), HeaderValueEncoding.QUOTED_ALWAYS)))</ID>
-    <ID>MaxLineLength:ApiKeyAuth.kt$fun ApplicationRequest.apiKeyAuthenticationCredentials(apiKeyName: String, apiKeyLocation: ApiKeyLocation): ApiKeyCredential?</ID>
     <ID>MaxLineLength:Paths.kt$inline</ID>
     <ID>SpreadOperator:OrganizationRepo.kt$OrganizationRepo$(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER, *values)</ID>
     <ID>SpreadOperator:OrganizationRepo.kt$OrganizationRepo$(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.NAME, *values)</ID>
     <ID>SpreadOperator:UserRepo.kt$UserRepo$(com.hypto.iam.server.db.tables.Users.USERS.ID, *values)</ID>
     <ID>SpreadOperator:UserRepo.kt$UserRepo$(com.hypto.iam.server.db.tables.Users.USERS.ORGANIZATION_ID, *values)</ID>
+    <ID>WildcardImport:ActionApi.kt$import io.ktor.auth.*</ID>
+    <ID>WildcardImport:ActionApi.kt$import io.ktor.response.*</ID>
+    <ID>WildcardImport:Application.kt$import com.hypto.iam.server.apis.*</ID>
+    <ID>WildcardImport:Application.kt$import com.hypto.iam.server.infrastructure.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.application.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.auth.*</ID>
+    <ID>WildcardImport:Application.kt$import io.ktor.features.*</ID>
+    <ID>WildcardImport:Auth.kt$import io.ktor.application.*</ID>
+    <ID>WildcardImport:Auth.kt$import io.ktor.auth.*</ID>
+    <ID>WildcardImport:Auth.kt$import io.ktor.http.auth.*</ID>
+    <ID>WildcardImport:Modules.kt$import com.hypto.iam.server.db.repositories.*</ID>
+    <ID>WildcardImport:OrganizationApi.kt$import io.ktor.auth.*</ID>
   </Whitelist>
 </SmellBaseline>
