@@ -10,36 +10,36 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.hypto.iam.server.Paths
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
+import com.hypto.iam.server.models.CreateOrganizationRequest
 import io.ktor.application.call
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.locations.KtorExperimentalLocationsAPI
-import io.ktor.locations.delete
-import io.ktor.locations.get
-import io.ktor.locations.patch
-import io.ktor.locations.post
 import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Route
+import io.ktor.routing.delete
+import io.ktor.routing.get
+import io.ktor.routing.patch
+import io.ktor.routing.post
 import java.time.LocalDateTime
 
-@KtorExperimentalLocationsAPI
 fun Route.organizationApi() {
 
-    post { createOrganizationRequest: Paths.CreateOrganization ->
+    post<CreateOrganizationRequest>("/organizations") {
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
         } else {
-            val body = createOrganizationRequest.body
-            createOrganizationRequest.body.description
-            OrganizationRepo.insert(Organizations("aaa", body.name, null, LocalDateTime.now(), LocalDateTime.now()))
-//            OrganizationResponse
-//            call.respond(HttpStatusCode.NotImplemented)
+            var id = OrganizationRepo
+                .insert(Organizations("aaa", it.name, null, LocalDateTime.now(), LocalDateTime.now()))
+
+            call.respondText("{success: true, id: $id}", ContentType.Application.Json)
         }
     }
-    delete { _: Paths.DeleteOrganization ->
+
+    delete("/organizations/{id}") {
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -47,7 +47,8 @@ fun Route.organizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    get { _: Paths.GetOrganization ->
+
+    get("/organizations/{id}") {
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
@@ -60,7 +61,7 @@ fun Route.organizationApi() {
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
-    patch { _: Paths.UpdateOrganization ->
+    patch("/organizations/{id}") {
         var principal = ""
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)

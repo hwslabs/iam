@@ -14,7 +14,7 @@ object DatabaseFactory {
         jdbcUrl = "jdbc:postgresql://localhost:5435/iam"
         maximumPoolSize = 3
         minimumIdle = 3
-        isAutoCommit = false
+        isAutoCommit = true
         transactionIsolation = "TRANSACTION_REPEATABLE_READ"
         username = "root"
         password = "password"
