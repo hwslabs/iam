@@ -152,7 +152,8 @@ jooq {
                         records = true
                         immutablePojos = true
                         fluentSetters = true
-                        daos = true
+//                        embeddablePrimaryKeys = true // Available only in paid version :(
+                        daos = true // TODO: make this false before prod deployment
                     }
                     target {
                         packageName = 'com.hypto.iam.server.db'
