@@ -55,7 +55,7 @@ paths:
       # security:
       #   - access_token: [] # organization:create
 
-  /organization/{id}:
+  /organizations/{id}:
     get:
       tags:
         - organization
@@ -331,7 +331,7 @@ paths:
       #   - access_token: [] # user:detach_policy and policy:detach_policy
 
   # credential
-  /users/{user_id}/credential:
+  /users/{user_id}/credentials:
     post:
       tags:
         - credential
@@ -362,7 +362,7 @@ paths:
       #   - access_token: [] # credential:create
 
 
-  /users/{user_id}/credential/{id}:
+  /users/{user_id}/credentials/{id}:
     get:
       tags:
         - credential
@@ -587,7 +587,7 @@ paths:
       #   - access_token: [] # action:create
 
 
-  /resources/{resource_id}/action/{id}:
+  /resources/{resource_id}/actions/{id}:
     get:
       tags:
         - action
@@ -1089,9 +1089,6 @@ components:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9]{3,50}$
-        description:
-          type: string
-          maxLength: 500
 
     UpdateOrganizationRequest:
       description: Payload to update organization
