@@ -3,6 +3,8 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 buildscript {
     ext.kotlin_version = '1.6.0'
     ext.ktor_version = '1.6.7'
+    ext.koin_version = '3.1.4'
+    ext.koin_test = '2.2.2'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
     ext.jooq_version = "3.16.3"
@@ -235,14 +237,9 @@ dependencies {
     implementation("io.ktor:ktor-auth:$ktor_version")
     implementation("io.ktor:ktor-auth-jwt:$ktor_version")
     implementation("ch.qos.logback:logback-classic:1.2.10")
-
     implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
     implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
     implementation("org.postgresql:postgresql:$postgres_jdbc_driver") // DB JDBC driver
-
-    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
-    testImplementation("com.h2database:h2:$h2Version")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
     // JooQ ORM
     implementation("org.jooq:jooq:$jooq_version")
@@ -251,7 +248,23 @@ dependencies {
     flywayMigration("org.postgresql:postgresql:$postgres_jdbc_driver")
     jooqGenerator("org.postgresql:postgresql:$postgres_jdbc_driver")
 
+    // Casbin
     implementation("org.casbin:jcasbin:$casbin_version") // Policy management
+
+    // Koin dependencies
+    implementation "io.insert-koin:koin-ktor:$koin_version"
+    implementation "io.insert-koin:koin-logger-slf4j:$koin_version"
+
+    // Logging
+    implementation 'io.github.microutils:kotlin-logging:1.7.4'
+    implementation 'org.slf4j:slf4j-simple:1.7.26'
+
+
+    // Test dependencies
+    testCompile "org.koin:koin-test:$koin_test"
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
+    testImplementation("com.h2database:h2:$h2Version")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 }
 
 // configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources
