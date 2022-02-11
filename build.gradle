@@ -57,6 +57,7 @@ mainClassName = "com.hypto.iam.server.Application"
 sourceCompatibility = 11
 
 sourceSets {
+    main.java.srcDirs += 'src/main/kotlin'
     main.kotlin.srcDirs += 'src/main/kotlin'
     main.kotlin.srcDirs += 'build/generated-src/jooq/main'
     test.kotlin.srcDirs += 'src/test/kotlin'
