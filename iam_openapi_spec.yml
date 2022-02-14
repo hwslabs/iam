@@ -136,17 +136,17 @@ paths:
       # security:
       #   - access_token: [] # organization:delete
 
-  /users:
+  /organizations/{organization_id}/users:
     post:
       tags:
         - users
       summary: Create a user
       description: Create a user
       operationId: createUser
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/CreateUserRequest'
-
-
       responses:
         '201':
           $ref: '#/components/responses/CreateUserResponse'
@@ -163,7 +163,7 @@ paths:
       # security:
       #   - access_token: [] # user:create
 
-  /users/{id}:
+  /organizations/{organization_id}/users/{id}:
     get:
       tags:
         - users
@@ -172,6 +172,7 @@ paths:
       operationId: getUser
       parameters:
         - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
           $ref: '#/components/responses/GetUserResponse'
@@ -198,6 +199,7 @@ paths:
       operationId: updateUser
       parameters:
         - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/UpdateUserRequest'
       responses:
@@ -226,6 +228,7 @@ paths:
       operationId: deleteUser
       parameters:
         - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
@@ -244,7 +247,7 @@ paths:
       # security:
       #   - access_token: [] # user:delete
 
-  /users/{id}/policies:
+  /organizations/{organization_id}/users/{id}/policies:
     get:
       tags:
         - policy
@@ -253,6 +256,7 @@ paths:
       operationId: getUserPolicies
       parameters:
         - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
           $ref: '#/components/responses/GetUserPoliciesResponse'
@@ -272,7 +276,7 @@ paths:
       #   - access_token: [] # user:get_policies
 
 
-  /users/{id}/attach_policies:
+  /organizations/{organization_id}/users/{id}/attach_policies:
     put:
       tags:
         - users
@@ -281,6 +285,7 @@ paths:
       operationId: attachPolicies
       parameters:
         - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/PolicyAssociationRequest'
       responses:
@@ -301,7 +306,7 @@ paths:
       # security:
       #   - access_token: [] # user:attach_policy and policy:attach_policy
 
-  /users/{id}/detach_policies:
+  /organizations/{organization_id}/users/{id}/detach_policies:
     put:
       tags:
         - users
@@ -310,6 +315,7 @@ paths:
       operationId: detachPolicies
       parameters:
         - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/PolicyAssociationRequest'
       responses:
@@ -331,7 +337,7 @@ paths:
       #   - access_token: [] # user:detach_policy and policy:detach_policy
 
   # credential
-  /users/{user_id}/credentials:
+  /organizations/{organization_id}/users/{user_id}/credentials:
     post:
       tags:
         - credential
@@ -340,6 +346,7 @@ paths:
       operationId: createCredential
       parameters:
         - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/CreateCredentialRequest'
 
@@ -362,7 +369,7 @@ paths:
       #   - access_token: [] # credential:create
 
 
-  /users/{user_id}/credentials/{id}:
+  /organizations/{organization_id}/users/{user_id}/credentials/{id}:
     get:
       tags:
         - credential
@@ -370,6 +377,7 @@ paths:
       description: Get a credential
       operationId: getCredential
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/id'
       responses:
@@ -397,6 +405,7 @@ paths:
       description: Update a credential
       operationId: updateCredential
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -426,6 +435,7 @@ paths:
       description: Delete a credential
       operationId: deleteCredential
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/id'
       responses:
@@ -447,13 +457,15 @@ paths:
       #   - access_token: [] # credential:delete
 
   # resource
-  /resource_types:
+  /organizations/{organization_id}/resource_types:
     post:
       tags:
         - resource_type
       summary: Create a resource type
       description: Create a resource type
       operationId: createResourceType
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/CreateResourceRequest'
       responses:
@@ -474,7 +486,7 @@ paths:
       # security:
       #   - access_token: [] # resource_type:create
 
-  /resource_types/{id}:
+  /organizations/{organization_id}/resource_types/{id}:
     get:
       tags:
         - resource_type
@@ -482,6 +494,7 @@ paths:
       description: Get a resource type
       operationId: getResourceType
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       responses:
         '200':
@@ -508,6 +521,7 @@ paths:
       description: Update a resource type
       operationId: updateResourceType
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       requestBody:
         $ref: '#/components/requestBodies/UpdateResourceRequest'
@@ -536,6 +550,7 @@ paths:
       description: Delete a resource type
       operationId: deleteResourceType
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       responses:
         '200':
@@ -556,7 +571,7 @@ paths:
       #   - access_token: [] # resource_type:get
 
   # action
-  /resources/{resource_id}/action:
+  /organizations/{organization_id}/resources/{resource_id}/action:
     post:
       tags:
         - action
@@ -564,6 +579,7 @@ paths:
       description: Create an action
       operationId: createAction
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/resource_id'
       requestBody:
         $ref: '#/components/requestBodies/CreateActionRequest'
@@ -587,7 +603,7 @@ paths:
       #   - access_token: [] # action:create
 
 
-  /resources/{resource_id}/actions/{id}:
+  /organizations/{organization_id}/resources/{resource_id}/actions/{id}:
     get:
       tags:
         - action
@@ -595,6 +611,7 @@ paths:
       description: Get an action
       operationId: getAction
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/resource_id'
         - $ref: '#/components/parameters/id'
       responses:
@@ -622,6 +639,7 @@ paths:
       description: Update an action
       operationId: updateAction
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/resource_id'
         - $ref: '#/components/parameters/id'
       requestBody:
@@ -651,6 +669,7 @@ paths:
       description: Delete an action
       operationId: deleteAction
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/resource_id'
         - $ref: '#/components/parameters/id'
       responses:
@@ -672,13 +691,15 @@ paths:
       #   - access_token: [] # action:delete
 
   # policy
-  /policies:
+  /organizations/{organization_id}/policies:
     post:
       tags:
         - policy
       summary: Create a policy
       description: Create a policy
       operationId: createPolicy
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/CreatePolicyRequest'
 
@@ -700,7 +721,7 @@ paths:
       # security:
       #   - access_token: [] # policy:create
 
-  /policies/{id}:
+  /organizations/{organization_id}/policies/{id}:
     get:
       tags:
         - policy
@@ -708,6 +729,7 @@ paths:
       description: Get a policy
       operationId: getPolicy
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       responses:
         '200':
@@ -734,6 +756,7 @@ paths:
       description: Update a policy
       operationId: updatePolicy
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       requestBody:
         $ref: '#/components/requestBodies/UpdatePolicyRequest'
@@ -762,6 +785,7 @@ paths:
       description: Delete a policy
       operationId: deletePolicy
       parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       responses:
         '200':
@@ -849,6 +873,17 @@ components:
             type: string
             maxLength: 50
             pattern: ^[A-Za-z0-9]{3,50}$
+
+    organization_id:
+      in: path
+      name: organization_id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 10
+            pattern: ^[A-Z]{10}$
 
   requestBodies:
 
