@@ -57,7 +57,8 @@ CREATE TABLE credentials (
 
   FOREIGN KEY (user_id) REFERENCES users (id)
 );
-CREATE INDEX credentials_idx_user_id_refresh_token ON credentials(user_id, refresh_token);
+CREATE INDEX credentials_idx_user_id ON credentials(user_id);
+CREATE INDEX credentials_idx_refresh_token ON credentials(refresh_token);
 
 CREATE TABLE resource_types (
   organization_id VARCHAR(10) NOT NULL,

@@ -1,8 +1,8 @@
 package com.hypto.iam.server.utils
 
+import java.io.InputStream
 import org.casbin.jcasbin.main.Enforcer
 import org.casbin.jcasbin.persist.file_adapter.FileAdapter
-import java.io.InputStream
 
 object PolicyUtil {
     private val modelPath = this::class.java.classLoader.getResource("casbin_model.conf")?.path

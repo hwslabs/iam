@@ -10,7 +10,6 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Paths
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -24,8 +23,6 @@ import io.ktor.routing.Route
 
 @KtorExperimentalLocationsAPI
 fun Route.credentialApi() {
-    val gson = Gson()
-    val empty = mutableMapOf<String, Any?>()
     post { _: Paths.CreateCredential ->
         var principal = ""
         if (principal == null) {
