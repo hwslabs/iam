@@ -36,10 +36,9 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
         return fetch(com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.USER_ID, value)
     }
 
-    fun fetchByUserIdAndRefreshToken(userId: UUID, refreshToken: String): Credentials? {
+    fun fetchByRefreshToken(refreshToken: String): Credentials? {
         return ctx().selectFrom(table).where(
-                com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.USER_ID.eq(userId),
-                com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.REFRESH_TOKEN.eq(refreshToken)
-            ).fetchOne(mapper())
+            com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.REFRESH_TOKEN.eq(refreshToken)
+        ).fetchOne(mapper())
     }
 }

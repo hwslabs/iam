@@ -75,7 +75,10 @@ fun Authentication.Configuration.apiKeyAuth(name: String? = null, configure: Api
     }
 }
 
-fun ApplicationRequest.apiKeyAuthenticationCredentials(apiKeyName: String, apiKeyLocation: ApiKeyLocation): ApiKeyCredential? {
+fun ApplicationRequest.apiKeyAuthenticationCredentials(
+    apiKeyName: String,
+    apiKeyLocation: ApiKeyLocation
+): ApiKeyCredential? {
     val value: String? = when (apiKeyLocation) {
         ApiKeyLocation.QUERY -> this.queryParameters[apiKeyName]
         ApiKeyLocation.HEADER -> this.headers[apiKeyName]
