@@ -15,6 +15,7 @@ import io.ktor.metrics.dropwizard.DropwizardMetrics
 import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.security.Security
 import java.util.concurrent.TimeUnit
 import org.koin.ktor.ext.Koin
 import org.koin.logger.SLF4JLogger
@@ -88,6 +89,9 @@ fun Application.module() {
 
 @KtorExperimentalLocationsAPI
 fun main(args: Array<String>) {
+    // https://www.baeldung.com/java-bouncy-castle#setup-unlimited-strength-jurisdiction-policy-files
+    Security.setProperty("crypto.policy", "unlimited")
+
     embeddedServer(
         Netty, 8081, module = Application::module).start(wait = true)
 }

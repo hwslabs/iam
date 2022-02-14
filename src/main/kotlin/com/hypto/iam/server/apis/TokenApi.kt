@@ -25,6 +25,7 @@ fun Route.tokenApi() {
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
         } else {
+
             call.respond(HttpStatusCode.NotImplemented)
         }
     }
