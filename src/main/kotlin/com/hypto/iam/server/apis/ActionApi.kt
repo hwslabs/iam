@@ -11,7 +11,6 @@
 */package com.hypto.iam.server.apis
 
 import com.hypto.iam.server.Paths
-import com.hypto.iam.server.db.repositories.ActionRepo
 import io.ktor.application.call
 import io.ktor.auth.*
 import io.ktor.http.HttpStatusCode
@@ -22,11 +21,9 @@ import io.ktor.locations.patch
 import io.ktor.locations.post
 import io.ktor.response.*
 import io.ktor.routing.Route
-import org.koin.ktor.ext.inject
 
 @KtorExperimentalLocationsAPI
 fun Route.actionApi() {
-    val repo: ActionRepo by inject()
 
     post { request: Paths.CreateAction ->
         var principal = ""

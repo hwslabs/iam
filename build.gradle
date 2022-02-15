@@ -265,6 +265,9 @@ dependencies {
     //    runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.60'
     runtimeOnly 'io.jsonwebtoken:jjwt-gson:0.11.2' // or 'io.jsonwebtoken:jjwt-jackson:0.11.2' for gson
 
+    // Validation
+    implementation("io.konform:konform:0.3.0")
+
     // Test dependencies
     testCompile "org.koin:koin-test:$koin_test"
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
