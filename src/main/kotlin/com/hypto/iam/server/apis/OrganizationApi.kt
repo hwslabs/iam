@@ -10,13 +10,15 @@
 * Do not edit the class manually.
 */package com.hypto.iam.server.apis
 
-import com.hypto.iam.server.db.repositories.OrganizationRepo
-import com.hypto.iam.server.db.tables.pojos.Organizations
+import com.google.gson.Gson
+import com.hypto.iam.server.controller.OrganizationsService
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.validatiors.validate
 import io.ktor.application.call
-import io.ktor.auth.*
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.response.respondText
 import io.ktor.routing.Route
@@ -24,54 +26,44 @@ import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
-import java.time.LocalDateTime
 import org.koin.ktor.ext.inject
 
 /**
- * API to create organization in IAM.
- * NOTE: This api is restricted. Clients are forbidden to use this api to create organizations.
- * Only "hypto-root" user having access to the secret can use this api.
+ * API to create & delete organization in IAM.
+ * NOTE: These apis are restricted. Clients are forbidden to use this api to create/delete organizations.
+ * Only "hypto-root" user having access to secret can use this api.
  */
-fun Route.createOrganizationApi() {
-    val repo: OrganizationRepo by inject()
+fun Route.createAndDeleteOrganizationApi() {
+    val controller: OrganizationsService by inject()
+    val gson: Gson by inject()
 
-    post<CreateOrganizationRequest>("/organizations") {
-        assert(call.authentication.principal != null) { "Unable to validate principal making the request." }
-        var id = repo.insert(Organizations("aaa", it.name, null, LocalDateTime.now(), LocalDateTime.now()))
-        call.respondText("{success: true, id: $id}", ContentType.Application.Json)
+    post("/organizations") {
+        val request = call.receive<CreateOrganizationRequest>().validate()
+        val response = controller.createOrganization(request.name, description = "")
+        call.respondText(text = gson.toJson(response), contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created)
+    }
+
+    delete("/organizations/{id}") {
+        call.respond(HttpStatusCode.NotImplemented)
     }
 }
 
-fun Route.organizationApi() {
-    val repo: OrganizationRepo by inject()
-    delete("/organizations/{id}") {
-        var principal = ""
-        if (principal == null) {
-            call.respond(HttpStatusCode.Unauthorized)
-        } else {
-            call.respond(HttpStatusCode.NotImplemented)
-        }
-    }
+/**
+ * Route to get and update organizations in IAM
+ */
+fun Route.getAndUpdateOrganizationApi() {
+    val controller: OrganizationsService by inject()
+    val gson: Gson by inject()
 
     get("/organizations/{id}") {
-        var principal = ""
-        if (principal == null) {
-            call.respond(HttpStatusCode.Unauthorized)
-        } else {
-
-            val org = OrganizationRepo.fetchOneById("a")
-            println(org.toString())
-//            call.respond()
-
-            call.respond(HttpStatusCode.NotImplemented)
-        }
+        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the Organization details")
+        val response = controller.getOrganization(id)
+        call.respondText(text = gson.toJson(response), contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK)
     }
-    patch("/organizations/{id}") {
-        var principal = ""
-        if (principal == null) {
-            call.respond(HttpStatusCode.Unauthorized)
-        } else {
-            call.respond(HttpStatusCode.NotImplemented)
-        }
+
+    patch<UpdateOrganizationRequest>("/organizations/{id}") {
+        call.respond(HttpStatusCode.NotImplemented)
     }
 }

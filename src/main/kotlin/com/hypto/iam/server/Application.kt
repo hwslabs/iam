@@ -2,6 +2,8 @@ package com.hypto.iam.server
 
 import com.codahale.metrics.Slf4jReporter
 import com.hypto.iam.server.apis.*
+import com.hypto.iam.server.di.applicationModule
+import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.infrastructure.*
 import io.ktor.application.*
@@ -26,7 +28,7 @@ fun Application.module() {
     install(CallLogging)
     install(Koin) {
         SLF4JLogger()
-        modules(repositoryModule)
+        modules(repositoryModule, controllerModule, applicationModule)
     }
     install(DropwizardMetrics) {
         val reporter = Slf4jReporter.forRegistry(registry)
@@ -72,11 +74,11 @@ fun Application.module() {
 
     install(Routing) {
         authenticate("hypto-iam-root-auth") {
-            createOrganizationApi()
+            createAndDeleteOrganizationApi()
         }
 
         authenticate("bearer-auth") {
-            organizationApi()
+            getAndUpdateOrganizationApi()
             actionApi()
             credentialApi()
             policyApi()

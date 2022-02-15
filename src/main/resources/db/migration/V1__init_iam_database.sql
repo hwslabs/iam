@@ -3,6 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE organizations (
   id VARCHAR(10) PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
+  description VARCHAR(200),
   admin_user VARCHAR(15),
 
   created_at timestamp NOT NULL,
