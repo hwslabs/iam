@@ -92,7 +92,7 @@ CREATE INDEX actions_idx_org_id_resource_type_hrn ON actions(organization_id, re
 CREATE TABLE policies (
   hrn VARCHAR(200) PRIMARY KEY,
   organization_id VARCHAR(10) NOT NULL,
-  statements JSONB NOT NULL,
+  statements text NOT NULL, -- Supports max string of 1GB (https://stackoverflow.com/a/39966079)
 
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
@@ -118,7 +118,7 @@ CREATE UNIQUE INDEX user_policies_idx_principal_policy ON user_policies(principa
 -- 2. Get user_policies for principal_hrn of resource as B
 -- 3. Filter policy statements in B with condition: statement_principal = user && statement_action = action
 
-CREATE TABLE ec_keys (
+CREATE TABLE master_keys (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   private_key BYTEA NOT NULL,
   public_key BYTEA NOT NULL,
@@ -128,7 +128,7 @@ CREATE TABLE ec_keys (
   updated_at timestamp NOT NULL
 );
 
-CREATE INDEX ec_keys_idx_status ON ec_keys(status) WHERE status IN ('SIGNING', 'VERIFYING');
+CREATE INDEX ec_keys_idx_status ON master_keys(status) WHERE status IN ('SIGNING', 'VERIFYING');
 
 
 

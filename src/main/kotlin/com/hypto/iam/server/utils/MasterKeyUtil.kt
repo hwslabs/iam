@@ -5,7 +5,7 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
 
-object MasterKey {
+object MasterKeyUtil {
 
     private const val PRIVATE_KEY = "/tmp/private_key.der"
     private const val PUBLIC_KEY = "/tmp/public_key.der"
