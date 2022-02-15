@@ -24,21 +24,21 @@ object OrganizationRepo : DAOImpl<OrganizationsRecord, Organizations, String?>(
     /**
      * Fetch a unique record that has `id = value`
      */
-    fun fetchOptionalById(value: String): Optional<Organizations?> {
+    fun fetchOptionalById(value: String): Optional<Organizations> {
         return fetchOptional(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ID, value)
     }
 
     /**
      * Fetch records that have `name IN (values)`
      */
-    fun fetchByName(vararg values: String): List<Organizations?> {
+    fun fetchByName(vararg values: String): List<Organizations> {
         return fetch(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.NAME, *values)
     }
 
     /**
      * Fetch records that have `admin_user IN (values)`
      */
-    fun fetchByAdminUser(vararg values: String): List<Organizations?> {
+    fun fetchByAdminUser(vararg values: String): List<Organizations> {
         return fetch(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER, *values)
     }
 }

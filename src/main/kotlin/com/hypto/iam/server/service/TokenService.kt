@@ -3,7 +3,13 @@
 
 package com.hypto.iam.server.service
 
+import com.hypto.iam.server.db.repositories.EcKeysRepo
+import com.hypto.iam.server.db.repositories.UserPoliciesRepo
+import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.IamResourceTypes
 import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -23,7 +29,7 @@ object TokenService {
     private const val ORGANIZATION_CLAIM = "org"
     private const val ENTITLEMENTS_CLAIM = "entitlements"
 
-    var privateKey: PrivateKey = AssymetricKey("private_key.der", "public_key.der").privateKey
+    var privateKey: PrivateKey = AssymetricKey.forSigning().privateKey
 
     fun generateJwtToken(userId: String, orgId: String, entitlements: String): String {
         // 1. Validate user
@@ -42,15 +48,18 @@ object TokenService {
             .claim(USER_CLAIM, userId.toString()) // UserId
             .claim(ORGANIZATION_CLAIM, orgId) // OrganizationId
             .claim(ENTITLEMENTS_CLAIM, "fetchEntitlements(userId)")
-            .signWith(privateKey/*, SignatureAlgorithm.ES256*/)
+            .signWith(privateKey, SignatureAlgorithm.ES256)
             .compact()
         return builder
     }
 
-//    fun fetchEntitlements(userId: String): String {
-//        val policies = UserPoliciesRepo.fetchByPrincipalHrn(userId)
-//        PoliciesRepo.g
-//    }
+    fun fetchEntitlements(organizationId: String, userId: String): String {
+        val userHrn = Hrn(organizationId, IamResourceTypes.USER, userId).toString()
+        val policies = UserPoliciesRepo.fetchByPrincipalHrn(userHrn)
+//        PoliciesRepo.fetchByOrganizationIdAndNamesIn()
+        // TODO: Implement this method
+        return ""
+    }
 }
 
 /**
@@ -63,11 +72,8 @@ Generate EC key pair using the below commands:
 `openssl pkcs8 -topk8 -inform PEM -outform DER -in  private_key.pem -out  private_key.der -nocrypt`
 - Generate public_key.der corresponding to private_key.pem
 `openssl ec -in private_key.pem -pubout -outform DER -out public_key.der`
-* */
+ * */
 class AssymetricKey(private val privateKeyByteArray: ByteArray, private val publicKeyByteArray: ByteArray) {
-    constructor(privateKeyFile: String, publicKeyFile: String) :
-        this(readResourceFileAsBytes(privateKeyFile), readResourceFileAsBytes(publicKeyFile))
-
     private val keyFactory: KeyFactory = KeyFactory.getInstance("EC")
 
     val publicKey: PublicKey
@@ -82,7 +88,45 @@ class AssymetricKey(private val privateKeyByteArray: ByteArray, private val publ
         }
 
     companion object {
-        fun readResourceFileAsBytes(name: String): ByteArray {
+        fun forSigning(): AssymetricKey {
+            val key = if (!::signKey.isInitialized || shouldRefreshSignKey()) {
+                EcKeysRepo.fetchForSigning()
+            } else {
+                throw InternalException("Signing key not found")
+            }
+
+            if (key == null) {
+                throw InternalException("Signing key not found")
+            }
+
+            signKeyFetchTime = Instant.now()
+            signKey = AssymetricKey(key.privateKey, key.publicKey)
+            return signKey
+        }
+
+        fun of(keyId: String): AssymetricKey {
+            val key = EcKeysRepo.fetchById(keyId) ?: throw InternalException("Key [$keyId] not found")
+            return AssymetricKey(key.privateKey, key.publicKey)
+        }
+
+        fun of(privateKeyFile: String, publicKeyFile: String): AssymetricKey {
+            return AssymetricKey(readResourceFileAsBytes(privateKeyFile), readResourceFileAsBytes(publicKeyFile))
+        }
+
+        fun of(privateKeyByteArray: ByteArray, publicKeyByteArray: ByteArray): AssymetricKey {
+            return AssymetricKey(privateKeyByteArray, publicKeyByteArray)
+        }
+
+        // TODO: Move to config file
+        private const val cacheDuration: Long = 300 // seconds
+        private lateinit var signKeyFetchTime: Instant
+        private lateinit var signKey: AssymetricKey
+
+        private fun shouldRefreshSignKey(): Boolean {
+            return signKeyFetchTime.plusSeconds(cacheDuration) > Instant.now()
+        }
+
+        private fun readResourceFileAsBytes(name: String): ByteArray {
             val fileUri: URI = this::class.java.classLoader.getResource(name).toURI()
             return Files.readAllBytes(Paths.get(fileUri))
         }

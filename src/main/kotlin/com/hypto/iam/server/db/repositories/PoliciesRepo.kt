@@ -2,17 +2,16 @@ package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
-import org.jooq.Record2
 import org.jooq.impl.DAOImpl
 
-object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, Record2<String, String>>(
+object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, String>(
     com.hypto.iam.server.db.tables.Policies.POLICIES,
     Policies::class.java,
     com.hypto.iam.server.service.DatabaseFactory.getConfiguration()
 ) {
 
-    override fun getId(policy: Policies): Record2<String, String> {
-        return compositeKeyRecord(policy.organizationId, policy.name)
+    override fun getId(policy: Policies): String {
+        return policy.hrn
     }
 
     /**
@@ -23,14 +22,16 @@ object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, Record2<String, String>>
     }
 
     /**
-     * Fetch records that have `organization_id = value AND name = value`
+     * Fetch records that have `hrn = value`
      */
-    fun fetchByOrganizationIdAndName(organizationId: String, name: String): Policies? {
-        return findById(
-            ctx().newRecord(
-                com.hypto.iam.server.db.tables.Policies.POLICIES.ORGANIZATION_ID,
-                com.hypto.iam.server.db.tables.Policies.POLICIES.NAME
-            ).values(organizationId, name)
-        )
+    fun fetchByHrn(hrn: String): Policies? {
+        return fetchOne(com.hypto.iam.server.db.tables.Policies.POLICIES.HRN, hrn)
+    }
+
+    /**
+     * Fetch records that have `organization_id = value, name IN (value, value, ...)`
+     */
+    fun fetchByHrns(hrns: List<String>): List<Policies> {
+        return fetch(com.hypto.iam.server.db.tables.Policies.POLICIES.HRN, hrns)
     }
 }

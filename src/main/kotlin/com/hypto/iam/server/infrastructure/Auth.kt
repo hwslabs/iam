@@ -30,9 +30,9 @@ data class UserPrincipal(
 ) : Principal
 
 /**
-* Represents a Api Key authentication provider
-* @param name is the name of the provider, or `null` for a default provider
-*/
+ * Represents a Api Key authentication provider
+ * @param name is the name of the provider, or `null` for a default provider
+ */
 class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvider(config) {
     internal var authenticationFunction: suspend ApplicationCall.(TokenCredential) -> Principal? = { null }
 
@@ -41,9 +41,9 @@ class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvide
     var tokenKeyLocation: TokenLocation = TokenLocation.HEADER
 
     /**
-    * Sets a validation function that will check given [ApiKeyCredential] instance and return [Principal],
-    * or null if credential does not correspond to an authenticated principal
-    */
+     * Sets a validation function that will check given [ApiKeyCredential] instance and return [Principal],
+     * or null if credential does not correspond to an authenticated principal
+     */
     fun validate(body: suspend ApplicationCall.(TokenCredential) -> Principal?) {
         authenticationFunction = body
     }
@@ -130,7 +130,9 @@ fun ApplicationRequest.tokenAuthenticationCredentials(
         TokenLocation.QUERY -> this.queryParameters[apiKeyName]
         TokenLocation.HEADER -> this.headers[apiKeyName]
     }
-    val result = if (transform != null && value != null) { transform.invoke(value) } else value
+    val result = if (transform != null && value != null) {
+        transform.invoke(value)
+    } else value
     return when (result) {
         null -> null
         else -> TokenCredential(result)
