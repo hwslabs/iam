@@ -25,7 +25,9 @@ fun Route.tokenApi() {
         if (principal == null) {
             call.respond(HttpStatusCode.Unauthorized)
         } else {
-
+            // 1. Validate user
+            // 2. Call TokenService.generateJwtToken(userId, orgId) to get signed token
+            // 3. Return the token
             call.respond(HttpStatusCode.NotImplemented)
         }
     }

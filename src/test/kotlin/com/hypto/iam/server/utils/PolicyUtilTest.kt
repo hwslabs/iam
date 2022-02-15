@@ -1,5 +1,8 @@
 package com.hypto.iam.server.utils
 
+import com.hypto.iam.server.utils.policy.PolicyBuilder
+import com.hypto.iam.server.utils.policy.PolicyRequest
+import com.hypto.iam.server.utils.policy.PolicyStatement
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
