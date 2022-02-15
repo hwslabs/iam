@@ -25,15 +25,15 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
     /**
      * Fetch a unique record that has `id = value`
      */
-    fun fetchOptionalById(value: UUID?): Optional<Credentials> {
+    fun fetchOptionalById(value: UUID): Optional<Credentials> {
         return fetchOptional(com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.ID, value)
     }
 
     /**
-     * Fetch records that have `user_id = value`
+     * Fetch records that have `user_hrn = value`
      */
-    fun fetchByUserId(value: UUID): List<Credentials> {
-        return fetch(com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.USER_ID, value)
+    fun fetchByUserId(value: String): List<Credentials> {
+        return fetch(com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.USER_HRN, value)
     }
 
     fun fetchByRefreshToken(refreshToken: String): Credentials? {

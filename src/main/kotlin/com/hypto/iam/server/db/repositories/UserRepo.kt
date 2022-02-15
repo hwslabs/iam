@@ -4,43 +4,42 @@ import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.service.DatabaseFactory
 import java.util.Optional
-import java.util.UUID
 import org.jooq.impl.DAOImpl
 
-object UserRepo : DAOImpl<UsersRecord, Users, UUID>(
+object UserRepo : DAOImpl<UsersRecord, Users, String>(
     com.hypto.iam.server.db.tables.Users.USERS,
     Users::class.java, DatabaseFactory.getConfiguration()
 ) {
 
-    override fun getId(user: Users): UUID? {
-        return user.id
+    override fun getId(user: Users): String {
+        return user.hrn
     }
 
     /**
-     * Fetch records that have `id IN (values)`
+     * Fetch records that have `hrn IN (values)`
      */
-    fun fetchById(vararg values: UUID?): List<Users?> {
-        return fetch(com.hypto.iam.server.db.tables.Users.USERS.ID, *values)
+    fun fetchByIHrn(vararg values: String): List<Users> {
+        return fetch(com.hypto.iam.server.db.tables.Users.USERS.HRN, *values)
+    }
+
+    /**
+     * Fetch a unique record that has `hrn = value`
+     */
+    fun fetchOneById(value: String): Users? {
+        return fetchOne(com.hypto.iam.server.db.tables.Users.USERS.HRN, value)
     }
 
     /**
      * Fetch a unique record that has `id = value`
      */
-    fun fetchOneById(value: UUID?): Users? {
-        return fetchOne(com.hypto.iam.server.db.tables.Users.USERS.ID, value)
-    }
-
-    /**
-     * Fetch a unique record that has `id = value`
-     */
-    fun fetchOptionalById(value: UUID): Optional<Users?> {
-        return fetchOptional(com.hypto.iam.server.db.tables.Users.USERS.ID, value)
+    fun fetchOptionalById(value: String): Optional<Users> {
+        return fetchOptional(com.hypto.iam.server.db.tables.Users.USERS.HRN, value)
     }
 
     /**
      * Fetch records that have `organization_id IN (values)`
      */
-    fun fetchByOrganizationId(vararg values: String?): List<Users> {
+    fun fetchByOrganizationId(vararg values: String): List<Users> {
         return fetch(com.hypto.iam.server.db.tables.Users.USERS.ORGANIZATION_ID, *values)
     }
 

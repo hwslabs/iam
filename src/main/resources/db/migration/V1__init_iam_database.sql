@@ -1,15 +1,16 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE organizations (
   id VARCHAR(10) PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   admin_user VARCHAR(15),
+
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL
-
 );
 
 CREATE TABLE users (
-  id uuid PRIMARY KEY,
-  name VARCHAR(50) NOT NULL,
+  hrn VARCHAR(200) PRIMARY KEY,
   password_hash text NOT NULL,
   email VARCHAR(50) NOT NULL,
   phone VARCHAR(50) NOT NULL,
@@ -18,18 +19,20 @@ CREATE TABLE users (
   status VARCHAR(10) NOT NULL,
   created_by uuid NOT NULL,
   organization_id VARCHAR(10),
+
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
   FOREIGN KEY (organization_id) REFERENCES organizations (id)
 );
 
-CREATE INDEX users_idx_organization_id_name ON users(organization_id, name);
+CREATE INDEX users_idx_organization_id_name ON users(organization_id);
 
 CREATE TABLE users_auth_providers (
 --   Supports 400 million users each with 5 auth providers
   id SERIAL PRIMARY KEY,
-  user_id uuid NOT NULL,
+  user_hrn VARCHAR(200) NOT NULL,
+  organization_id VARCHAR(10),
   auth_provider VARCHAR(10) NOT NULL,
   protocol VARCHAR(10) NOT NULL,
   valid_until timestamp,
@@ -42,69 +45,89 @@ CREATE TABLE users_auth_providers (
   updated_at timestamp NOT NULL,
 
   -- PRIMARY KEY (user_id, auth_provider, protocol),
-  FOREIGN KEY (user_id) REFERENCES users (id)
+  FOREIGN KEY (user_hrn) REFERENCES users (hrn)
 );
 
 CREATE TABLE credentials (
-  id uuid PRIMARY KEY,
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   valid_until timestamp,
   status VARCHAR(10) NOT NULL,
   refresh_token text,
-  user_id uuid NOT NULL,
+  user_hrn VARCHAR(200) NOT NULL,
 
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  FOREIGN KEY (user_id) REFERENCES users (id)
+  FOREIGN KEY (user_hrn) REFERENCES users (hrn)
 );
-CREATE INDEX credentials_idx_user_id ON credentials(user_id);
+CREATE INDEX credentials_idx_user_hrn ON credentials(user_hrn);
 CREATE INDEX credentials_idx_refresh_token ON credentials(refresh_token);
 
 CREATE TABLE resource_types (
+  hrn VARCHAR(200) PRIMARY KEY,
   organization_id VARCHAR(10) NOT NULL,
-  name VARCHAR(50) NOT NULL,
   description text,
 
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  PRIMARY KEY (organization_id, name),
   FOREIGN KEY (organization_id) REFERENCES organizations (id)
 );
+CREATE INDEX resource_types_idx_org_id ON resource_types(organization_id);
 
 CREATE TABLE actions (
+  hrn VARCHAR(200) PRIMARY KEY,
   organization_id VARCHAR(10) NOT NULL,
-  name VARCHAR(50) NOT NULL,
-  resource_type VARCHAR(50) NOT NULL,
+  resource_type_hrn VARCHAR(200) NOT NULL,
   description text,
 
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  PRIMARY KEY (organization_id, resource_type, name),
-  FOREIGN KEY (organization_id, resource_type) REFERENCES resource_types (organization_id, name)
+  FOREIGN KEY (resource_type_hrn) REFERENCES resource_types (hrn)
 );
+CREATE INDEX actions_idx_org_id_resource_type_hrn ON actions(organization_id, resource_type_hrn);
 
 CREATE TABLE policies (
+  hrn VARCHAR(200) PRIMARY KEY,
   organization_id VARCHAR(10) NOT NULL,
-  name VARCHAR(50) NOT NULL,
   statements JSONB NOT NULL,
 
-  PRIMARY KEY (organization_id, name),
+  created_at timestamp NOT NULL,
+  updated_at timestamp NOT NULL,
+
   FOREIGN KEY (organization_id) REFERENCES organizations (id)
 );
+CREATE INDEX policies_idx_org_id ON policies(organization_id);
 
+-- user_policy entry always belongs to the organization to which the principal blongs to.
 CREATE TABLE user_policies (
-  id uuid PRIMARY KEY,
-  principal_hrn VARCHAR(100) NOT NULL,
-  policy_hrn VARCHAR(100) NOT NULL
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  principal_hrn VARCHAR(200) NOT NULL,
+  policy_hrn VARCHAR(200) NOT NULL,
+
+  created_at timestamp NOT NULL,
+
+  FOREIGN KEY (policy_hrn) REFERENCES policies (hrn)
 );
-CREATE INDEX user_policies_idx_principal ON user_policies(principal_hrn);
+CREATE UNIQUE INDEX user_policies_idx_principal_policy ON user_policies(principal_hrn, policy_hrn);
 
 -- List all permissions a user has on a resource+action:
 -- 1. Get user_policies for principal_hrn of user as A
 -- 2. Get user_policies for principal_hrn of resource as B
 -- 3. Filter policy statements in B with condition: statement_principal = user && statement_action = action
+
+CREATE TABLE ec_keys (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  private_key BYTEA NOT NULL,
+  public_key BYTEA NOT NULL,
+  status VARCHAR(10) NOT NULL, -- SIGNING, VERIFYING, EXPIRED
+
+  created_at timestamp NOT NULL,
+  updated_at timestamp NOT NULL
+);
+
+CREATE INDEX ec_keys_idx_status ON ec_keys(status) WHERE status IN ('SIGNING', 'VERIFYING');
 
 
 

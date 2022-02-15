@@ -3,7 +3,6 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.tables.pojos.UsersAuthProviders
 import com.hypto.iam.server.db.tables.records.UsersAuthProvidersRecord
 import java.util.Optional
-import java.util.UUID
 import org.jooq.impl.DAOImpl
 
 object UserAuthProvidersRepo : DAOImpl<UsersAuthProvidersRecord, UsersAuthProviders, Int>(
@@ -32,7 +31,7 @@ object UserAuthProvidersRepo : DAOImpl<UsersAuthProvidersRecord, UsersAuthProvid
     /**
      * Fetch records that have `user_id = value`
      */
-    fun fetchByUserId(value: UUID): List<UsersAuthProviders> {
-        return fetch(com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS.USER_ID, value)
+    fun fetchByUserHrn(value: String): List<UsersAuthProviders> {
+        return fetch(com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS.USER_HRN, value)
     }
 }
