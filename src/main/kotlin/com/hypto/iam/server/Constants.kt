@@ -1,6 +1,6 @@
 package com.hypto.iam.server
 
-class Constants {
+class Constants private constructor() {
     // Validation constants
     companion object {
         const val MIN_NAME_LENGTH = 2

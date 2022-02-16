@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>EmptyDefaultConstructor:Paths.kt$Paths.GetToken$()</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.active$active</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.inactive$inactive</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.admin$admin</ID>
@@ -27,19 +26,6 @@
     <ID>EnumNaming:User.kt$User.UserType.apiOnly$apiOnly</ID>
     <ID>EnumNaming:User.kt$User.UserType.normal$normal</ID>
     <ID>EnumNaming:User.kt$User.UserType.system$system</ID>
-    <ID>ForbiddenComment:Application.kt$// TODO: Get secret key from db or cache</ID>
-    <ID>ForbiddenComment:Application.kt$// TODO: Logic to update error message</ID>
-    <ID>ForbiddenComment:Application.kt$// TODO: Switch to kotlinx.serialization</ID>
-    <ID>ForbiddenComment:Application.kt$// TODO: Validate bearer token from db</ID>
-    <ID>ForbiddenComment:DatabaseFactory.kt$DatabaseFactory$// TODO: Read from config file instead of hardcoding</ID>
-    <ID>ForbiddenComment:EcKeysRepo.kt$EcKeysRepo$// TODO: Move TTL to config file</ID>
-    <ID>ForbiddenComment:Hrn.kt$Hrn$// TODO: Introduce a "service" entity to replace "iam". For services like ledger / waller / etc.</ID>
-    <ID>ForbiddenComment:OrganizationsService.kt$OrganizationsServiceImpl$// TODO: #1 - Update schema to include description, createdBy, updatedBy fields</ID>
-    <ID>ForbiddenComment:OrganizationsService.kt$OrganizationsServiceImpl$// TODO: #2 - Add transaction to create admin user</ID>
-    <ID>ForbiddenComment:TokenService.kt$AssymetricKey.Companion$// TODO: Move to config file</ID>
-    <ID>ForbiddenComment:TokenService.kt$TokenService$// TODO: Implement this method</ID>
-    <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationCompressionConfiguration(): Compression.Configuration.() -&gt; Unit</ID>
-    <ID>FunctionNaming:Configuration.kt$ internal fun ApplicationHstsConfiguration(): HSTS.Configuration.() -&gt; Unit</ID>
     <ID>MagicNumber:Application.kt$10</ID>
     <ID>MagicNumber:Application.kt$8081</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
@@ -50,20 +36,5 @@
     <ID>MagicNumber:DatabaseFactory.kt$DatabaseFactory$3</ID>
     <ID>MatchingDeclarationName:Inline_response_200.kt$InlineResponse200</ID>
     <ID>MatchingDeclarationName:Inline_response_200_1.kt$InlineResponse2001</ID>
-    <ID>MaxLineLength:Paths.kt$inline</ID>
-    <ID>UnusedPrivateMember:TokenService.kt$TokenService$entitlements: String</ID>
-    <ID>UnusedPrivateMember:TokenService.kt$TokenService$val policies = UserPoliciesRepo.fetchByPrincipalHrn(userHrn)</ID>
-    <ID>UtilityClassWithPublicConstructor:Constants.kt$Constants</ID>
-    <ID>WildcardImport:ActionApi.kt$import io.ktor.auth.*</ID>
-    <ID>WildcardImport:ActionApi.kt$import io.ktor.response.*</ID>
-    <ID>WildcardImport:Application.kt$import com.hypto.iam.server.apis.*</ID>
-    <ID>WildcardImport:Application.kt$import com.hypto.iam.server.infrastructure.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.application.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.auth.*</ID>
-    <ID>WildcardImport:Application.kt$import io.ktor.features.*</ID>
-    <ID>WildcardImport:Auth.kt$import io.ktor.application.*</ID>
-    <ID>WildcardImport:Auth.kt$import io.ktor.auth.*</ID>
-    <ID>WildcardImport:Auth.kt$import io.ktor.http.auth.*</ID>
-    <ID>WildcardImport:Modules.kt$import com.hypto.iam.server.db.repositories.*</ID>
   </CurrentIssues>
 </SmellBaseline>

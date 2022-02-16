@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
  *
  * See http://ktor.io/features/hsts.html
  */
-internal fun ApplicationHstsConfiguration(): HSTS.Configuration.() -> Unit {
+internal fun applicationHstsConfiguration(): HSTS.Configuration.() -> Unit {
     return {
         maxAgeInSeconds = Duration.ofDays(365).toMinutes() * 60
         includeSubDomains = true
@@ -38,7 +38,7 @@ internal fun ApplicationHstsConfiguration(): HSTS.Configuration.() -> Unit {
  *
  * See http://ktor.io/features/compression.html
  */
-internal fun ApplicationCompressionConfiguration(): Compression.Configuration.() -> Unit {
+internal fun applicationCompressionConfiguration(): Compression.Configuration.() -> Unit {
     return {
         gzip {
             priority = 1.0
