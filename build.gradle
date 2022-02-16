@@ -224,6 +224,13 @@ jacocoTestCoverageVerification {
 
 detekt {
     baseline = file("detekt_baseline.xml")
+
+    // Define the detekt configuration(s) you want to use.
+    // Defaults to the default detekt configuration.
+    config = files("detekt_config.yml")
+
+    // Applies the config files on top of detekt's default config file. `false` by default.
+    buildUponDefaultConfig = true
 }
 
 dependencies {
