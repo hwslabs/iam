@@ -1,4 +1,4 @@
-package com.hypto.iam.server.controller
+package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
