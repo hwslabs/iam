@@ -5,7 +5,6 @@ import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.utils.Hrn
-import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import com.hypto.iam.server.utils.policy.PolicyStatement
 import io.jsonwebtoken.Jwts
@@ -37,7 +36,7 @@ object TokenService {
 
     val keyPair = CachedMasterKey.forSigning()
 
-    fun generateJwtToken(userHrn: Hrn /*userId: String, orgId: String*/): String {
+    fun generateJwtToken(userHrn: Hrn): String {
         return Jwts.builder()
             .setHeaderParam(KEY_ID, keyPair.id)
             .setIssuer(ISSUER)
@@ -89,7 +88,7 @@ class CachedMasterKey(
 
     companion object {
         fun forSigning(): CachedMasterKey {
-           val key = (
+            val key = (
                 if (!::signKey.isInitialized || shouldRefreshSignKey()) MasterKeysRepo.fetchForSigning() else null
                 ) ?: throw InternalException("Signing key not found")
 

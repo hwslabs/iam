@@ -2,7 +2,6 @@ package com.hypto.iam.server.infrastructure
 
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.utils.Hrn
-import com.hypto.iam.server.utils.IamResourceTypes
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.auth.Authentication
@@ -13,7 +12,6 @@ import io.ktor.auth.AuthenticationProvider
 import io.ktor.auth.Credential
 import io.ktor.auth.Principal
 import io.ktor.auth.UnauthorizedResponse
-import io.ktor.http.auth.HeaderValueEncoding
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
 import io.ktor.request.ApplicationRequest

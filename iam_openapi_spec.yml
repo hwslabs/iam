@@ -247,7 +247,7 @@ paths:
       # security:
       #   - access_token: [] # user:delete
 
-  /organizations/{organization_id}/users/{id}/policies:
+  /organizations/{organization_id}/users/{user_id}/policies:
     get:
       tags:
         - policy
@@ -255,7 +255,7 @@ paths:
       description: Get policies of a user
       operationId: getUserPolicies
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
