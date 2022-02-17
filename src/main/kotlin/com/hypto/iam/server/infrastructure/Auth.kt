@@ -1,6 +1,8 @@
 package com.hypto.iam.server.infrastructure
 
 import com.hypto.iam.server.models.Policy
+import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.IamResourceTypes
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.auth.Authentication
@@ -34,15 +36,12 @@ data class ApiPrincipal(
 /** Class to store the Principal authenticated using Bearer auth **/
 data class UserPrincipal(
     val tokenCredential: TokenCredential,
-    val organization: String,
-    val userId: String,
+    val hrnStr: String,
     val policies: List<Policy>? = null
-) : Principal
+) : Principal {
+    val hrn: Hrn = Hrn.of(hrnStr)
+}
 
-/**
- * Represents a Api Key authentication provider
- * @param name is the name of the provider, or `null` for a default provider
- */
 class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvider(config) {
     internal var authenticationFunction: suspend ApplicationCall.(TokenCredential) -> Principal? = { null }
 
@@ -59,6 +58,10 @@ class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvide
     }
 }
 
+/**
+ * Represents an Api Key authentication provider
+ * @param name is the name of the provider, or `null` for a default provider
+ */
 class ApiKeyConfiguration(name: String?) : AuthenticationProvider.Configuration(name) {
     // todo
 }
@@ -113,15 +116,7 @@ private fun validateResponse(
 
     if (cause != null) {
         context.challenge(apiKeyName, cause) {
-            call.respond(
-                UnauthorizedResponse(
-                    HttpAuthHeader.Parameterized(
-                        "API_KEY",
-                        mapOf("key" to apiKeyName),
-                        HeaderValueEncoding.QUOTED_ALWAYS
-                    )
-                )
-            )
+            call.respond(UnauthorizedResponse())
             it.complete()
         }
     }
