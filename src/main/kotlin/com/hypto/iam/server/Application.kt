@@ -9,6 +9,8 @@ import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceTypeApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
+import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
@@ -29,18 +31,17 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.features.HSTS
 import io.ktor.features.StatusPages
-import io.ktor.gson.GsonConverter
-import io.ktor.http.ContentType
+import io.ktor.gson.gson
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Locations
 import io.ktor.metrics.dropwizard.DropwizardMetrics
 import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import org.koin.ktor.ext.Koin
-import org.koin.logger.SLF4JLogger
 import java.security.Security
 import java.util.concurrent.TimeUnit
+import org.koin.ktor.ext.Koin
+import org.koin.logger.SLF4JLogger
 
 @KtorExperimentalLocationsAPI
 fun Application.module() {
@@ -61,7 +62,7 @@ fun Application.module() {
     }
     install(ContentNegotiation) {
         // TODO: Switch to kotlinx.serialization
-        register(ContentType.Application.Json, GsonConverter())
+        gson()
     }
 
     install(StatusPages) {
@@ -83,10 +84,10 @@ fun Application.module() {
         }
         bearer("bearer-auth") {
             validate { tokenCredential: TokenCredential ->
-                when (tokenCredential.value) {
-                    // TODO: Validate bearer token from db
-                    "test-bearer-token" -> UserPrincipal(tokenCredential, "hypto", "ABC123")
-                    else -> null
+                return@validate tokenCredential.value?.let {
+                    return@let CredentialsRepo.fetchByRefreshToken(it)
+                        ?.let { credential -> UserRepo.fetchByHrn(credential.userHrn) }
+                        ?.let { user -> UserPrincipal(tokenCredential, user.hrn) }
                 }
             }
         }

@@ -16,10 +16,10 @@ object UserRepo : DAOImpl<UsersRecord, Users, String>(
     }
 
     /**
-     * Fetch records that have `hrn IN (values)`
+     * Fetch records that have `hrn = values`
      */
-    fun fetchByIHrn(vararg values: String): List<Users> {
-        return fetch(com.hypto.iam.server.db.tables.Users.USERS.HRN, *values)
+    fun fetchByHrn(values: String): Users? {
+        return fetchOne(com.hypto.iam.server.db.tables.Users.USERS.HRN, values)
     }
 
     /**

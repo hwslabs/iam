@@ -10,7 +10,6 @@ import com.hypto.iam.server.utils.policy.PolicyBuilder
 import com.hypto.iam.server.utils.policy.PolicyStatement
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import mu.KotlinLogging
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -21,6 +20,7 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Date
+import mu.KotlinLogging
 
 val logger = KotlinLogging.logger("service.TokenService")
 
@@ -37,7 +37,7 @@ object TokenService {
 
     val keyPair = CachedMasterKey.forSigning()
 
-    fun generateJwtToken(userId: String, orgId: String): String {
+    fun generateJwtToken(userHrn: Hrn /*userId: String, orgId: String*/): String {
         return Jwts.builder()
             .setHeaderParam(KEY_ID, keyPair.id)
             .setIssuer(ISSUER)
@@ -47,9 +47,9 @@ object TokenService {
 //            .setAudience("")
 //            .setId("")
             .claim(VERSION_CLAIM, "1.0")
-            .claim(USER_CLAIM, userId) // UserId
-            .claim(ORGANIZATION_CLAIM, orgId) // OrganizationId
-            .claim(ENTITLEMENTS_CLAIM, fetchEntitlements(Hrn(orgId, IamResourceTypes.USER, userId).toString()))
+            .claim(USER_CLAIM, userHrn.resourceInstance) // UserId
+            .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
+            .claim(ENTITLEMENTS_CLAIM, fetchEntitlements(userHrn.toString()))
             .signWith(keyPair.privateKey, SignatureAlgorithm.ES256)
             .compact()
     }
@@ -89,15 +89,9 @@ class CachedMasterKey(
 
     companion object {
         fun forSigning(): CachedMasterKey {
-            val key = if (!::signKey.isInitialized || shouldRefreshSignKey()) {
-                MasterKeysRepo.fetchForSigning()
-            } else {
-                throw InternalException("Signing key not found")
-            }
-
-            if (key == null) {
-                throw InternalException("Signing key not found")
-            }
+           val key = (
+                if (!::signKey.isInitialized || shouldRefreshSignKey()) MasterKeysRepo.fetchForSigning() else null
+                ) ?: throw InternalException("Signing key not found")
 
             signKeyFetchTime = Instant.now()
             signKey = CachedMasterKey(key.privateKey, key.publicKey)

@@ -18,7 +18,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             null, LocalDateTime.now(), LocalDateTime.now()))
 
         // TODO: #1 - Update schema to include description, createdBy, updatedBy fields
-        // TODO: #2 - Add transaction to create admin user
+        // TODO: #2 - Add transaction to create iam resource_types and actions
+        // TODO: #3 - Add transaction to create admin user
 
         return getOrganization(id)
     }
