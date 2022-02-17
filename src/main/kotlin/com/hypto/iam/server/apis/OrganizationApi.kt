@@ -1,9 +1,9 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.controller.OrganizationsService
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.validatiors.validate
 import io.ktor.application.call
 import io.ktor.http.ContentType
@@ -52,8 +52,11 @@ fun Route.getAndUpdateOrganizationApi() {
     get("/organizations/{id}") {
         val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the Organization details")
         val response = controller.getOrganization(id)
-        call.respondText(text = gson.toJson(response), contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
     patch<UpdateOrganizationRequest>("/organizations/{id}") {

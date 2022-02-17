@@ -20,23 +20,34 @@ import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Date
 import mu.KotlinLogging
+import org.koin.core.component.KoinComponent
 
 val logger = KotlinLogging.logger("service.TokenService")
 
-object TokenService {
-    private const val ISSUER = "https://iam.hypto.com"
+/**
+ * Service which holds logic related to Organization operations
+ */
+interface TokenService {
+    suspend fun generateJwtToken(userHrn: Hrn): String
+}
 
-    // TODO: Move to config file
-    const val TOKEN_VALIDITY: Long = 300 // in seconds
-    private const val VERSION_CLAIM = "ver"
-    private const val USER_CLAIM = "usr"
-    private const val ORGANIZATION_CLAIM = "org"
-    private const val ENTITLEMENTS_CLAIM = "entitlements"
-    private const val KEY_ID = "kid"
+class TokenServiceImpl : KoinComponent, TokenService {
+    companion object {
+        private const val ISSUER = "https://iam.hypto.com"
 
-    val keyPair = CachedMasterKey.forSigning()
+        // TODO: Move to config file
+        const val TOKEN_VALIDITY: Long = 300 // in seconds
+        private const val VERSION_CLAIM = "ver"
+        private const val USER_CLAIM = "usr"
+        private const val ORGANIZATION_CLAIM = "org"
+        private const val ENTITLEMENTS_CLAIM = "entitlements"
+        private const val KEY_ID = "kid"
+        private const val VERSION_NUM = "1.0"
 
-    fun generateJwtToken(userHrn: Hrn): String {
+        val keyPair = CachedMasterKey.forSigning()
+    }
+
+    override suspend fun generateJwtToken(userHrn: Hrn): String {
         return Jwts.builder()
             .setHeaderParam(KEY_ID, keyPair.id)
             .setIssuer(ISSUER)
@@ -45,7 +56,7 @@ object TokenService {
             .setExpiration(Date.from(Instant.now().plusSeconds(TOKEN_VALIDITY)))
 //            .setAudience("")
 //            .setId("")
-            .claim(VERSION_CLAIM, "1.0")
+            .claim(VERSION_CLAIM, VERSION_NUM)
             .claim(USER_CLAIM, userHrn.resourceInstance) // UserId
             .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
             .claim(ENTITLEMENTS_CLAIM, fetchEntitlements(userHrn.toString()))
@@ -110,7 +121,8 @@ class CachedMasterKey(
             return CachedMasterKey(privateKeyByteArray, publicKeyByteArray)
         }
 
-        private const val cacheDuration: Long = TokenService.TOKEN_VALIDITY
+        // TODO: Change this to read from config file
+        private const val cacheDuration: Long = TokenServiceImpl.TOKEN_VALIDITY
         private lateinit var signKeyFetchTime: Instant
         private lateinit var signKey: CachedMasterKey
 
