@@ -1,10 +1,17 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.service.CredentialService
+import com.hypto.iam.server.service.CredentialServiceImpl
+import com.hypto.iam.server.service.DatabaseFactory
 import com.hypto.iam.server.service.OrganizationsService
-import com.hypto.iam.server.validatiors.validate
+import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -17,6 +24,7 @@ import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
 import org.koin.ktor.ext.inject
+import java.time.LocalDateTime
 
 /**
  * API to create & delete organization in IAM.
@@ -39,6 +47,25 @@ fun Route.createAndDeleteOrganizationApi() {
 
     delete("/organizations/{id}") {
         call.respond(HttpStatusCode.NotImplemented)
+    }
+}
+
+fun Route.testApi() {
+    get("/test") {
+//        val org = OrganizationsRecord("id1", "name", "description", null, LocalDateTime.now(), LocalDateTime.now())
+//        org.attach(DatabaseFactory.getConfiguration())
+//        org.insert()
+//        println(org.toString())
+//        org.name = "name2"
+//        org.update()
+//        println(org.toString())
+//        org.detach()
+        val rec = CredentialsRepo.create(
+            userHrn = Hrn.of("id1", IamResourceTypes.USER, "user1"),
+            refreshToken = "ref_token"
+        )
+
+        CredentialServiceImpl().deleteCredential("id2", "user1", rec.id)
     }
 }
 

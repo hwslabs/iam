@@ -1,9 +1,11 @@
 package com.hypto.iam.server
 
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
+import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.koin.test.KoinTest
+import java.time.LocalDateTime
 
 internal class ConfigurationTest : KoinTest {
 
@@ -11,7 +13,14 @@ internal class ConfigurationTest : KoinTest {
     fun `Sample Test`() {
         Assertions.assertEquals(1, 1)
 
-        MasterKeysRepo.rotateKey()
+//        MasterKeysRepo.rotateKey()
+
+//        val org = OrganizationsRecord("id1", "name", "description", null, LocalDateTime.now(), LocalDateTime.now())
+//        org.insert()
+//        println(org.toString())
+//        org.name = "name2"
+//        org.update()
+//        println(org.toString())
 
 //        startKoin {
 //            modules(repositoryModule, controllerModule, applicationModule)

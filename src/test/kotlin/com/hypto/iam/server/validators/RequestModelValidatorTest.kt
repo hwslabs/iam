@@ -2,7 +2,6 @@ package com.hypto.iam.server.validators
 
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
-import com.hypto.iam.server.validatiors.validate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import org.junit.jupiter.api.Assertions
@@ -53,14 +52,22 @@ internal class RequestModelValidatorTest {
         Assertions.assertInstanceOf(UpdateCredentialRequest::class.java, req.validate())
     }
 
-    // TODO: Fix the code and uncomment this test
-//    @Test
-//    fun `UpdateCredentialRequest - invalid - without status and validity `() {
-//        val req = UpdateCredentialRequest()
-//        Assertions.assertThrows(IllegalArgumentException::class.java) {
-//            Assertions.assertInstanceOf(UpdateCredentialRequest::class.java, req.validate())
-//        }
-//    }
+    @Test
+    fun `UpdateCredentialRequest - valid - with both status and validity `() {
+        val req = UpdateCredentialRequest(
+            LocalDateTime.MAX.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            UpdateCredentialRequest.Status.inactive
+        )
+        Assertions.assertInstanceOf(UpdateCredentialRequest::class.java, req.validate())
+    }
+
+    @Test
+    fun `UpdateCredentialRequest - invalid - without status and validity `() {
+        val req = UpdateCredentialRequest()
+        Assertions.assertThrows(IllegalArgumentException::class.java) {
+            Assertions.assertInstanceOf(UpdateCredentialRequest::class.java, req.validate())
+        }
+    }
 
     @Test
     fun `UpdateCredentialRequest - invalid - validity in the past`() {

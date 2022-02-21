@@ -20,7 +20,13 @@ object DatabaseFactory {
         password = "password"
     })
 
-    private val daoConfiguration = DefaultConfiguration().derive(SQLDialect.POSTGRES).derive(pool)
+    private val daoConfiguration = DefaultConfiguration()
+        .derive(SQLDialect.POSTGRES)
+        .derive(pool)
+        .deriveSettings {
+            // https://www.jooq.org/doc/latest/manual/sql-building/dsl-context/custom-settings/settings-return-all-on-store/
+            it.withReturnAllOnUpdatableRecord(true)
+        }
 
     fun getConfiguration(): Configuration {
         return daoConfiguration

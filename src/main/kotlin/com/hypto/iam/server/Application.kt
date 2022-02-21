@@ -7,6 +7,7 @@ import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceTypeApi
+import com.hypto.iam.server.apis.testApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.db.repositories.CredentialsRepo
@@ -94,6 +95,7 @@ fun Application.module() {
     }
 
     install(Routing) {
+        testApi()
         authenticate("hypto-iam-root-auth") {
             createAndDeleteOrganizationApi()
         }
@@ -115,6 +117,5 @@ fun main(args: Array<String>) {
     // https://www.baeldung.com/java-bouncy-castle#setup-unlimited-strength-jurisdiction-policy-files
     Security.setProperty("crypto.policy", "unlimited")
 
-    embeddedServer(
-        Netty, 8081, module = Application::module).start(wait = true)
+    embeddedServer(Netty, 8081, module = Application::module).start(wait = true)
 }
