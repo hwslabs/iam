@@ -25,4 +25,19 @@ data class Hrn(
     override fun toString(): String {
         return hrnStr
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Hrn
+
+        if (hrnStr != other.hrnStr) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return hrnStr.hashCode()
+    }
 }

@@ -1,15 +1,21 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.db.tables.Credentials.CREDENTIALS
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
-import java.util.Optional
+import com.hypto.iam.server.models.Credential
+import com.hypto.iam.server.service.DatabaseFactory
+import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.IamResourceTypes
+import java.time.LocalDateTime
 import java.util.UUID
+import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
 object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
-    com.hypto.iam.server.db.tables.Credentials.CREDENTIALS,
+    CREDENTIALS,
     Credentials::class.java,
-    com.hypto.iam.server.service.DatabaseFactory.getConfiguration()
+    DatabaseFactory.getConfiguration()
 ) {
     override fun getId(credentials: Credentials): UUID {
         return credentials.id
@@ -18,27 +24,80 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
     /**
      * Fetch a unique record that has `id = value`
      */
-    fun fetchOneById(value: UUID): Credentials? {
-        return fetchOne(com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.ID, value)
-    }
-
-    /**
-     * Fetch a unique record that has `id = value`
-     */
-    fun fetchOptionalById(value: UUID): Optional<Credentials> {
-        return fetchOptional(com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.ID, value)
+    fun fetchOneById(value: UUID): CredentialsRecord? {
+        val cred = fetchOne(CREDENTIALS.ID, value)
+        return cred?.let { CredentialsRecord(cred) }
     }
 
     /**
      * Fetch records that have `user_hrn = value`
      */
-    fun fetchByUserId(value: String): List<Credentials> {
-        return fetch(com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.USER_HRN, value)
+    fun fetchByUserHrn(value: String): Result<CredentialsRecord> {
+        return ctx().selectFrom(table).where(CREDENTIALS.USER_HRN.eq(value)).fetch()
     }
 
-    fun fetchByRefreshToken(refreshToken: String): Credentials? {
-        return ctx().selectFrom(table).where(
-            com.hypto.iam.server.db.tables.Credentials.CREDENTIALS.REFRESH_TOKEN.eq(refreshToken)
-        ).fetchOne(mapper())
+    /**
+     * Fetch records that have `user_hrn = value`
+     */
+    fun fetchByIdAndUserHrn(id: UUID, value: String): CredentialsRecord? {
+        return ctx().selectFrom(table)
+            .where(CREDENTIALS.ID.eq(id).and(CREDENTIALS.USER_HRN.eq(value)))
+            .fetchOne()
+    }
+
+    /**
+     * Fetch a unique record that has `refresh_token = value`
+     */
+    fun fetchByRefreshToken(refreshToken: String): CredentialsRecord? {
+        return ctx().selectFrom(table).where(CREDENTIALS.REFRESH_TOKEN.eq(refreshToken)).fetchOne()
+    }
+
+    /**
+     * Updates status and / or validUntil attributes of a credential represented by {@param id}
+     * @return true on successful update. false otherwise.
+     */
+    fun update(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): Boolean {
+        val query = ctx().update(table)
+        var builder = status?.let { query.set(CREDENTIALS.STATUS, status.value) }
+
+        validUntil?.let { builder = (builder ?: query).set(CREDENTIALS.VALID_UNTIL, validUntil) }
+
+        val count = builder?.where(CREDENTIALS.ID.eq(id))?.execute()
+
+        return count != null && count > 0
+    }
+
+    fun fetchAndUpdate(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): Boolean {
+        val credentialsRecord = fetchOneById(id) ?: return false
+        status?.let { credentialsRecord.setStatus(status.value) }
+        validUntil?.let { credentialsRecord.setValidUntil(validUntil) }
+        return credentialsRecord.update() > 0
+    }
+
+    /**
+     * Creates a credential record and returns the record object with auto-generated values (i.e, uuid)
+     */
+    fun create(
+        userHrn: Hrn,
+        status: Credential.Status = Credential.Status.active,
+        refreshToken: String,
+        validUntil: LocalDateTime? = null
+    ): CredentialsRecord {
+        val record = CredentialsRecord()
+            .setValidUntil(validUntil).setStatus(status.value).setRefreshToken(refreshToken)
+            .setUserHrn(userHrn.toString()).setCreatedAt(LocalDateTime.now()).setUpdatedAt(LocalDateTime.now())
+        record.attach(configuration())
+        record.store()
+        return record
+    }
+
+    fun delete(organizationId: String, userId: String, id: UUID): Boolean {
+        val record = CredentialsRecord()
+            .setId(id)
+            .setUserHrn(Hrn.of(organizationId, IamResourceTypes.USER, userId).toString())
+        record.attach(configuration())
+        val count = record.delete()
+        println(count)
+        return count > 0
     }
 }
