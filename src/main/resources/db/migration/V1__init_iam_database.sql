@@ -11,7 +11,7 @@ CREATE TABLE organizations (
 );
 
 CREATE TABLE users (
-  hrn VARCHAR(200) PRIMARY KEY, -- userId: 10 char alphabets (upper + lower case) is part of this hrn
+  hrn VARCHAR(200) PRIMARY KEY, -- username is a part of this hrn
   password_hash text NOT NULL,
   email VARCHAR(50) NOT NULL,
   phone VARCHAR(50) NOT NULL,
@@ -65,7 +65,7 @@ CREATE INDEX credentials_idx_user_hrn ON credentials(user_hrn);
 CREATE INDEX credentials_idx_refresh_token ON credentials(refresh_token);
 
 CREATE TABLE resource_types (
-  hrn VARCHAR(200) PRIMARY KEY, -- resourceTypeId: 10 char alphabets (upper + lower case) is part of this hrn
+  hrn VARCHAR(200) PRIMARY KEY, -- resourceTypeName is part of this hrn
   organization_id VARCHAR(10) NOT NULL,
   description text,
 
@@ -77,7 +77,7 @@ CREATE TABLE resource_types (
 CREATE INDEX resource_types_idx_org_id ON resource_types(organization_id);
 
 CREATE TABLE actions (
-  hrn VARCHAR(200) PRIMARY KEY, -- actionId: 10 char alphabets (upper + lower case) is part of this hrn
+  hrn VARCHAR(200) PRIMARY KEY, -- actionName is part of this hrn
   organization_id VARCHAR(10) NOT NULL,
   resource_type_hrn VARCHAR(200) NOT NULL,
   description text,
@@ -90,8 +90,9 @@ CREATE TABLE actions (
 CREATE INDEX actions_idx_org_id_resource_type_hrn ON actions(organization_id, resource_type_hrn);
 
 CREATE TABLE policies (
-  hrn VARCHAR(200) PRIMARY KEY, -- policyId: 10 char alphabets (upper + lower case) is part of this hrn
+  hrn VARCHAR(200) PRIMARY KEY, -- policyName is part of this hrn
   organization_id VARCHAR(10) NOT NULL,
+  version INT NOT NULL,
   statements text NOT NULL, -- Supports max string of 1GB (https://stackoverflow.com/a/39966079)
 
   created_at timestamp NOT NULL,

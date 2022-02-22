@@ -13,9 +13,14 @@ import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.service.CredentialServiceImpl
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.service.OrganizationsServiceImpl
+import com.hypto.iam.server.service.PolicyService
+import com.hypto.iam.server.service.PolicyServiceImpl
 import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
-import com.hypto.iam.server.utils.IdUtil
+import com.hypto.iam.server.utils.ApplicationIdUtil
+import com.hypto.iam.server.utils.IdGenerator
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
@@ -35,9 +40,18 @@ val controllerModule = module {
     single { OrganizationsServiceImpl() } bind OrganizationsService::class
     single { TokenServiceImpl() } bind TokenService::class
     single { CredentialServiceImpl() } bind CredentialService::class
+    single { PolicyServiceImpl() } bind PolicyService::class
 }
 
 val applicationModule = module {
     single { Gson() }
-    single { IdUtil }
+    single { IdGenerator }
+    single { ApplicationIdUtil.Generator }
+    single { ApplicationIdUtil.Validator }
+}
+
+inline fun <reified T> getKoinInstance(): T {
+    return object : KoinComponent {
+        val value: T by inject()
+    }.value
 }

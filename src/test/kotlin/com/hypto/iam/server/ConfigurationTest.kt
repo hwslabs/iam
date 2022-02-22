@@ -1,11 +1,8 @@
 package com.hypto.iam.server
 
-import com.hypto.iam.server.db.repositories.MasterKeysRepo
-import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.koin.test.KoinTest
-import java.time.LocalDateTime
 
 internal class ConfigurationTest : KoinTest {
 

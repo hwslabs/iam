@@ -14,15 +14,15 @@ package com.hypto.iam.server.models
 import java.io.Serializable
 /**
  *
- * @param id
  * @param name
+ * @param organizationId
  * @param version
  * @param statements
  */
 data class Policy(
-    val id: kotlin.String,
     val name: kotlin.String,
-    val version: kotlin.String,
+    val organizationId: kotlin.String,
+    val version: kotlin.Int,
     val statements: kotlin.collections.List<PolicyStatement>
 ) : Serializable {
     companion object {

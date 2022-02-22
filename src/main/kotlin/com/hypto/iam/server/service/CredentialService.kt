@@ -2,14 +2,15 @@ package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
+import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.UpdateCredentialRequest
+import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
-import com.hypto.iam.server.utils.IdUtil
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -18,26 +19,17 @@ import org.koin.core.component.inject
 
 class CredentialServiceImpl : KoinComponent, CredentialService {
     private val repo: CredentialsRepo by inject()
-    private val idUtil: IdUtil by inject()
-
-    companion object {
-        const val REFRESH_TOKEN_RANDOM_LENGTH = 30L
-    }
-
-    // First 10 chars: alphabets (lower + upper) representing userId
-    // next 20 chars: alphanumeric with upper and lower case - random
-    private fun generateRefreshToken(userId: String): String {
-        return userId + idUtil.timeBasedRandomId(REFRESH_TOKEN_RANDOM_LENGTH, IdUtil.IdCharset.ALPHABETS)
-    }
+    private val idGenerator: ApplicationIdUtil.Generator by inject()
 
     override suspend fun createCredential(
         organizationId: String,
         userId: String,
         validUntil: String?
     ): Credential {
+        // TODO: Limit number of active credentials for a single user
         val credentialsRecord = repo.create(
             userHrn = Hrn.of(organizationId, IamResourceTypes.USER, userId),
-            refreshToken = generateRefreshToken(userId),
+            refreshToken = idGenerator.refreshToken(organizationId),
             validUntil = LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
 
@@ -59,28 +51,29 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         status: UpdateCredentialRequest.Status?,
         validUntil: String?
     ): CredentialWithoutSecret {
+        // TODO: 3 DB queries are being made in this method. Try to optimize
         fetchCredential(organizationId, userId, id) // Validation
 
-        val success = repo.update(
+        val credentialsRecord = repo.update(
             id,
             status?.let { Credential.Status.valueOf(it.value) },
             validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
-        if (!success) { throw IllegalStateException("Update unsuccessful") }
+        credentialsRecord ?: throw IllegalStateException("Update unsuccessful")
 
-        return CredentialWithoutSecret.from(repo.fetchOneById(id)!!)
+        return CredentialWithoutSecret.from(credentialsRecord)
     }
 
     override suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse {
-        if (!repo.delete(organizationId, userId, id)) { throw IllegalStateException("Credential not found") }
+        if (!repo.delete(organizationId, userId, id)) { throw EntityNotFoundException("Credential not found") }
 
         return BaseSuccessResponse(true)
     }
 
     private fun fetchCredential(organizationId: String, userId: String, id: UUID): CredentialsRecord {
         return repo.fetchByIdAndUserHrn(id, Hrn.of(organizationId, IamResourceTypes.USER, userId).toString())
-            ?: throw IllegalStateException("Credential not found")
+            ?: throw EntityNotFoundException("Credential not found")
     }
 }
 

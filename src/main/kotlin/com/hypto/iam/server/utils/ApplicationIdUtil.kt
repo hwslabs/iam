@@ -1,0 +1,34 @@
+package com.hypto.iam.server.utils
+
+import com.hypto.iam.server.extensions.nameCheck
+import com.hypto.iam.server.utils.IdGenerator.Charset
+import io.konform.validation.Valid
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+object ApplicationIdUtil : KoinComponent {
+    private const val ORGANIZATION_ID_LENGTH = 10L
+    private const val REFRESH_TOKEN_RANDOM_LENGTH = 30L
+
+    object Generator {
+        private val idGenerator: IdGenerator by inject()
+
+        fun organizationId(): String {
+            return idGenerator.randomId(ORGANIZATION_ID_LENGTH, Charset.ALPHANUMERIC)
+        }
+
+        // First 10 chars: alphabets (upper) representing organizationId
+        // next 20 chars: alphanumeric with upper and lower case - random
+        fun refreshToken(organizationId: String): String {
+            return organizationId + idGenerator.timeBasedRandomId(REFRESH_TOKEN_RANDOM_LENGTH, Charset.ALPHABETS)
+        }
+    }
+
+    object Validator {
+        fun organizationId(orgId: String): Boolean {
+            return (orgId.length == ORGANIZATION_ID_LENGTH.toInt() && orgId.all { it.isUpperCase() })
+        }
+
+        fun name(name: String): Boolean { return nameCheck(name) is Valid }
+    }
+}

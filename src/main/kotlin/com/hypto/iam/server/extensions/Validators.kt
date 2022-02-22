@@ -1,8 +1,15 @@
 package com.hypto.iam.server.extensions
 
+import com.hypto.iam.server.Constants.Companion.MAX_NAME_LENGTH
+import com.hypto.iam.server.Constants.Companion.MIN_NAME_LENGTH
+import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.HrnParseException
 import io.konform.validation.Invalid
 import io.konform.validation.Validation
 import io.konform.validation.ValidationBuilder
+import io.konform.validation.jsonschema.maxLength
+import io.konform.validation.jsonschema.minLength
+import io.konform.validation.jsonschema.pattern
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -35,6 +42,23 @@ fun ValidationBuilder<String>.dateTime(
     } catch (e: DateTimeParseException) {
         false
     }
+}
+
+fun ValidationBuilder<String>.hrn(hrnString: String) = addConstraint("must be a valid hrn") {
+    try {
+        Hrn.of(hrnString)
+        true
+    } catch (e: HrnParseException) {
+        false
+    }
+}
+
+const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
+const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
+val nameCheck = Validation<String> {
+    minLength(MIN_NAME_LENGTH) hint "Minimum length expected is $MIN_NAME_LENGTH"
+    maxLength(MAX_NAME_LENGTH) hint "Maximum length supported for name is $MAX_NAME_LENGTH characters"
+    pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
 }
 
 /**

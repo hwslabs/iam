@@ -1,9 +1,10 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.db.Tables.USER_POLICIES
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
-import java.util.Optional
 import java.util.UUID
+import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
 object UserPoliciesRepo : DAOImpl<UserPoliciesRecord, UserPolicies, UUID>(
@@ -16,23 +17,12 @@ object UserPoliciesRepo : DAOImpl<UserPoliciesRecord, UserPolicies, UUID>(
     }
 
     /**
-     * Fetch a unique record that has `id = value`
-     */
-    fun fetchOneById(value: UUID): UserPolicies? {
-        return fetchOne(com.hypto.iam.server.db.tables.UserPolicies.USER_POLICIES.ID, value)
-    }
-
-    /**
-     * Fetch a unique record that has `id = value`
-     */
-    fun fetchOptionalById(value: UUID): Optional<UserPolicies> {
-        return fetchOptional(com.hypto.iam.server.db.tables.UserPolicies.USER_POLICIES.ID, value)
-    }
-
-    /**
      * Fetch records that have `principal_hrn = value`
      */
-    fun fetchByPrincipalHrn(value: String): List<UserPolicies> {
-        return fetch(com.hypto.iam.server.db.tables.UserPolicies.USER_POLICIES.PRINCIPAL_HRN, value)
+    fun fetchByPrincipalHrn(value: String): Result<UserPoliciesRecord> {
+        return ctx()
+            .selectFrom(table)
+            .where(USER_POLICIES.PRINCIPAL_HRN.equal(value))
+            .fetch()
     }
 }

@@ -4,10 +4,10 @@ import java.time.Instant
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.streams.asSequence
 
-object IdUtil {
+object IdGenerator {
     val ulid = ULID()
 
-    enum class IdCharset(val seed: String) {
+    enum class Charset(val seed: String) {
         UPPERCASE_ALPHABETS("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
         LOWERCASE_ALPHABETS(UPPERCASE_ALPHABETS.seed.lowercase()),
         NUMERIC("0123456789"),
@@ -17,7 +17,7 @@ object IdUtil {
         ALPHANUMERIC(ALPHABETS.seed + NUMERIC.seed),
     }
 
-    fun randomId(length: Long = 10, charset: IdCharset = IdCharset.UPPERCASE_ALPHABETS): String {
+    fun randomId(length: Long = 10, charset: Charset = Charset.UPPERCASE_ALPHABETS): String {
         return ThreadLocalRandom.current().ints(length, 0, charset.seed.length)
             .asSequence()
             .map(charset.seed::get)
@@ -28,15 +28,15 @@ object IdUtil {
      * Convert numbers to required charset.
      *
      * E.g: For number = 1645204287
-     * - numberToId(number, IdUtil.IdCharset.NUMERIC) == "1645204287"
-     * - numberToId(number, IdUtil.IdCharset.ALPHABETS) == "ERAhbz"
-     * - numberToId(number, IdUtil.IdCharset.ALPHANUMERIC) == "BxVGxB"
-     * - numberToId(number, IdUtil.IdCharset.UPPERCASE_ALPHABETS) == "FIMFEDZ"
-     * - numberToId(number, IdUtil.IdCharset.LOWERCASE_ALPHABETS) == "fimfedz"
-     * - numberToId(number, IdUtil.IdCharset.UPPER_ALPHANUMERIC) == "1HSP1D"
-     * - numberToId(number, IdUtil.IdCharset.LOWER_ALPHANUMERIC) == "1hsp1d"
+     * - numberToId(number, IdGenerator.Charset.NUMERIC) == "1645204287"
+     * - numberToId(number, IdGenerator.Charset.ALPHABETS) == "ERAhbz"
+     * - numberToId(number, IdGenerator.Charset.ALPHANUMERIC) == "BxVGxB"
+     * - numberToId(number, IdGenerator.Charset.UPPERCASE_ALPHABETS) == "FIMFEDZ"
+     * - numberToId(number, IdGenerator.Charset.LOWERCASE_ALPHABETS) == "fimfedz"
+     * - numberToId(number, IdGenerator.Charset.UPPER_ALPHANUMERIC) == "1HSP1D"
+     * - numberToId(number, IdGenerator.Charset.LOWER_ALPHANUMERIC) == "1hsp1d"
      */
-    fun numberToId(number: Long, charset: IdCharset = IdCharset.UPPERCASE_ALPHABETS): String {
+    fun numberToId(number: Long, charset: Charset = Charset.UPPERCASE_ALPHABETS): String {
         return if (number < 0L) {
             "-" + numberToId(-number - 1)
         } else if (number == 0L) {
@@ -56,7 +56,7 @@ object IdUtil {
 
     private const val MIN_TIME_BASED_RANDOM_ID_SIZE = 10
 
-    fun timeBasedRandomId(length: Long = 10, charset: IdCharset = IdCharset.UPPERCASE_ALPHABETS): String {
+    fun timeBasedRandomId(length: Long = 10, charset: Charset = Charset.UPPERCASE_ALPHABETS): String {
         if (length < MIN_TIME_BASED_RANDOM_ID_SIZE) {
             throw IllegalArgumentException(
                 "Cannot generate a timestamp based random id with less than $MIN_TIME_BASED_RANDOM_ID_SIZE characters"
