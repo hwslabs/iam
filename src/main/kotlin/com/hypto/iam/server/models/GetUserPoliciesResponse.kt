@@ -17,7 +17,7 @@ import java.io.Serializable
  * @param policies
  */
 data class GetUserPoliciesResponse(
-    val policies: kotlin.collections.List<Policy>
+    val policies: kotlin.collections.List<UserPolicy>
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

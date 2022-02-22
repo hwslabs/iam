@@ -5,22 +5,37 @@ package com.hypto.iam.server.utils
 data class Hrn(
     val organization: String,
     val resourceType: String,
-    val resourceInstance: String
+    val resourceInstance: String?
 ) {
     companion object {
-        fun of(organization: String, resourceType: String, resourceInstance: String): Hrn {
+        private const val HRN_COMPONENTS = 4
+        fun of(organization: String, resourceType: String, resourceInstance: String?): Hrn {
             return Hrn(organization, resourceType, resourceInstance)
         }
 
         fun of(hrnString: String): Hrn {
+            // hws:iam:id1:user/user1
             // TODO: Validate if the input is indeed an HRN string
-            val arnArray = hrnString.split(":").reversed()
-            val resourceArray = arnArray[0].split("/")
-            return Hrn(arnArray[1], resourceArray[0], resourceArray[1])
+            try {
+                val hrnArray = hrnString.split(":").reversed()
+                if (hrnArray.size != HRN_COMPONENTS || hrnArray.any { it.isEmpty() }) { throw HrnParseException() }
+
+                // TODO: Decide what kind of regex usage we should allow (prefix *, suffix *, etc.)
+                // and add validations accordingly
+                val resourceArray = hrnArray[0].split("/", limit = 2)
+                return Hrn(hrnArray[1], resourceArray[0], resourceArray.getOrNull(1))
+            } catch (_: Exception) {
+                throw HrnParseException()
+            }
         }
     }
 
-    private val hrnStr = "hws:iam:$organization:$resourceType/$resourceInstance"
+    private var hrnStr: String
+
+    init {
+        val instanceSection = resourceInstance?.let { "/$it" }
+        hrnStr = "hws:iam:$organization:$resourceType$instanceSection"
+    }
 
     override fun toString(): String {
         return hrnStr
@@ -40,4 +55,8 @@ data class Hrn(
     override fun hashCode(): Int {
         return hrnStr.hashCode()
     }
+}
+
+class HrnParseException(message: String?) : Exception(message) {
+    constructor() : this(null)
 }

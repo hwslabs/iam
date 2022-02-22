@@ -1319,7 +1319,7 @@ components:
           type: array
           maxItems: 50
           items:
-            $ref: '#/components/schemas/Policy'
+            $ref: '#/components/schemas/UserPolicy'
 
     TokenResponse:
       type: object
@@ -1446,7 +1446,6 @@ components:
       type: object
       additionalProperties: false
       required:
-        - id
         - name
         - organization_id
       properties:
@@ -1467,11 +1466,11 @@ components:
       type: object
       additionalProperties: false
       required:
-        - id
+        - organization_id
         - resource_id
         - name
       properties:
-        id:
+        organization_id:
           type: string
           maxLength: 50
         resource_id:
@@ -1484,23 +1483,36 @@ components:
           type: string
           maxLength: 500
 
+    UserPolicy:
+      type: object
+      additionalProperties: false
+      required:
+        - organization_id
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        organization_id:
+          type: string
+          maxLength: 50
     Policy:
       type: object
       additionalProperties: false
       required:
-        - id
+        - organization_id
         - name
         - version
         - statements
       properties:
-        id:
-          type: string
-          maxLength: 50
         name:
           type: string
           maxLength: 50
-        version:
+        organization_id:
           type: string
+          maxLength: 50
+        version:
+          type: integer
           maxLength: 5
         statements:
           type: array

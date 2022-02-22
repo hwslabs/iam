@@ -1,3 +1,4 @@
+@file:Suppress("LongMethod")
 package com.hypto.iam.server
 
 import com.codahale.metrics.Slf4jReporter
@@ -59,7 +60,8 @@ fun Application.module() {
             .convertRatesTo(TimeUnit.SECONDS)
             .convertDurationsTo(TimeUnit.MILLISECONDS)
             .build()
-        reporter.start(10, TimeUnit.SECONDS)
+        // TODO: Change this to SECONDS upon configuring separate service log file
+        reporter.start(10, TimeUnit.MINUTES)
     }
     install(ContentNegotiation) {
         // TODO: Switch to kotlinx.serialization
@@ -68,6 +70,19 @@ fun Application.module() {
 
     install(StatusPages) {
         // TODO: Logic to update error message
+
+        /* Exceptions to handle:
+         * CustomExceptions:
+         * - EntityAlreadyExistsException - 400
+         * - EntityNotFoundException      - 404
+         * - InternalException            - 500
+         *
+         * - DeleteOrUpdateWithoutWhereException - 500
+         *
+         * UsedExceptions:
+         * - IllegalArgumentException
+         * - DataAccessException
+         */
     }
     install(AutoHeadResponse) // see http://ktor.io/features/autoheadresponse.html
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
@@ -100,7 +115,7 @@ fun Application.module() {
             createAndDeleteOrganizationApi()
         }
 
-        authenticate("bearer-auth") {
+//        authenticate("bearer-auth") {
             getAndUpdateOrganizationApi()
             actionApi()
             credentialApi()
@@ -108,7 +123,7 @@ fun Application.module() {
             resourceTypeApi()
             tokenApi()
             usersApi()
-        }
+//        }
     }
 }
 

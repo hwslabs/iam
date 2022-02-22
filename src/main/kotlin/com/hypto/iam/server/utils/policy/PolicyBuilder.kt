@@ -1,19 +1,19 @@
 package com.hypto.iam.server.utils.policy
 
-import com.hypto.iam.server.db.tables.pojos.Policies
+import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import java.io.InputStream
 
 class PolicyBuilder {
 
     var policyStatements = ArrayList<PolicyStatement>()
-    var policies = ArrayList<Policies>()
+    var policies = ArrayList<PoliciesRecord>()
 
     fun withStatement(statement: PolicyStatement): PolicyBuilder {
         this.policyStatements.add(statement)
         return this
     }
 
-    fun withPolicy(policy: Policies?): PolicyBuilder {
+    fun withPolicy(policy: PoliciesRecord?): PolicyBuilder {
         if (policy != null) { this.policies.add(policy) }
         return this
     }

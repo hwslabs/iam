@@ -1,18 +1,22 @@
 package com.hypto.iam.server.validators
 
-import com.hypto.iam.server.Constants
+import com.hypto.iam.server.Constants.Companion.MAX_POLICY_STATEMENTS
+import com.hypto.iam.server.Constants.Companion.MIN_POLICY_STATEMENTS
 import com.hypto.iam.server.extensions.TimeNature
 import com.hypto.iam.server.extensions.dateTime
+import com.hypto.iam.server.extensions.nameCheck
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreatePolicyRequest
+import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.models.UpdatePolicyRequest
 import io.konform.validation.Validation
-import io.konform.validation.jsonschema.maxLength
-import io.konform.validation.jsonschema.minLength
-import io.konform.validation.jsonschema.pattern
+import io.konform.validation.jsonschema.maxItems
+import io.konform.validation.jsonschema.minItems
 
 // This file contains extension functions to validate input data given by clients
 
@@ -23,9 +27,7 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
     return Validation<CreateOrganizationRequest> {
         // Name is mandatory parameter and max length should be 50
         CreateOrganizationRequest::name required {
-            minLength(Constants.MIN_NAME_LENGTH) hint "Minimum length expected is 2"
-            maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for name is 50 characters"
-            pattern("^[a-zA-Z_]*\$") hint "Only characters A..Z, a..z & _ are supported."
+            run(nameCheck)
         }
     }.validateAndThrowOnFailure(this)
 }
@@ -36,9 +38,7 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
 fun UpdateOrganizationRequest.validate(): UpdateOrganizationRequest {
     return Validation<UpdateOrganizationRequest> {
         UpdateOrganizationRequest::description required {
-            minLength(Constants.MIN_DESC_LENGTH) hint "Minimum length expected is 2"
-            maxLength(Constants.MAX_DESC_LENGTH) hint "Maximum length supported for description is 100 characters"
-            pattern("^[a-zA-Z_]*\$") hint "Only characters A..Z, a..z & _ are supported."
+            run(nameCheck)
         }
     }.validateAndThrowOnFailure(this)
 }
@@ -65,6 +65,37 @@ fun UpdateCredentialRequest.validate(): UpdateCredentialRequest {
         )
         UpdateCredentialRequest::validUntil ifPresent {
             dateTime(nature = TimeNature.FUTURE)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+fun CreatePolicyRequest.validate(): CreatePolicyRequest {
+    return Validation<CreatePolicyRequest> {
+        CreatePolicyRequest::name required {
+            run(nameCheck)
+        }
+        CreatePolicyRequest::statements required {
+            minItems(MIN_POLICY_STATEMENTS)
+            maxItems(MAX_POLICY_STATEMENTS)
+        }
+        CreatePolicyRequest::statements onEach {
+            PolicyStatement::resourceType required { run(nameCheck) }
+            PolicyStatement::action required { run(nameCheck) }
+            PolicyStatement::effect required {}
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+fun UpdatePolicyRequest.validate(): UpdatePolicyRequest {
+    return Validation<UpdatePolicyRequest> {
+        UpdatePolicyRequest::statements required {
+            minItems(MIN_POLICY_STATEMENTS)
+            maxItems(MAX_POLICY_STATEMENTS)
+        }
+        UpdatePolicyRequest::statements onEach {
+            PolicyStatement::resourceType required { run(nameCheck) }
+            PolicyStatement::action required { run(nameCheck) }
+            PolicyStatement::effect required {}
         }
     }.validateAndThrowOnFailure(this)
 }

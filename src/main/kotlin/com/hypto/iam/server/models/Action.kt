@@ -14,13 +14,13 @@ package com.hypto.iam.server.models
 import java.io.Serializable
 /**
  *
- * @param id
+ * @param organizationId
  * @param resourceId
  * @param name
  * @param description
  */
 data class Action(
-    val id: kotlin.String,
+    val organizationId: kotlin.String,
     val resourceId: kotlin.String,
     val name: kotlin.String,
     val description: kotlin.String? = null

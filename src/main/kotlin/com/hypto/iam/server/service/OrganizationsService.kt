@@ -3,17 +3,17 @@ package com.hypto.iam.server.service
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.models.Organization
-import com.hypto.iam.server.utils.IdUtil
+import com.hypto.iam.server.utils.ApplicationIdUtil
 import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val repo: OrganizationRepo by inject()
-    private val idUtil: IdUtil by inject()
+    private val idGenerator: ApplicationIdUtil.Generator by inject()
 
     override suspend fun createOrganization(name: String, description: String): Organization {
-        val id = idUtil.randomId(charset = IdUtil.IdCharset.ALPHANUMERIC)
+        val id = idGenerator.organizationId()
         repo.insert(Organizations(id, name, "",
             null, LocalDateTime.now(), LocalDateTime.now()))
 

@@ -1,13 +1,17 @@
-@file:Suppress("ThrowsCount", "UnusedPrivateMember")
+@file:Suppress("ThrowsCount")
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.UpdatePolicyRequest
+import com.hypto.iam.server.service.PolicyService
+import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
 import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.get
@@ -17,41 +21,78 @@ import org.koin.ktor.ext.inject
 
 fun Route.policyApi() {
 
+    val policyService: PolicyService by inject()
     val gson: Gson by inject()
 
     post("/organizations/{organization_id}/policies") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val request = call.receive<CreatePolicyRequest>() // .validate()
-        call.respond(HttpStatusCode.NotImplemented)
+        val request = call.receive<CreatePolicyRequest>().validate()
+
+        // TODO: Validate policy statements (actions and resourceTypes)
+
+        val policy = policyService.createPolicy(organizationId, request.name, request.statements)
+
+        call.respondText(
+            text = gson.toJson(policy),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created
+        )
     }
 
-    delete("/organizations/{organization_id}/policies/{id}") {
+    delete("/organizations/{organization_id}/policies/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to delete a policy")
-        call.respond(HttpStatusCode.NotImplemented)
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to delete a policy")
+
+        val response = policyService.deletePolicy(organizationId, name)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    get("/organizations/{organization_id}/policies/{id}") {
+    get("/organizations/{organization_id}/policies/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the policy details")
-        call.respond(HttpStatusCode.NotImplemented)
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to get the policy details")
+
+        val response = policyService.getPolicy(organizationId, name)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
     get("/organizations/{organization_id}/users/{user_id}/policies") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
         val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required user id to list policies")
-        call.respond(HttpStatusCode.NotImplemented)
+
+        val response = policyService.getPoliciesByUser(organizationId, userId)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    patch("/organizations/{organization_id}/policies/{id}") {
+    patch("/organizations/{organization_id}/policies/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the policy details")
-        val request = call.receive<UpdatePolicyRequest>() // .validate()
+        val name = call.parameters["name"]
+            ?: throw IllegalArgumentException("Required name to update the policy details")
+        val request = call.receive<UpdatePolicyRequest>().validate()
+
+        // TODO: Validate policy statements (actions and resourceTypes)
+
+        policyService.updatePolicy(organizationId, name, request.statements)
+
         call.respond(HttpStatusCode.NotImplemented)
     }
 }

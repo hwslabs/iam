@@ -56,21 +56,22 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
      * Updates status and / or validUntil attributes of a credential represented by {@param id}
      * @return true on successful update. false otherwise.
      */
-    fun update(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): Boolean {
-        val query = ctx().update(table)
-        var builder = status?.let { query.set(CREDENTIALS.STATUS, status.value) }
+    fun update(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): CredentialsRecord? {
+        var builder = ctx().update(table).set(CREDENTIALS.UPDATED_AT, LocalDateTime.now())
+        status?.let { builder = builder.set(CREDENTIALS.STATUS, status.value) }
+        validUntil?.let { builder = builder.set(CREDENTIALS.VALID_UNTIL, validUntil) }
 
-        validUntil?.let { builder = (builder ?: query).set(CREDENTIALS.VALID_UNTIL, validUntil) }
-
-        val count = builder?.where(CREDENTIALS.ID.eq(id))?.execute()
-
-        return count != null && count > 0
+        return builder.where(CREDENTIALS.ID.eq(id)).returning().fetchOne()
     }
 
     fun fetchAndUpdate(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): Boolean {
         val credentialsRecord = fetchOneById(id) ?: return false
         status?.let { credentialsRecord.setStatus(status.value) }
         validUntil?.let { credentialsRecord.setValidUntil(validUntil) }
+
+        // TODO: Automate this using listeners or some other means
+        if (credentialsRecord.changed()) { credentialsRecord.updatedAt = LocalDateTime.now() }
+
         return credentialsRecord.update() > 0
     }
 
@@ -97,7 +98,6 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
             .setUserHrn(Hrn.of(organizationId, IamResourceTypes.USER, userId).toString())
         record.attach(configuration())
         val count = record.delete()
-        println(count)
         return count > 0
     }
 }
