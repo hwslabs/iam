@@ -72,7 +72,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
             val policy = PoliciesRepo.fetchByHrn(it.policyHrn)!!
             logger.info { policy.statements }
 
-            policyBuilder.withPolicy(policy).withStatement(PolicyStatement.g(userHrn, policy.hrn))
+            policyBuilder.withPolicy(policy).withUserPolicy(it)
         }
 
         return policyBuilder.build()

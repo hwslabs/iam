@@ -3,10 +3,11 @@ package com.hypto.iam.server.utils
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import com.hypto.iam.server.utils.policy.PolicyRequest
 import com.hypto.iam.server.utils.policy.PolicyStatement
+import com.hypto.iam.server.utils.policy.PolicyValidator
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
-class PolicyUtilTest {
+class PolicyValidatorTest {
     @Test
     fun `Test policy- allow and deny for same permission, outcome- deny`() {
         val policy = PolicyBuilder()
@@ -14,7 +15,7 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "data1", "read", "allow"))
 
         Assertions.assertFalse(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
         )
     }
 
@@ -25,7 +26,7 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "*", "read", "deny"))
 
         Assertions.assertFalse(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
         )
     }
 
@@ -36,7 +37,7 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "*", "read", "allow"))
 
         Assertions.assertFalse(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
         )
     }
 
@@ -47,7 +48,7 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "data2", "read", "allow"))
 
         Assertions.assertFalse(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("bob", "data1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("bob", "data1", "read"))
         )
     }
 
@@ -58,7 +59,7 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "data2", "read", "allow"))
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data2", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data2", "read"))
         )
     }
 
@@ -68,15 +69,15 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "*", "read", "allow"))
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data2", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data2", "read"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data3", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data3", "read"))
         )
     }
 
@@ -86,19 +87,19 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "resource1/*", "read", "allow"))
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "resource1/instance1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "resource1/instance1", "read"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "resource1/instance2", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "resource1/instance2", "read"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "resource1/instance3", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "resource1/instance3", "read"))
         )
 
         Assertions.assertFalse(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "resource2/instance1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "resource2/instance1", "read"))
         )
     }
 
@@ -108,15 +109,15 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "data1", "*", "allow"))
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "read"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "write"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "write"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "update"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "update"))
         )
     }
 
@@ -126,18 +127,18 @@ class PolicyUtilTest {
             .withStatement(PolicyStatement.p("alice", "data1", "prefix*", "allow"))
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "prefixread"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "prefixread"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "prefixwrite"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "prefixwrite"))
         )
 
         Assertions.assertTrue(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "prefixupdate"))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "prefixupdate"))
         )
 
         Assertions.assertFalse(
-            PolicyUtil.validate(policy.stream(), PolicyRequest("alice", "data1", "read")))
+            PolicyValidator.validate(policy.stream(), PolicyRequest("alice", "data1", "read")))
     }
 }

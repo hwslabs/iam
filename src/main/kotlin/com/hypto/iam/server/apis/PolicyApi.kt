@@ -29,8 +29,6 @@ fun Route.policyApi() {
             ?: throw IllegalArgumentException("organization_id required")
         val request = call.receive<CreatePolicyRequest>().validate()
 
-        // TODO: Validate policy statements (actions and resourceTypes)
-
         val policy = policyService.createPolicy(organizationId, request.name, request.statements)
 
         call.respondText(
@@ -89,10 +87,12 @@ fun Route.policyApi() {
             ?: throw IllegalArgumentException("Required name to update the policy details")
         val request = call.receive<UpdatePolicyRequest>().validate()
 
-        // TODO: Validate policy statements (actions and resourceTypes)
+        val response = policyService.updatePolicy(organizationId, name, request.statements)
 
-        policyService.updatePolicy(organizationId, name, request.statements)
-
-        call.respond(HttpStatusCode.NotImplemented)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 }
