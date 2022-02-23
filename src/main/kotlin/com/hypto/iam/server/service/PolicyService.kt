@@ -13,6 +13,7 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.UserPolicy
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.policy.PolicyBuilder
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -27,7 +28,12 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         if (policyRepo.existsById(policyHrn.toString())) {
             throw EntityAlreadyExistsException("Policy with name [$name] already exists")
         }
-        val policyRecord = policyRepo.create(policyHrn, gson.toJson(statements))
+
+        // TODO: Validate policy statements (actions and resourceTypes)
+        val newPolicyBuilder = PolicyBuilder(policyHrn.toString())
+        statements.forEach { newPolicyBuilder.withStatement(it) }
+
+        val policyRecord = policyRepo.create(policyHrn, newPolicyBuilder.build())
         return Policy.from(policyRecord)
     }
 
@@ -38,9 +44,15 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     }
 
     override fun updatePolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
+        val policyHrnStr = Hrn.of(organizationId, IamResourceTypes.POLICY, name).toString()
+
+        // TODO: Validate policy statements (actions and resourceTypes)
+        val newPolicyBuilder = PolicyBuilder(policyHrnStr)
+        statements.forEach { newPolicyBuilder.withStatement(it) }
+
         val policyRecord = policyRepo.update(
-            Hrn.of(organizationId, IamResourceTypes.POLICY, name).toString(),
-            gson.toJson(statements)
+            policyHrnStr,
+            newPolicyBuilder.build()
         )
         policyRecord ?: throw IllegalStateException("Update unsuccessful")
         return Policy.from(policyRecord)

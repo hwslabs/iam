@@ -1,20 +1,38 @@
 package com.hypto.iam.server.utils.policy
 
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
+import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
 import java.io.InputStream
 
-class PolicyBuilder {
+class PolicyBuilder() {
 
+    constructor(policyName: String) : this() { this.policyName = policyName }
+
+    lateinit var policyName: String
     var policyStatements = ArrayList<PolicyStatement>()
     var policies = ArrayList<PoliciesRecord>()
+    var userPolicies = ArrayList<UserPoliciesRecord>()
 
     fun withStatement(statement: PolicyStatement): PolicyBuilder {
         this.policyStatements.add(statement)
         return this
     }
 
+    fun withStatement(
+        statement: com.hypto.iam.server.models.PolicyStatement,
+        principal: String = policyName
+    ): PolicyBuilder {
+        this.policyStatements.add(PolicyStatement.of(principal, statement))
+        return this
+    }
+
     fun withPolicy(policy: PoliciesRecord?): PolicyBuilder {
         if (policy != null) { this.policies.add(policy) }
+        return this
+    }
+
+    fun withUserPolicy(userPolicy: UserPoliciesRecord?): PolicyBuilder {
+        if (userPolicy != null) { this.userPolicies.add(userPolicy) }
         return this
     }
 
@@ -26,8 +44,9 @@ class PolicyBuilder {
 
     override fun toString(): String {
         val builder = StringBuilder()
-        policyStatements.forEach { builder.appendLine(it.statement) }
+        policyStatements.forEach { builder.appendLine(it.toString()) }
         policies.forEach { builder.appendLine(it.statements) }
+        userPolicies.forEach { builder.appendLine(PolicyStatement.g(it.principalHrn, it.policyHrn)) }
         return builder.toString()
     }
 }

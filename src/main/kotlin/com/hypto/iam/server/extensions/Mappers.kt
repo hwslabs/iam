@@ -1,13 +1,11 @@
 package com.hypto.iam.server.extensions
 
-import com.google.gson.Gson
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
-import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.Policy
@@ -50,9 +48,21 @@ fun CredentialWithoutSecret.Companion.from(record: Credentials): CredentialWitho
     )
 }
 
-// Inject Gson into Policy model
-val Policy.Companion.gson: Gson
-    get() = getKoinInstance()
+// // Inject Gson into Policy model
+// val Policy.Companion.gson: Gson
+//    get() = getKoinInstance()
+
+val COMMA_REGEX = Regex("\\s*,\\s*")
+fun PolicyStatement.Companion.from(policyString: String): PolicyStatement {
+    val components = policyString.trim().split(COMMA_REGEX)
+    if (components.size != 5 && components[0] != "p") {
+        println(components)
+        println(components.size)
+        println(components[0])
+        throw IllegalArgumentException("Invalid statement string")
+    }
+    return PolicyStatement(components[2], components[3], PolicyStatement.Effect.valueOf(components[4]))
+}
 
 fun Policy.Companion.from(record: PoliciesRecord): Policy {
     val hrn = Hrn.of(record.hrn)
@@ -60,8 +70,7 @@ fun Policy.Companion.from(record: PoliciesRecord): Policy {
         hrn.resourceInstance!!,
         hrn.organization,
         record.version,
-        // TODO: Find a way to convert directly to list and avoid intermediate array
-        gson.fromJson(record.statements, Array<PolicyStatement>::class.java).asList()
+        record.statements.trim().lines().map { PolicyStatement.from(it) }
     )
 }
 
@@ -71,9 +80,7 @@ fun Policy.Companion.from(record: Policies): Policy {
         hrn.resourceInstance!!,
         hrn.organization,
         record.version,
-
-        // TODO: Find a way to convert directly to list and avoid intermediate array
-        gson.fromJson(record.statements, Array<PolicyStatement>::class.java).asList()
+        record.statements.split("\n").map { PolicyStatement.from(it) }
     )
 }
 
