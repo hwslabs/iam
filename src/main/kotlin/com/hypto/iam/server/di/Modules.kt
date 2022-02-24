@@ -3,6 +3,7 @@ package com.hypto.iam.server.di
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceTypeRepo
@@ -31,6 +32,7 @@ import org.koin.dsl.module
 
 // DI module to get repositories
 val repositoryModule = module {
+    single { MasterKeysRepo }
     single { ActionRepo }
     single { CredentialsRepo }
     single { OrganizationRepo }
