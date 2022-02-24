@@ -70,4 +70,12 @@ object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, String>(
             .returning()
             .fetchOne()
     }
+
+    fun existsByIds(hrns: List<String>): Boolean {
+        return ctx()
+            .selectCount()
+            .from(table)
+            .where(POLICIES.HRN.`in`(hrns))
+            .fetchOne<Int>(0, Int::class.java) == hrns.size
+    }
 }

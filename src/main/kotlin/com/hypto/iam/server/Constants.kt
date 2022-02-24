@@ -9,5 +9,6 @@ class Constants private constructor() {
         const val MAX_DESC_LENGTH = 100
         const val MIN_POLICY_STATEMENTS = 1
         const val MAX_POLICY_STATEMENTS = 50
+        const val MAX_POLICY_ASSOCIATIONS_PER_REQUEST = 20
     }
 }

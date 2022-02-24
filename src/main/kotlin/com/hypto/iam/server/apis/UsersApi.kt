@@ -1,28 +1,49 @@
 @file:Suppress("ThrowsCount", "UnusedPrivateMember")
 package com.hypto.iam.server.apis
 
+import com.google.gson.Gson
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.UpdateUserRequest
+import com.hypto.iam.server.service.UserPolicyService
+import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
 import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
 import io.ktor.routing.put
+import org.koin.ktor.ext.inject
 
 fun Route.usersApi() {
 
-    put("/organizations/{organization_id}/users/{id}/attach_policies") {
+    val userPolicyService: UserPolicyService by inject()
+    val gson: Gson by inject()
+
+    put("/organizations/{organization_id}/users/{user_id}/attach_policies") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to attach policies")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to attach policies")
-        val request = call.receive<PolicyAssociationRequest>() // .validate()
-        call.respond(HttpStatusCode.NotImplemented)
+        val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to attach policies")
+        val request = call.receive<PolicyAssociationRequest>().validate()
+
+        val response = userPolicyService.attachPoliciesToUser(
+            Hrn.of(organizationId, IamResourceTypes.USER, userId),
+            request.policies.map { Hrn.of(it) }
+        )
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
     post("/organizations/{organization_id}/users") {
@@ -32,32 +53,42 @@ fun Route.usersApi() {
         call.respond(HttpStatusCode.NotImplemented)
     }
 
-    delete("/organizations/{organization_id}/users/{id}") {
+    delete("/organizations/{organization_id}/users/{user_id}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to delete user")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to delete a user")
+        val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to delete a user")
         call.respond(HttpStatusCode.NotImplemented)
     }
 
-    put("/organizations/{organization_id}/users/{id}/detach_policies") {
+    put("/organizations/{organization_id}/users/{user_id}/detach_policies") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to detach policies")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to detach policies")
-        val request = call.receive<PolicyAssociationRequest>() // .validate()
-        call.respond(HttpStatusCode.NotImplemented)
+        val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to detach policies")
+        val request = call.receive<PolicyAssociationRequest>().validate()
+
+        val response = userPolicyService.detachPoliciesToUser(
+            Hrn.of(organizationId, IamResourceTypes.USER, userId),
+            request.policies.map { Hrn.of(it) }
+        )
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    get("/organizations/{organization_id}/users/{id}") {
+    get("/organizations/{organization_id}/users/{user_id}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to get user")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the user")
+        val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to get the user")
         call.respond(HttpStatusCode.NotImplemented)
     }
 
-    patch("/organizations/{organization_id}/users/{id}") {
+    patch("/organizations/{organization_id}/users/{user_id}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to update user")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to update the user")
+        val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to update the user")
         val request = call.receive<UpdateUserRequest>() // .validate()
         call.respond(HttpStatusCode.NotImplemented)
     }
