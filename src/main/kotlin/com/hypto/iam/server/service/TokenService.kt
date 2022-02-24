@@ -3,6 +3,7 @@ package com.hypto.iam.server.service
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.utils.Hrn
+import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import java.net.URI
@@ -60,6 +61,8 @@ class TokenServiceImpl : KoinComponent, TokenService {
             .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
             .claim(ENTITLEMENTS_CLAIM, userPolicyService.fetchEntitlements(userHrn.toString()).toString())
             .signWith(keyPair.privateKey, SignatureAlgorithm.ES256)
+            // TODO: Uncomment before taking to prod
+            // .compressWith(CompressionCodecs.GZIP)
             .compact()
     }
 }

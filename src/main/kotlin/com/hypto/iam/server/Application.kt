@@ -13,6 +13,7 @@ import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.apis.validationApi
 import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
@@ -44,6 +45,7 @@ import io.ktor.server.netty.Netty
 import java.security.Security
 import java.util.concurrent.TimeUnit
 import org.koin.ktor.ext.Koin
+import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
 
 @KtorExperimentalLocationsAPI
@@ -109,6 +111,10 @@ fun Application.module() {
             }
         }
     }
+
+    // Create a signing Master key pair in case one doesn't exist
+    val masterKeysRepo: MasterKeysRepo by inject()
+    masterKeysRepo.rotateKey(skipIfPresent = true)
 
     install(Routing) {
         testApi()
