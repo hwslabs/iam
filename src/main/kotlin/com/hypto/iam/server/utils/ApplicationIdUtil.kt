@@ -1,7 +1,7 @@
 package com.hypto.iam.server.utils
 
-import com.hypto.iam.server.extensions.nameCheck
 import com.hypto.iam.server.utils.IdGenerator.Charset
+import com.hypto.iam.server.validators.nameCheck
 import io.konform.validation.Valid
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

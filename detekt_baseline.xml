@@ -14,6 +14,8 @@
     <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.inactive$inactive</ID>
     <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.allow$allow</ID>
     <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.deny$deny</ID>
+    <ID>EnumNaming:ResourceActionEffect.kt$ResourceActionEffect.Effect.allow$allow</ID>
+    <ID>EnumNaming:ResourceActionEffect.kt$ResourceActionEffect.Effect.deny$deny</ID>
     <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.active$active</ID>
     <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.inactive$inactive</ID>
     <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.active$active</ID>

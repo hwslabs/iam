@@ -11,6 +11,7 @@ import com.hypto.iam.server.apis.resourceTypeApi
 import com.hypto.iam.server.apis.testApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
+import com.hypto.iam.server.apis.validationApi
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.applicationModule
@@ -115,7 +116,8 @@ fun Application.module() {
             createAndDeleteOrganizationApi()
         }
 
-//        authenticate("bearer-auth") {
+        // TODO: Uncomment this before taking to prod
+        authenticate("bearer-auth") {
             getAndUpdateOrganizationApi()
             actionApi()
             credentialApi()
@@ -123,7 +125,8 @@ fun Application.module() {
             resourceTypeApi()
             tokenApi()
             usersApi()
-//        }
+            validationApi()
+        }
     }
 }
 

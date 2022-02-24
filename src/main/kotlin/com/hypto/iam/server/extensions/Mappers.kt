@@ -10,6 +10,8 @@ import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.ResourceAction
+import com.hypto.iam.server.models.ResourceActionEffect
 import com.hypto.iam.server.models.UserPolicy
 import com.hypto.iam.server.utils.Hrn
 import java.time.format.DateTimeFormatter
@@ -48,20 +50,26 @@ fun CredentialWithoutSecret.Companion.from(record: Credentials): CredentialWitho
     )
 }
 
-// // Inject Gson into Policy model
-// val Policy.Companion.gson: Gson
-//    get() = getKoinInstance()
+object MagicNumber {
+    const val ONE = 1
+    const val ZERO = 0
+    const val TWO = 2
+    const val THREE = 3
+    const val FOUR = 4
+    const val FIVE = 5
+}
 
 val COMMA_REGEX = Regex("\\s*,\\s*")
 fun PolicyStatement.Companion.from(policyString: String): PolicyStatement {
     val components = policyString.trim().split(COMMA_REGEX)
-    if (components.size != 5 && components[0] != "p") {
-        println(components)
-        println(components.size)
-        println(components[0])
+    if (components.size != MagicNumber.FIVE && components[MagicNumber.ZERO] != "p") {
         throw IllegalArgumentException("Invalid statement string")
     }
-    return PolicyStatement(components[2], components[3], PolicyStatement.Effect.valueOf(components[4]))
+    return PolicyStatement(
+        components[MagicNumber.TWO],
+        components[MagicNumber.THREE],
+        PolicyStatement.Effect.valueOf(components[MagicNumber.FOUR])
+    )
 }
 
 fun Policy.Companion.from(record: PoliciesRecord): Policy {
@@ -98,4 +106,11 @@ fun UserPolicy.Companion.from(record: UserPolicies): UserPolicy {
         policyHrn.resourceInstance!!,
         policyHrn.organization
     )
+}
+
+fun ResourceActionEffect.Companion.from(
+    resourceAction: ResourceAction,
+    effect: ResourceActionEffect.Effect
+): ResourceActionEffect {
+    return ResourceActionEffect(resourceAction.resource, resourceAction.action, effect)
 }

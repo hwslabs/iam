@@ -17,8 +17,13 @@ import com.hypto.iam.server.service.PolicyService
 import com.hypto.iam.server.service.PolicyServiceImpl
 import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
+import com.hypto.iam.server.service.UserPolicyService
+import com.hypto.iam.server.service.UserPolicyServiceImpl
+import com.hypto.iam.server.service.ValidationService
+import com.hypto.iam.server.service.ValidationServiceImpl
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.IdGenerator
+import com.hypto.iam.server.utils.policy.PolicyValidator
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.dsl.bind
@@ -41,6 +46,8 @@ val controllerModule = module {
     single { TokenServiceImpl() } bind TokenService::class
     single { CredentialServiceImpl() } bind CredentialService::class
     single { PolicyServiceImpl() } bind PolicyService::class
+    single { ValidationServiceImpl() } bind ValidationService::class
+    single { UserPolicyServiceImpl() } bind UserPolicyService::class
 }
 
 val applicationModule = module {
@@ -48,8 +55,18 @@ val applicationModule = module {
     single { IdGenerator }
     single { ApplicationIdUtil.Generator }
     single { ApplicationIdUtil.Validator }
+    single { PolicyValidator }
 }
 
+/**
+ * Used to inject a KoinComponent into a class / object as an extension.
+ *
+ * E.g: to inject gson into Policy model from some util class, do
+ * val Policy.Companion.gson: Gson
+ *    get() = getKoinInstance()
+ *
+ * This gson attribute can now be used in any other extension function of the Policy class
+ */
 inline fun <reified T> getKoinInstance(): T {
     return object : KoinComponent {
         val value: T by inject()

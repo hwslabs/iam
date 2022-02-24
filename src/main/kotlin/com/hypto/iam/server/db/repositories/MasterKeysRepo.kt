@@ -49,7 +49,6 @@ object MasterKeysRepo : DAOImpl<MasterKeysRecord, MasterKeys, UUID>(
     fun rotateKey(oldKeyTtl: Long = 600 /* 2X the local cache duration */): Boolean {
 
         MasterKeyUtil.generateKeyPair()
-
         ctx().transaction { c ->
             c.dsl().update(table)
                 .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.EXPIRED.value)

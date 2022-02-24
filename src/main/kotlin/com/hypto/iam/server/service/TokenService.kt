@@ -1,12 +1,8 @@
 package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
-import com.hypto.iam.server.db.repositories.PoliciesRepo
-import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.utils.Hrn
-import com.hypto.iam.server.utils.policy.PolicyBuilder
-import com.hypto.iam.server.utils.policy.PolicyStatement
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import java.net.URI
@@ -21,6 +17,7 @@ import java.time.Instant
 import java.util.Date
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 val logger = KotlinLogging.logger("service.TokenService")
 
@@ -32,6 +29,8 @@ interface TokenService {
 }
 
 class TokenServiceImpl : KoinComponent, TokenService {
+    private val userPolicyService: UserPolicyService by inject()
+
     companion object {
         private const val ISSUER = "https://iam.hypto.com"
 
@@ -59,23 +58,9 @@ class TokenServiceImpl : KoinComponent, TokenService {
             .claim(VERSION_CLAIM, VERSION_NUM)
             .claim(USER_CLAIM, userHrn.resourceInstance) // UserId
             .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
-            .claim(ENTITLEMENTS_CLAIM, fetchEntitlements(userHrn.toString()))
+            .claim(ENTITLEMENTS_CLAIM, userPolicyService.fetchEntitlements(userHrn.toString()).toString())
             .signWith(keyPair.privateKey, SignatureAlgorithm.ES256)
             .compact()
-    }
-
-    private fun fetchEntitlements(userHrn: String): String {
-        val userPolicies = UserPoliciesRepo.fetchByPrincipalHrn(userHrn)
-
-        val policyBuilder = PolicyBuilder()
-        userPolicies.forEach {
-            val policy = PoliciesRepo.fetchByHrn(it.policyHrn)!!
-            logger.info { policy.statements }
-
-            policyBuilder.withPolicy(policy).withUserPolicy(it)
-        }
-
-        return policyBuilder.build()
     }
 }
 

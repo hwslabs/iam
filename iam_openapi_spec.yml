@@ -828,6 +828,29 @@ paths:
       # security:
       #   - refresh_token: [] # token:generate
 
+  /validate:
+    post:
+      tags:
+        - validate
+      summary: Validate an auth request
+      description: Validate if the caller has access to resource-action in the request
+      operationId: validate
+      requestBody:
+        $ref: '#/components/requestBodies/ValidationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 components:
 
   # securitySchemes:
@@ -991,6 +1014,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/PolicyAssociationRequest'
+
+    ValidationRequest:
+      description: Payload to validate if a user has access to a resource-action
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationRequest'
 
   responses:
 
@@ -1308,6 +1339,48 @@ components:
             type: string
             maxLength: 50
 
+    ResourceAction:
+      type: object
+      required:
+        - resource
+        - action
+      properties:
+        resource:
+          type: string
+        action:
+          type: string
+
+    ResourceActionEffect:
+      type: object
+      required:
+        - resource
+        - action
+        - effect
+      properties:
+        resource:
+          type: string
+        action:
+          type: string
+        effect:
+          type: string
+          enum:
+            - allow
+            - deny
+
+    ValidationRequest:
+      description: Payload to validate if a user has access to a resource-action
+      type: object
+      additionalProperties: false
+      required:
+        - validations
+      properties:
+        validations:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/ResourceAction"
+
+
     # Responses:
     GetUserPoliciesResponse:
       type: object
@@ -1328,6 +1401,19 @@ components:
       properties:
         token:
           type: string
+
+    ValidationResponse:
+      description: Payload to validate if a user has access to a resource-action
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/ResourceActionEffect"
 
 
     # Entities:
