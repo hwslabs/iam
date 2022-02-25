@@ -53,6 +53,16 @@ fun Route.usersApi() {
         call.respond(HttpStatusCode.NotImplemented)
     }
 
+    get("/organizations/{organization_id}/users") {
+        val organizationId = call.parameters["organization_id"]
+            ?: throw IllegalArgumentException("Required organization_id to get user")
+        val nextToken = call.request.queryParameters["next_token"]
+        val pageSize = call.request.queryParameters["page_size"]
+        val sortOrder = call.request.queryParameters["sort_order"]
+
+        call.respond(HttpStatusCode.NotImplemented)
+    }
+
     delete("/organizations/{organization_id}/users/{user_id}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to delete user")
@@ -76,13 +86,6 @@ fun Route.usersApi() {
             contentType = ContentType.Application.Json,
             status = HttpStatusCode.OK
         )
-    }
-
-    get("/organizations/{organization_id}/users/{user_id}") {
-        val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("Required organization_id to get user")
-        val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to get the user")
-        call.respond(HttpStatusCode.NotImplemented)
     }
 
     patch("/organizations/{organization_id}/users/{user_id}") {

@@ -1,5 +1,7 @@
 package com.hypto.iam.server
 
+import com.hypto.iam.server.models.PaginationOptions
+
 class Constants private constructor() {
     // Validation constants
     companion object {
@@ -10,5 +12,8 @@ class Constants private constructor() {
         const val MIN_POLICY_STATEMENTS = 1
         const val MAX_POLICY_STATEMENTS = 50
         const val MAX_POLICY_ASSOCIATIONS_PER_REQUEST = 20
+
+        const val PAGINATION_DEFAULT_PAGE_SIZE = 50
+        val PAGINATION_DEFAULT_SORT_ORDER = PaginationOptions.SortOrder.asc
     }
 }

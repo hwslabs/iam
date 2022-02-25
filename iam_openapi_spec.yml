@@ -136,6 +136,7 @@ paths:
       # security:
       #   - access_token: [] # organization:delete
 
+  # user
   /organizations/{organization_id}/users:
     post:
       tags:
@@ -162,6 +163,31 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       # security:
       #   - access_token: [] # user:create
+
+    get:
+      tags:
+        - users
+      summary: List users
+      description: List users
+      operationId: listUsers
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '201':
+          $ref: '#/components/responses/UserPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 
   /organizations/{organization_id}/users/{id}:
     get:
@@ -251,15 +277,18 @@ paths:
     get:
       tags:
         - policy
-      summary: Get policies of a user
-      description: Get policies of a user
+      summary: List policies of a user
+      description: List policies of a user
       operationId: getUserPolicies
       parameters:
         - $ref: '#/components/parameters/user_id'
         - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
       responses:
         '200':
-          $ref: '#/components/responses/GetUserPoliciesResponse'
+          $ref: '#/components/responses/PolicyPaginatedResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '401':
@@ -721,6 +750,31 @@ paths:
       # security:
       #   - access_token: [] # policy:create
 
+    get:
+      tags:
+        - policy
+      summary: List policies
+      description: List policies
+      operationId: listPolicies
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /organizations/{organization_id}/policies/{id}:
     get:
       tags:
@@ -908,6 +962,30 @@ components:
             maxLength: 10
             pattern: ^[A-Z]{10}$
 
+    next_token:
+      in: query
+      name: nextToken
+      required: false
+      schema:
+        type: string
+
+    page_size:
+      in: query
+      name: pageSize
+      required: false
+      schema:
+        type: string
+
+    sort_order:
+      in: query
+      name: sortOrder
+      required: false
+      schema:
+        type: string
+        enum:
+          - asc
+          - desc
+
   requestBodies:
 
     CreateOrganizationRequest:
@@ -933,7 +1011,6 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CreateUserRequest'
-
 
     UpdateUserRequest:
       description: Payload to update user
@@ -1115,35 +1192,24 @@ components:
           schema:
             $ref: '#/components/schemas/TokenResponse'
 
+    UserPaginatedResponse:
+      description: Response for list users request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserPaginatedResponse'
+
+    PolicyPaginatedResponse:
+      description: Response for list policies request and list policies for user request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PolicyPaginatedResponse'
+
 
   schemas:
-    ErrorResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - code
-        - message
-      properties:
-        code:
-          type: string
-          description: error code
-          maxLength: 20
-          pattern: ^[A-Z0-9_]{3,20}$
-        message:
-          type: string
-          description: error description
-          maxLength: 500
 
-    BaseSuccessResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - success
-      properties:
-        success:
-          type: boolean
-          example: true
-
+    # Requests
     CreateOrganizationRequest:
       description: Payload to create organization
       type: object
@@ -1339,34 +1405,6 @@ components:
             type: string
             maxLength: 50
 
-    ResourceAction:
-      type: object
-      required:
-        - resource
-        - action
-      properties:
-        resource:
-          type: string
-        action:
-          type: string
-
-    ResourceActionEffect:
-      type: object
-      required:
-        - resource
-        - action
-        - effect
-      properties:
-        resource:
-          type: string
-        action:
-          type: string
-        effect:
-          type: string
-          enum:
-            - allow
-            - deny
-
     ValidationRequest:
       description: Payload to validate if a user has access to a resource-action
       type: object
@@ -1382,6 +1420,33 @@ components:
 
 
     # Responses:
+    BaseSuccessResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: error code
+          maxLength: 20
+          pattern: ^[A-Z0-9_]{3,20}$
+        message:
+          type: string
+          description: error description
+          maxLength: 500
+
     GetUserPoliciesResponse:
       type: object
       additionalProperties: false
@@ -1415,6 +1480,31 @@ components:
           items:
             $ref: "#/components/schemas/ResourceActionEffect"
 
+    UserPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
+
+    PolicyPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Policy'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
 
     # Entities:
     Organization:
@@ -1625,6 +1715,48 @@ components:
           enum:
             - allow
             - deny
+
+    # Others
+
+    ResourceAction:
+      type: object
+      required:
+        - resource
+        - action
+      properties:
+        resource:
+          type: string
+        action:
+          type: string
+
+    ResourceActionEffect:
+      type: object
+      required:
+        - resource
+        - action
+        - effect
+      properties:
+        resource:
+          type: string
+        action:
+          type: string
+        effect:
+          type: string
+          enum:
+            - allow
+            - deny
+
+    PaginationOptions:
+      type: object
+      additionalProperties: false
+      properties:
+        pageSize:
+          type: integer
+        sortOrder:
+          type: string
+          enum:
+            - asc
+            - desc
 
 externalDocs:
   description: Find out more about IAM
