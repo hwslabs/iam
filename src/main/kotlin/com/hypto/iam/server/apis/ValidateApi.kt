@@ -1,8 +1,8 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.infrastructure.UserPrincipal
 import com.hypto.iam.server.models.ValidationRequest
+import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.ValidationService
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call

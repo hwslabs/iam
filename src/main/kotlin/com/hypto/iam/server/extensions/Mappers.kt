@@ -13,7 +13,8 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
 import com.hypto.iam.server.models.UserPolicy
-import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.ResourceHrn
 import java.time.format.DateTimeFormatter
 
 fun Credential.Companion.from(record: CredentialsRecord): Credential {
@@ -73,7 +74,8 @@ fun PolicyStatement.Companion.from(policyString: String): PolicyStatement {
 }
 
 fun Policy.Companion.from(record: PoliciesRecord): Policy {
-    val hrn = Hrn.of(record.hrn)
+    val hrn = HrnFactory().getHrn(record.hrn)
+    require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
         hrn.resourceInstance!!,
         hrn.organization,
@@ -83,7 +85,8 @@ fun Policy.Companion.from(record: PoliciesRecord): Policy {
 }
 
 fun Policy.Companion.from(record: Policies): Policy {
-    val hrn = Hrn.of(record.hrn)
+    val hrn = HrnFactory().getHrn(record.hrn)
+    require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
         hrn.resourceInstance!!,
         hrn.organization,
@@ -93,7 +96,8 @@ fun Policy.Companion.from(record: Policies): Policy {
 }
 
 fun UserPolicy.Companion.from(record: UserPoliciesRecord): UserPolicy {
-    val policyHrn = Hrn.of(record.policyHrn)
+    val policyHrn = HrnFactory().getHrn(record.policyHrn)
+    require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(
         policyHrn.resourceInstance!!,
         policyHrn.organization
@@ -101,7 +105,8 @@ fun UserPolicy.Companion.from(record: UserPoliciesRecord): UserPolicy {
 }
 
 fun UserPolicy.Companion.from(record: UserPolicies): UserPolicy {
-    val policyHrn = Hrn.of(record.policyHrn)
+    val policyHrn = HrnFactory().getHrn(record.policyHrn)
+    require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(
         policyHrn.resourceInstance!!,
         policyHrn.organization

@@ -1,7 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.infrastructure.UserPrincipal
+import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
 import io.ktor.application.call
 import io.ktor.auth.principal

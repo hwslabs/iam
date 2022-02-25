@@ -5,3 +5,7 @@ formatting:
 style:
   ForbiddenComment:
     allowedPatterns: 'TODO:'
+
+complexity:
+  LongMethod:
+    active: false

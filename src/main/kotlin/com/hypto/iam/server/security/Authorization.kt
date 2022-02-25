@@ -1,0 +1,144 @@
+package com.hypto.iam.server.security
+
+import com.hypto.iam.server.utils.GlobalHrn
+import com.hypto.iam.server.utils.ResourceHrn
+import com.hypto.iam.server.utils.policy.PolicyRequest
+import com.hypto.iam.server.utils.policy.PolicyValidator
+import io.ktor.application.*
+import io.ktor.auth.*
+import io.ktor.request.*
+import io.ktor.routing.*
+import io.ktor.util.*
+import io.ktor.util.pipeline.*
+import mu.KotlinLogging
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+/* Authorization logic is defined based on - https://www.ximedes.com/2020-09-17/role-based-authorization-in-ktor/ */
+
+private typealias Action = String
+private val logger = KotlinLogging.logger { }
+class AuthorizationException(override val message: String) : Exception(message)
+
+/**
+ * This class is used in api request flow. This performs user authorization checks before allowing any operation
+ */
+class Authorization(config: Configuration) : KoinComponent {
+    private val policyValidator: PolicyValidator by inject()
+    private val isDevelopment = config.isDevelopment
+
+    class Configuration {
+        internal var isDevelopment: Boolean = false
+
+        fun isDevelopment(isDevelopment: Boolean) {
+            this.isDevelopment = isDevelopment
+        }
+
+        // Configuration for any future use-case to override default authorization logic in interceptPipeline(..)
+    }
+
+    fun interceptPipeline(
+        pipeline: ApplicationCallPipeline,
+        any: Set<Action>? = null,
+        all: Set<Action>? = null,
+        none: Set<Action>? = null
+    ) {
+        pipeline.insertPhaseAfter(ApplicationCallPipeline.Features, Authentication.ChallengePhase)
+        pipeline.insertPhaseAfter(Authentication.ChallengePhase, authorizationPhase)
+        pipeline.intercept(authorizationPhase) {
+
+            if (isDevelopment) {
+                logger.warn { "In development mode, not checking for authorization." }
+                return@intercept
+            }
+            val principal =
+                call.authentication.principal<UserPrincipal>() ?: throw AuthenticationException("Missing principal")
+
+            val principalHrn = principal.hrnStr
+            val resourceHrn = ResourceHrn(context.request)
+            val denyReasons = mutableListOf<String>()
+            all?.let {
+                val policyRequests = all.map {
+                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resourceType, it)
+                    PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
+                }.toList()
+                if (!policyValidator.validateAll(policyRequests)) {
+                    denyReasons += "Principal $principalHrn lacks one or more permission(s) -" +
+                        "  ${policyRequests.joinToString { it.action }}"
+                }
+            }
+
+            any?.let {
+                val policyRequests = any.map {
+                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resourceType, it)
+                    PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
+                }.toList()
+                if (!policyValidator.validateAny(policyRequests)) {
+                    denyReasons += "Principal $principalHrn has none of the permission(s) -" +
+                        "  ${policyRequests.joinToString { it.action }}"
+                }
+            }
+
+            none?.let {
+                val policyRequests = none.map {
+                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resourceType, it)
+                    PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
+                }.toList()
+                if (!policyValidator.validateNone(policyRequests)) {
+                    denyReasons += "Principal $principalHrn shouldn't have these permission(s) -" +
+                        "  ${policyRequests.joinToString { it.action }}"
+                }
+            }
+
+            if (denyReasons.isNotEmpty()) {
+                val message = denyReasons.joinToString(". ")
+                logger.warn { "Authorization failed for ${call.request.path()}. $message" }
+                throw AuthorizationException(message)
+            }
+        }
+    }
+
+    companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, Authorization> {
+        override val key = AttributeKey<Authorization>("Authorization")
+        val authorizationPhase = PipelinePhase("Authorization")
+
+        override fun install(
+            pipeline: ApplicationCallPipeline,
+            configure: Configuration.() -> Unit
+        ): Authorization {
+            val configuration = Configuration().apply(configure)
+            return Authorization(configuration)
+        }
+    }
+}
+
+class AuthorizedRouteSelector(private val description: String) : RouteSelector() {
+    override fun evaluate(context: RoutingResolveContext, segmentIndex: Int) = RouteSelectorEvaluation.Constant
+    override fun toString(): String = "(authorize $description)"
+}
+
+private fun Route.authorizedRoute(
+    any: Set<Action>? = null,
+    all: Set<Action>? = null,
+    none: Set<Action>? = null,
+    build: Route.() -> Unit
+): Route {
+    val description = listOfNotNull(
+        any?.let { "anyOf (${any.joinToString(" ")})" },
+        all?.let { "allOf (${all.joinToString(" ")})" },
+        none?.let { "noneOf (${none.joinToString(" ")})" }).joinToString(",")
+    val authorizedRoute = createChild(AuthorizedRouteSelector(description))
+    application.feature(Authorization).interceptPipeline(authorizedRoute, any, all, none)
+    authorizedRoute.build()
+    return authorizedRoute
+}
+
+fun Route.withPermission(action: Action, build: Route.() -> Unit) = authorizedRoute(all = setOf(action), build = build)
+
+fun Route.withAllPermission(vararg action: Action, build: Route.() -> Unit) =
+    authorizedRoute(all = action.toSet(), build = build)
+
+fun Route.withAnyPermission(vararg action: Action, build: Route.() -> Unit) = authorizedRoute(any = action.toSet(), build = build)
+
+fun Route.withoutPermission(vararg action: Action, build: Route.() -> Unit) =
+    authorizedRoute(none = action.toSet(), build = build)

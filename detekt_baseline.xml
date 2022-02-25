@@ -2,6 +2,9 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
+    <ID>ConstructorParameterNaming:PolicyPaginatedResponse.kt$PolicyPaginatedResponse$val `data`: kotlin.collections.List&lt;Policy&gt;? = null</ID>
+    <ID>ConstructorParameterNaming:UserPaginatedResponse.kt$UserPaginatedResponse$val `data`: kotlin.collections.List&lt;User&gt;? = null</ID>
+    <ID>EmptyFunctionBlock:AuthorizationTest.kt$AuthorizationTest${ }</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.active$active</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.inactive$inactive</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.admin$admin</ID>
@@ -12,6 +15,8 @@
     <ID>EnumNaming:Credential.kt$Credential.Status.inactive$inactive</ID>
     <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.active$active</ID>
     <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.inactive$inactive</ID>
+    <ID>EnumNaming:PaginationOptions.kt$PaginationOptions.SortOrder.asc$asc</ID>
+    <ID>EnumNaming:PaginationOptions.kt$PaginationOptions.SortOrder.desc$desc</ID>
     <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.allow$allow</ID>
     <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.deny$deny</ID>
     <ID>EnumNaming:ResourceActionEffect.kt$ResourceActionEffect.Effect.allow$allow</ID>
@@ -36,7 +41,26 @@
     <ID>MagicNumber:Configuration.kt$4</ID>
     <ID>MagicNumber:Configuration.kt$60</ID>
     <ID>MagicNumber:DatabaseFactory.kt$DatabaseFactory$3</ID>
-    <ID>MatchingDeclarationName:Inline_response_200.kt$InlineResponse200</ID>
-    <ID>MatchingDeclarationName:Inline_response_200_1.kt$InlineResponse2001</ID>
+    <ID>MagicNumber:Hrn.kt$ResourceHrn$5</ID>
+    <ID>MaxLineLength:Authorization.kt$fun Route.withAnyPermission(vararg action: Action, build: Route.() -&gt; Unit)</ID>
+    <ID>MaxLineLength:Hrn.kt$GlobalHrn.Companion$val GLOBAL_HRN_REGEX = """^hrn:(?&lt;organization&gt;[^:$\n]+)\$(?&lt;resourceType&gt;[^:\n]*):{0,1}(?&lt;operation&gt;[^/\n:]*)""".toRegex()</ID>
+    <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
+    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 5. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt; - hrn:hypto:&lt;accountId&gt;:iam-resource/12345 - updateResource</ID>
+    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 6. /organization/&lt;organizationId&gt;/user/&lt;userId&gt;/credentials/ - hrn:hypto:&lt;accountId&gt;:iam-user/12345 - addCredentials</ID>
+    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 7. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt;/action/ - hrn:hypto:&lt;accountId&gt;:iam-resource/12345 - addAction</ID>
+    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 8. /organization/&lt;organizationId&gt;/user/&lt;userId&gt;/credentials/&lt;credentialsId&gt; - hrn:hypto:&lt;accountId&gt;:iam-credential/12345 - getCredentials</ID>
+    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 9. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt;/action/&lt;actionId&gt; - hrn:hypto:&lt;accountId&gt;:iam-action/12345 - updateAction</ID>
+    <ID>MaxLineLength:Hrn.kt$ResourceHrn.Companion$val RESOURCE_HRN_REGEX = """^hrn:(?&lt;organization&gt;[^:\n]+):(?&lt;accountId&gt;[^:\n]*):(?&lt;resourceType&gt;[^:/\n]*)/{0,1}(?&lt;resourceInstance&gt;[^/\n:]*)""".toRegex()</ID>
+    <ID>MaxLineLength:OrganizationApi.kt$val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the Organization details")</ID>
+    <ID>MaxLineLength:PolicyService.kt$PolicyServiceImpl$.</ID>
+    <ID>MaxLineLength:PolicyService.kt$PolicyServiceImpl$val</ID>
+    <ID>UnusedPrivateMember:Hrn.kt$ResourceHrn$private fun getResourceInstance(splits: List&lt;String&gt;): String?</ID>
+    <ID>UnusedPrivateMember:Hrn.kt$ResourceHrn$private fun getResourceType(splits: List&lt;String&gt;): String?</ID>
+    <ID>WildcardImport:Authorization.kt$import io.ktor.application.*</ID>
+    <ID>WildcardImport:Authorization.kt$import io.ktor.auth.*</ID>
+    <ID>WildcardImport:Authorization.kt$import io.ktor.request.*</ID>
+    <ID>WildcardImport:Authorization.kt$import io.ktor.routing.*</ID>
+    <ID>WildcardImport:Authorization.kt$import io.ktor.util.*</ID>
+    <ID>WildcardImport:Authorization.kt$import io.ktor.util.pipeline.*</ID>
   </CurrentIssues>
 </SmellBaseline>
