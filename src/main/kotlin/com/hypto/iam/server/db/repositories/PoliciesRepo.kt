@@ -3,10 +3,13 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.tables.Policies.POLICIES
 import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
+import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.service.DatabaseFactory
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
 import java.time.LocalDateTime
+import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
 object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, String>(
@@ -24,6 +27,17 @@ object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, String>(
      */
     fun fetchByOrganizationId(value: String): List<Policies> {
         return fetch(POLICIES.ORGANIZATION_ID, value)
+    }
+
+    fun fetchByOrganizationIdPaginated(
+        organizationId: String,
+        paginationContext: PaginationContext
+    ): Result<PoliciesRecord> {
+
+        return ctx().selectFrom(table)
+            .where(POLICIES.ORGANIZATION_ID.eq(organizationId))
+            .paginate(POLICIES.HRN, paginationContext)
+            .fetch()
     }
 
     /**

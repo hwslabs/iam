@@ -3,7 +3,6 @@ package com.hypto.iam.server.service
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.utils.Hrn
-import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import java.net.URI
