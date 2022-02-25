@@ -1,7 +1,8 @@
-package com.hypto.iam.server.infrastructure
+package com.hypto.iam.server.security
 
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.HrnFactory
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.auth.Authentication
@@ -16,6 +17,8 @@ import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
 import io.ktor.request.ApplicationRequest
 import io.ktor.response.respond
+
+data class AuthenticationException(override val message: String) : Exception(message)
 
 enum class TokenLocation(val location: String) {
     QUERY("query"),
@@ -37,7 +40,7 @@ data class UserPrincipal(
     val hrnStr: String,
     val policies: List<Policy>? = null
 ) : Principal {
-    val hrn: Hrn = Hrn.of(hrnStr)
+    val hrn: Hrn = HrnFactory().getHrn(hrnStr)
 }
 
 class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvider(config) {
@@ -60,9 +63,7 @@ class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvide
  * Represents an Api Key authentication provider
  * @param name is the name of the provider, or `null` for a default provider
  */
-class ApiKeyConfiguration(name: String?) : AuthenticationProvider.Configuration(name) {
-    // todo
-}
+class ApiKeyConfiguration(name: String?) : AuthenticationProvider.Configuration(name)
 
 fun Authentication.Configuration.apiKeyAuth(name: String? = null, configure: TokenAuthenticationProvider.() -> Unit) {
     val provider = TokenAuthenticationProvider(ApiKeyConfiguration(name)).apply(configure)

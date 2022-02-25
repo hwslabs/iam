@@ -11,8 +11,8 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyPaginatedResponse
 import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -24,7 +24,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     private val gson: Gson by inject()
 
     override suspend fun createPolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
-        val policyHrn = Hrn.of(organizationId, IamResourceTypes.POLICY, name)
+        val policyHrn = ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name)
         if (policyRepo.existsById(policyHrn.toString())) {
             throw EntityAlreadyExistsException("Policy with name [$name] already exists")
         }
@@ -38,13 +38,13 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     }
 
     override suspend fun getPolicy(organizationId: String, name: String): Policy {
-        val policyRecord = policyRepo.fetchByHrn(Hrn.of(organizationId, IamResourceTypes.POLICY, name).toString())
+        val policyRecord = policyRepo.fetchByHrn(ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name).toString())
             ?: throw EntityNotFoundException("Policy not found")
         return Policy.from(policyRecord)
     }
 
     override suspend fun updatePolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
-        val policyHrnStr = Hrn.of(organizationId, IamResourceTypes.POLICY, name).toString()
+        val policyHrnStr = ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name).toString()
 
         // TODO: Validate policy statements (actions and resourceTypes)
         val newPolicyBuilder = PolicyBuilder(policyHrnStr)
@@ -70,7 +70,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         context: PaginationContext
     ): PolicyPaginatedResponse {
         val policies = userPolicyRepo
-            .fetchPoliciesByUserHrnPaginated(Hrn.of(organizationId, IamResourceTypes.USER, userId).toString(), context)
+            .fetchPoliciesByUserHrnPaginated(ResourceHrn(organizationId, "", IamResourceTypes.USER, userId).toString(), context)
         val newContext = PaginationContext.from(policies.lastOrNull()?.hrn, context)
         return PolicyPaginatedResponse(policies.map { Policy.from(it) }, newContext.nextToken, newContext.toOptions())
     }

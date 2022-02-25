@@ -7,6 +7,7 @@ import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.service.DatabaseFactory
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
 import java.util.UUID
 import org.jooq.Result
@@ -95,7 +96,7 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
     fun delete(organizationId: String, userId: String, id: UUID): Boolean {
         val record = CredentialsRecord()
             .setId(id)
-            .setUserHrn(Hrn.of(organizationId, IamResourceTypes.USER, userId).toString())
+            .setUserHrn(ResourceHrn(organizationId, "", IamResourceTypes.USER, userId).toString())
         record.attach(configuration())
         val count = record.delete()
         return count > 0

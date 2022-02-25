@@ -11,18 +11,18 @@ import com.hypto.iam.server.apis.resourceTypeApi
 import com.hypto.iam.server.apis.testApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
-import com.hypto.iam.server.apis.validationApi
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
-import com.hypto.iam.server.infrastructure.ApiPrincipal
-import com.hypto.iam.server.infrastructure.TokenCredential
-import com.hypto.iam.server.infrastructure.UserPrincipal
-import com.hypto.iam.server.infrastructure.apiKeyAuth
-import com.hypto.iam.server.infrastructure.bearer
+import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.Authorization
+import com.hypto.iam.server.security.TokenCredential
+import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.security.apiKeyAuth
+import com.hypto.iam.server.security.bearer
 import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.application.log
@@ -116,13 +116,16 @@ fun Application.module() {
     val masterKeysRepo: MasterKeysRepo by inject()
     masterKeysRepo.rotateKey(skipIfPresent = true)
 
+    install(Authorization) {
+        isDevelopment = true // TODO: Upddate the value based on the environment variable.
+    }
+
     install(Routing) {
-        testApi()
+        testApi() // TODO: Remove this before deploying to prod
         authenticate("hypto-iam-root-auth") {
             createAndDeleteOrganizationApi()
         }
 
-        // TODO: Uncomment this before taking to prod
         authenticate("bearer-auth") {
             getAndUpdateOrganizationApi()
             actionApi()
@@ -131,7 +134,6 @@ fun Application.module() {
             resourceTypeApi()
             tokenApi()
             usersApi()
-            validationApi()
         }
     }
 }

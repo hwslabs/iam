@@ -3,11 +3,10 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.models.CreateOrganizationRequest
-import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.service.CredentialServiceImpl
 import com.hypto.iam.server.service.OrganizationsService
-import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
 import io.ktor.http.ContentType
@@ -20,6 +19,7 @@ import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
+import io.ktor.routing.route
 import org.koin.ktor.ext.inject
 
 /**
@@ -31,21 +31,24 @@ fun Route.createAndDeleteOrganizationApi() {
     val controller: OrganizationsService by inject()
     val gson: Gson by inject()
 
-    post("/organizations") {
-        val request = call.receive<CreateOrganizationRequest>().validate()
-        val response = controller.createOrganization(request.name, description = "")
-        call.respondText(
-            text = gson.toJson(response),
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.Created
-        )
-    }
+    route("/organizations") {
+        post {
+            val request = call.receive<CreateOrganizationRequest>().validate()
+            val response = controller.createOrganization(request.name, description = "")
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.Created
+            )
+        }
 
-    delete("/organizations/{id}") {
-        call.respond(HttpStatusCode.NotImplemented)
+        delete("/{id}") {
+            call.respond(HttpStatusCode.NotImplemented)
+        }
     }
 }
 
+// TODO: Remove this before deploying to prod
 fun Route.testApi() {
     get("/test") {
 //        val org = OrganizationsRecord("id1", "name", "description", null, LocalDateTime.now(), LocalDateTime.now())
@@ -57,7 +60,7 @@ fun Route.testApi() {
 //        println(org.toString())
 //        org.detach()
         val rec = CredentialsRepo.create(
-            userHrn = Hrn.of("id1", IamResourceTypes.USER, "user1"),
+            userHrn = ResourceHrn("id1", "", IamResourceTypes.USER, "user1"),
             refreshToken = "ref_token"
         )
 
@@ -72,17 +75,19 @@ fun Route.getAndUpdateOrganizationApi() {
     val controller: OrganizationsService by inject()
     val gson: Gson by inject()
 
-    get("/organizations/{id}") {
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the Organization details")
-        val response = controller.getOrganization(id)
-        call.respondText(
-            text = gson.toJson(response),
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
-        )
-    }
+    route("/organizations/{id}") {
+        get {
+            val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the Organization details")
+            val response = controller.getOrganization(id)
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
 
-    patch<UpdateOrganizationRequest>("/organizations/{id}") {
-        call.respond(HttpStatusCode.NotImplemented)
+        patch {
+            call.respond(HttpStatusCode.NotImplemented)
+        }
     }
 }

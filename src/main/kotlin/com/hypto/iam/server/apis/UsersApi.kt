@@ -6,8 +6,9 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.service.UserPolicyService
-import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
 import io.ktor.http.ContentType
@@ -27,6 +28,7 @@ fun Route.usersApi() {
 
     val userPolicyService: UserPolicyService by inject()
     val gson: Gson by inject()
+    val hrnFactory: HrnFactory by inject()
 
     put("/organizations/{organization_id}/users/{user_id}/attach_policies") {
         val organizationId = call.parameters["organization_id"]
@@ -35,8 +37,8 @@ fun Route.usersApi() {
         val request = call.receive<PolicyAssociationRequest>().validate()
 
         val response = userPolicyService.attachPoliciesToUser(
-            Hrn.of(organizationId, IamResourceTypes.USER, userId),
-            request.policies.map { Hrn.of(it) }
+            ResourceHrn(organizationId, "", IamResourceTypes.USER, userId),
+            request.policies.map { hrnFactory.getHrn(it) }
         )
 
         call.respondText(
@@ -77,8 +79,8 @@ fun Route.usersApi() {
         val request = call.receive<PolicyAssociationRequest>().validate()
 
         val response = userPolicyService.detachPoliciesToUser(
-            Hrn.of(organizationId, IamResourceTypes.USER, userId),
-            request.policies.map { Hrn.of(it) }
+            ResourceHrn(organizationId, "", IamResourceTypes.USER, userId),
+            request.policies.map { hrnFactory.getHrn(it) }
         )
 
         call.respondText(

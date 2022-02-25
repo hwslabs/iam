@@ -3,6 +3,7 @@ package com.hypto.iam.server.service
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.ResourceHrn
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import java.net.URI
@@ -14,7 +15,7 @@ import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
-import java.util.Date
+import java.util.*
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -47,6 +48,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
     }
 
     override suspend fun generateJwtToken(userHrn: Hrn): String {
+        require(userHrn is ResourceHrn) { "The input hrn must be a userHrn" }
         return Jwts.builder()
             .setHeaderParam(KEY_ID, keyPair.id)
             .setIssuer(ISSUER)

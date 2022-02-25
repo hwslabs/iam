@@ -9,11 +9,11 @@ import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
-import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.util.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -28,7 +28,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
     ): Credential {
         // TODO: Limit number of active credentials for a single user
         val credentialsRecord = repo.create(
-            userHrn = Hrn.of(organizationId, IamResourceTypes.USER, userId),
+            userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userId),
             refreshToken = idGenerator.refreshToken(organizationId),
             validUntil = LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
@@ -72,7 +72,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
     }
 
     private fun fetchCredential(organizationId: String, userId: String, id: UUID): CredentialsRecord {
-        return repo.fetchByIdAndUserHrn(id, Hrn.of(organizationId, IamResourceTypes.USER, userId).toString())
+        return repo.fetchByIdAndUserHrn(id, ResourceHrn(organizationId, "", IamResourceTypes.USER, userId).toString())
             ?: throw EntityNotFoundException("Credential not found")
     }
 }
