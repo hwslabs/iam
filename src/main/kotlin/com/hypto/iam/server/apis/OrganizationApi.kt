@@ -1,12 +1,9 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.extensions.auditLogger
 import com.hypto.iam.server.models.CreateOrganizationRequest
-import com.hypto.iam.server.service.CredentialServiceImpl
 import com.hypto.iam.server.service.OrganizationsService
-import com.hypto.iam.server.utils.IamResourceTypes
-import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
 import io.ktor.http.ContentType
@@ -20,6 +17,7 @@ import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
 import io.ktor.routing.route
+import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 
 /**
@@ -48,25 +46,8 @@ fun Route.createAndDeleteOrganizationApi() {
     }
 }
 
-// TODO: Remove this before deploying to prod
-fun Route.testApi() {
-    get("/test") {
-//        val org = OrganizationsRecord("id1", "name", "description", null, LocalDateTime.now(), LocalDateTime.now())
-//        org.attach(DatabaseFactory.getConfiguration())
-//        org.insert()
-//        println(org.toString())
-//        org.name = "name2"
-//        org.update()
-//        println(org.toString())
-//        org.detach()
-        val rec = CredentialsRepo.create(
-            userHrn = ResourceHrn("id1", "", IamResourceTypes.USER, "user1"),
-            refreshToken = "ref_token"
-        )
-
-        CredentialServiceImpl().deleteCredential("id2", "user1", rec.id)
-    }
-}
+private val logger = KotlinLogging.logger { }
+private val auditLogger = KotlinLogging.auditLogger()
 
 /**
  * Route to get and update organizations in IAM
@@ -77,8 +58,11 @@ fun Route.getAndUpdateOrganizationApi() {
 
     route("/organizations/{id}") {
         get {
-            val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the Organization details")
+            val id = call.parameters["id"]
+                ?: throw IllegalArgumentException("Required id to get the Organization details")
             val response = controller.getOrganization(id)
+            // TODO: Remove this log after testing
+            auditLogger.info("=============  Test audit log message  =============")
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,

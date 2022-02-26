@@ -7,11 +7,11 @@ buildscript {
     ext.koin_test = '2.2.2'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
-    ext.jooq_version = "3.16.3"
+    ext.jooq_version = '3.16.4'
     ext.h2Version = "2.1.210"
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = "5.8.2"
-    ext.flyway_version = "8.4.3"
+    ext.flyway_version = '8.5.0'
     ext.casbin_version = "1.22.1"
     ext.postgres_jdbc_driver = "42.3.2"
 
@@ -264,8 +264,14 @@ dependencies {
     implementation "io.insert-koin:koin-logger-slf4j:$koin_version"
 
     // Logging
-    implementation 'io.github.microutils:kotlin-logging:1.7.4'
-    implementation 'org.slf4j:slf4j-simple:1.7.26'
+    implementation 'io.github.microutils:kotlin-logging:2.1.21'
+    implementation 'org.slf4j:slf4j-simple:1.7.36'
+
+    // Metrics
+    implementation "io.ktor:ktor-metrics-micrometer:$ktor_version"
+
+    // APM
+    implementation 'com.newrelic.telemetry:micrometer-registry-new-relic:0.8.0'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.2'

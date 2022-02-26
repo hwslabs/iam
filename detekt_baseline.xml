@@ -4,7 +4,6 @@
   <CurrentIssues>
     <ID>ConstructorParameterNaming:PolicyPaginatedResponse.kt$PolicyPaginatedResponse$val `data`: kotlin.collections.List&lt;Policy&gt;? = null</ID>
     <ID>ConstructorParameterNaming:UserPaginatedResponse.kt$UserPaginatedResponse$val `data`: kotlin.collections.List&lt;User&gt;? = null</ID>
-    <ID>EmptyFunctionBlock:AuthorizationTest.kt$AuthorizationTest${ }</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.active$active</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.inactive$inactive</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.admin$admin</ID>
@@ -33,7 +32,6 @@
     <ID>EnumNaming:User.kt$User.UserType.apiOnly$apiOnly</ID>
     <ID>EnumNaming:User.kt$User.UserType.normal$normal</ID>
     <ID>EnumNaming:User.kt$User.UserType.system$system</ID>
-    <ID>MagicNumber:Application.kt$10</ID>
     <ID>MagicNumber:Application.kt$8081</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
@@ -43,6 +41,7 @@
     <ID>MagicNumber:DatabaseFactory.kt$DatabaseFactory$3</ID>
     <ID>MagicNumber:Hrn.kt$ResourceHrn$5</ID>
     <ID>MaxLineLength:Authorization.kt$fun Route.withAnyPermission(vararg action: Action, build: Route.() -&gt; Unit)</ID>
+    <ID>MaxLineLength:Configuration.kt$MicrometerConfigs$/* * TODO: Configure "LoggingMeterRegistry" with a logging sink to direct metrics logs to a separate "iam_metrics.log" logback appender * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer) */</ID>
     <ID>MaxLineLength:Hrn.kt$GlobalHrn.Companion$val GLOBAL_HRN_REGEX = """^hrn:(?&lt;organization&gt;[^:$\n]+)\$(?&lt;resourceType&gt;[^:\n]*):{0,1}(?&lt;operation&gt;[^/\n:]*)""".toRegex()</ID>
     <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 5. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt; - hrn:hypto:&lt;accountId&gt;:iam-resource/12345 - updateResource</ID>
@@ -51,9 +50,9 @@
     <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 8. /organization/&lt;organizationId&gt;/user/&lt;userId&gt;/credentials/&lt;credentialsId&gt; - hrn:hypto:&lt;accountId&gt;:iam-credential/12345 - getCredentials</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 9. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt;/action/&lt;actionId&gt; - hrn:hypto:&lt;accountId&gt;:iam-action/12345 - updateAction</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn.Companion$val RESOURCE_HRN_REGEX = """^hrn:(?&lt;organization&gt;[^:\n]+):(?&lt;accountId&gt;[^:\n]*):(?&lt;resourceType&gt;[^:/\n]*)/{0,1}(?&lt;resourceInstance&gt;[^/\n:]*)""".toRegex()</ID>
-    <ID>MaxLineLength:OrganizationApi.kt$val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the Organization details")</ID>
     <ID>MaxLineLength:PolicyService.kt$PolicyServiceImpl$.</ID>
     <ID>MaxLineLength:PolicyService.kt$PolicyServiceImpl$val</ID>
+    <ID>UnusedPrivateMember:Configuration.kt$MicrometerConfigs$private fun getNewRelicMeterRegistry(): NewRelicRegistry</ID>
     <ID>UnusedPrivateMember:Hrn.kt$ResourceHrn$private fun getResourceInstance(splits: List&lt;String&gt;): String?</ID>
     <ID>UnusedPrivateMember:Hrn.kt$ResourceHrn$private fun getResourceType(splits: List&lt;String&gt;): String?</ID>
     <ID>WildcardImport:Authorization.kt$import io.ktor.application.*</ID>

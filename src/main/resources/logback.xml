@@ -1,3 +1,4 @@
+<!--Reference: https://www.marcogomiero.com/posts/2021/ktor-logging-on-disk/ -->
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -5,11 +6,56 @@
         </encoder>
     </appender>
 
-    <root level="trace">
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DEST}/iam_application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOG_DEST}/iam_application.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 90 days' worth of history capped at 3GB total size -->
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DEST}/iam_audit.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- daily rollover -->
+            <fileNamePattern>${LOG_DEST}/iam_audit.%d{yyyy-MM-dd}.log</fileNamePattern>
+
+            <!-- keep 90 days' worth of history capped at 3GB total size -->
+            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <totalSizeCap>3GB</totalSizeCap>
+
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="info">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+<!--        <appender-ref ref="AUDIT-FILE"/>-->
     </root>
 
     <logger name="org.eclipse.jetty" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
+
+    <!-- TODO: Make these "INFO" before prod deployment-->
+    <logger name="com.zaxxer.hikari" level="DEBUG"/>
+    <logger name="org.jooq" level="TRACE"/>
+
+    <logger name="audit-logger" level="info" additivity="false">
+        <appender-ref ref="FILE-AUDIT" />
+        <appender-ref ref="STDOUT" />
+    </logger>
 
 </configuration>
