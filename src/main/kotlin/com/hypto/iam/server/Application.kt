@@ -1,14 +1,12 @@
 @file:Suppress("LongMethod")
 package com.hypto.iam.server
 
-import com.codahale.metrics.Slf4jReporter
 import com.hypto.iam.server.apis.actionApi
 import com.hypto.iam.server.apis.createAndDeleteOrganizationApi
 import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceTypeApi
-import com.hypto.iam.server.apis.testApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.db.repositories.CredentialsRepo
@@ -25,7 +23,6 @@ import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
 import io.ktor.application.Application
 import io.ktor.application.install
-import io.ktor.application.log
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.features.AutoHeadResponse
@@ -38,12 +35,11 @@ import io.ktor.features.StatusPages
 import io.ktor.gson.gson
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Locations
-import io.ktor.metrics.dropwizard.DropwizardMetrics
+import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.security.Security
-import java.util.concurrent.TimeUnit
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
@@ -56,15 +52,9 @@ fun Application.module() {
         SLF4JLogger()
         modules(repositoryModule, controllerModule, applicationModule)
     }
-    install(DropwizardMetrics) {
-        val reporter = Slf4jReporter.forRegistry(registry)
-            .withLoggingLevel(Slf4jReporter.LoggingLevel.ERROR)
-            .outputTo(log)
-            .convertRatesTo(TimeUnit.SECONDS)
-            .convertDurationsTo(TimeUnit.MILLISECONDS)
-            .build()
-        // TODO: Change this to SECONDS upon configuring separate service log file
-        reporter.start(10, TimeUnit.MINUTES)
+    install(MicrometerMetrics) {
+        registry = MicrometerConfigs.getRegistry()
+        meterBinders = MicrometerConfigs.getBinders()
     }
     install(ContentNegotiation) {
         // TODO: Switch to kotlinx.serialization
@@ -117,11 +107,10 @@ fun Application.module() {
     masterKeysRepo.rotateKey(skipIfPresent = true)
 
     install(Authorization) {
-        isDevelopment = true // TODO: Upddate the value based on the environment variable.
+        isDevelopment = true // TODO: Update the value based on the environment variable.
     }
 
     install(Routing) {
-        testApi() // TODO: Remove this before deploying to prod
         authenticate("hypto-iam-root-auth") {
             createAndDeleteOrganizationApi()
         }

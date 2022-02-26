@@ -1,6 +1,9 @@
 package com.hypto.iam.server
 
 // Use this file to hold package-level internal functions that return receiver object passed to the `install` method.
+
+import com.newrelic.telemetry.micrometer.NewRelicRegistry
+import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
 import io.ktor.auth.OAuthServerSettings
 import io.ktor.features.Compression
 import io.ktor.features.HSTS
@@ -8,6 +11,16 @@ import io.ktor.features.deflate
 import io.ktor.features.gzip
 import io.ktor.features.minimumSize
 import io.ktor.util.KtorExperimentalAPI
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Tag
+import io.micrometer.core.instrument.binder.MeterBinder
+import io.micrometer.core.instrument.binder.logging.LogbackMetrics
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry
+import io.micrometer.core.instrument.config.MeterFilter
+import io.micrometer.core.instrument.logging.LoggingMeterRegistry
+import io.micrometer.core.instrument.util.NamedThreadFactory
+import java.net.InetAddress
 import java.time.Duration
 import java.util.concurrent.Executors
 
@@ -67,3 +80,73 @@ val ApplicationAuthProviders: Map<String, OAuthServerSettings> = listOf<OAuthSer
 
 // Provides an application-level fixed thread pool on which to execute coroutines (mainly)
 internal val ApplicationExecutors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+
+// Provides all resources and configurations for application telemetry using micrometer
+object MicrometerConfigs {
+    private val registry = CompositeMeterRegistry()
+//        .add(getNewRelicMeterRegistry()) // TODO: Uncomment this to publish metrics to new relic
+
+        /*
+         * TODO: Configure "LoggingMeterRegistry" with a logging sink to direct metrics logs to a separate "iam_metrics.log" logback appender
+         * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer)
+         */
+        .add(LoggingMeterRegistry())
+
+    // TODO: Retain required metric binders and remove the rest
+    private val meterBinders = listOf(
+//        ClassLoaderMetrics(),
+//        JvmMemoryMetrics(),
+//        JvmGcMetrics(),
+//        JvmThreadMetrics(),
+//        JvmHeapPressureMetrics(),
+        ProcessorMetrics(),
+        LogbackMetrics()
+    )
+
+    private fun getNewRelicMeterRegistry(): NewRelicRegistry {
+        val newRelicRegistry = NewRelicRegistry.builder(getNewRelicRegistryConfig())
+            .commonAttributes(
+                com.newrelic.telemetry.Attributes()
+                    .put("host", InetAddress.getLocalHost().hostName)
+            )
+            .build()
+        newRelicRegistry.config() // TODO: Fix the config params as required
+            .meterFilter(MeterFilter.ignoreTags("plz_ignore_me"))
+            .meterFilter(MeterFilter.denyNameStartsWith("jvm.threads"))
+        newRelicRegistry.start(NamedThreadFactory("newrelic.micrometer.registry"))
+        return newRelicRegistry
+    }
+
+    private fun getNewRelicRegistryConfig(): NewRelicRegistryConfig {
+        return object : NewRelicRegistryConfig {
+            override fun apiKey(): String {
+                // TODO: Add valid NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home
+                return "aabb"
+//                return System.getenv("INSIGHTS_INSERT_KEY")
+            }
+
+            override fun get(key: String): String? { return null }
+            override fun step(): Duration {
+                // TODO: read from config file and tweak
+                return Duration.ofSeconds(Constants.NEWRELIC_METRICS_PUBLISH_INTERVAL)
+            }
+            override fun serviceName(): String { return "Hypto IAM - Development" } // TODO: read from config file
+            override fun enableAuditMode(): Boolean { return false }
+            override fun useLicenseKey(): Boolean { return true }
+        }
+    }
+
+    init {
+        registry.config().commonTags(
+            listOf(Tag.of("environment", "development")) // TODO: read from config file
+        )
+    }
+
+    fun getRegistry(): MeterRegistry {
+        return registry
+    }
+
+    fun getBinders(): List<MeterBinder> {
+        return meterBinders
+    }
+}
