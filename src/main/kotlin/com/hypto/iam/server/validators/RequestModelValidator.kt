@@ -10,16 +10,7 @@ import com.hypto.iam.server.extensions.dateTime
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
-import com.hypto.iam.server.models.CreateCredentialRequest
-import com.hypto.iam.server.models.CreateOrganizationRequest
-import com.hypto.iam.server.models.CreatePolicyRequest
-import com.hypto.iam.server.models.PolicyAssociationRequest
-import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.models.ResourceAction
-import com.hypto.iam.server.models.UpdateCredentialRequest
-import com.hypto.iam.server.models.UpdateOrganizationRequest
-import com.hypto.iam.server.models.UpdatePolicyRequest
-import com.hypto.iam.server.models.ValidationRequest
+import com.hypto.iam.server.models.*
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxItems
 import io.konform.validation.jsonschema.maxLength
@@ -74,6 +65,29 @@ fun UpdateCredentialRequest.validate(): UpdateCredentialRequest {
         )
         UpdateCredentialRequest::validUntil ifPresent {
             dateTime(nature = TimeNature.FUTURE)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+
+/**
+ * Extension function to validate CreateResourceTypeRequest input from client
+ */
+fun CreateResourceTypeRequest.validate(): CreateResourceTypeRequest {
+    return Validation<CreateResourceTypeRequest> {
+        CreateResourceTypeRequest::name required {
+            run(nameCheck)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+/**
+ * Extension function to validate UpdateResourceTypeRequest input from client
+ */
+fun UpdateResourceTypeRequest.validate(): UpdateResourceTypeRequest {
+    return Validation<UpdateResourceTypeRequest> {
+        UpdateResourceTypeRequest::description {
+            run(nameCheck)
         }
     }.validateAndThrowOnFailure(this)
 }

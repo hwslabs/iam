@@ -6,14 +6,10 @@ import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
+import com.hypto.iam.server.db.tables.records.ResourceTypesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
-import com.hypto.iam.server.models.Credential
-import com.hypto.iam.server.models.CredentialWithoutSecret
-import com.hypto.iam.server.models.Policy
-import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.models.ResourceAction
-import com.hypto.iam.server.models.ResourceActionEffect
-import com.hypto.iam.server.models.UserPolicy
+import com.hypto.iam.server.models.*
+import com.hypto.iam.server.utils.GlobalHrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
@@ -94,6 +90,16 @@ fun Policy.Companion.from(record: Policies): Policy {
         hrn.organization,
         record.version,
         record.statements.split("\n").map { PolicyStatement.from(it) }
+    )
+}
+
+fun ResourceType.Companion.from(record: ResourceTypesRecord): ResourceType {
+    val hrn = HrnFactory().getHrn(record.hrn)
+    require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
+    return ResourceType(
+        hrn.resourceType!!,
+        hrn.organization,
+        record.description
     )
 }
 

@@ -16,7 +16,7 @@ import java.io.Serializable
  * Payload to update resource
  * @param description
  */
-data class UpdateResourceRequest(
+data class UpdateResourceTypeRequest(
     val description: kotlin.String
 ) : Serializable {
     companion object {
