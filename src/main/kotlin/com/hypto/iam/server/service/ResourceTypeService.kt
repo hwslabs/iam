@@ -6,14 +6,14 @@ import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.ResourceType
-import com.hypto.iam.server.utils.*
+import com.hypto.iam.server.utils.GlobalHrn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
     private val resourceTypeRepo: ResourceTypesRepo by inject()
 
-    override suspend fun createResourceType(organizationId: String, name:String, description: String): ResourceType {
+    override suspend fun createResourceType(organizationId: String, name: String, description: String): ResourceType {
         val resourceTypeHrn = GlobalHrn(organizationId, name, null)
 
         if (resourceTypeRepo.existsById(resourceTypeHrn.toString())) {
@@ -26,7 +26,8 @@ class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
     }
 
     override suspend fun getResourceType(organizationId: String, name: String): ResourceType {
-        val resourceTypeRecord = resourceTypeRepo.fetchByHrn(GlobalHrn(organizationId, name, null)) ?: throw EntityNotFoundException("Resource type with name [$name] not found")
+        val resourceTypeRecord = resourceTypeRepo.fetchByHrn(GlobalHrn(organizationId, name, null))
+            ?: throw EntityNotFoundException("Resource type with name [$name] not found")
         return ResourceType.from(resourceTypeRecord)
 
     }
@@ -44,10 +45,12 @@ class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
 
     }
 
-    override suspend fun deleteResourceType(organizationId: String, name:String): BaseSuccessResponse {
+    override suspend fun deleteResourceType(organizationId: String, name: String): BaseSuccessResponse {
         val resourceTypeHrn = GlobalHrn(organizationId, name, null)
 
-        if (!ResourceTypesRepo.delete(resourceTypeHrn)) { throw EntityNotFoundException("Resource Type not found") }
+        if (!resourceTypeRepo.delete(resourceTypeHrn)) {
+            throw EntityNotFoundException("Resource Type not found")
+        }
 
         return BaseSuccessResponse(true)
     }
@@ -58,8 +61,8 @@ class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
  * Service which holds logic related to ResourceType operations
  */
 interface ResourceTypeService {
-    suspend fun createResourceType(organizationId: String, name:String, description: String): ResourceType
+    suspend fun createResourceType(organizationId: String, name: String, description: String): ResourceType
     suspend fun getResourceType(organizationId: String, name: String): ResourceType
     suspend fun updateResourceType(organizationId: String, name: String, description: String): ResourceType
-    suspend fun deleteResourceType(organizationId: String, name:String): BaseSuccessResponse
+    suspend fun deleteResourceType(organizationId: String, name: String): BaseSuccessResponse
 }

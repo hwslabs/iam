@@ -1,5 +1,3 @@
-@file:Suppress("ThrowsCount", "UnusedPrivateMember")
-
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
@@ -7,11 +5,12 @@ import com.hypto.iam.server.models.CreateResourceTypeRequest
 import com.hypto.iam.server.models.UpdateResourceTypeRequest
 import com.hypto.iam.server.service.ResourceTypeService
 import com.hypto.iam.server.validators.validate
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.locations.*
-import io.ktor.request.*
-import io.ktor.response.*
+import io.ktor.application.call
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.locations.KtorExperimentalLocationsAPI
+import io.ktor.request.receive
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.get
@@ -42,20 +41,21 @@ fun Route.resourceTypeApi() {
     delete("/organizations/{organization_id}/resource_types/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required id to delete a resource_type")
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to delete a resource_type")
 
         val response = resourceTypeService.deleteResourceType(organizationId, name)
 
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
         )
     }
 
     get("/organizations/{organization_id}/resource_types/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required id to get the resource_type")
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to get the resource_type")
 
         val response = resourceTypeService.getResourceType(organizationId, name)
 
@@ -69,7 +69,7 @@ fun Route.resourceTypeApi() {
     patch("/organizations/{organization_id}/resource_types/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required id to update a resource_type")
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to update a resource_type")
         val request = call.receive<UpdateResourceTypeRequest>().validate()
 
         val response = resourceTypeService.updateResourceType(organizationId, name, request.description)

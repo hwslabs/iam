@@ -1,13 +1,12 @@
 package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.db.Tables.RESOURCE_TYPES
-import com.hypto.iam.server.db.tables.Policies
 import com.hypto.iam.server.db.tables.pojos.ResourceTypes
 import com.hypto.iam.server.db.tables.records.ResourceTypesRecord
 import com.hypto.iam.server.service.DatabaseFactory
 import com.hypto.iam.server.utils.GlobalHrn
-import org.jooq.impl.DAOImpl
 import java.time.LocalDateTime
+import org.jooq.impl.DAOImpl
 
 object ResourceTypesRepo : DAOImpl<ResourceTypesRecord, ResourceTypes, String>(
     RESOURCE_TYPES,
@@ -59,6 +58,6 @@ object ResourceTypesRepo : DAOImpl<ResourceTypesRecord, ResourceTypes, String>(
     fun delete(hrn: GlobalHrn): Boolean {
         val record = ResourceTypesRecord().setHrn(hrn.toString())
         record.attach(configuration())
-        return record.delete()>0
+        return record.delete() > 0
     }
 }

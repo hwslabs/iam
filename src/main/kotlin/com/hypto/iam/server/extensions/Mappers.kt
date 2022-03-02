@@ -8,7 +8,14 @@ import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourceTypesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
-import com.hypto.iam.server.models.*
+import com.hypto.iam.server.models.Credential
+import com.hypto.iam.server.models.CredentialWithoutSecret
+import com.hypto.iam.server.models.Policy
+import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.ResourceAction
+import com.hypto.iam.server.models.ResourceActionEffect
+import com.hypto.iam.server.models.ResourceType
+import com.hypto.iam.server.models.UserPolicy
 import com.hypto.iam.server.utils.GlobalHrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
