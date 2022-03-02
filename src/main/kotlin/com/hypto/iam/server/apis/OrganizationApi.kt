@@ -1,7 +1,6 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.extensions.auditLogger
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.validators.validate
@@ -47,7 +46,6 @@ fun Route.createAndDeleteOrganizationApi() {
 }
 
 private val logger = KotlinLogging.logger { }
-private val auditLogger = KotlinLogging.auditLogger()
 
 /**
  * Route to get and update organizations in IAM
@@ -61,8 +59,6 @@ fun Route.getAndUpdateOrganizationApi() {
             val id = call.parameters["id"]
                 ?: throw IllegalArgumentException("Required id to get the Organization details")
             val response = controller.getOrganization(id)
-            // TODO: Remove this log after testing
-            auditLogger.info("=============  Test audit log message  =============")
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,

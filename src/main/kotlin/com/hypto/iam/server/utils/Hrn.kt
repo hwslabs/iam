@@ -1,3 +1,4 @@
+@file:Suppress("MaximumLineLength")
 package com.hypto.iam.server.utils
 
 import com.hypto.iam.server.utils.GlobalHrn.Companion.GLOBAL_HRN_REGEX

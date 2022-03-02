@@ -1,5 +1,6 @@
 package com.hypto.iam.server.extensions
 
+import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
@@ -15,6 +16,7 @@ import com.hypto.iam.server.models.ResourceActionEffect
 import com.hypto.iam.server.models.UserPolicy
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 fun Credential.Companion.from(record: CredentialsRecord): Credential {
@@ -118,4 +120,15 @@ fun ResourceActionEffect.Companion.from(
     effect: ResourceActionEffect.Effect
 ): ResourceActionEffect {
     return ResourceActionEffect(resourceAction.resource, resourceAction.action, effect)
+}
+
+fun auditEntryFrom(
+    requestId: String?,
+    eventTime: LocalDateTime,
+    principal: String,
+    resource: String,
+    operation: String
+): AuditEntries {
+    val principalHrn: ResourceHrn = HrnFactory().getHrn(principal) as ResourceHrn
+    return AuditEntries(null, requestId, eventTime, principalHrn.organization, principal, resource, operation, null)
 }

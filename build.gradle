@@ -159,7 +159,7 @@ jooq {
                         immutablePojos = true
                         fluentSetters = true
 //                        embeddablePrimaryKeys = true // Available only in paid version :(
-                        daos = true // TODO: make this false before prod deployment
+                        daos = false
                     }
                     target {
                         packageName = 'com.hypto.iam.server.db'
@@ -282,6 +282,10 @@ dependencies {
 
     // Validation
     implementation("io.konform:konform:0.3.0")
+
+    // AWS Lambda
+    implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
+    implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
 
     // Test dependencies
     testImplementation "org.koin:koin-test:$koin_test"
