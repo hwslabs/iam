@@ -63,6 +63,8 @@ class TokenServiceImpl : KoinComponent, TokenService {
             .claim(ENTITLEMENTS_CLAIM, userPolicyService.fetchEntitlements(userHrn.toString()).toString())
             .signWith(keyPair.privateKey, SignatureAlgorithm.ES256)
             // TODO: Uncomment before taking to prod
+            // Eventually move to Brotli from GZIP:
+            // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
             // .compressWith(CompressionCodecs.GZIP)
             .compact()
     }
