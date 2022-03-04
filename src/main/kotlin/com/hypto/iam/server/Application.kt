@@ -44,14 +44,12 @@ import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
 
-@KtorExperimentalLocationsAPI
-fun Application.module() {
+fun Application.handleRequest() {
+    val credentialsRepo: CredentialsRepo by inject()
+    val userRepo: UserRepo by inject()
+
     install(DefaultHeaders)
     install(CallLogging)
-    install(Koin) {
-        SLF4JLogger()
-        modules(repositoryModule, controllerModule, applicationModule)
-    }
     install(MicrometerMetrics) {
         registry = MicrometerConfigs.getRegistry()
         meterBinders = MicrometerConfigs.getBinders()
@@ -60,7 +58,6 @@ fun Application.module() {
         // TODO: Switch to kotlinx.serialization
         gson()
     }
-
     install(StatusPages) {
         // TODO: Logic to update error message
 
@@ -94,8 +91,8 @@ fun Application.module() {
         bearer("bearer-auth") {
             validate { tokenCredential: TokenCredential ->
                 return@validate tokenCredential.value?.let {
-                    return@let CredentialsRepo.fetchByRefreshToken(it)
-                        ?.let { credential -> UserRepo.fetchByHrn(credential.userHrn) }
+                    return@let credentialsRepo.fetchByRefreshToken(it)
+                        ?.let { credential -> userRepo.fetchByHrn(credential.userHrn) }
                         ?.let { user -> UserPrincipal(tokenCredential, user.hrn) }
                 }
             }
@@ -125,6 +122,14 @@ fun Application.module() {
             usersApi()
         }
     }
+}
+
+fun Application.module() {
+    install(Koin) {
+        SLF4JLogger()
+        modules(repositoryModule, controllerModule, applicationModule)
+    }
+    handleRequest()
 }
 
 @KtorExperimentalLocationsAPI

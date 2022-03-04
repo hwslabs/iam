@@ -89,10 +89,11 @@ fun Authentication.Configuration.bearer(name: String? = null, configure: TokenAu
 
     provider.pipeline.intercept(AuthenticationPipeline.RequestAuthentication) { context ->
         val credentials = call.request.tokenAuthenticationCredentials(apiKeyName, apiKeyLocation) {
-            when (val header = parseAuthorizationHeader(it)) {
+            val result = when (val header = parseAuthorizationHeader(it)) {
                 is HttpAuthHeader.Single -> header.blob
                 else -> null
             }
+            return@tokenAuthenticationCredentials result
         }
         val principal = credentials?.let { authenticate(call, it) }
 

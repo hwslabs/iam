@@ -21,12 +21,12 @@ internal class ConfigurationTest : KoinTest {
 //                UUID.randomUUID().toString(),
 //                LocalDateTime.now(), "principal", "organization", "resource", "operation", null)
 //        }
-////        val entries = mutableListOf<AuditEntries>()
+// //        val entries = mutableListOf<AuditEntries>()
 //
 //        for (i in 1..5) {
 //            val entry = genAuditEntry()
 //            KotlinLogging.auditLog(entry)
-////            entries.add(entry)
+// //            entries.add(entry)
 //        }
 
 //        AuditEntriesRepo.batchInsert(entries)

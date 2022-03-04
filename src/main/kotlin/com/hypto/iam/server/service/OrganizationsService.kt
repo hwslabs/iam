@@ -15,7 +15,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
     override suspend fun createOrganization(name: String, description: String): Organization {
         val id = idGenerator.organizationId()
-        repo.insert(Organizations(id, name, "", null, LocalDateTime.now(), LocalDateTime.now()))
+        repo.insert(Organizations(id, name, "", "", LocalDateTime.now(), LocalDateTime.now()))
 
         // TODO: #1 - Update schema to include description, createdBy, updatedBy fields
         // TODO: #2 - Add transaction to create iam resource_types and actions
