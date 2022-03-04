@@ -25,13 +25,13 @@ import org.koin.ktor.ext.inject
  * Only users (Just "hypto-root" at the moment) having access to master key can use this api.
  */
 fun Route.createAndDeleteOrganizationApi() {
-    val controller: OrganizationsService by inject()
+    val service: OrganizationsService by inject()
     val gson: Gson by inject()
 
     route("/organizations") {
         post {
             val request = call.receive<CreateOrganizationRequest>().validate()
-            val response = controller.createOrganization(request.name, description = "")
+            val response = service.createOrganization(request.name, description = "")
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
