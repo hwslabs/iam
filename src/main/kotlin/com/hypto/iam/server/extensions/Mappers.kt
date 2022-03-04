@@ -3,6 +3,7 @@ package com.hypto.iam.server.extensions
 import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
+import com.hypto.iam.server.db.tables.pojos.ResourceTypes
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
@@ -101,6 +102,16 @@ fun Policy.Companion.from(record: Policies): Policy {
 }
 
 fun ResourceType.Companion.from(record: ResourceTypesRecord): ResourceType {
+    val hrn = HrnFactory().getHrn(record.hrn)
+    require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
+    return ResourceType(
+        hrn.resourceType!!,
+        hrn.organization,
+        record.description
+    )
+}
+
+fun ResourceType.Companion.from(record: ResourceTypes): ResourceType {
     val hrn = HrnFactory().getHrn(record.hrn)
     require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
     return ResourceType(

@@ -515,6 +515,31 @@ paths:
       # security:
       #   - access_token: [] # resource_type:create
 
+    get:
+      tags:
+        - resource_type
+      summary: List Resource Types
+      description: List Resource Types
+      operationId: listResourceTypes
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '201':
+          $ref: '#/components/responses/ResourceTypePaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /organizations/{organization_id}/resource_types/{id}:
     get:
       tags:
@@ -1206,6 +1231,12 @@ components:
           schema:
             $ref: '#/components/schemas/PolicyPaginatedResponse'
 
+    ResourceTypePaginatedResponse:
+      description: Response for list resource types request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResourceTypePaginatedResponse'
 
   schemas:
 
@@ -1499,6 +1530,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Policy'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
+
+    ResourceTypePaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceType'
         nextToken:
           type: string
         context:

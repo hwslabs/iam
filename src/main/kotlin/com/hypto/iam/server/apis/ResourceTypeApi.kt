@@ -1,7 +1,9 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreateResourceTypeRequest
+import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateResourceTypeRequest
 import com.hypto.iam.server.service.ResourceTypeService
 import com.hypto.iam.server.validators.validate
@@ -35,6 +37,28 @@ fun Route.resourceTypeApi() {
             text = gson.toJson(resourceType),
             contentType = ContentType.Application.Json,
             status = HttpStatusCode.Created
+        )
+    }
+
+    get("/organizations/{organization_id}/resource_types") {
+        val organizationId = call.parameters["organization_id"]
+            ?: throw IllegalArgumentException("Required organization_id to get user")
+        val nextToken = call.request.queryParameters["next_token"]
+        val pageSize = call.request.queryParameters["page_size"]
+        val sortOrder = call.request.queryParameters["sort_order"]
+
+        val context = PaginationContext.from(
+            nextToken,
+            pageSize?.toInt(),
+            sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
+        )
+
+        val response = resourceTypeService.listResourceTypes(organizationId, context)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
         )
     }
 

@@ -3,9 +3,12 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.Tables.RESOURCE_TYPES
 import com.hypto.iam.server.db.tables.pojos.ResourceTypes
 import com.hypto.iam.server.db.tables.records.ResourceTypesRecord
+import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.service.DatabaseFactory
 import com.hypto.iam.server.utils.GlobalHrn
 import java.time.LocalDateTime
+import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
 object ResourceTypesRepo : DAOImpl<ResourceTypesRecord, ResourceTypes, String>(
@@ -59,5 +62,15 @@ object ResourceTypesRepo : DAOImpl<ResourceTypesRecord, ResourceTypes, String>(
         val record = ResourceTypesRecord().setHrn(hrn.toString())
         record.attach(configuration())
         return record.delete() > 0
+    }
+
+    fun fetchByOrganizationIdPaginated(
+        organizationId: String,
+        paginationContext: PaginationContext
+    ): Result<ResourceTypesRecord> {
+        return ctx().selectFrom(table)
+            .where(RESOURCE_TYPES.ORGANIZATION_ID.eq(organizationId))
+            .paginate(RESOURCE_TYPES.HRN, paginationContext)
+            .fetch()
     }
 }

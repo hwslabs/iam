@@ -3,9 +3,11 @@ package com.hypto.iam.server.service
 import com.hypto.iam.server.db.repositories.ResourceTypesRepo
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
+import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.ResourceType
+import com.hypto.iam.server.models.ResourceTypePaginatedResponse
 import com.hypto.iam.server.utils.GlobalHrn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -28,6 +30,19 @@ class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
         val resourceTypeRecord = resourceTypeRepo.fetchByHrn(GlobalHrn(organizationId, name, null))
             ?: throw EntityNotFoundException("Resource type with name [$name] not found")
         return ResourceType.from(resourceTypeRecord)
+    }
+
+    override suspend fun listResourceTypes(
+        organizationId: String,
+        context: PaginationContext
+    ): ResourceTypePaginatedResponse {
+        val resourceTypes = resourceTypeRepo.fetchByOrganizationIdPaginated(organizationId, context)
+        val newContext = PaginationContext.from(resourceTypes.lastOrNull()?.hrn, context)
+        return ResourceTypePaginatedResponse(
+            resourceTypes.map { ResourceType.from(it) },
+            newContext.nextToken,
+            newContext.toOptions()
+        )
     }
 
     override suspend fun updateResourceType(organizationId: String, name: String, description: String): ResourceType {
@@ -61,4 +76,8 @@ interface ResourceTypeService {
     suspend fun getResourceType(organizationId: String, name: String): ResourceType
     suspend fun updateResourceType(organizationId: String, name: String, description: String): ResourceType
     suspend fun deleteResourceType(organizationId: String, name: String): BaseSuccessResponse
+    suspend fun listResourceTypes(
+        organizationId: String,
+        context: PaginationContext
+    ): ResourceTypePaginatedResponse
 }
