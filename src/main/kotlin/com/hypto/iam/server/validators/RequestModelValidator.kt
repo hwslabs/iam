@@ -80,7 +80,6 @@ fun UpdateCredentialRequest.validate(): UpdateCredentialRequest {
     }.validateAndThrowOnFailure(this)
 }
 
-
 /**
  * Extension function to validate CreateResourceTypeRequest input from client
  */
@@ -100,7 +99,7 @@ fun CreateResourceTypeRequest.validate(): CreateResourceTypeRequest {
  */
 fun UpdateResourceTypeRequest.validate(): UpdateResourceTypeRequest {
     return Validation<UpdateResourceTypeRequest> {
-        UpdateResourceTypeRequest::description required {
+        UpdateResourceTypeRequest::description ifPresent {
             run(descriptionCheck)
         }
     }.validateAndThrowOnFailure(this)

@@ -17,7 +17,7 @@ import java.io.Serializable
  * @param description
  */
 data class UpdateResourceTypeRequest(
-    val description: kotlin.String
+    val description: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

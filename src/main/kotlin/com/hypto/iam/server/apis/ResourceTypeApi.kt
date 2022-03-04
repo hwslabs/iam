@@ -72,7 +72,7 @@ fun Route.resourceTypeApi() {
         val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to update a resource_type")
         val request = call.receive<UpdateResourceTypeRequest>().validate()
 
-        val response = resourceTypeService.updateResourceType(organizationId, name, request.description)
+        val response = resourceTypeService.updateResourceType(organizationId, name, request.description ?: "")
 
         call.respondText(
             text = gson.toJson(response),
@@ -80,6 +80,4 @@ fun Route.resourceTypeApi() {
             status = HttpStatusCode.OK
         )
     }
-
-
 }

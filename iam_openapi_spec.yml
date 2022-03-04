@@ -496,7 +496,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_id'
       requestBody:
-        $ref: '#/components/requestBodies/CreateResourceRequest'
+        $ref: '#/components/requestBodies/CreateResourceTypeRequest'
       responses:
         '201':
           $ref: '#/components/responses/ResourceTypeResponse'
@@ -553,7 +553,7 @@ paths:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       requestBody:
-        $ref: '#/components/requestBodies/UpdateResourceRequest'
+        $ref: '#/components/requestBodies/UpdateResourceTypeRequest'
       responses:
         '200':
           $ref: '#/components/responses/ResourceTypeResponse'
@@ -1036,21 +1036,21 @@ components:
           schema:
             $ref: '#/components/schemas/UpdateCredentialRequest'
 
-    CreateResourceRequest:
-      description: Payload to create resource
+    CreateResourceTypeRequest:
+      description: Payload to create resource type
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CreateResourceRequest'
+            $ref: '#/components/schemas/CreateResourceTypeRequest'
 
-    UpdateResourceRequest:
-      description: Payload to update resource
+    UpdateResourceTypeRequest:
+      description: Payload to update resource type
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/UpdateResourceRequest'
+            $ref: '#/components/schemas/UpdateResourceTypeRequest'
 
     CreateActionRequest:
       description: Payload to create action
@@ -1314,7 +1314,7 @@ components:
             - active
             - inactive
 
-    CreateResourceRequest:
+    CreateResourceTypeRequest:
       description: Payload to create resource
       type: object
       additionalProperties: false
@@ -1328,12 +1328,10 @@ components:
           type: string
           maxLength: 500
 
-    UpdateResourceRequest:
+    UpdateResourceTypeRequest:
       description: Payload to update resource
       type: object
       additionalProperties: false
-      required:
-        - description
       properties:
         description:
           type: string
@@ -1625,9 +1623,6 @@ components:
         - name
         - organization_id
       properties:
-        id:
-          type: string
-          maxLength: 50
         name:
           type: string
           maxLength: 50

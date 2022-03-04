@@ -22,14 +22,12 @@ class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
 
         val resourceTypeRecord = resourceTypeRepo.create(resourceTypeHrn, description)
         return ResourceType.from(resourceTypeRecord)
-
     }
 
     override suspend fun getResourceType(organizationId: String, name: String): ResourceType {
         val resourceTypeRecord = resourceTypeRepo.fetchByHrn(GlobalHrn(organizationId, name, null))
             ?: throw EntityNotFoundException("Resource type with name [$name] not found")
         return ResourceType.from(resourceTypeRecord)
-
     }
 
     override suspend fun updateResourceType(organizationId: String, name: String, description: String): ResourceType {
@@ -42,7 +40,6 @@ class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
 
         resourceTypeRecord ?: throw IllegalStateException("Update unsuccessful")
         return ResourceType.from(resourceTypeRecord)
-
     }
 
     override suspend fun deleteResourceType(organizationId: String, name: String): BaseSuccessResponse {
@@ -54,7 +51,6 @@ class ResourceTypeServiceImpl : KoinComponent, ResourceTypeService {
 
         return BaseSuccessResponse(true)
     }
-
 }
 
 /**
