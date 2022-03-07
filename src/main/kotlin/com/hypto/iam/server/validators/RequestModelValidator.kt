@@ -13,12 +13,14 @@ import com.hypto.iam.server.extensions.validateAndThrowOnFailure
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
+import com.hypto.iam.server.models.CreateResourceTypeRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.UpdatePolicyRequest
+import com.hypto.iam.server.models.UpdateResourceTypeRequest
 import com.hypto.iam.server.models.ValidationRequest
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxItems
@@ -47,7 +49,7 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
 fun UpdateOrganizationRequest.validate(): UpdateOrganizationRequest {
     return Validation<UpdateOrganizationRequest> {
         UpdateOrganizationRequest::description required {
-            run(nameCheck)
+            run(descriptionCheck)
         }
     }.validateAndThrowOnFailure(this)
 }
@@ -74,6 +76,31 @@ fun UpdateCredentialRequest.validate(): UpdateCredentialRequest {
         )
         UpdateCredentialRequest::validUntil ifPresent {
             dateTime(nature = TimeNature.FUTURE)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+/**
+ * Extension function to validate CreateResourceTypeRequest input from client
+ */
+fun CreateResourceTypeRequest.validate(): CreateResourceTypeRequest {
+    return Validation<CreateResourceTypeRequest> {
+        CreateResourceTypeRequest::name required {
+            run(nameCheck)
+        }
+        CreateResourceTypeRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+/**
+ * Extension function to validate UpdateResourceTypeRequest input from client
+ */
+fun UpdateResourceTypeRequest.validate(): UpdateResourceTypeRequest {
+    return Validation<UpdateResourceTypeRequest> {
+        UpdateResourceTypeRequest::description ifPresent {
+            run(descriptionCheck)
         }
     }.validateAndThrowOnFailure(this)
 }
@@ -134,6 +161,11 @@ val nameCheck = Validation<String> {
     maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
         "name is ${Constants.MAX_NAME_LENGTH} characters"
     pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
+}
+
+val descriptionCheck = Validation<String> {
+    maxLength(Constants.MAX_DESC_LENGTH) hint "Maximum length supported for" +
+        "description is ${Constants.MAX_DESC_LENGTH} characters"
 }
 
 val policyStatementValidation = Validation<PolicyStatement> {

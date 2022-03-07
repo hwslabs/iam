@@ -14,7 +14,7 @@ import io.ktor.request.path
 /**
  * Hrn - Hypto Resource Name. It is a unique representation of an entity managed by iam service.
  * Hrn entities are classified into 1) ResourceHrn 2) GlobalHrn
- * 1. ResourceHrn - This identifies the instances of resouces like users, policies, and any other service specific resources.
+ * 1. ResourceHrn - This identifies the instances of resources like users, policies, and any other service specific resources.
  * 2. GlobalHrn - This identifies the resource names and operations possible with the resources.
  */
 interface Hrn {

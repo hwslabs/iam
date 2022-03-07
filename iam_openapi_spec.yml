@@ -496,7 +496,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_id'
       requestBody:
-        $ref: '#/components/requestBodies/CreateResourceRequest'
+        $ref: '#/components/requestBodies/CreateResourceTypeRequest'
       responses:
         '201':
           $ref: '#/components/responses/ResourceTypeResponse'
@@ -514,6 +514,31 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       # security:
       #   - access_token: [] # resource_type:create
+
+    get:
+      tags:
+        - resource_type
+      summary: List Resource Types
+      description: List Resource Types
+      operationId: listResourceTypes
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '201':
+          $ref: '#/components/responses/ResourceTypePaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 
   /organizations/{organization_id}/resource_types/{id}:
     get:
@@ -553,7 +578,7 @@ paths:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       requestBody:
-        $ref: '#/components/requestBodies/UpdateResourceRequest'
+        $ref: '#/components/requestBodies/UpdateResourceTypeRequest'
       responses:
         '200':
           $ref: '#/components/responses/ResourceTypeResponse'
@@ -1036,21 +1061,21 @@ components:
           schema:
             $ref: '#/components/schemas/UpdateCredentialRequest'
 
-    CreateResourceRequest:
-      description: Payload to create resource
+    CreateResourceTypeRequest:
+      description: Payload to create resource type
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CreateResourceRequest'
+            $ref: '#/components/schemas/CreateResourceTypeRequest'
 
-    UpdateResourceRequest:
-      description: Payload to update resource
+    UpdateResourceTypeRequest:
+      description: Payload to update resource type
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/UpdateResourceRequest'
+            $ref: '#/components/schemas/UpdateResourceTypeRequest'
 
     CreateActionRequest:
       description: Payload to create action
@@ -1206,6 +1231,12 @@ components:
           schema:
             $ref: '#/components/schemas/PolicyPaginatedResponse'
 
+    ResourceTypePaginatedResponse:
+      description: Response for list resource types request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResourceTypePaginatedResponse'
 
   schemas:
 
@@ -1314,7 +1345,7 @@ components:
             - active
             - inactive
 
-    CreateResourceRequest:
+    CreateResourceTypeRequest:
       description: Payload to create resource
       type: object
       additionalProperties: false
@@ -1328,12 +1359,10 @@ components:
           type: string
           maxLength: 500
 
-    UpdateResourceRequest:
+    UpdateResourceTypeRequest:
       description: Payload to update resource
       type: object
       additionalProperties: false
-      required:
-        - description
       properties:
         description:
           type: string
@@ -1506,6 +1535,19 @@ components:
         context:
           $ref: '#/components/schemas/PaginationOptions'
 
+    ResourceTypePaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceType'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
+
     # Entities:
     Organization:
       type: object
@@ -1625,9 +1667,6 @@ components:
         - name
         - organization_id
       properties:
-        id:
-          type: string
-          maxLength: 50
         name:
           type: string
           maxLength: 50

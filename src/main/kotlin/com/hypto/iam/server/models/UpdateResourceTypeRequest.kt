@@ -16,8 +16,8 @@ import java.io.Serializable
  * Payload to update resource
  * @param description
  */
-data class UpdateResourceRequest(
-    val description: kotlin.String
+data class UpdateResourceTypeRequest(
+    val description: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
