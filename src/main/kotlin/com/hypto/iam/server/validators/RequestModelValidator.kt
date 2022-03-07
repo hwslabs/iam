@@ -13,14 +13,14 @@ import com.hypto.iam.server.extensions.validateAndThrowOnFailure
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
-import com.hypto.iam.server.models.CreateResourceTypeRequest
+import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.UpdatePolicyRequest
-import com.hypto.iam.server.models.UpdateResourceTypeRequest
+import com.hypto.iam.server.models.UpdateResourceRequest
 import com.hypto.iam.server.models.ValidationRequest
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxItems
@@ -81,25 +81,25 @@ fun UpdateCredentialRequest.validate(): UpdateCredentialRequest {
 }
 
 /**
- * Extension function to validate CreateResourceTypeRequest input from client
+ * Extension function to validate CreateResourceRequest input from client
  */
-fun CreateResourceTypeRequest.validate(): CreateResourceTypeRequest {
-    return Validation<CreateResourceTypeRequest> {
-        CreateResourceTypeRequest::name required {
+fun CreateResourceRequest.validate(): CreateResourceRequest {
+    return Validation<CreateResourceRequest> {
+        CreateResourceRequest::name required {
             run(nameCheck)
         }
-        CreateResourceTypeRequest::description ifPresent {
+        CreateResourceRequest::description ifPresent {
             run(descriptionCheck)
         }
     }.validateAndThrowOnFailure(this)
 }
 
 /**
- * Extension function to validate UpdateResourceTypeRequest input from client
+ * Extension function to validate UpdateResourceRequest input from client
  */
-fun UpdateResourceTypeRequest.validate(): UpdateResourceTypeRequest {
-    return Validation<UpdateResourceTypeRequest> {
-        UpdateResourceTypeRequest::description ifPresent {
+fun UpdateResourceRequest.validate(): UpdateResourceRequest {
+    return Validation<UpdateResourceRequest> {
+        UpdateResourceRequest::description ifPresent {
             run(descriptionCheck)
         }
     }.validateAndThrowOnFailure(this)
@@ -115,7 +115,7 @@ fun CreatePolicyRequest.validate(): CreatePolicyRequest {
             maxItems(MAX_POLICY_STATEMENTS)
         }
         CreatePolicyRequest::statements onEach {
-            PolicyStatement::resourceType required { run(nameCheck) }
+            PolicyStatement::resource required { run(nameCheck) }
             PolicyStatement::action required { run(nameCheck) }
             PolicyStatement::effect required {}
         }
@@ -169,7 +169,7 @@ val descriptionCheck = Validation<String> {
 }
 
 val policyStatementValidation = Validation<PolicyStatement> {
-    PolicyStatement::resourceType required { run(nameCheck) }
+    PolicyStatement::resource required { run(nameCheck) }
     PolicyStatement::action required { run(nameCheck) }
     PolicyStatement::effect required {}
 }

@@ -65,10 +65,10 @@ Class | Method | HTTP request | Description
 *PolicyApi* | [**getPolicy**](docs/PolicyApi.md#getpolicy) | **GET** /policies/{id} | Get a policy
 *PolicyApi* | [**getUserPolicies**](docs/PolicyApi.md#getuserpolicies) | **GET** /users/{id}/policies | Get policies of a user
 *PolicyApi* | [**updatePolicy**](docs/PolicyApi.md#updatepolicy) | **PATCH** /policies/{id} | Update a policy
-*ResourceTypeApi* | [**createResourceType**](docs/ResourceTypeApi.md#createresourcetype) | **POST** /resource_types | Create a resource type
-*ResourceTypeApi* | [**deleteResourceType**](docs/ResourceTypeApi.md#deleteresourcetype) | **DELETE** /resource_types/{id} | Delete a resource type
-*ResourceTypeApi* | [**getResourceType**](docs/ResourceTypeApi.md#getresourcetype) | **GET** /resource_types/{id} | Get a resource type
-*ResourceTypeApi* | [**updateResourceType**](docs/ResourceTypeApi.md#updateresourcetype) | **PATCH** /resource_types/{id} | Update a resource type
+*ResourceApi* | [**createResource**](docs/ResourceApi.md#createresource) | **POST** /resources | Create a resource
+*ResourceApi* | [**deleteResource**](docs/ResourceApi.md#deleteresource) | **DELETE** /resources/{id} | Delete a resource
+*ResourceApi* | [**getResource**](docs/ResourceApi.md#getresource) | **GET** /resources/{id} | Get a resource
+*ResourceApi* | [**updateResource**](docs/ResourceApi.md#updateresource) | **PATCH** /resources/{id} | Update a resource
 *TokenApi* | [**getToken**](docs/TokenApi.md#gettoken) | **POST** /token | Generate a token
 *UsersApi* | [**attachPolicies**](docs/UsersApi.md#attachpolicies) | **PUT** /users/{id}/attach_policies | Attach policies to user
 *UsersApi* | [**createUser**](docs/UsersApi.md#createuser) | **POST** /users | Create a user
@@ -96,7 +96,7 @@ Class | Method | HTTP request | Description
  - [io.swagger.server.models.Policy](docs/Policy.md)
  - [io.swagger.server.models.PolicyAssociationRequest](docs/PolicyAssociationRequest.md)
  - [io.swagger.server.models.PolicyStatement](docs/PolicyStatement.md)
- - [io.swagger.server.models.ResourceType](docs/ResourceType.md)
+ - [io.swagger.server.models.Resource](docs/Resource.md)
  - [io.swagger.server.models.UpdateActionRequest](docs/UpdateActionRequest.md)
  - [io.swagger.server.models.UpdateCredentialRequest](docs/UpdateCredentialRequest.md)
  - [io.swagger.server.models.UpdateOrganizationRequest](docs/UpdateOrganizationRequest.md)

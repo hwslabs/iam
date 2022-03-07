@@ -21,14 +21,14 @@ object ActionRepo : DAOImpl<ActionsRecord, Actions, String>(
     }
 
     /**
-     * Fetch records that have `organization_id = value AND resource_type = value`
+     * Fetch records that have `organization_id = value AND resource = value`
      */
-    fun fetchByHrn(orgId: String, resourceTypeHrn: String): List<Actions> {
+    fun fetchByHrn(orgId: String, resourceHrn: String): List<Actions> {
         return ctx()
             .selectFrom(table)
             .where(
                 com.hypto.iam.server.db.tables.Actions.ACTIONS.ORGANIZATION_ID.equal(orgId),
-                com.hypto.iam.server.db.tables.Actions.ACTIONS.RESOURCE_TYPE_HRN.equal(resourceTypeHrn)
+                com.hypto.iam.server.db.tables.Actions.ACTIONS.RESOURCE_HRN.equal(resourceHrn)
             )
             .fetch(mapper())
     }

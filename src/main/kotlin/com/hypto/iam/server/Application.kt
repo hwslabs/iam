@@ -1,4 +1,5 @@
 @file:Suppress("LongMethod")
+
 package com.hypto.iam.server
 
 import com.hypto.iam.server.apis.actionApi
@@ -6,7 +7,7 @@ import com.hypto.iam.server.apis.createAndDeleteOrganizationApi
 import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.policyApi
-import com.hypto.iam.server.apis.resourceTypeApi
+import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.db.repositories.CredentialsRepo
@@ -117,7 +118,7 @@ fun Application.handleRequest() {
             actionApi()
             credentialApi()
             policyApi()
-            resourceTypeApi()
+            resourceApi()
             tokenApi()
             usersApi()
         }

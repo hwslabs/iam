@@ -17,7 +17,9 @@ import org.koin.core.component.inject
 /* Authorization logic is defined based on - https://www.ximedes.com/2020-09-17/role-based-authorization-in-ktor/ */
 
 private typealias Action = String
+
 private val logger = KotlinLogging.logger { }
+
 class AuthorizationException(override val message: String) : Exception(message)
 
 /**
@@ -59,7 +61,7 @@ class Authorization(config: Configuration) : KoinComponent {
             val denyReasons = mutableListOf<String>()
             all?.let {
                 val policyRequests = all.map {
-                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resourceType, it)
+                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resource, it)
                     PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
                 }.toList()
                 if (!policyValidator.validateAll(policyRequests)) {
@@ -70,7 +72,7 @@ class Authorization(config: Configuration) : KoinComponent {
 
             any?.let {
                 val policyRequests = any.map {
-                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resourceType, it)
+                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resource, it)
                     PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
                 }.toList()
                 if (!policyValidator.validateAny(policyRequests)) {
@@ -81,7 +83,7 @@ class Authorization(config: Configuration) : KoinComponent {
 
             none?.let {
                 val policyRequests = none.map {
-                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resourceType, it)
+                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resource, it)
                     PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
                 }.toList()
                 if (!policyValidator.validateNone(policyRequests)) {
@@ -138,7 +140,8 @@ fun Route.withPermission(action: Action, build: Route.() -> Unit) = authorizedRo
 fun Route.withAllPermission(vararg action: Action, build: Route.() -> Unit) =
     authorizedRoute(all = action.toSet(), build = build)
 
-fun Route.withAnyPermission(vararg action: Action, build: Route.() -> Unit) = authorizedRoute(any = action.toSet(), build = build)
+fun Route.withAnyPermission(vararg action: Action, build: Route.() -> Unit) =
+    authorizedRoute(any = action.toSet(), build = build)
 
 fun Route.withoutPermission(vararg action: Action, build: Route.() -> Unit) =
     authorizedRoute(none = action.toSet(), build = build)

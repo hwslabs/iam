@@ -17,7 +17,7 @@ import java.io.Serializable
  * @param name
  * @param description
  */
-data class CreateResourceTypeRequest(
+data class CreateResourceRequest(
     val name: kotlin.String,
     val description: kotlin.String? = null
 ) : Serializable {

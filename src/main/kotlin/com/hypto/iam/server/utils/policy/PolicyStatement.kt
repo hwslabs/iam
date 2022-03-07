@@ -1,4 +1,5 @@
 @file:Suppress("MagicNumber")
+
 package com.hypto.iam.server.utils.policy
 
 open class PolicyStatement(private val statement: String) {
@@ -13,9 +14,11 @@ open class PolicyStatement(private val statement: String) {
         }
 
         fun of(principal: String, statement: com.hypto.iam.server.models.PolicyStatement): PolicyStatement {
-            return this.p(principal, statement.resourceType, statement.action, statement.effect.value)
+            return this.p(principal, statement.resource, statement.action, statement.effect.value)
         }
     }
 
-    override fun toString(): String { return statement }
+    override fun toString(): String {
+        return statement
+    }
 }
