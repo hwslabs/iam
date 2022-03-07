@@ -1,14 +1,18 @@
-@file:Suppress("ThrowsCount", "UnusedPrivateMember")
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.models.CreateResourceRequest
-import com.hypto.iam.server.models.UpdateResourceRequest
+import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.models.CreateResourceTypeRequest
+import com.hypto.iam.server.models.PaginationOptions
+import com.hypto.iam.server.models.UpdateResourceTypeRequest
+import com.hypto.iam.server.service.ResourceTypeService
+import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.request.receive
-import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.get
@@ -19,34 +23,85 @@ import org.koin.ktor.ext.inject
 @KtorExperimentalLocationsAPI
 fun Route.resourceTypeApi() {
 
+    val resourceTypeService: ResourceTypeService by inject()
     val gson: Gson by inject()
 
     post("/organizations/{organization_id}/resource_types") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val request = call.receive<CreateResourceRequest>() // .validate()
-        call.respond(HttpStatusCode.NotImplemented)
+        val request = call.receive<CreateResourceTypeRequest>().validate()
+
+        val resourceType =
+            resourceTypeService.createResourceType(organizationId, request.name, request.description ?: "")
+        call.respondText(
+            text = gson.toJson(resourceType),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created
+        )
     }
 
-    delete("/organizations/{organization_id}/resource_types/{id}") {
+    get("/organizations/{organization_id}/resource_types") {
         val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to delete a resource_type")
-        call.respond(HttpStatusCode.NotImplemented)
+            ?: throw IllegalArgumentException("Required organization_id to get user")
+        val nextToken = call.request.queryParameters["next_token"]
+        val pageSize = call.request.queryParameters["page_size"]
+        val sortOrder = call.request.queryParameters["sort_order"]
+
+        val context = PaginationContext.from(
+            nextToken,
+            pageSize?.toInt(),
+            sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
+        )
+
+        val response = resourceTypeService.listResourceTypes(organizationId, context)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    get("/organizations/{organization_id}/resource_types/{id}") {
+    delete("/organizations/{organization_id}/resource_types/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to get the resource_type")
-        call.respond(HttpStatusCode.NotImplemented)
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to delete a resource_type")
+
+        val response = resourceTypeService.deleteResourceType(organizationId, name)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    patch("/organizations/{organization_id}/resource_types/{id}") {
+    get("/organizations/{organization_id}/resource_types/{name}") {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("organization_id required")
-        val id = call.parameters["id"] ?: throw IllegalArgumentException("Required id to update a resource_type")
-        val request = call.receive<UpdateResourceRequest>() // .validate()
-        call.respond(HttpStatusCode.NotImplemented)
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to get the resource_type")
+
+        val response = resourceTypeService.getResourceType(organizationId, name)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
+    }
+
+    patch("/organizations/{organization_id}/resource_types/{name}") {
+        val organizationId = call.parameters["organization_id"]
+            ?: throw IllegalArgumentException("organization_id required")
+        val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to update a resource_type")
+        val request = call.receive<UpdateResourceTypeRequest>().validate()
+
+        val response = resourceTypeService.updateResourceType(organizationId, name, request.description ?: "")
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 }
