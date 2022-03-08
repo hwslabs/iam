@@ -23,7 +23,7 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.coEvery
 import io.mockk.mockkClass
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

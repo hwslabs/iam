@@ -15,17 +15,21 @@ import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
+import com.hypto.iam.server.features.globalcalldata.GlobalCallData
 import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.Audit
 import com.hypto.iam.server.security.Authorization
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
+import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.features.AutoHeadResponse
+import io.ktor.features.CallId
 import io.ktor.features.CallLogging
 import io.ktor.features.Compression
 import io.ktor.features.ContentNegotiation
@@ -44,12 +48,21 @@ import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
 
+private const val REQUEST_ID_HEADER = "X-Request-ID"
+
 fun Application.handleRequest() {
+    val idGenerator: ApplicationIdUtil.Generator by inject()
     val credentialsRepo: CredentialsRepo by inject()
     val userRepo: UserRepo by inject()
 
     install(DefaultHeaders)
     install(CallLogging)
+    install(CallId) {
+        generate { idGenerator.requestId() }
+        verify { it.isNotEmpty() }
+        replyToHeader(headerName = REQUEST_ID_HEADER)
+    }
+    install(GlobalCallData)
     install(MicrometerMetrics) {
         registry = MicrometerConfigs.getRegistry()
         meterBinders = MicrometerConfigs.getBinders()
@@ -78,6 +91,7 @@ fun Application.handleRequest() {
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
     install(Compression, applicationCompressionConfiguration()) // see http://ktor.io/features/compression.html
     install(Locations) // see http://ktor.io/features/locations.html
+    install(Audit)
     install(Authentication) {
         apiKeyAuth("hypto-iam-root-auth") {
             validate { tokenCredential: TokenCredential ->
