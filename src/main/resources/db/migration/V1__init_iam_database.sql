@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE organizations (
   id VARCHAR(10) PRIMARY KEY, -- 10 char alphabets (upper case only)
   name VARCHAR(50) NOT NULL,
-  description VARCHAR(200),
+  description text NOT NULL,
   admin_user VARCHAR(15),
 
   created_at timestamp NOT NULL,
@@ -64,30 +64,30 @@ CREATE TABLE credentials (
 CREATE INDEX credentials_idx_user_hrn ON credentials(user_hrn);
 CREATE INDEX credentials_idx_refresh_token ON credentials(refresh_token);
 
-CREATE TABLE resource_types (
-  hrn VARCHAR(200) PRIMARY KEY, -- resourceTypeName is part of this hrn
+CREATE TABLE resources (
+  hrn VARCHAR(200) PRIMARY KEY, -- resourceName is part of this hrn
   organization_id VARCHAR(10) NOT NULL,
-  description text,
+  description text NOT NULL,
 
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
   FOREIGN KEY (organization_id) REFERENCES organizations (id)
 );
-CREATE INDEX resource_types_idx_org_id ON resource_types(organization_id);
+CREATE INDEX resources_idx_org_id ON resources(organization_id);
 
 CREATE TABLE actions (
   hrn VARCHAR(200) PRIMARY KEY, -- actionName is part of this hrn
   organization_id VARCHAR(10) NOT NULL,
-  resource_type_hrn VARCHAR(200) NOT NULL,
-  description text,
+  resource_hrn VARCHAR(200) NOT NULL,
+  description text NOT NULL,
 
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  FOREIGN KEY (resource_type_hrn) REFERENCES resource_types (hrn)
+  FOREIGN KEY (resource_hrn) REFERENCES resources (hrn)
 );
-CREATE INDEX actions_idx_org_id_resource_type_hrn ON actions(organization_id, resource_type_hrn);
+CREATE INDEX actions_idx_org_id_resource_hrn ON actions(organization_id, resource_hrn);
 
 CREATE TABLE policies (
   hrn VARCHAR(200) PRIMARY KEY, -- policyName is part of this hrn

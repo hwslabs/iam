@@ -13,10 +13,14 @@ package com.hypto.iam.server.models
 
 import java.io.Serializable
 /**
- * Payload to update resource
+ *
+ * @param name
+ * @param organizationId
  * @param description
  */
-data class UpdateResourceTypeRequest(
+data class Resource(
+    val name: kotlin.String,
+    val organizationId: kotlin.String,
     val description: kotlin.String? = null
 ) : Serializable {
     companion object {

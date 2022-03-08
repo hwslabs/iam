@@ -15,13 +15,13 @@ import java.io.Serializable
 /**
  *
  * @param organizationId
- * @param resourceId
+ * @param resourceName
  * @param name
  * @param description
  */
 data class Action(
     val organizationId: kotlin.String,
-    val resourceId: kotlin.String,
+    val resourceName: kotlin.String,
     val name: kotlin.String,
     val description: kotlin.String? = null
 ) : Serializable {

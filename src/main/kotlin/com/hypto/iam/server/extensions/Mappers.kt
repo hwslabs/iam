@@ -3,19 +3,19 @@ package com.hypto.iam.server.extensions
 import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
-import com.hypto.iam.server.db.tables.pojos.ResourceTypes
+import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
-import com.hypto.iam.server.db.tables.records.ResourceTypesRecord
+import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
-import com.hypto.iam.server.models.ResourceType
 import com.hypto.iam.server.models.UserPolicy
 import com.hypto.iam.server.utils.GlobalHrn
 import com.hypto.iam.server.utils.HrnFactory
@@ -101,21 +101,21 @@ fun Policy.Companion.from(record: Policies): Policy {
     )
 }
 
-fun ResourceType.Companion.from(record: ResourceTypesRecord): ResourceType {
+fun Resource.Companion.from(record: ResourcesRecord): Resource {
     val hrn = HrnFactory().getHrn(record.hrn)
     require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
-    return ResourceType(
-        hrn.resourceType!!,
+    return Resource(
+        hrn.resource!!,
         hrn.organization,
         record.description
     )
 }
 
-fun ResourceType.Companion.from(record: ResourceTypes): ResourceType {
+fun Resource.Companion.from(record: Resources): Resource {
     val hrn = HrnFactory().getHrn(record.hrn)
     require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
-    return ResourceType(
-        hrn.resourceType!!,
+    return Resource(
+        hrn.resource!!,
         hrn.organization,
         record.description
     )
