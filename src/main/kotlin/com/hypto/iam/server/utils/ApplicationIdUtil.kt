@@ -9,6 +9,7 @@ import org.koin.core.component.inject
 object ApplicationIdUtil : KoinComponent {
     private const val ORGANIZATION_ID_LENGTH = 10L
     private const val REFRESH_TOKEN_RANDOM_LENGTH = 30L
+    private const val REQUEST_ID_LENGTH = 15L
 
     object Generator {
         private val idGenerator: IdGenerator by inject()
@@ -21,6 +22,10 @@ object ApplicationIdUtil : KoinComponent {
         // next 20 chars: alphanumeric with upper and lower case - random
         fun refreshToken(organizationId: String): String {
             return organizationId + idGenerator.timeBasedRandomId(REFRESH_TOKEN_RANDOM_LENGTH, Charset.ALPHABETS)
+        }
+
+        fun requestId(): String {
+            return idGenerator.timeBasedRandomId(REQUEST_ID_LENGTH, Charset.ALPHANUMERIC)
         }
     }
 

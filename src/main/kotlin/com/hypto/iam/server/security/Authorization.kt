@@ -4,12 +4,20 @@ import com.hypto.iam.server.utils.GlobalHrn
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
 import com.hypto.iam.server.utils.policy.PolicyValidator
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.request.*
-import io.ktor.routing.*
-import io.ktor.util.*
-import io.ktor.util.pipeline.*
+import io.ktor.application.ApplicationCallPipeline
+import io.ktor.application.ApplicationFeature
+import io.ktor.application.call
+import io.ktor.application.feature
+import io.ktor.auth.Authentication
+import io.ktor.auth.authentication
+import io.ktor.request.path
+import io.ktor.routing.Route
+import io.ktor.routing.RouteSelector
+import io.ktor.routing.RouteSelectorEvaluation
+import io.ktor.routing.RoutingResolveContext
+import io.ktor.routing.application
+import io.ktor.util.AttributeKey
+import io.ktor.util.pipeline.PipelinePhase
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -21,7 +29,7 @@ private val logger = KotlinLogging.logger { }
 class AuthorizationException(override val message: String) : Exception(message)
 
 /**
- * This class is used in api request flow. This performs user authorization checks before allowing any operation
+ * This class is used in api request flow. This performs user authorization checks before allowing any action
  */
 class Authorization(config: Configuration) : KoinComponent {
     private val policyValidator: PolicyValidator by inject()
