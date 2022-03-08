@@ -486,20 +486,20 @@ paths:
       #   - access_token: [] # credential:delete
 
   # resource
-  /organizations/{organization_id}/resource_types:
+  /organizations/{organization_id}/resources:
     post:
       tags:
-        - resource_type
-      summary: Create a resource type
-      description: Create a resource type
-      operationId: createResourceType
+        - resource
+      summary: Create a resource
+      description: Create a resource
+      operationId: createResource
       parameters:
         - $ref: '#/components/parameters/organization_id'
       requestBody:
-        $ref: '#/components/requestBodies/CreateResourceTypeRequest'
+        $ref: '#/components/requestBodies/CreateResourceRequest'
       responses:
         '201':
-          $ref: '#/components/responses/ResourceTypeResponse'
+          $ref: '#/components/responses/ResourceResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '401':
@@ -512,15 +512,13 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-      # security:
-      #   - access_token: [] # resource_type:create
 
     get:
       tags:
-        - resource_type
-      summary: List Resource Types
-      description: List Resource Types
-      operationId: listResourceTypes
+        - resource
+      summary: List Resources
+      description: List Resources
+      operationId: listResources
       parameters:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/next_token'
@@ -528,7 +526,7 @@ paths:
         - $ref: '#/components/parameters/sort_order'
       responses:
         '201':
-          $ref: '#/components/responses/ResourceTypePaginatedResponse'
+          $ref: '#/components/responses/ResourcePaginatedResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '401':
@@ -540,19 +538,19 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/resource_types/{id}:
+  /organizations/{organization_id}/resources/{id}:
     get:
       tags:
-        - resource_type
-      summary: Get a resource type
-      description: Get a resource type
-      operationId: getResourceType
+        - resource
+      summary: Get a resource
+      description: Get a resource
+      operationId: getResource
       parameters:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       responses:
         '200':
-          $ref: '#/components/responses/ResourceTypeResponse'
+          $ref: '#/components/responses/ResourceResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '401':
@@ -565,23 +563,21 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-      # security:
-      #   - access_token: [] # resource_type:get
 
     patch:
       tags:
-        - resource_type
-      summary: Update a resource type
-      description: Update a resource type
-      operationId: updateResourceType
+        - resource
+      summary: Update a resource
+      description: Update a resource
+      operationId: updateResource
       parameters:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
       requestBody:
-        $ref: '#/components/requestBodies/UpdateResourceTypeRequest'
+        $ref: '#/components/requestBodies/UpdateResourceRequest'
       responses:
         '200':
-          $ref: '#/components/responses/ResourceTypeResponse'
+          $ref: '#/components/responses/ResourceResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '401':
@@ -594,15 +590,13 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-        # security:
-        # - access_token: [] # resource_type:update
 
     delete:
       tags:
-        - resource_type
-      summary: Delete a resource type
-      description: Delete a resource type
-      operationId: deleteResourceType
+        - resource
+      summary: Delete a resource
+      description: Delete a resource
+      operationId: deleteResource
       parameters:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/id'
@@ -621,11 +615,9 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-      # security:
-      #   - access_token: [] # resource_type:get
-
+  
   # action
-  /organizations/{organization_id}/resources/{resource_id}/action:
+  /organizations/{organization_id}/resources/{resource_name}/action:
     post:
       tags:
         - action
@@ -634,7 +626,7 @@ paths:
       operationId: createAction
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/resource_id'
+        - $ref: '#/components/parameters/resource_name'
       requestBody:
         $ref: '#/components/requestBodies/CreateActionRequest'
 
@@ -657,7 +649,7 @@ paths:
       #   - access_token: [] # action:create
 
 
-  /organizations/{organization_id}/resources/{resource_id}/actions/{id}:
+  /organizations/{organization_id}/resources/{resource_name}/actions/{id}:
     get:
       tags:
         - action
@@ -666,7 +658,7 @@ paths:
       operationId: getAction
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/resource_id'
+        - $ref: '#/components/parameters/resource_name'
         - $ref: '#/components/parameters/id'
       responses:
         '200':
@@ -694,7 +686,7 @@ paths:
       operationId: updateAction
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/resource_id'
+        - $ref: '#/components/parameters/resource_name'
         - $ref: '#/components/parameters/id'
       requestBody:
         $ref: '#/components/requestBodies/UpdateActionRequest'
@@ -724,7 +716,7 @@ paths:
       operationId: deleteAction
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/resource_id'
+        - $ref: '#/components/parameters/resource_name'
         - $ref: '#/components/parameters/id'
       responses:
         '200':
@@ -965,9 +957,9 @@ components:
             maxLength: 50
             pattern: ^[A-Za-z0-9]{3,50}$
 
-    resource_id:
+    resource_name:
       in: path
-      name: resource_id
+      name: resource_name
       required: true
       content:
         application/json:
@@ -1061,21 +1053,21 @@ components:
           schema:
             $ref: '#/components/schemas/UpdateCredentialRequest'
 
-    CreateResourceTypeRequest:
-      description: Payload to create resource type
+    CreateResourceRequest:
+      description: Payload to create resource
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CreateResourceTypeRequest'
+            $ref: '#/components/schemas/CreateResourceRequest'
 
-    UpdateResourceTypeRequest:
-      description: Payload to update resource type
+    UpdateResourceRequest:
+      description: Payload to update resource
       required: true
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/UpdateResourceTypeRequest'
+            $ref: '#/components/schemas/UpdateResourceRequest'
 
     CreateActionRequest:
       description: Payload to create action
@@ -1182,12 +1174,12 @@ components:
           schema:
             $ref: '#/components/schemas/CredentialWithoutSecret'
 
-    ResourceTypeResponse:
-      description: Response for resource type requests returning a resource type entity
+    ResourceResponse:
+      description: Response for resource requests returning a resource entity
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ResourceType'
+            $ref: '#/components/schemas/Resource'
 
     ActionResponse:
       description: Response for action requests returning an action entity
@@ -1231,12 +1223,12 @@ components:
           schema:
             $ref: '#/components/schemas/PolicyPaginatedResponse'
 
-    ResourceTypePaginatedResponse:
-      description: Response for list resource types request
+    ResourcePaginatedResponse:
+      description: Response for list resources request
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ResourceTypePaginatedResponse'
+            $ref: '#/components/schemas/ResourcePaginatedResponse'
 
   schemas:
 
@@ -1345,7 +1337,7 @@ components:
             - active
             - inactive
 
-    CreateResourceTypeRequest:
+    CreateResourceRequest:
       description: Payload to create resource
       type: object
       additionalProperties: false
@@ -1359,7 +1351,7 @@ components:
           type: string
           maxLength: 500
 
-    UpdateResourceTypeRequest:
+    UpdateResourceRequest:
       description: Payload to update resource
       type: object
       additionalProperties: false
@@ -1535,14 +1527,14 @@ components:
         context:
           $ref: '#/components/schemas/PaginationOptions'
 
-    ResourceTypePaginatedResponse:
+    ResourcePaginatedResponse:
       type: object
       additionalProperties: false
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/ResourceType'
+            $ref: '#/components/schemas/Resource'
         nextToken:
           type: string
         context:
@@ -1660,7 +1652,7 @@ components:
             - active
             - inactive
 
-    ResourceType:
+    Resource:
       type: object
       additionalProperties: false
       required:
@@ -1682,13 +1674,13 @@ components:
       additionalProperties: false
       required:
         - organization_id
-        - resource_id
+        - resource_name
         - name
       properties:
         organization_id:
           type: string
           maxLength: 50
-        resource_id:
+        resource_name:
           type: string
           maxLength: 50
         name:
@@ -1739,11 +1731,11 @@ components:
       type: object
       additionalProperties: false
       required:
-        - resource_type
+        - resource
         - action
         - effect
       properties:
-        resource_type:
+        resource:
           type: string
           maxLength: 50
         action:

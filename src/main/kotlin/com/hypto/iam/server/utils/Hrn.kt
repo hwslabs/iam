@@ -1,4 +1,5 @@
 @file:Suppress("MaximumLineLength")
+
 package com.hypto.iam.server.utils
 
 import com.hypto.iam.server.utils.GlobalHrn.Companion.GLOBAL_HRN_REGEX
@@ -39,26 +40,27 @@ interface Hrn {
 class ResourceHrn : Hrn {
     val organization: String
     val account: String?
-    val resourceType: String?
+    val resource: String?
     val resourceInstance: String?
 
     companion object {
-        val RESOURCE_HRN_REGEX = """^hrn:(?<organization>[^:\n]+):(?<accountId>[^:\n]*):(?<resourceType>[^:/\n]*)/{0,1}(?<resourceInstance>[^/\n:]*)""".toRegex()
+        val RESOURCE_HRN_REGEX =
+            """^hrn:(?<organization>[^:\n]+):(?<accountId>[^:\n]*):(?<resource>[^:/\n]*)/{0,1}(?<resourceInstance>[^/\n:]*)""".toRegex()
     }
 
     constructor(
         organization: String,
         account: String?,
-        resourceType: String?,
+        resource: String?,
         resourceInstance: String?
     ) {
         this.organization = organization
         this.account = account
-        if (resourceType != null && resourceInstance == null) {
+        if (resource != null && resourceInstance == null) {
             // Resource Hrn must have a resource instance
             throw HrnParseException("Null resourceInstance for resource hrn")
         }
-        this.resourceType = resourceType
+        this.resource = resource
         this.resourceInstance = resourceInstance
     }
 
@@ -67,7 +69,7 @@ class ResourceHrn : Hrn {
             ?: throw HrnParseException("Not a valid hrn string format")
         organization = result.groups["organization"]!!.value
         account = result.groups["accountId"]?.value
-        resourceType = result.groups["resourceType"]?.value
+        resource = result.groups["resource"]?.value
         resourceInstance = result.groups["resourceInstance"]?.value
     }
 
@@ -88,21 +90,21 @@ class ResourceHrn : Hrn {
         if (splits.size < 2) throw IllegalArgumentException("Invalid request path")
         this.organization = splits[1]
         this.account = null
-        this.resourceType = getResourceTypeAndInstance(splits).first
-        this.resourceInstance = getResourceTypeAndInstance(splits).second
+        this.resource = getResourceAndInstance(splits).first
+        this.resourceInstance = getResourceAndInstance(splits).second
     }
 
-    private fun getResourceTypeAndInstance(splits: List<String>): Pair<String, String> {
+    private fun getResourceAndInstance(splits: List<String>): Pair<String, String> {
         if (splits.size == 2) return Pair("", "")
         val lastSplitMap = resourceMap[splits.last()]
         return if (lastSplitMap.isNullOrEmpty()) {
-            val resourceType = resourceMap[splits[(splits.lastIndex - 1)]] ?: ""
+            val resource = resourceMap[splits[(splits.lastIndex - 1)]] ?: ""
             val resourceInstance = lastSplitMap ?: ""
-            Pair(resourceType, resourceInstance)
+            Pair(resource, resourceInstance)
         } else {
             val resourceInstance = resourceMap[splits[(splits.lastIndex - 1)]] ?: ""
-            val resourceType = resourceMap[splits[(splits.lastIndex - 2)]] ?: ""
-            Pair(resourceType, resourceInstance)
+            val resource = resourceMap[splits[(splits.lastIndex - 2)]] ?: ""
+            Pair(resource, resourceInstance)
         }
     }
 
@@ -111,7 +113,7 @@ class ResourceHrn : Hrn {
         return resourceMap.getOrDefault(resType, "")
     }
 
-    private fun getResourceType(splits: List<String>): String? {
+    private fun getResource(splits: List<String>): String? {
         val resType = splits.getOrNull(2)
         return resourceMap.getOrDefault(resType, "")
     }
@@ -127,11 +129,11 @@ class ResourceHrn : Hrn {
         if (!account.isNullOrEmpty()) {
             hrnString += account
         }
-        if (!resourceType.isNullOrEmpty()) {
+        if (!resource.isNullOrEmpty()) {
             if (account.isNullOrEmpty()) {
                 hrnString += HRN_DELIMITER + HRN_DELIMITER
             }
-            hrnString += resourceType + HRN_INSTANCE_DELIMITER + resourceInstance
+            hrnString += resource + HRN_INSTANCE_DELIMITER + resourceInstance
         }
         return hrnString
     }
@@ -142,28 +144,29 @@ class ResourceHrn : Hrn {
  */
 class GlobalHrn : Hrn {
     val organization: String
-    val resourceType: String?
+    val resource: String?
     val operation: String?
 
     companion object {
-        val GLOBAL_HRN_REGEX = """^hrn:(?<organization>[^:$\n]+)\$(?<resourceType>[^:\n]*):{0,1}(?<operation>[^/\n:]*)""".toRegex()
+        val GLOBAL_HRN_REGEX =
+            """^hrn:(?<organization>[^:$\n]+)\$(?<resource>[^:\n]*):{0,1}(?<operation>[^/\n:]*)""".toRegex()
     }
 
     constructor(organization: String, resource: String?, operation: String?) {
         this.organization = organization
-        this.resourceType = resource
+        this.resource = resource
         this.operation = operation
     }
 
     constructor(hrnString: String) {
         val result = GLOBAL_HRN_REGEX.matchEntire(hrnString) ?: throw HrnParseException("Not a valid hrn string format")
         organization = result.groups["organization"]!!.value
-        resourceType = result.groups["resourceType"]?.value
+        resource = result.groups["resource"]?.value
         operation = result.groups["operation"]?.value
     }
 
     override fun toString(): String {
-        var hrnString = HRN_PREFIX + organization + HRN_GLOBAL_DELIMITER + resourceType
+        var hrnString = HRN_PREFIX + organization + HRN_GLOBAL_DELIMITER + resource
         if (!operation.isNullOrEmpty()) {
             hrnString += HRN_DELIMITER + operation
         }

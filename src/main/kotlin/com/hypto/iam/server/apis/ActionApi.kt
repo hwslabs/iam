@@ -1,4 +1,5 @@
 @file:Suppress("ThrowsCount", "UnusedPrivateMember")
+
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
@@ -18,7 +19,6 @@ import io.ktor.routing.post
 import io.ktor.routing.route
 import org.koin.ktor.ext.inject
 
-@KtorExperimentalLocationsAPI
 fun Route.actionApi() {
 
     val gson: Gson by inject()
@@ -42,7 +42,7 @@ fun Route.actionApi() {
                     val resourceId = call.parameters["resourceId"]
                         ?: throw IllegalArgumentException("Required resourceId to delete an action")
                     val id =
-                        call.parameters["id"] ?: throw IllegalArgumentException("Required id to delete a resource_type")
+                        call.parameters["id"] ?: throw IllegalArgumentException("Required id to delete a resource")
                     call.respond(HttpStatusCode.NotImplemented)
                 }
 
@@ -53,7 +53,7 @@ fun Route.actionApi() {
                         val resourceId = call.parameters["resourceId"]
                             ?: throw IllegalArgumentException("Required resourceId to get an action")
                         val id = call.parameters["id"]
-                            ?: throw IllegalArgumentException("Required id to get the resource_type")
+                            ?: throw IllegalArgumentException("Required id to get the resource")
                         call.respond(HttpStatusCode.NotImplemented)
                     }
                 }
@@ -65,7 +65,7 @@ fun Route.actionApi() {
                         val resourceId = call.parameters["resourceId"]
                             ?: throw IllegalArgumentException("Required resourceId to update an action")
                         val id = call.parameters["id"]
-                            ?: throw IllegalArgumentException("Required id to update a resource_type")
+                            ?: throw IllegalArgumentException("Required id to update a resource")
                         val request = call.receive<UpdateActionRequest>() // .validate()
                         call.respond(HttpStatusCode.NotImplemented)
                     }

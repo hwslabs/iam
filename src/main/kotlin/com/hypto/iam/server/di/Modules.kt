@@ -6,7 +6,7 @@ import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
-import com.hypto.iam.server.db.repositories.ResourceTypesRepo
+import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
@@ -16,8 +16,8 @@ import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.service.OrganizationsServiceImpl
 import com.hypto.iam.server.service.PolicyService
 import com.hypto.iam.server.service.PolicyServiceImpl
-import com.hypto.iam.server.service.ResourceTypeService
-import com.hypto.iam.server.service.ResourceTypeServiceImpl
+import com.hypto.iam.server.service.ResourceService
+import com.hypto.iam.server.service.ResourceServiceImpl
 import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserPolicyService
@@ -39,7 +39,7 @@ val repositoryModule = module {
     single { CredentialsRepo }
     single { OrganizationRepo }
     single { PoliciesRepo }
-    single { ResourceTypesRepo }
+    single { ResourceRepo }
     single { UserAuthProvidersRepo }
     single { UserPoliciesRepo }
     single { UserRepo }
@@ -52,7 +52,7 @@ val controllerModule = module {
     single { PolicyServiceImpl() } bind PolicyService::class
     single { ValidationServiceImpl() } bind ValidationService::class
     single { UserPolicyServiceImpl() } bind UserPolicyService::class
-    single { ResourceTypeServiceImpl() } bind ResourceTypeService::class
+    single { ResourceServiceImpl() } bind ResourceService::class
 }
 
 val applicationModule = module {

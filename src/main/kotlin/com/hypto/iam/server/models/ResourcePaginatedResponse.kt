@@ -14,14 +14,14 @@ package com.hypto.iam.server.models
 import java.io.Serializable
 /**
  *
- * @param name
- * @param organizationId
- * @param description
+ * @param &#x60;data&#x60;
+ * @param nextToken
+ * @param context
  */
-data class ResourceType(
-    val name: kotlin.String,
-    val organizationId: kotlin.String,
-    val description: kotlin.String? = null
+data class ResourcePaginatedResponse(
+    val `data`: kotlin.collections.List<Resource>? = null,
+    val nextToken: kotlin.String? = null,
+    val context: PaginationOptions? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
