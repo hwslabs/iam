@@ -100,7 +100,7 @@ repositories {
     mavenCentral()
     google()
     jcenter()
-    maven { url  "https://dl.bintray.com/kotlin/ktor" }
+    maven { url "https://dl.bintray.com/kotlin/ktor" }
     maven { url "https://dl.bintray.com/kotlin/kotlinx" }
 }
 
@@ -166,6 +166,24 @@ jooq {
                 }
             }
         }
+    }
+}
+
+task copyGitHooks(type: Copy) {
+    description "Copies the git hooks from ${rootDir}/.githooks to the .git folder"
+    from "${rootDir}/.githooks/"
+    into "${rootDir}/.git/hooks/"
+}
+
+task installGitHooks(type: Exec) {
+    description "Installs the pre-commit git hooks from ${rootDir}/.githooks"
+    group 'git hooks'
+    workingDir rootDir
+    commandLine 'chmod'
+    args '-R', '+x', '.git/hooks/'
+    dependsOn copyGitHooks
+    doLast {
+        println('Git hook installed successfully')
     }
 }
 
