@@ -616,7 +616,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
   
   # action
-  /organizations/{organization_id}/resources/{resource_name}/action:
+  /organizations/{organization_id}/resources/{resource_name}/actions:
     post:
       tags:
         - action
@@ -646,6 +646,32 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       # security:
       #   - access_token: [] # action:create
+
+    get:
+      tags:
+        - actions
+      summary: List actions
+      description: List actions
+      operationId: listActions
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/resource_name'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '201':
+          $ref: '#/components/responses/ActionPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 
 
   /organizations/{organization_id}/resources/{resource_name}/actions/{id}:
@@ -1229,6 +1255,13 @@ components:
           schema:
             $ref: '#/components/schemas/ResourcePaginatedResponse'
 
+    ActionPaginatedResponse:
+      description: Response for list actions request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionPaginatedResponse'
+
   schemas:
 
     # Requests
@@ -1568,6 +1601,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Resource'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
+
+    ActionPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
         nextToken:
           type: string
         context:
