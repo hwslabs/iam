@@ -13,6 +13,7 @@ class Constants private constructor() {
         const val MAX_POLICY_STATEMENTS = 50
         const val MAX_POLICY_ASSOCIATIONS_PER_REQUEST = 20
 
+        const val PAGINATION_MAX_PAGE_SIZE = 50
         const val PAGINATION_DEFAULT_PAGE_SIZE = 50
         val PAGINATION_DEFAULT_SORT_ORDER = PaginationOptions.SortOrder.asc
         const val NEWRELIC_METRICS_PUBLISH_INTERVAL = 30L // seconds
