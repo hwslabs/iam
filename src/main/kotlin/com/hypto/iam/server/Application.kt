@@ -73,20 +73,7 @@ fun Application.handleRequest() {
         gson()
     }
     install(StatusPages) {
-        // TODO: Logic to update error message
-
-        /* Exceptions to handle:
-         * CustomExceptions:
-         * - EntityAlreadyExistsException - 400
-         * - EntityNotFoundException      - 404
-         * - InternalException            - 500
-         *
-         * - DeleteOrUpdateWithoutWhereException - 500
-         *
-         * UsedExceptions:
-         * - IllegalArgumentException
-         * - DataAccessException
-         */
+        statusPages()
     }
     install(AutoHeadResponse) // see http://ktor.io/features/autoheadresponse.html
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
