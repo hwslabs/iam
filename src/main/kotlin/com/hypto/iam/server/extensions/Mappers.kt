@@ -5,10 +5,12 @@ import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
+import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
+import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.Policy
@@ -118,6 +120,14 @@ fun Resource.Companion.from(record: Resources): Resource {
         hrn.resource!!,
         hrn.organization,
         record.description
+    )
+}
+
+fun usersFrom(value: UsersRecord): Users {
+    return Users(
+        value.hrn, value.passwordHash, value.email, value.phone,
+        value.loginAccess, value.userType, value.status, value.createdBy,
+        value.organizationId, value.createdAt, value.updatedAt
     )
 }
 
