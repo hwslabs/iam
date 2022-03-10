@@ -2,6 +2,7 @@ package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
+import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.micrometer.core.annotation.Timed
@@ -26,7 +27,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
     @Timed("organization.get") // TODO: Make this work
     override suspend fun getOrganization(id: String): Organization {
-        val response = repo.findById(id) ?: throw IllegalStateException("Unable to get Organization")
+        val response = repo.findById(id) ?: throw EntityNotFoundException("Unable to get Organization")
         return Organization(
             id = response.id,
             name = response.name,
