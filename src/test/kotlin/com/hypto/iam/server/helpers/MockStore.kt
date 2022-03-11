@@ -10,6 +10,7 @@ import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.extensions.usersFrom
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.User
+import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import io.mockk.coEvery
@@ -20,11 +21,23 @@ class MockStore {
     val organizationIdMap = mutableMapOf<String, Organizations>()
     val userIdMap = mutableMapOf<String, Users>()
     val credentialTokenMap = mutableMapOf<String, CredentialsRecord>()
+    val credentialIdMap = mutableMapOf<String, CredentialsRecord>()
 
     fun clear() {
         organizationIdMap.clear()
         userIdMap.clear()
         credentialTokenMap.clear()
+        credentialIdMap.clear()
+    }
+
+    fun insertCredential(cred: CredentialsRecord) {
+        credentialIdMap[cred.id.toString()] = cred
+        credentialTokenMap[cred.refreshToken] = cred
+    }
+
+    fun deleteCredential(identifier: String): Boolean {
+        credentialIdMap.remove(identifier)
+        return credentialTokenMap.remove(identifier) != null
     }
 }
 
@@ -77,28 +90,40 @@ class MockCredentialsStore(private val store: MockStore) {
             .setStatus("active")
             .setUserHrn(userHrn)
             .setRefreshToken(refreshToken.toString())
-        store.credentialTokenMap[refreshToken.toString()] = credentialRecord
+        store.insertCredential(credentialRecord)
         return credentialRecord
     }
 
     fun mockCreate(credentialsRepo: CredentialsRepo) {
         coEvery { credentialsRepo.create(any(), any(), any(), any()) } coAnswers {
-            val credential = CredentialsRecord(
+            val credentialRecord = CredentialsRecord(
                 UUID.randomUUID(),
                 lastArg(),
                 secondArg<Credential.Status>().toString(),
                 thirdArg(),
-                firstArg(),
+                firstArg<Hrn>().toString(),
                 LocalDateTime.MAX, LocalDateTime.MAX
             )
-            store.credentialTokenMap[credential.refreshToken] = credential
-            credential
+            store.insertCredential(credentialRecord)
+            credentialRecord
         }
     }
 
     fun mockFetchByRefreshToken(credentialsRepo: CredentialsRepo) {
         coEvery { credentialsRepo.fetchByRefreshToken(any()) } coAnswers {
             store.credentialTokenMap[firstArg()]
+        }
+    }
+
+    fun mockDelete(credentialsRepo: CredentialsRepo) {
+        coEvery { credentialsRepo.delete(any(), any(), any<UUID>()) } coAnswers {
+            store.deleteCredential(thirdArg<UUID>().toString())
+        }
+    }
+
+    fun mockFetchByIdAndUserHrn(credentialsRepo: CredentialsRepo) {
+        coEvery { credentialsRepo.fetchByIdAndUserHrn(any(), any()) } coAnswers {
+            store.credentialIdMap[firstArg<UUID>().toString()]
         }
     }
 }

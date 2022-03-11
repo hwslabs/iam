@@ -136,7 +136,8 @@ private fun Route.authorizedRoute(
     val description = listOfNotNull(
         any?.let { "anyOf (${any.joinToString(" ")})" },
         all?.let { "allOf (${all.joinToString(" ")})" },
-        none?.let { "noneOf (${none.joinToString(" ")})" }).joinToString(",")
+        none?.let { "noneOf (${none.joinToString(" ")})" }
+    ).joinToString(",")
     val authorizedRoute = createChild(AuthorizedRouteSelector(description))
     application.feature(Authorization).interceptPipeline(authorizedRoute, any, all, none)
     authorizedRoute.build()

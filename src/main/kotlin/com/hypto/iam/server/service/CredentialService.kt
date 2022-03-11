@@ -33,7 +33,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         val credentialsRecord = repo.create(
             userHrn = userHrn,
             refreshToken = idGenerator.refreshToken(organizationId),
-            validUntil = LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            validUntil = validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
         auditLog().append(userHrn)
