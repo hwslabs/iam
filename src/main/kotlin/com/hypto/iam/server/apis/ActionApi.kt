@@ -8,7 +8,6 @@ import com.hypto.iam.server.models.UpdateActionRequest
 import com.hypto.iam.server.security.withPermission
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
-import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
