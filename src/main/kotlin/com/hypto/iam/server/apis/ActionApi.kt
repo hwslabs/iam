@@ -25,12 +25,11 @@ fun Route.actionApi() {
 
     post("/organizations/{organization_id}/resources/{resource_name}/actions") {
         val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
         val resourceName = call.parameters["resource_name"]
-            ?: throw IllegalArgumentException("Required resourceName to create an action")
         val request = call.receive<CreateActionRequest>().validate()
 
-        val response = actionService.createAction(organizationId, resourceName, request.name, request.description ?: "")
+        val response =
+            actionService.createAction(organizationId!!, resourceName!!, request.name, request.description ?: "")
 
         call.respondText(
             text = gson.toJson(response),
@@ -41,9 +40,7 @@ fun Route.actionApi() {
 
     get("/organizations/{organization_id}/resources/{resource_name}/actions") {
         val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
         val resourceName = call.parameters["resource_name"]
-            ?: throw IllegalArgumentException("Required resourceName to create an action")
         val nextToken = call.request.queryParameters["next_token"]
         val pageSize = call.request.queryParameters["page_size"]
         val sortOrder = call.request.queryParameters["sort_order"]
@@ -54,7 +51,7 @@ fun Route.actionApi() {
             sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
         )
 
-        val response = actionService.listActions(organizationId, resourceName, context)
+        val response = actionService.listActions(organizationId!!, resourceName!!, context)
 
         call.respondText(
             text = gson.toJson(response),
@@ -65,13 +62,10 @@ fun Route.actionApi() {
 
     get("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
         val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
         val resourceName = call.parameters["resource_name"]
-            ?: throw IllegalArgumentException("Required resourceName to get an action")
         val actionName = call.parameters["action_name"]
-            ?: throw IllegalArgumentException("Required actionName to get an action")
 
-        val response = actionService.getAction(organizationId, resourceName, actionName)
+        val response = actionService.getAction(organizationId!!, resourceName!!, actionName!!)
 
         call.respondText(
             text = gson.toJson(response),
@@ -82,15 +76,12 @@ fun Route.actionApi() {
 
     patch("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
         val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
         val resourceName = call.parameters["resource_name"]
-            ?: throw IllegalArgumentException("Required resourceName to update an action")
         val actionName = call.parameters["action_name"]
-            ?: throw IllegalArgumentException("Required actionName to update an action")
         val request = call.receive<UpdateActionRequest>().validate()
 
         val response =
-            actionService.updateAction(organizationId, resourceName, actionName, request.description)
+            actionService.updateAction(organizationId!!, resourceName!!, actionName!!, request.description ?: "")
 
         call.respondText(
             text = gson.toJson(response),
@@ -101,13 +92,10 @@ fun Route.actionApi() {
 
     delete("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
         val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
         val resourceName = call.parameters["resource_name"]
-            ?: throw IllegalArgumentException("Required resourceName to delete an action")
         val actionName = call.parameters["action_name"]
-            ?: throw IllegalArgumentException("Required actionName to delete an action")
 
-        val response = actionService.deleteAction(organizationId, resourceName, actionName)
+        val response = actionService.deleteAction(organizationId!!, resourceName!!, actionName!!)
 
         call.respondText(
             text = gson.toJson(response),
