@@ -22,7 +22,6 @@ import io.micrometer.core.instrument.composite.CompositeMeterRegistry
 import io.micrometer.core.instrument.config.MeterFilter
 import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.util.NamedThreadFactory
-import org.koin.core.component.KoinComponent
 import java.net.InetAddress
 import java.time.Duration
 import java.util.concurrent.Executors
@@ -122,17 +121,19 @@ object MicrometerConfigs {
 
     private fun getNewRelicRegistryConfig(): NewRelicRegistryConfig {
         return object : NewRelicRegistryConfig {
+            val appConfig = getKoinInstance<AppConfig>()
+
             override fun apiKey(): String {
                 // TODO: Add valid NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home
-                return getKoinInstance<AppConfig>().configuration.newrelic.apiKey
+                return appConfig.configuration.newrelic.apiKey
             }
 
             override fun get(key: String): String? { return null }
             override fun step(): Duration {
                 // TODO: Needs Tweaking
-                return Duration.ofSeconds(getKoinInstance<AppConfig>().configuration.newrelic.publishInterval)
+                return Duration.ofSeconds(appConfig.configuration.newrelic.publishInterval)
             }
-            override fun serviceName(): String { return "Hypto IAM - " + getKoinInstance<AppConfig>().configuration.env }
+            override fun serviceName(): String { return "Hypto IAM - " + appConfig.configuration.env }
             override fun enableAuditMode(): Boolean { return false }
             override fun useLicenseKey(): Boolean { return true }
         }

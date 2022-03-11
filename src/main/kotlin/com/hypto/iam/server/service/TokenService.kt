@@ -118,7 +118,8 @@ class CachedMasterKey(
         private lateinit var signKey: CachedMasterKey
 
         private fun shouldRefreshSignKey(): Boolean {
-            return signKeyFetchTime.plusSeconds(getKoinInstance<AppConfig>().configuration.tokenValidity) > Instant.now()
+            val appConfig = getKoinInstance<AppConfig>()
+            return signKeyFetchTime.plusSeconds(appConfig.configuration.tokenValidity) > Instant.now()
         }
 
         private fun readResourceFileAsBytes(name: String): ByteArray {
