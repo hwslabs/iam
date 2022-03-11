@@ -1,5 +1,6 @@
 package com.hypto.iam.server.security
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.utils.GlobalHrn
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
@@ -37,8 +38,9 @@ class Authorization(config: Configuration) : KoinComponent {
     private val policyValidator: PolicyValidator by inject()
     private val isDevelopment = config.isDevelopment
 
-    class Configuration {
-        internal var isDevelopment: Boolean = false
+    class Configuration : KoinComponent {
+        private val appConfig: AppConfig by inject()
+        internal var isDevelopment = appConfig.isDevelopment
 
         fun isDevelopment(isDevelopment: Boolean) {
             this.isDevelopment = isDevelopment

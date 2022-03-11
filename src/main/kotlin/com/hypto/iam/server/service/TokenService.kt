@@ -1,7 +1,10 @@
 package com.hypto.iam.server.service
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
+import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.service.DatabaseFactory.appConfig
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.ResourceHrn
 import io.jsonwebtoken.Jwts
@@ -31,12 +34,11 @@ interface TokenService {
 
 class TokenServiceImpl : KoinComponent, TokenService {
     private val userPolicyService: UserPolicyService by inject()
+    private val appConfig: AppConfig by inject()
 
     companion object {
         private const val ISSUER = "https://iam.hypto.com"
 
-        // TODO: Move to config file
-        const val TOKEN_VALIDITY: Long = 300 // in seconds
         private const val VERSION_CLAIM = "ver"
         private const val USER_CLAIM = "usr"
         private const val ORGANIZATION_CLAIM = "org"
@@ -54,7 +56,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
             .setIssuer(ISSUER)
             .setIssuedAt(Date())
 //            .setSubject("")
-            .setExpiration(Date.from(Instant.now().plusSeconds(TOKEN_VALIDITY)))
+            .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.configuration.tokenValidity)))
 //            .setAudience("")
 //            .setId("")
             .claim(VERSION_CLAIM, VERSION_NUM)
@@ -74,7 +76,7 @@ class CachedMasterKey(
     private val privateKeyByteArray: ByteArray,
     private val publicKeyByteArray: ByteArray,
     val id: String? = null
-) {
+) : KoinComponent {
     private val keyFactory: KeyFactory = KeyFactory.getInstance("EC")
 
     val publicKey: PublicKey
@@ -112,13 +114,11 @@ class CachedMasterKey(
             return CachedMasterKey(privateKeyByteArray, publicKeyByteArray)
         }
 
-        // TODO: Change this to read from config file
-        private const val cacheDuration: Long = TokenServiceImpl.TOKEN_VALIDITY
         private lateinit var signKeyFetchTime: Instant
         private lateinit var signKey: CachedMasterKey
 
         private fun shouldRefreshSignKey(): Boolean {
-            return signKeyFetchTime.plusSeconds(cacheDuration) > Instant.now()
+            return signKeyFetchTime.plusSeconds(getKoinInstance<AppConfig>().configuration.tokenValidity) > Instant.now()
         }
 
         private fun readResourceFileAsBytes(name: String): ByteArray {

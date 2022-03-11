@@ -119,7 +119,6 @@ fun Application.handleRequest() {
     masterKeysRepo.rotateKey(skipIfPresent = true)
 
     install(Authorization) {
-        isDevelopment = true // TODO: Update the value based on the environment variable.
     }
 
     install(Routing) {
