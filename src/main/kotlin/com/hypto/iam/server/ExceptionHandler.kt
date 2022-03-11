@@ -17,7 +17,7 @@ import org.jooq.exception.DataAccessException
 
 inline fun <reified T : Throwable> StatusPages.Configuration.sendStatus(
     statusCode: HttpStatusCode,
-    Throw: Boolean = false,
+    shouldThrowException: Boolean = false,
     message: String? = null
 ) {
     exception<T> { cause ->
@@ -27,7 +27,7 @@ inline fun <reified T : Throwable> StatusPages.Configuration.sendStatus(
             contentType = ContentType.Application.Json,
             status = statusCode
         )
-        Throw && throw cause
+        shouldThrowException && throw cause
     }
 }
 
