@@ -27,6 +27,7 @@ import com.hypto.iam.server.service.UsersServiceImpl
 import com.hypto.iam.server.service.ValidationService
 import com.hypto.iam.server.service.ValidationServiceImpl
 import com.hypto.iam.server.utils.ApplicationIdUtil
+import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.policy.PolicyValidator
 import org.koin.core.component.KoinComponent
@@ -45,6 +46,7 @@ val repositoryModule = module {
     single { UserAuthProvidersRepo }
     single { UserPoliciesRepo }
     single { UserRepo }
+    single { HrnFactory() }
 }
 
 val controllerModule = module {
