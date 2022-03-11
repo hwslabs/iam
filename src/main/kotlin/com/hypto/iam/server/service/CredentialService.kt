@@ -8,7 +8,6 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.UpdateCredentialRequest
-import com.hypto.iam.server.security.auditLog
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
@@ -35,8 +34,6 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             refreshToken = idGenerator.refreshToken(organizationId),
             validUntil = validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
-
-        auditLog().append(userHrn)
 
         return Credential.from(credentialsRecord)
     }
@@ -68,8 +65,6 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         )
 
         credentialsRecord ?: throw IllegalStateException("Update unsuccessful")
-
-        auditLog().append(userHrn)
 
         return CredentialWithoutSecret.from(credentialsRecord)
     }

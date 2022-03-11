@@ -1,5 +1,6 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import java.time.LocalDateTime
@@ -40,9 +41,12 @@ object OrganizationRepo : DAOImpl<OrganizationsRecord, Organizations, String?>(
      * Fetch records that have `admin_user IN (values)`
      */
     fun fetchByAdminUser(vararg values: String): List<Organizations> {
-        return fetch(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER, *values)
+        return fetch(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER_NAME, *values)
     }
 
+    /**
+     * Create a new organization with given input values
+     */
     fun create(
         id: String,
         name: String,
@@ -53,10 +57,22 @@ object OrganizationRepo : DAOImpl<OrganizationsRecord, Organizations, String?>(
             .setId(id)
             .setName(name)
             .setDescription(description)
-            .setAdminUser(adminUser)
+            .setAdminUserName(adminUser)
             .setCreatedAt(LocalDateTime.now())
             .setUpdatedAt(LocalDateTime.now())
         record.insert()
         return record
+    }
+
+    /**
+     * Updates organization with given input values
+     */
+    fun update(id: String, name: String?, description: String?): OrganizationsRecord? {
+        val updateStep = ctx().update(table).set(ORGANIZATIONS.UPDATED_AT, LocalDateTime.now())
+        if (!name.isNullOrEmpty())
+            updateStep.set(ORGANIZATIONS.NAME, name)
+        if (!description.isNullOrEmpty())
+            updateStep.set(ORGANIZATIONS.DESCRIPTION, description)
+        return updateStep.where(ORGANIZATIONS.ID.eq(id)).returning().fetchOne()
     }
 }

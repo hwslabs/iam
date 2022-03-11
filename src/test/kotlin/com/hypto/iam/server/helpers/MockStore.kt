@@ -53,6 +53,12 @@ class MockOrganizationStore(private val store: MockStore) {
             organizations ?: store.organizationIdMap[firstArg()]
         }
     }
+
+    fun fetchByAdminUser(orgRepo: OrganizationRepo) {
+        coEvery { orgRepo.fetchByAdminUser(any()) } coAnswers {
+            listOf()
+        }
+    }
 }
 
 class MockUserStore(private val store: MockStore) {
@@ -63,7 +69,7 @@ class MockUserStore(private val store: MockStore) {
             .setHrn(hrnString)
             .setCreatedAt(LocalDateTime.MAX)
             .setUpdatedAt(LocalDateTime.MAX)
-            .setStatus(User.Status.active.value)
+            .setStatus(User.Status.enabled.value)
             .setUserType(User.UserType.normal.value)
             .setEmail("testEmail")
             .setPasswordHash("testSaltedPassword")

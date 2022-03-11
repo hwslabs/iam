@@ -5,8 +5,11 @@ import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
+import com.hypto.iam.server.idp.UserAlreadyExistException
+import com.hypto.iam.server.idp.UserNotFoundException
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.AuthorizationException
+import com.hypto.iam.server.service.OrganizationAlreadyExistException
 import com.hypto.iam.server.utils.HrnParseException
 import io.ktor.application.call
 import io.ktor.features.StatusPages
@@ -37,7 +40,10 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<AuthenticationException>(HttpStatusCode.Unauthorized)
     sendStatus<AuthorizationException>(HttpStatusCode.Forbidden)
     sendStatus<EntityAlreadyExistsException>(HttpStatusCode.BadRequest)
+    sendStatus<UserAlreadyExistException>(HttpStatusCode.BadRequest)
+    sendStatus<OrganizationAlreadyExistException>(HttpStatusCode.BadRequest)
     sendStatus<EntityNotFoundException>(HttpStatusCode.NotFound)
+    sendStatus<UserNotFoundException>(HttpStatusCode.NotFound)
     sendStatus<InternalException>(HttpStatusCode.InternalServerError, true)
     sendStatus<DeleteOrUpdateWithoutWhereException>(HttpStatusCode.InternalServerError)
     sendStatus<HrnParseException>(HttpStatusCode.InternalServerError, true)

@@ -1,76 +1,125 @@
 @file:Suppress("LongParameterList")
 package com.hypto.iam.server.service
 
-import com.hypto.iam.server.db.repositories.UserRepo
-import com.hypto.iam.server.db.tables.records.UsersRecord
-import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
+import com.google.gson.Gson
+import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.exceptions.EntityNotFoundException
-import com.hypto.iam.server.extensions.from
+import com.hypto.iam.server.extensions.toUserStatus
+import com.hypto.iam.server.idp.IdentityGroup
+import com.hypto.iam.server.idp.IdentityProvider
+import com.hypto.iam.server.idp.NextToken
+import com.hypto.iam.server.idp.PasswordCredentials
+import com.hypto.iam.server.idp.RequestContext
+import com.hypto.iam.server.models.BaseSuccessResponse
+import com.hypto.iam.server.models.PaginationOptions
+import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
-import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class UsersServiceImpl : KoinComponent, UsersService {
-    private val repo: UserRepo by inject()
+    private val organizationRepo: OrganizationRepo by inject()
+    private val identityProvider: IdentityProvider by inject()
+    private val gson: Gson by inject()
+
     override suspend fun createUser(
         organizationId: String,
-        userName: String,
-        password: String,
-        email: String,
-        userType: User.UserType,
-        createdBy: Hrn,
-        status: User.Status,
-        phone: String?
-    ): UsersRecord {
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userName)
-        if (repo.existsById(userHrn.toString())) {
-            throw EntityAlreadyExistsException("User name already exist")
-        }
-
-        // TODO: Remove this impl and use cognito
-        return repo.create(
-            userHrn,
-            password,
-            email,
-            phone,
-            userType,
-            status,
-            createdBy
+        credentials: PasswordCredentials,
+        createdBy: String?
+    ): User {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, credentials.userName)
+        val user = identityProvider.createUser(
+            RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user"),
+            identityGroup, credentials
         )
+        return getUser(userHrn, user)
     }
 
-    override suspend fun getUser(hrn: String): User {
-        val userRecord = repo.fetchByHrn(hrn) ?: throw EntityNotFoundException("User hrn $hrn not found")
-        return User.from(userRecord)
+    override suspend fun getUser(organizationId: String, userName: String): User {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userName)
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val user = identityProvider.getUser(identityGroup, userName)
+        return getUser(userHrn, user)
     }
 
-    override suspend fun updateUser(): User {
-        TODO("Not yet implemented")
+    override suspend fun listUsers(
+        organizationId: String,
+        nextToken: String?,
+        pageSize: Int?
+    ): Triple<List<User>, NextToken?, PaginationOptions> {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val (users, nextToken) = identityProvider.listUsers(identityGroup = identityGroup,
+            pageToken = nextToken, limit = pageSize)
+        val pageContext = PaginationOptions(pageSize)
+        val externalUserTypeUsers = users.map { user ->
+                val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, user.username)
+                getUser(userHrn, user)
+        }.toList()
+        return Triple(externalUserTypeUsers, nextToken, pageContext)
     }
 
-    override suspend fun deleteUser(hrn: String) {
-        TODO("Not yet implemented")
+    private fun getUser(
+        userHrn: ResourceHrn,
+        user: com.hypto.iam.server.idp.User
+    ) = User(
+        hrn = userHrn.toString(),
+        username = user.username,
+        organizationId = userHrn.organization,
+        email = user.email,
+        phone = user.phoneNumber,
+        status = if (user.isEnabled) User.Status.enabled else User.Status.disabled,
+        loginAccess = true, createdBy = user.createdBy, userType = User.UserType.normal
+    )
+
+    override suspend fun updateUser(
+        organizationId: String,
+        userName: String,
+        email: String,
+        phone: String,
+        status: UpdateUserRequest.Status?
+    ): User {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userName)
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val userStatus = status?.toUserStatus()
+        val user = identityProvider.updateUser(identityGroup = identityGroup,
+            userName = userName, email = email, phone = phone, status = userStatus)
+        return getUser(userHrn, user)
+    }
+
+    override suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        identityProvider.deleteUser(identityGroup, userName)
+        return BaseSuccessResponse(true)
     }
 }
 
 /**
- * Service which holds logic related to Organization operations
+ * Service which holds logic related to User operations
  */
 interface UsersService {
-    suspend fun createUser(
+    suspend fun createUser(organizationId: String, credentials: PasswordCredentials, createdBy: String?): User
+    suspend fun getUser(organizationId: String, userName: String): User
+    suspend fun listUsers(organizationId: String, nextToken: String?, pageSize: Int?):
+        Triple<List<User>, NextToken?, PaginationOptions>
+    suspend fun updateUser(
         organizationId: String,
         userName: String,
-        password: String,
         email: String,
-        userType: User.UserType,
-        createdBy: Hrn,
-        status: User.Status,
-        phone: String?
-    ): UsersRecord
-    suspend fun getUser(hrn: String): User
-    suspend fun updateUser(): User
-    suspend fun deleteUser(hrn: String)
+        phone: String,
+        status: UpdateUserRequest.Status? = null
+    ): User
+    suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
 }

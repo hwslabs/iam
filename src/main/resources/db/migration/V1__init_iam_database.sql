@@ -4,8 +4,8 @@ CREATE TABLE organizations (
   id VARCHAR(10) PRIMARY KEY, -- 10 char alphabets (upper case only)
   name VARCHAR(50) NOT NULL,
   description text NOT NULL,
-  admin_user VARCHAR(50),
-
+  admin_user_name VARCHAR(50) UNIQUE,
+  metadata JSON,
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL
 );
@@ -57,9 +57,7 @@ CREATE TABLE credentials (
   user_hrn VARCHAR(200) NOT NULL,
 
   created_at timestamp NOT NULL,
-  updated_at timestamp NOT NULL,
-
-  FOREIGN KEY (user_hrn) REFERENCES users (hrn)
+  updated_at timestamp NOT NULL
 );
 CREATE INDEX credentials_idx_user_hrn ON credentials(user_hrn);
 CREATE INDEX credentials_idx_refresh_token ON credentials(refresh_token);

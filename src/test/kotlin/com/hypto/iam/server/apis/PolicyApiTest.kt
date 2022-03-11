@@ -17,6 +17,7 @@ import com.hypto.iam.server.helpers.MockPoliciesStore
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.helpers.MockUserPoliciesStore
 import com.hypto.iam.server.helpers.MockUserStore
+import com.hypto.iam.server.helpers.mockCognitoClient
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyStatement
@@ -71,6 +72,7 @@ class PolicyApiTest : AutoCloseKoinTest() {
             MockOrganizationStore(mockStore).let {
                 it.mockInsert(this@declareMock)
                 it.mockFindById(this@declareMock)
+                it.fetchByAdminUser(this@declareMock)
             }
         }
 
@@ -106,6 +108,8 @@ class PolicyApiTest : AutoCloseKoinTest() {
                 mockFetchByPrincipalHrn(this@declareMock)
             }
         }
+
+        mockCognitoClient()
     }
 
     @Nested
@@ -127,7 +131,7 @@ class PolicyApiTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/policies"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                         setBody(gson.toJson(requestBody))
                     }
                 ) {

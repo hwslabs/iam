@@ -1,3 +1,5 @@
+@file:Suppress("TooGenericExceptionCaught")
+
 package com.hypto.iam.server.security
 
 import com.google.gson.Gson
@@ -100,7 +102,12 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
 
     fun persist(message: Any) {
         entries.forEach {
-            persistEntry(context.call, message, it.toString())
+            try {
+                persistEntry(context.call, message, it.toString())
+            } catch (e: Exception) {
+                // Catching generic exception to avoid request failure on any audit persist failures
+                logger.error { "Error while persisting the audit info to destination with msg: ${e.message}" }
+            }
         }
     }
 

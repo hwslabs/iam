@@ -6,6 +6,7 @@ import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.ResourceHrn
+import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import java.net.URI
@@ -66,7 +67,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
             // TODO: Uncomment before taking to prod
             // Eventually move to Brotli from GZIP:
             // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
-            // .compressWith(CompressionCodecs.GZIP)
+            .compressWith(CompressionCodecs.GZIP)
             .compact()
     }
 }

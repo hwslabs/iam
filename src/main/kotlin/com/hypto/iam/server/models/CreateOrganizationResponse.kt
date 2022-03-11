@@ -13,25 +13,15 @@ package com.hypto.iam.server.models
 
 import java.io.Serializable
 /**
- * Payload to create ledger account
- * @param email
- * @param phone
- * @param status
+ *
+ * @param organization
+ * @param adminUserCredential
  */
-data class UpdateUserRequest(
-    val email: kotlin.String? = null,
-    val phone: kotlin.String? = null,
-    val status: UpdateUserRequest.Status? = null
+data class CreateOrganizationResponse(
+    val organization: Organization? = null,
+    val adminUserCredential: Credential? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
-    }
-    /**
-    *
-    * Values: enabled,disabled
-    */
-    enum class Status(val value: kotlin.String) {
-        enabled("enabled"),
-        disabled("disabled");
     }
 }

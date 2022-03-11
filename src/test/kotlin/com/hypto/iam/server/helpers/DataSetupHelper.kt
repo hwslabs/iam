@@ -1,12 +1,12 @@
 package com.hypto.iam.server.helpers
 
 import com.google.gson.Gson
-import com.hypto.iam.server.db.tables.pojos.Users
-import com.hypto.iam.server.db.tables.records.CredentialsRecord
-import com.hypto.iam.server.extensions.usersFrom
 import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreateOrganizationResponse
+import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Organization
+import com.hypto.iam.server.models.User
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -21,7 +21,7 @@ object DataSetupHelper {
     fun createOrganizationUserCredential(
         engine: TestApplicationEngine,
         mockStore: MockStore
-    ): Triple<Organization, Users, CredentialsRecord> {
+    ): Triple<Organization, User, Credential> {
         with(engine) {
             // Create organization
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
@@ -41,18 +41,19 @@ object DataSetupHelper {
                     )
                 )
             }
-            val createdOrganization = gson
-                .fromJson(createOrganizationCall.response.content, Organization::class.java)
+            val createOrganizationResponse = gson
+                .fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
+            val organizationId = createOrganizationResponse.organization!!.id
 
-            val adminUserId = mockStore.organizationIdMap[createdOrganization.id]!!.adminUser
-            val createdUser = usersFrom(mockStore.userIdMap[adminUserId]!!)
-
-            // Create a Credential to make API requests for the test
-            // TODO: Replace this call with `/login` API once it's implemented so that
-            //  the createCredential can be called with the returned JWT token
-            val createdCredentials = MockCredentialsStore(mockStore).createCredential(createdUser.hrn)
-
-            return Triple(createdOrganization, createdUser, createdCredentials)
+            // Get admin user
+            val getUserCall = handleRequest(HttpMethod.Get, "/organizations/$organizationId/users/testAdminUser") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer ${createOrganizationResponse
+                    .adminUserCredential!!.secret}")
+            }
+            val user = gson.fromJson(getUserCall.response.content, User::class.java)
+            return Triple(createOrganizationResponse.organization!!, user,
+                createOrganizationResponse.adminUserCredential!!)
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.hypto.iam.server.extensions
 
 import com.hypto.iam.server.Constants.Companion.MAX_NAME_LENGTH
-import com.hypto.iam.server.Constants.Companion.MIN_NAME_LENGTH
+import com.hypto.iam.server.Constants.Companion.MIN_LENGTH
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.HrnParseException
 import io.konform.validation.Invalid
@@ -56,7 +56,7 @@ fun ValidationBuilder<String>.hrn() = addConstraint("must be a valid hrn") {
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
 const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
 val nameCheck = Validation<String> {
-    minLength(MIN_NAME_LENGTH) hint "Minimum length expected is $MIN_NAME_LENGTH"
+    minLength(MIN_LENGTH) hint "Minimum length expected is $MIN_LENGTH"
     maxLength(MAX_NAME_LENGTH) hint "Maximum length supported for name is $MAX_NAME_LENGTH characters"
     pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
 }

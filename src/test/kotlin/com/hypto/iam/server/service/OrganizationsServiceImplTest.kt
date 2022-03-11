@@ -13,17 +13,18 @@ import com.hypto.iam.server.helpers.MockPoliciesStore
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.helpers.MockUserPoliciesStore
 import com.hypto.iam.server.helpers.MockUserStore
+import com.hypto.iam.server.helpers.mockCognitoClient
 import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.mockk.coEvery
 import io.mockk.just
 import io.mockk.mockkClass
 import io.mockk.runs
-import io.mockk.slot
 import io.mockk.verify
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
+import org.jooq.JSON
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -59,11 +60,14 @@ internal class OrganizationsServiceImplTest : AutoCloseKoinTest() {
     fun setUp() {
         declareMock<OrganizationRepo> {
             coEvery { this@declareMock.insert(any<Organizations>()) } just runs
+            coEvery { this@declareMock.fetchByAdminUser(any()) } returns listOf()
             coEvery { this@declareMock.findById(any()) } coAnswers {
                 Organizations(firstArg(),
                     "testName",
                     "",
                     "adminUser",
+                    JSON.json("{\"id\":\"test\", \"name\":\"testName\", \"identitySource\": \"AWS_COGNITO\", " +
+                        "\"metadata\": {\"iam-client-id\": \"testClientId\"}}"),
                     LocalDateTime.MAX, LocalDateTime.MAX)
             }
         }
@@ -87,7 +91,9 @@ internal class OrganizationsServiceImplTest : AutoCloseKoinTest() {
         }
         declareMock<ApplicationIdUtil.Generator> {
             coEvery { this@declareMock.organizationId() } returns "testId"
+            coEvery { this@declareMock.refreshToken(any()) } returns "sampleRefreshToken"
         }
+        mockCognitoClient()
     }
 
     @Test
@@ -97,19 +103,10 @@ internal class OrganizationsServiceImplTest : AutoCloseKoinTest() {
             val org = organizationServiceImpl.createOrganization(
                 "testName", "testDescription", AdminUser("testPassword",
                     "testEmail", "testPhone", "testUserName"))
-            assertEquals("testName", org.name)
-            assertEquals("", org.description)
-            assertEquals("testId", org.id)
+            assertEquals("testName", org.first.name)
+            assertEquals("", org.first.description)
+            assertEquals("testId", org.first.id)
         }
-        val orgRepo = get<OrganizationRepo>()
-        val orgInputSlot = slot<Organizations>()
-        verify(exactly = 1) { orgRepo.findById("testId") }
-        verify(exactly = 1) {
-            orgRepo.insert(capture(orgInputSlot))
-        }
-        val orgInput = orgInputSlot.captured
-        assertEquals("testId", orgInput.id)
-        assertEquals("testName", orgInput.name)
     }
 
     @Test

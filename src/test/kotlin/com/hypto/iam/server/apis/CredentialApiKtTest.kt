@@ -17,6 +17,7 @@ import com.hypto.iam.server.helpers.MockPoliciesStore
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.helpers.MockUserPoliciesStore
 import com.hypto.iam.server.helpers.MockUserStore
+import com.hypto.iam.server.helpers.mockCognitoClient
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.utils.ResourceHrn
@@ -73,6 +74,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
             MockOrganizationStore(mockStore).let {
                 it.mockInsert(this@declareMock)
                 it.mockFindById(this@declareMock)
+                it.fetchByAdminUser(this@declareMock)
             }
         }
 
@@ -108,6 +110,49 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 mockFetchByPrincipalHrn(this@declareMock)
             }
         }
+
+        mockCognitoClient()
+
+        /* declareMock<CognitoIdentityProviderClient> {
+            coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
+                val result = CreateUserPoolResponse.builder()
+                    .userPool(UserPoolType.builder().id("").name("").build())
+                    .build()
+                result
+            }
+            coEvery { this@declareMock.createUserPoolClient(any<CreateUserPoolClientRequest>()) } coAnswers {
+                CreateUserPoolClientResponse.builder()
+                    .userPoolClient(UserPoolClientType.builder().clientId("").build())
+                    .build()
+            }
+            coEvery { this@declareMock.deleteUserPool(any<DeleteUserPoolRequest>()) } returns DeleteUserPoolResponse
+                .builder().build()
+            coEvery { this@declareMock.adminGetUser(any<AdminGetUserRequest>()) } coAnswers {
+                AdminGetUserResponse.builder()
+                    .enabled(true)
+                    .userAttributes(listOf())
+                    .username("")
+                    .userCreateDate(Instant.now())
+                    .build()
+            }
+            coEvery { this@declareMock.adminDisableUser(any<AdminDisableUserRequest>()) } returns mockk()
+            coEvery { this@declareMock.adminCreateUser(any<AdminCreateUserRequest>()) } coAnswers {
+                AdminCreateUserResponse.builder()
+                    .user(UserType.builder().attributes(listOf())
+                        .username("")
+                        .userCreateDate(Instant.now())
+                        .build())
+                    .build()
+            }
+            coEvery { this@declareMock.adminInitiateAuth(any<AdminInitiateAuthRequest>()) } coAnswers {
+                AdminInitiateAuthResponse.builder()
+                    .session("").build()
+            }
+            coEvery { this@declareMock.adminRespondToAuthChallenge(
+                any<AdminRespondToAuthChallengeRequest>()) } returns mockk()
+            coEvery { this@declareMock.listUsers(any<ListUsersRequest>()) } returns mockk()
+            coEvery { this@declareMock.adminDeleteUser(any<AdminDeleteUserRequest>()) } returns mockk()
+        } */
     }
 
     @Nested
@@ -129,7 +174,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                         setBody(gson.toJson(requestBody))
                     }
                 ) {
@@ -162,7 +207,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                         setBody(gson.toJson(requestBody))
                     }
                 ) {
@@ -201,7 +246,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                         setBody(gson.toJson(requestBody))
                     }
                 ) {
@@ -235,7 +280,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.OK, response.status())
@@ -249,7 +294,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
@@ -286,7 +331,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
@@ -310,7 +355,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${organization1.id}/users/$user1Name/credentials/${credentials1.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${credentials2.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${credentials2.secret}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.Forbidden, response.status())
@@ -336,7 +381,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/${createdCredentials.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.OK, response.status())
@@ -364,7 +409,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
@@ -386,7 +431,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/inValid_credential_id"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())

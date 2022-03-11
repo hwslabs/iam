@@ -25,12 +25,10 @@
     <ID>EnumNaming:ResourceActionEffect.kt$ResourceActionEffect.Effect.deny$deny</ID>
     <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.active$active</ID>
     <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.inactive$inactive</ID>
-    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.active$active</ID>
-    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.deleted$deleted</ID>
-    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.inactive$inactive</ID>
-    <ID>EnumNaming:User.kt$User.Status.active$active</ID>
-    <ID>EnumNaming:User.kt$User.Status.deleted$deleted</ID>
-    <ID>EnumNaming:User.kt$User.Status.inactive$inactive</ID>
+    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.disabled$disabled</ID>
+    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.enabled$enabled</ID>
+    <ID>EnumNaming:User.kt$User.Status.disabled$disabled</ID>
+    <ID>EnumNaming:User.kt$User.Status.enabled$enabled</ID>
     <ID>EnumNaming:User.kt$User.UserType.admin$admin</ID>
     <ID>EnumNaming:User.kt$User.UserType.apiOnly$apiOnly</ID>
     <ID>EnumNaming:User.kt$User.UserType.normal$normal</ID>
@@ -53,6 +51,11 @@
     <ID>TooGenericExceptionThrown:AuditEventHandler.kt$AuditEventHandler$throw Exception("few Batch inserts failed")</ID>
     <ID>TooManyFunctions:Mappers.kt$com.hypto.iam.server.extensions.Mappers.kt</ID>
     <ID>TooManyFunctions:RequestModelValidator.kt$com.hypto.iam.server.validators.RequestModelValidator.kt</ID>
+    <ID>UnnecessaryAbstractClass:IdentityProvider.kt$UserCredentials</ID>
+    <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$context: RequestContext</ID>
+    <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$identityGroup: IdentityGroup</ID>
+    <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$userCredentials: AccessTokenCredentials</ID>
     <ID>UnusedPrivateMember:Configuration.kt$MicrometerConfigs$private fun getNewRelicMeterRegistry(): NewRelicRegistry</ID>
+    <ID>UnusedPrivateMember:DataSetupHelper.kt$DataSetupHelper$mockStore: MockStore</ID>
   </CurrentIssues>
 </SmellBaseline>
