@@ -5,12 +5,16 @@ import com.google.gson.Gson
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.UpdateUserRequest
+import com.hypto.iam.server.models.User
+import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.UserPolicyService
+import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
+import io.ktor.auth.principal
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
@@ -29,6 +33,7 @@ fun Route.usersApi() {
     val userPolicyService: UserPolicyService by inject()
     val gson: Gson by inject()
     val hrnFactory: HrnFactory by inject()
+    val usersService: UsersService by inject()
 
     put("/organizations/{organization_id}/users/{user_id}/attach_policies") {
         val organizationId = call.parameters["organization_id"]
@@ -52,7 +57,19 @@ fun Route.usersApi() {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to create user")
         val request = call.receive<CreateUserRequest>() // .validate()
-        call.respond(HttpStatusCode.NotImplemented)
+        val principal = context.principal<UserPrincipal>()!!
+        val user = usersService.createUser(organizationId = organizationId, userName = request.username,
+            password = request.passwordHash,
+            email = request.email,
+            createdBy = principal.hrn.toString(),
+            userType = User.UserType.valueOf(request.userType.toString()),
+            status = User.Status.valueOf(request.status.toString()),
+            phone = request.phone)
+        call.respondText(
+            text = gson.toJson(user),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
     get("/organizations/{organization_id}/users") {

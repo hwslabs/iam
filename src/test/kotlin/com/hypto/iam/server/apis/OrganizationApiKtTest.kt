@@ -12,6 +12,7 @@ import com.hypto.iam.server.helpers.MockCredentialsStore
 import com.hypto.iam.server.helpers.MockOrganizationStore
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.helpers.MockUserStore
+import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Organization
 import io.ktor.application.Application
@@ -78,7 +79,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
     @Test
     fun `create organization with valid root credentials`() {
         withTestApplication(Application::handleRequest) {
-            val requestBody = CreateOrganizationRequest("testName")
+            val requestBody = CreateOrganizationRequest("testName", AdminUser("testPassword",
+                "testEmail", "testPhone", "testUserName"))
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -104,7 +106,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                 handleRequest(HttpMethod.Post, "/organizations") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader("X-Api-Key", "bad creds")
-                    setBody(gson.toJson(CreateOrganizationRequest("testName")))
+                    setBody(gson.toJson(CreateOrganizationRequest("testName", AdminUser("testPassword",
+                        "testEmail", "testPhone", "testUserName"))))
                 }
             ) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
@@ -121,7 +124,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
-                setBody(gson.toJson(CreateOrganizationRequest("testName")))
+                setBody(gson.toJson(CreateOrganizationRequest("testName", AdminUser("testPassword",
+                    "testEmail", "testPhone", "testUserName"))))
             }
             val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
 
@@ -146,7 +150,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
-                setBody(gson.toJson(CreateOrganizationRequest("testName")))
+                setBody(gson.toJson(CreateOrganizationRequest("testName", AdminUser("testPassword",
+                    "testEmail", "testPhone", "testUserName"))))
             }
             val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
 
@@ -190,7 +195,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
-                setBody(gson.toJson(CreateOrganizationRequest("testName")))
+                setBody(gson.toJson(CreateOrganizationRequest("testName", AdminUser("testPassword",
+                    "testEmail", "testPhone", "testUserName"))))
             }
             val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
 

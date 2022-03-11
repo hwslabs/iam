@@ -22,6 +22,8 @@ import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserPolicyService
 import com.hypto.iam.server.service.UserPolicyServiceImpl
+import com.hypto.iam.server.service.UsersService
+import com.hypto.iam.server.service.UsersServiceImpl
 import com.hypto.iam.server.service.ValidationService
 import com.hypto.iam.server.service.ValidationServiceImpl
 import com.hypto.iam.server.utils.ApplicationIdUtil
@@ -53,6 +55,7 @@ val controllerModule = module {
     single { ValidationServiceImpl() } bind ValidationService::class
     single { UserPolicyServiceImpl() } bind UserPolicyService::class
     single { ResourceServiceImpl() } bind ResourceService::class
+    single { UsersServiceImpl() } bind UsersService::class
 }
 
 val applicationModule = module {

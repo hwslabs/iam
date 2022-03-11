@@ -87,7 +87,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
 }
 
 interface CredentialService {
-    suspend fun createCredential(organizationId: String, userId: String, validUntil: String?): Credential
+    suspend fun createCredential(organizationId: String, userId: String, validUntil: String? = null): Credential
     suspend fun getCredentialWithoutSecret(organizationId: String, userId: String, id: UUID): CredentialWithoutSecret
     suspend fun updateCredentialAndGetWithoutSecret(
         organizationId: String,

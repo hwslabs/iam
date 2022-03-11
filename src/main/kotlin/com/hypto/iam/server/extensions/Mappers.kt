@@ -85,10 +85,11 @@ fun Policy.Companion.from(record: PoliciesRecord): Policy {
     val hrn = HrnFactory().getHrn(record.hrn)
     require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
-        hrn.resourceInstance!!,
-        hrn.organization,
-        record.version,
-        record.statements.trim().lines().map { PolicyStatement.from(it) }
+        name = hrn.resourceInstance!!,
+        organizationId = hrn.organization,
+        version = record.version,
+        id = hrn.toString(),
+        statements = record.statements.trim().lines().map { PolicyStatement.from(it) }
     )
 }
 
@@ -96,10 +97,11 @@ fun Policy.Companion.from(record: Policies): Policy {
     val hrn = HrnFactory().getHrn(record.hrn)
     require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
-        hrn.resourceInstance!!,
-        hrn.organization,
-        record.version,
-        record.statements.split("\n").map { PolicyStatement.from(it) }
+        name = hrn.resourceInstance!!,
+        organizationId = hrn.organization,
+        version = record.version,
+        id = hrn.toString(),
+        statements = record.statements.split("\n").map { PolicyStatement.from(it) }
     )
 }
 

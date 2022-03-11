@@ -27,7 +27,7 @@ data class CreateUserRequest(
     val email: kotlin.String,
     val userType: CreateUserRequest.UserType,
     val status: CreateUserRequest.Status,
-    val phone: kotlin.String? = null
+    val phone: kotlin.String
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

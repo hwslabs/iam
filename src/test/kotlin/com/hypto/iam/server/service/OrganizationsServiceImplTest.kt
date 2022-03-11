@@ -6,6 +6,7 @@ import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
+import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.mockk.coEvery
 import io.mockk.just
@@ -61,7 +62,8 @@ internal class OrganizationsServiceImplTest : AutoCloseKoinTest() {
         val organizationServiceImpl: OrganizationsServiceImpl by inject()
         runBlocking {
             val org = organizationServiceImpl.createOrganization(
-                "testName", "testDescription")
+                "testName", "testDescription", AdminUser("testPassword",
+                    "testEmail", "testPhone", "testUserName"))
             assertEquals("testName", org.name)
             assertEquals("", org.description)
             assertEquals("testId", org.id)

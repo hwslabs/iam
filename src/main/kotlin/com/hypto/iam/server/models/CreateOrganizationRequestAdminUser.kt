@@ -13,18 +13,17 @@ package com.hypto.iam.server.models
 
 import java.io.Serializable
 /**
- *
- * @param name
- * @param organizationId
- * @param version
- * @param statements
+ * Admin user details for the organization
+ * @param passwordHash
+ * @param email
+ * @param phone
+ * @param username
  */
-data class Policy(
-    val name: kotlin.String,
-    val organizationId: kotlin.String,
-    val version: kotlin.Int,
-    val statements: kotlin.collections.List<PolicyStatement>,
-    val id: kotlin.String
+data class CreateOrganizationRequestAdminUser(
+    val passwordHash: kotlin.String,
+    val email: kotlin.String,
+    val phone: kotlin.String,
+    val username: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

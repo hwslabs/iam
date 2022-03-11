@@ -1239,11 +1239,18 @@ components:
       additionalProperties: false
       required:
         - name
+        - adminUser
       properties:
         name:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9]{3,50}$
+        description:
+          type: string
+          maxLength: 200
+          pattern: ^[A-Za-z0-9]{3,200}$
+        adminUser:
+          $ref: '#/components/schemas/AdminUser'
 
     UpdateOrganizationRequest:
       description: Payload to update organization
@@ -1255,6 +1262,32 @@ components:
         description:
           type: string
           maxLength: 500
+
+    AdminUser:
+      type: object
+      description: Administrator user details for the organization
+      additionalProperties: false
+      required:
+        - userName
+        - password_hash
+        - email
+        - phone
+      properties:
+        username:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9]{3,50}$
+        password_hash:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_+]{8,100}$
+        phone:
+          type: string
+          maxLength: 30
+
 
     CreateUserRequest:
       description: Payload to create ledger account
@@ -1708,6 +1741,7 @@ components:
       additionalProperties: false
       required:
         - organization_id
+        - id
         - name
         - version
         - statements
@@ -1716,6 +1750,9 @@ components:
           type: string
           maxLength: 50
         organization_id:
+          type: string
+          maxLength: 50
+        id:
           type: string
           maxLength: 50
         version:
