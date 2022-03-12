@@ -10,7 +10,7 @@ import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -25,7 +25,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         userType: User.UserType,
         createdBy: String,
         status: User.Status,
-        phone: String
+        phone: String?
     ): User {
         val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userName)
         if (repo.existsById(userHrn.toString())) {
@@ -33,7 +33,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         }
 
         // TODO: Remove this impl and use cognito
-        val user = Users(userHrn.toString(),
+        val user = Users(
+            userHrn.toString(),
             password,
             email,
             phone,
@@ -41,7 +42,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
             userType.toString(),
             status.toString(),
             UUID.randomUUID(),
-            organizationId, LocalDateTime.now(), LocalDateTime.now())
+            organizationId, LocalDateTime.now(), LocalDateTime.now()
+        )
         repo.insert(user)
         return getUser(userHrn.toString())
     }
@@ -49,7 +51,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun getUser(hrn: String): User {
         val userRecord = repo.fetchByHrn(hrn) ?: throw EntityNotFoundException("User hrn $hrn not found")
         return User(
-            id = userRecord.hrn,
+            hrn = userRecord.hrn,
             username = hrnFactory.getHrn(userRecord.hrn).toString(),
             organizationId = userRecord.organizationId,
             email = userRecord.email,
@@ -66,7 +68,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         TODO("Not yet implemented")
     }
 
-    override suspend fun deleteUser(id: String) {
+    override suspend fun deleteUser(hrn: String) {
         TODO("Not yet implemented")
     }
 }
@@ -83,9 +85,9 @@ interface UsersService {
         userType: User.UserType,
         createdBy: String,
         status: User.Status,
-        phone: String
+        phone: String?
     ): User
-    suspend fun getUser(id: String): User
+    suspend fun getUser(hrn: String): User
     suspend fun updateUser(): User
-    suspend fun deleteUser(id: String)
+    suspend fun deleteUser(hrn: String)
 }

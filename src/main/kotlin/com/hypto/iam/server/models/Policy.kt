@@ -16,15 +16,16 @@ import java.io.Serializable
  *
  * @param name
  * @param organizationId
+ * @param hrn
  * @param version
  * @param statements
  */
 data class Policy(
     val name: kotlin.String,
     val organizationId: kotlin.String,
+    val hrn: kotlin.String,
     val version: kotlin.Int,
-    val statements: kotlin.collections.List<PolicyStatement>,
-    val id: kotlin.String
+    val statements: kotlin.collections.List<PolicyStatement>
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

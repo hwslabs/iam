@@ -46,7 +46,7 @@ val repositoryModule = module {
     single { UserAuthProvidersRepo }
     single { UserPoliciesRepo }
     single { UserRepo }
-    single { HrnFactory() }
+    single { HrnFactory }
 }
 
 val controllerModule = module {

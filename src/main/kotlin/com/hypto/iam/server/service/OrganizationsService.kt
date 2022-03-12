@@ -29,28 +29,35 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         val adminUserHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, adminUser.username)
 
         // Create Organization
-        organizationRepo.insert(Organizations(organizationId,
-            name,
-            description,
-            adminUserHrn.toString(),
-            LocalDateTime.now(), LocalDateTime.now()))
+        organizationRepo.insert(
+            Organizations(
+                organizationId,
+                name,
+                description,
+                adminUserHrn.toString(),
+                LocalDateTime.now(), LocalDateTime.now()
+            )
+        )
 
         // Create admin user for the organization
-        val user = usersService.createUser(organizationId = organizationId,
+        val user = usersService.createUser(
+            organizationId = organizationId,
             userName = adminUser.username!!,
             password = adminUser.passwordHash,
             email = adminUser.email,
             userType = User.UserType.admin,
             createdBy = adminUser.username,
-            status = User.Status.active, phone = adminUser.phone)
+            status = User.Status.active, phone = adminUser.phone
+        )
 
         // Add policies for the admin user
         val organization = getOrganization(organizationId)
         val policyStatements = listOf(
             PolicyStatement(organization.id, "*", PolicyStatement.Effect.allow),
-            PolicyStatement("hrn:$organizationId::*", "*", PolicyStatement.Effect.allow))
+            PolicyStatement("hrn:$organizationId::*", "*", PolicyStatement.Effect.allow)
+        )
         val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
-        userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.id), listOf(hrnFactory.getHrn(policy.id)))
+        userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.hrn), listOf(hrnFactory.getHrn(policy.hrn)))
         return organization
     }
 

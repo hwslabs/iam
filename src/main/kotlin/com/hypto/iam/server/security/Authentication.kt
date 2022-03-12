@@ -40,7 +40,7 @@ data class UserPrincipal(
     val hrnStr: String,
     val policies: List<Policy>? = null
 ) : Principal {
-    val hrn: Hrn = HrnFactory().getHrn(hrnStr)
+    val hrn: Hrn = HrnFactory.getHrn(hrnStr)
 }
 
 class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvider(config) {

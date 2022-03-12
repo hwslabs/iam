@@ -14,7 +14,7 @@ package com.hypto.iam.server.models
 import java.io.Serializable
 /**
  *
- * @param id
+ * @param hrn
  * @param username
  * @param organizationId
  * @param email
@@ -26,7 +26,7 @@ import java.io.Serializable
  * @param createdBy
  */
 data class User(
-    val id: kotlin.String,
+    val hrn: kotlin.String,
     val username: kotlin.String,
     val organizationId: kotlin.String,
     val email: kotlin.String,

@@ -17,12 +17,14 @@ import java.io.Serializable
  * @param organizationId
  * @param resourceName
  * @param name
+ * @param hrn
  * @param description
  */
 data class Action(
     val organizationId: kotlin.String,
     val resourceName: kotlin.String,
     val name: kotlin.String,
+    val hrn: kotlin.String,
     val description: kotlin.String? = null
 ) : Serializable {
     companion object {

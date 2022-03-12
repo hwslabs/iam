@@ -174,7 +174,7 @@ class GlobalHrn : Hrn {
     }
 }
 
-class HrnFactory {
+object HrnFactory {
     /**
      * Method to convert the Hrn string to actual Hrn instance
      */

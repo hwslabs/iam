@@ -12,13 +12,16 @@ import java.util.UUID
 import mu.KotlinLogging
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-object AuditEntriesRepo : DAOImpl<AuditEntriesRecord, AuditEntries, UUID>(
+object AuditEntriesRepo : KoinComponent, DAOImpl<AuditEntriesRecord, AuditEntries, UUID>(
     AUDIT_ENTRIES,
     AuditEntries::class.java,
     getConfiguration()
 ) {
     private val logger = KotlinLogging.logger { }
+    private val hrnFactory by inject<HrnFactory>()
 
     override fun getId(action: AuditEntries): UUID {
         return action.id
@@ -73,7 +76,7 @@ object AuditEntriesRepo : DAOImpl<AuditEntriesRecord, AuditEntries, UUID>(
                 .values(null as String?, null, null, null, null, null)
         )
         auditEntries.forEach {
-            val principalHrn: ResourceHrn = HrnFactory().getHrn(it.principal) as ResourceHrn
+            val principalHrn: ResourceHrn = hrnFactory.getHrn(it.principal) as ResourceHrn
             batchBindStep.bind(
                 it.requestId, it.eventTime, it.principal, principalHrn.organization, it.resource, it.operation
             )

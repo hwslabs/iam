@@ -1247,8 +1247,7 @@ components:
           pattern: ^[A-Za-z0-9]{3,50}$
         description:
           type: string
-          maxLength: 200
-          pattern: ^[A-Za-z0-9]{3,200}$
+          maxLength: 500
         adminUser:
           $ref: '#/components/schemas/AdminUser'
 
@@ -1256,9 +1255,11 @@ components:
       description: Payload to update organization
       type: object
       additionalProperties: false
-      required:
-        - description
       properties:
+        name:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9]{3,50}$
         description:
           type: string
           maxLength: 500
@@ -1595,7 +1596,7 @@ components:
       type: object
       additionalProperties: false
       required:
-        - id
+        - hrn
         - username
         - organization_id
         - email
@@ -1603,9 +1604,8 @@ components:
         - user_type
         - status
       properties:
-        id:
+        hrn:
           type: string
-          maxLength: 50
         username:
           type: string
           maxLength: 50
@@ -1691,6 +1691,7 @@ components:
       required:
         - name
         - organization_id
+        - hrn
       properties:
         name:
           type: string
@@ -1698,6 +1699,8 @@ components:
         organization_id:
           type: string
           maxLength: 50
+        hrn:
+          type: string
         description:
           type: string
           maxLength: 500
@@ -1709,6 +1712,7 @@ components:
         - organization_id
         - resource_name
         - name
+        - hrn
       properties:
         organization_id:
           type: string
@@ -1719,6 +1723,8 @@ components:
         name:
           type: string
           maxLength: 50
+        hrn:
+          type: string
         description:
           type: string
           maxLength: 500
@@ -1741,7 +1747,7 @@ components:
       additionalProperties: false
       required:
         - organization_id
-        - id
+        - hrn
         - name
         - version
         - statements
@@ -1752,9 +1758,8 @@ components:
         organization_id:
           type: string
           maxLength: 50
-        id:
+        hrn:
           type: string
-          maxLength: 50
         version:
           type: integer
           maxLength: 5
