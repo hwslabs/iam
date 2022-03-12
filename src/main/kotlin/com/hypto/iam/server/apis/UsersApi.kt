@@ -61,7 +61,7 @@ fun Route.usersApi() {
         val user = usersService.createUser(organizationId = organizationId, userName = request.username,
             password = request.passwordHash,
             email = request.email,
-            createdBy = principal.hrn.toString(),
+            createdBy = principal.hrn,
             userType = User.UserType.valueOf(request.userType.toString()),
             status = User.Status.valueOf(request.status.toString()),
             phone = request.phone)

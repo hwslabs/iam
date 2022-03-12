@@ -3,6 +3,8 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.PoliciesRepo
+import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
@@ -10,7 +12,9 @@ import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.MockCredentialsStore
 import com.hypto.iam.server.helpers.MockOrganizationStore
+import com.hypto.iam.server.helpers.MockPoliciesStore
 import com.hypto.iam.server.helpers.MockStore
+import com.hypto.iam.server.helpers.MockUserPoliciesStore
 import com.hypto.iam.server.helpers.MockUserStore
 import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationRequest
@@ -62,9 +66,9 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
     @BeforeEach
     fun setUp() {
         declareMock<OrganizationRepo> {
-            MockOrganizationStore(mockStore).let {
-                it.mockInsert(this@declareMock)
-                it.mockFindById(this@declareMock)
+            with(MockOrganizationStore(mockStore)) {
+                mockInsert(this@declareMock)
+                mockFindById(this@declareMock)
             }
         }
 
@@ -72,7 +76,23 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
             MockCredentialsStore(mockStore).mockFetchByRefreshToken(this@declareMock)
         }
         declareMock<UserRepo> {
-            MockUserStore(mockStore).mockFetchByHrn(this@declareMock)
+            with(MockUserStore(mockStore)) {
+                mockFetchByHrn(this@declareMock)
+                mockExistsById(this@declareMock)
+                mockCreate(this@declareMock)
+            }
+        }
+
+        declareMock<PoliciesRepo> {
+            with(MockPoliciesStore(mockStore)) {
+                mockCreate(this@declareMock)
+                mockExistsById(this@declareMock)
+                mockExistsByIds(this@declareMock)
+            }
+        }
+
+        declareMock<UserPoliciesRepo> {
+            MockUserPoliciesStore(mockStore).mockInsert(this@declareMock)
         }
     }
 
@@ -150,8 +170,14 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
-                setBody(gson.toJson(CreateOrganizationRequest("testName", AdminUser("testPassword",
-                    "testEmail", "testPhone", "testUserName"))))
+                setBody(
+                    gson.toJson(
+                        CreateOrganizationRequest(
+                            "testName",
+                            AdminUser("testPassword", "testEmail", "testPhone", "testUserName")
+                        )
+                    )
+                )
             }
             val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
 

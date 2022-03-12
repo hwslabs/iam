@@ -19,6 +19,7 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
+import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPolicy
 import com.hypto.iam.server.utils.GlobalHrn
 import com.hypto.iam.server.utils.HrnFactory
@@ -125,6 +126,15 @@ fun Resource.Companion.from(record: Resources): Resource {
         hrn.resource!!,
         hrn.organization,
         record.description
+    )
+}
+
+fun User.Companion.from(value: UsersRecord): User {
+    val hrn = hrnFactory.getHrn(value.hrn) as ResourceHrn
+    return User(
+        value.hrn, hrn.resourceInstance!!, value.organizationId, value.email, value.phone,
+        User.UserType.valueOf(value.userType), User.Status.valueOf(value.status),
+        value.loginAccess, value.createdBy
     )
 }
 

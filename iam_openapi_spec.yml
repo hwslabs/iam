@@ -1269,7 +1269,7 @@ components:
       description: Administrator user details for the organization
       additionalProperties: false
       required:
-        - userName
+        - username
         - password_hash
         - email
         - phone
@@ -1633,10 +1633,6 @@ components:
             - active
             - inactive
             - deleted
-        created_at:
-          type: string
-          format: timestamp
-          maxLength: 20
         created_by:
           type: string
           maxLength: 50

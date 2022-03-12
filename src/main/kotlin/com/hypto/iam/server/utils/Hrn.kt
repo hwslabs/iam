@@ -18,7 +18,7 @@ import io.ktor.request.path
  * 1. ResourceHrn - This identifies the instances of resources like users, policies, and any other service specific resources.
  * 2. GlobalHrn - This identifies the resource names and operations possible with the resources.
  */
-interface Hrn {
+abstract class Hrn {
     companion object {
         const val HRN_DELIMITER = ":"
         const val HRN_PREFIX = "hrn$HRN_DELIMITER"
@@ -32,15 +32,18 @@ interface Hrn {
             "credential" to "iam-credential"
         )
     }
+
+    abstract val organization: String
+    abstract val resource: String?
 }
 
 /**
  * Class representing ResourceHrn
  */
 class ResourceHrn : Hrn {
-    val organization: String
+    override val organization: String
+    override val resource: String?
     val account: String?
-    val resource: String?
     val resourceInstance: String?
 
     companion object {
@@ -143,8 +146,8 @@ class ResourceHrn : Hrn {
  * Class representing GlobalHrn
  */
 class GlobalHrn : Hrn {
-    val organization: String
-    val resource: String?
+    override val organization: String
+    override val resource: String?
     val operation: String?
 
     companion object {

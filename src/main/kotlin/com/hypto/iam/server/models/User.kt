@@ -22,7 +22,6 @@ import java.io.Serializable
  * @param userType
  * @param status
  * @param loginAccess
- * @param createdAt
  * @param createdBy
  */
 data class User(
@@ -34,7 +33,6 @@ data class User(
     val userType: User.UserType,
     val status: User.Status,
     val loginAccess: kotlin.Boolean? = null,
-    val createdAt: kotlin.String? = null,
     val createdBy: kotlin.String? = null
 ) : Serializable {
     companion object {

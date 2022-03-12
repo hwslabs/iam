@@ -18,7 +18,7 @@ CREATE TABLE users (
   login_access boolean DEFAULT FALSE,
   user_type VARCHAR(10) NOT NULL,
   status VARCHAR(10) NOT NULL,
-  created_by uuid NOT NULL,
+  created_by VARCHAR(200) NOT NULL,
   organization_id VARCHAR(10),
 
   created_at timestamp NOT NULL,

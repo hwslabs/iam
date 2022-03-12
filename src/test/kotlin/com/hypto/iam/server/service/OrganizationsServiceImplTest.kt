@@ -2,10 +2,17 @@ package com.hypto.iam.server.service
 
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.PoliciesRepo
+import com.hypto.iam.server.db.repositories.UserPoliciesRepo
+import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
+import com.hypto.iam.server.helpers.MockPoliciesStore
+import com.hypto.iam.server.helpers.MockStore
+import com.hypto.iam.server.helpers.MockUserPoliciesStore
+import com.hypto.iam.server.helpers.MockUserStore
 import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.mockk.coEvery
@@ -17,6 +24,7 @@ import io.mockk.verify
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -40,6 +48,13 @@ internal class OrganizationsServiceImplTest : AutoCloseKoinTest() {
     @RegisterExtension
     val koinMockProvider = MockProviderExtension.create { mockkClass(it) }
 
+    private val mockStore = MockStore()
+
+    @AfterEach
+    fun tearDown() {
+        mockStore.clear()
+    }
+
     @BeforeEach
     fun setUp() {
         declareMock<OrganizationRepo> {
@@ -51,6 +66,24 @@ internal class OrganizationsServiceImplTest : AutoCloseKoinTest() {
                     "adminUser",
                     LocalDateTime.MAX, LocalDateTime.MAX)
             }
+        }
+        declareMock<UserRepo> {
+            with(MockUserStore(mockStore)) {
+                mockFetchByHrn(this@declareMock)
+                mockExistsById(this@declareMock)
+                mockCreate(this@declareMock)
+            }
+        }
+        declareMock<PoliciesRepo> {
+            with(MockPoliciesStore(mockStore)) {
+                mockCreate(this@declareMock)
+                mockExistsById(this@declareMock)
+                mockExistsByIds(this@declareMock)
+            }
+        }
+
+        declareMock<UserPoliciesRepo> {
+            MockUserPoliciesStore(mockStore).mockInsert(this@declareMock)
         }
         declareMock<ApplicationIdUtil.Generator> {
             coEvery { this@declareMock.organizationId() } returns "testId"

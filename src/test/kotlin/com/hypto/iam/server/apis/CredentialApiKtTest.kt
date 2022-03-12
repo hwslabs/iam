@@ -14,6 +14,7 @@ import com.hypto.iam.server.helpers.MockCredentialsStore
 import com.hypto.iam.server.helpers.MockOrganizationStore
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.helpers.MockUserStore
+import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Credential
@@ -99,7 +100,19 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, Json.toString())
                 addHeader("X-Api-Key", rootToken)
-                setBody(gson.toJson(CreateOrganizationRequest("testName")))
+                setBody(
+                    gson.toJson(
+                        CreateOrganizationRequest(
+                            "testName",
+                            AdminUser(
+                                username = "testAdminUser",
+                                passwordHash = "#123",
+                                email = "testAdminUser@example.com",
+                                phone = ""
+                            )
+                        )
+                    )
+                )
             }
             val createdOrganization = gson
                 .fromJson(createOrganizationCall.response.content, Organization::class.java)

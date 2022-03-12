@@ -46,7 +46,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             password = adminUser.passwordHash,
             email = adminUser.email,
             userType = User.UserType.admin,
-            createdBy = adminUser.username,
+            createdBy = adminUserHrn,
             status = User.Status.active, phone = adminUser.phone
         )
 

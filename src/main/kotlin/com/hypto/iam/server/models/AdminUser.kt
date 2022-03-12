@@ -14,16 +14,16 @@ package com.hypto.iam.server.models
 import java.io.Serializable
 /**
  * Administrator user details for the organization
+ * @param username
  * @param passwordHash
  * @param email
  * @param phone
- * @param username
  */
 data class AdminUser(
+    val username: kotlin.String,
     val passwordHash: kotlin.String,
     val email: kotlin.String,
-    val phone: kotlin.String,
-    val username: kotlin.String? = null
+    val phone: kotlin.String
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
