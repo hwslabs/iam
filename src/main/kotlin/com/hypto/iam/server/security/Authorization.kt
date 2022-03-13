@@ -1,6 +1,6 @@
 package com.hypto.iam.server.security
 
-import com.hypto.iam.server.utils.GlobalHrn
+import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
 import com.hypto.iam.server.utils.policy.PolicyValidator
@@ -69,10 +69,10 @@ class Authorization(config: Configuration) : KoinComponent {
             val denyReasons = mutableListOf<String>()
             all?.let {
                 val policyRequests = all.map {
-                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resource, it)
-                    PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
+                    val actionHrn = ActionHrn(resourceHrn.organization, resourceHrn.resource, it)
+                    PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
-                if (!policyValidator.validateAll(policyRequests)) {
+                if (!policyValidator.validate(principal.policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn lacks one or more permission(s) -" +
                         "  ${policyRequests.joinToString { it.action }}"
                 }
@@ -80,10 +80,10 @@ class Authorization(config: Configuration) : KoinComponent {
 
             any?.let {
                 val policyRequests = any.map {
-                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resource, it)
-                    PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
+                    val actionHrn = ActionHrn(resourceHrn.organization, resourceHrn.resource, it)
+                    PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
-                if (!policyValidator.validateAny(policyRequests)) {
+                if (!policyValidator.validateAny(principal.policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn has none of the permission(s) -" +
                         "  ${policyRequests.joinToString { it.action }}"
                 }
@@ -91,10 +91,10 @@ class Authorization(config: Configuration) : KoinComponent {
 
             none?.let {
                 val policyRequests = none.map {
-                    val actionHrn = GlobalHrn(resourceHrn.organization, resourceHrn.resource, it)
-                    PolicyRequest(principal.toString(), resourceHrn.toString(), actionHrn.toString())
+                    val actionHrn = ActionHrn(resourceHrn.organization, resourceHrn.resource, it)
+                    PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
-                if (!policyValidator.validateNone(policyRequests)) {
+                if (!policyValidator.validateNone(principal.policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn shouldn't have these permission(s) -" +
                         "  ${policyRequests.joinToString { it.action }}"
                 }

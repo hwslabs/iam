@@ -3,22 +3,22 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.PoliciesRepo
+import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
-import com.hypto.iam.server.db.tables.pojos.Users
-import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
+import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.helpers.MockCredentialsStore
 import com.hypto.iam.server.helpers.MockOrganizationStore
+import com.hypto.iam.server.helpers.MockPoliciesStore
 import com.hypto.iam.server.helpers.MockStore
+import com.hypto.iam.server.helpers.MockUserPoliciesStore
 import com.hypto.iam.server.helpers.MockUserStore
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateCredentialRequest
-import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Credential
-import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.application.Application
 import io.ktor.http.ContentType.Application.Json
@@ -26,16 +26,15 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
-import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
-import io.ktor.utils.io.charsets.Charset
 import io.mockk.mockkClass
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -50,7 +49,6 @@ import org.koin.test.mock.declareMock
 
 internal class CredentialApiKtTest : AutoCloseKoinTest() {
     private val gson = Gson()
-    private val rootToken = "hypto-root-secret-key"
 
     @JvmField
     @RegisterExtension
@@ -79,7 +77,11 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         }
 
         declareMock<UserRepo> {
-            MockUserStore(mockStore).mockFetchByHrn(this@declareMock)
+            with(MockUserStore(mockStore)) {
+                mockFetchByHrn(this@declareMock)
+                mockExistsById(this@declareMock)
+                mockCreate(this@declareMock)
+            }
         }
 
         declareMock<CredentialsRepo> {
@@ -90,44 +92,21 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 it.mockFetchByIdAndUserHrn(this@declareMock)
             }
         }
-    }
 
-    fun createOrganizationUserCredential(
-        engine: TestApplicationEngine
-    ): Triple<Organization, Users, CredentialsRecord> {
-        with(engine) {
-            // Create organization
-            val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
-                addHeader(HttpHeaders.ContentType, Json.toString())
-                addHeader("X-Api-Key", rootToken)
-                setBody(
-                    gson.toJson(
-                        CreateOrganizationRequest(
-                            "testName",
-                            AdminUser(
-                                username = "testAdminUser",
-                                passwordHash = "#123",
-                                email = "testAdminUser@example.com",
-                                phone = ""
-                            )
-                        )
-                    )
-                )
+        declareMock<PoliciesRepo> {
+            with(MockPoliciesStore(mockStore)) {
+                mockCreate(this@declareMock)
+                mockExistsById(this@declareMock)
+                mockExistsByIds(this@declareMock)
+                mockFetchByHrn(this@declareMock)
             }
-            val createdOrganization = gson
-                .fromJson(createOrganizationCall.response.content, Organization::class.java)
-            val userName = "testUserName"
+        }
 
-            // Create User
-            // TODO: Replace createUser method call with API call
-            val createdUser = MockUserStore(mockStore).createUser(createdOrganization.id, userName)
-
-            // Create a Credential to call create credential API with
-            // TODO: Replace this call with `/login` API once it's implemented so that
-            //  the createCredential can be called with the returned JWT token
-            val createdCredentials = MockCredentialsStore(mockStore).createCredential(createdUser.hrn)
-
-            return Triple(createdOrganization, createdUser, createdCredentials)
+        declareMock<UserPoliciesRepo> {
+            with(MockUserPoliciesStore(mockStore)) {
+                mockInsert(this@declareMock)
+                mockFetchByPrincipalHrn(this@declareMock)
+            }
         }
     }
 
@@ -137,7 +116,8 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         @Test
         fun `without expiry - success`() {
             withTestApplication(Application::handleRequest) {
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
 
                 // Actual test
@@ -146,7 +126,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential"
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
@@ -154,7 +134,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.Created, response.status())
-                    Assertions.assertEquals(Json.withCharset(Charset.defaultCharset()), response.contentType())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
 
                     val responseBody = gson.fromJson(response.content, Credential::class.java)
                     Assertions.assertNull(responseBody.validUntil)
@@ -168,7 +148,8 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `with expiry - success`() {
             withTestApplication(Application::handleRequest) {
 
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
 
                 // Actual test
@@ -178,7 +159,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential"
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
@@ -187,7 +168,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 ) {
                     Assertions.assertEquals(HttpStatusCode.Created, response.status())
                     Assertions.assertEquals(
-                        Json.withCharset(Charset.defaultCharset()),
+                        Json.withCharset(UTF_8),
                         response.contentType()
                     )
 
@@ -206,7 +187,8 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `expiry date in past - failure`() {
             withTestApplication(Application::handleRequest) {
 
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
 
                 // Actual test
@@ -216,7 +198,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential"
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
@@ -225,7 +207,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 ) {
                     Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
                     Assertions.assertEquals(
-                        Json.withCharset(Charset.defaultCharset()),
+                        Json.withCharset(UTF_8),
                         response.contentType()
                     )
                 }
@@ -239,7 +221,8 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         @Test
         fun `delete existing credential`() {
             withTestApplication(Application::handleRequest) {
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
 
                 // Create a credential to delete
@@ -249,21 +232,21 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 with(
                     handleRequest(
                         HttpMethod.Delete,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential/${credentialsToDelete.id}"
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.OK, response.status())
-                    Assertions.assertEquals(Json.withCharset(Charset.defaultCharset()), response.contentType())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
                 }
 
                 // Validate that credential has been deleted
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential/${credentialsToDelete.id}"
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
@@ -276,7 +259,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential/${credentialsToDelete.id}"
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${credentialsToDelete.refreshToken}")
@@ -290,7 +273,8 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         @Test
         fun `credential not found`() {
             withTestApplication(Application::handleRequest) {
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
 
                 val nonExistentCredentialId = UUID.randomUUID().toString()
@@ -299,14 +283,14 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
                 with(
                     handleRequest(
                         HttpMethod.Delete,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential/$nonExistentCredentialId"
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
-                    Assertions.assertEquals(Json.withCharset(Charset.defaultCharset()), response.contentType())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
                 }
             }
         }
@@ -314,22 +298,23 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         @Test
         fun `unauthorized access`() {
             withTestApplication(Application::handleRequest) {
-                val (organization1, user1, credentials1) = createOrganizationUserCredential(this)
-                val (_, _, credentials2) = createOrganizationUserCredential(this)
+                val (organization1, user1, credentials1) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
+                val (_, _, credentials2) = DataSetupHelper.createOrganizationUserCredential(this, mockStore)
                 val user1Name = ResourceHrn(user1.hrn).resourceInstance
 
                 // Delete Credential
                 with(
                     handleRequest(
                         HttpMethod.Delete,
-                        "/organizations/${organization1.id}/users/$user1Name/credential/${credentials1.id}"
+                        "/organizations/${organization1.id}/users/$user1Name/credentials/${credentials1.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${credentials2.refreshToken}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.Forbidden, response.status())
-                    Assertions.assertEquals(Json.withCharset(Charset.defaultCharset()), response.contentType())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
                 }
             }
         }
@@ -339,26 +324,28 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
     @DisplayName("Get credential API tests")
     inner class GetCredentialTest {
         @Test
-        fun `success - without refresh token`() {
+        fun `success - response does not have secret`() {
             withTestApplication(Application::handleRequest) {
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
 
                 with(
                     handleRequest(
-                        HttpMethod.Delete,
-                        "/organizations/${createdOrganization.id}/users/$userName/credential/${createdCredentials.id}"
+                        HttpMethod.Get,
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials/${createdCredentials.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.OK, response.status())
-                    Assertions.assertEquals(Json.withCharset(Charset.defaultCharset()), response.contentType())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
 
                     val responseBody = gson.fromJson(response.content, Credential::class.java)
                     Assertions.assertNull(responseBody.validUntil)
-                    Assertions.assertEquals(responseBody.status, Credential.Status.active)
+                    Assertions.assertNull(responseBody.secret)
+                    Assertions.assertEquals(Credential.Status.active, responseBody.status)
                 }
             }
         }
@@ -366,16 +353,45 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         @Test
         fun `not found`() {
             withTestApplication(Application::handleRequest) {
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
+                val nonExistentCredentialId = UUID.randomUUID().toString()
+
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                }
             }
         }
 
         @Test
         fun `invalid credential id`() {
             withTestApplication(Application::handleRequest) {
-                val (createdOrganization, createdUser, createdCredentials) = createOrganizationUserCredential(this)
+                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+                    .createOrganizationUserCredential(this, mockStore)
                 val userName = ResourceHrn(createdUser.hrn).resourceInstance
+
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials/inValid_credential_id"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                }
             }
         }
     }

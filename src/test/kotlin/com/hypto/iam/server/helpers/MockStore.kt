@@ -18,6 +18,7 @@ import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import java.time.LocalDateTime
 import java.util.UUID
@@ -28,7 +29,7 @@ class MockStore {
     val credentialTokenMap = mutableMapOf<String, CredentialsRecord>()
     val credentialIdMap = mutableMapOf<String, CredentialsRecord>()
     val policyIdMap = mutableMapOf<String, PoliciesRecord>()
-    val userToPolicyMap = mutableMapOf<String /*User HRN*/, MutableList<String> /*List of Policy HRNs*/>()
+    val userToPolicyMap = mutableMapOf<String /*User HRN*/, MutableList<UserPoliciesRecord> /*List of Policy HRNs*/>()
     val policyToUserMap = mutableMapOf<String /*Policy HRN*/, String /*USer HRN*/>()
 
     fun clear() {
@@ -58,7 +59,7 @@ class MockUserStore(private val store: MockStore) {
     // TODO: Replace this method once createUser API is implemented
     fun createUser(organizationId: String, userName: String): Users {
         val hrnString = ResourceHrn(organizationId, null, IamResourceTypes.USER, userName).toString()
-        val user = UsersRecord()
+        val userRecord = UsersRecord()
             .setHrn(hrnString)
             .setCreatedAt(LocalDateTime.MAX)
             .setUpdatedAt(LocalDateTime.MAX)
@@ -66,8 +67,8 @@ class MockUserStore(private val store: MockStore) {
             .setUserType(User.UserType.normal.value)
             .setEmail("testEmail")
             .setPasswordHash("testSaltedPassword")
-        store.userIdMap[hrnString] = user
-        return usersFrom(user)
+        store.userIdMap[hrnString] = userRecord
+        return usersFrom(userRecord)
     }
 
     fun mockFetchByHrn(userRepo: UserRepo) {
@@ -187,21 +188,45 @@ class MockPoliciesStore(private val store: MockStore) {
             store.policyIdMap.containsKey(firstArg())
         }
     }
+
+    fun mockFetchByHrn(policiesRepo: PoliciesRepo) {
+        coEvery { policiesRepo.fetchByHrn(any()) } coAnswers {
+            store.policyIdMap[firstArg()]
+        }
+    }
 }
 
 class MockUserPoliciesStore(private val store: MockStore) {
     fun mockInsert(userPoliciesRepo: UserPoliciesRepo) {
         coEvery { userPoliciesRepo.insert(any<List<UserPoliciesRecord>>()) } coAnswers {
             firstArg<List<UserPoliciesRecord>>().forEach {
+                val record = UserPoliciesRecord()
+                    .setPrincipalHrn(it.principalHrn)
+                    .setPolicyHrn(it.policyHrn)
+                    .setId(UUID.randomUUID())
+                    .setCreatedAt(LocalDateTime.now())
                 if (store.userToPolicyMap.containsKey(it.principalHrn)) {
-                    store.userToPolicyMap[it.principalHrn]!!.add(it.policyHrn)
+                    store.userToPolicyMap[it.principalHrn]!!.add(record)
                 } else {
-                    store.userToPolicyMap[it.principalHrn] = mutableListOf(it.policyHrn)
+                    store.userToPolicyMap[it.principalHrn] = mutableListOf(record)
                 }
                 store.policyToUserMap[it.policyHrn] = it.principalHrn
             }
 
             mockk()
+        }
+    }
+
+    fun mockFetchByPrincipalHrn(userPoliciesRepo: UserPoliciesRepo) {
+        coEvery { userPoliciesRepo.fetchByPrincipalHrn(any()) } coAnswers {
+            val a = store.userToPolicyMap[firstArg()]
+
+            val mockResult = mockk<org.jooq.Result<UserPoliciesRecord>>(
+                moreInterfaces = arrayOf(Iterable::class)
+            ) {
+                every { iterator() } returns a!!.iterator()
+            }
+            mockResult
         }
     }
 }

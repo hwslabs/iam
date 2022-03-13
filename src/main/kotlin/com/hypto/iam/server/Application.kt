@@ -12,7 +12,6 @@ import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
-import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
@@ -24,6 +23,7 @@ import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
+import com.hypto.iam.server.service.UserPolicyService
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.ktor.application.Application
 import io.ktor.application.install
@@ -54,7 +54,8 @@ private const val REQUEST_ID_HEADER = "X-Request-ID"
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val credentialsRepo: CredentialsRepo by inject()
-    val userRepo: UserRepo by inject()
+//    val userRepo: UserRepo by inject()
+    val userPoliciesService: UserPolicyService by inject()
 
     install(DefaultHeaders)
     install(CallLogging)
@@ -94,8 +95,15 @@ fun Application.handleRequest() {
             validate { tokenCredential: TokenCredential ->
                 return@validate tokenCredential.value?.let {
                     return@let credentialsRepo.fetchByRefreshToken(it)
-                        ?.let { credential -> userRepo.fetchByHrn(credential.userHrn) }
-                        ?.let { user -> UserPrincipal(tokenCredential, user.hrn) }
+//                        ?.let { credential -> userRepo.fetchByHrn(credential.userHrn) }
+//                        ?.let { user -> UserPrincipal(tokenCredential, user.hrn) }
+                        ?.let { credential ->
+                            UserPrincipal(
+                                tokenCredential,
+                                credential.userHrn,
+                                userPoliciesService.fetchEntitlements(credential.userHrn)
+                            )
+                        }
                 }
             }
         }

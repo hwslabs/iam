@@ -38,7 +38,6 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateOrganizationRequest'
 
-
       responses:
         '201':
           $ref: '#/components/responses/OrganizationResponse'

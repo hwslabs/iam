@@ -1,8 +1,8 @@
 package com.hypto.iam.server.security
 
-import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.policy.PolicyBuilder
 import io.ktor.application.ApplicationCall
 import io.ktor.application.call
 import io.ktor.auth.Authentication
@@ -38,7 +38,7 @@ data class ApiPrincipal(
 data class UserPrincipal(
     val tokenCredential: TokenCredential,
     val hrnStr: String,
-    val policies: List<Policy>? = null
+    val policies: PolicyBuilder
 ) : Principal {
     val hrn: Hrn = HrnFactory.getHrn(hrnStr)
 }

@@ -21,7 +21,7 @@ import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPolicy
-import com.hypto.iam.server.utils.GlobalHrn
+import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
@@ -111,7 +111,7 @@ fun Policy.Companion.from(record: Policies): Policy {
 
 fun Resource.Companion.from(record: ResourcesRecord): Resource {
     val hrn = hrnFactory.getHrn(record.hrn)
-    require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
+    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
     return Resource(
         hrn.resource!!,
         hrn.organization,
@@ -121,7 +121,7 @@ fun Resource.Companion.from(record: ResourcesRecord): Resource {
 
 fun Resource.Companion.from(record: Resources): Resource {
     val hrn = hrnFactory.getHrn(record.hrn)
-    require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
+    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
     return Resource(
         hrn.resource!!,
         hrn.organization,
