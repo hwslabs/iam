@@ -51,10 +51,6 @@ class Authorization(config: Configuration) : KoinComponent {
         pipeline.insertPhaseAfter(Authentication.ChallengePhase, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
 
-            if (appConfig.app.isDevelopment) {
-                logger.warn { "In development mode, not checking for authorization." }
-                return@intercept
-            }
             val principal =
                 call.authentication.principal<UserPrincipal>() ?: throw AuthenticationException("Missing principal")
 
