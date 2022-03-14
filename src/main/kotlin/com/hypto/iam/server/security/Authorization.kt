@@ -34,20 +34,12 @@ class AuthorizationException(override val message: String) : Exception(message)
 /**
  * This class is used in api request flow. This performs user authorization checks before allowing any action
  */
+@Suppress("UnusedPrivateMember")
 class Authorization(config: Configuration) : KoinComponent {
     private val policyValidator: PolicyValidator by inject()
-    private val isDevelopment = config.isDevelopment
+    private val appConfig: AppConfig by inject()
 
-    class Configuration : KoinComponent {
-        private val appConfig: AppConfig by inject()
-        internal var isDevelopment = appConfig.isDevelopment
-
-        fun isDevelopment(isDevelopment: Boolean) {
-            this.isDevelopment = isDevelopment
-        }
-
-        // Configuration for any future use-case to override default authorization logic in interceptPipeline(..)
-    }
+    class Configuration : KoinComponent
 
     fun interceptPipeline(
         pipeline: ApplicationCallPipeline,
@@ -59,7 +51,7 @@ class Authorization(config: Configuration) : KoinComponent {
         pipeline.insertPhaseAfter(Authentication.ChallengePhase, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
 
-            if (isDevelopment) {
+            if (appConfig.configuration.app.isDevelopment) {
                 logger.warn { "In development mode, not checking for authorization." }
                 return@intercept
             }

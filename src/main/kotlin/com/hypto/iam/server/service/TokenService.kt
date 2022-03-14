@@ -4,7 +4,6 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.exceptions.InternalException
-import com.hypto.iam.server.service.DatabaseFactory.appConfig
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.ResourceHrn
 import io.jsonwebtoken.Jwts
@@ -56,7 +55,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
             .setIssuer(ISSUER)
             .setIssuedAt(Date())
 //            .setSubject("")
-            .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.configuration.tokenValidity)))
+            .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.configuration.app.jwtTokenValidity)))
 //            .setAudience("")
 //            .setId("")
             .claim(VERSION_CLAIM, VERSION_NUM)
@@ -116,10 +115,10 @@ class CachedMasterKey(
 
         private lateinit var signKeyFetchTime: Instant
         private lateinit var signKey: CachedMasterKey
+        private val appConfig = getKoinInstance<AppConfig>()
 
         private fun shouldRefreshSignKey(): Boolean {
-            val appConfig = getKoinInstance<AppConfig>()
-            return signKeyFetchTime.plusSeconds(appConfig.configuration.tokenValidity) > Instant.now()
+            return signKeyFetchTime.plusSeconds(appConfig.configuration.app.jwtTokenValidity) > Instant.now()
         }
 
         private fun readResourceFileAsBytes(name: String): ByteArray {

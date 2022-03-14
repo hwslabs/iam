@@ -11,14 +11,20 @@ class AppConfig {
     {data_class_name}__{variable_name}
     E.g. For Database - database__host, database__port, database__username, database__password
      */
-    data class Database(val host: String, val port: Int, val username: String, val password: String) {
-        fun jdbcUrl(): String {
-            return "jdbc:postgresql://$host:$port/iam"
-        }
-    }
-    data class Newrelic(val apiKey: String, val publishInterval: Long)
-    data class Config(val env: String, val tokenValidity: Long, val database: Database, val newrelic: Newrelic)
 
-    val configuration: Config = ConfigLoader().loadConfigOrThrow<Config>("/default_config.json")
-    val isDevelopment = configuration.env == "development"
+    data class Database(val host: String, val port: Int, val username: String, val password: String) {
+        val jdbcUrl: String
+            get() = "jdbc:postgresql://$host:$port/iam"
+    }
+
+    data class App(val env: String, val jwtTokenValidity: Long) {
+        val isDevelopment: Boolean
+            get() = env == "development"
+    }
+
+    // Get NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home
+    data class Newrelic(val apiKey: String, val publishInterval: Long)
+
+    data class Config(val app: App, val database: Database, val newrelic: Newrelic)
+    val configuration: Config = ConfigLoader().loadConfigOrThrow("/default_config.json")
 }

@@ -1,6 +1,4 @@
 {
-  "env": "development",
-  "token_validity": 300,
   "database": {
     "host": "localhost",
     "port": "5435",
@@ -10,5 +8,9 @@
   "newrelic": {
     "api_key": "test_key",
     "publish_interval": 10
+  },
+  "app": {
+    "env": "development",
+    "jwt_token_validity": 300
   }
 }

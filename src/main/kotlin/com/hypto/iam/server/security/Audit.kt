@@ -119,7 +119,7 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
         val meta = hashMapOf(
             Pair("HttpMethod", applicationCall.request.httpMethod.value),
             Pair("Referer", applicationCall.request.userAgent()), // TODO: Verify this is not ALB address
-            Pair("StatusCode", fetchStatusCode(message)?.value.toString()),
+            Pair("StatusCode", fetchStatusCode(message)?.value.toString())
         )
 
         val auditEntry = AuditEntries(

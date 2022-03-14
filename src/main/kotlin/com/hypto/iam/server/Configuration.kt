@@ -124,7 +124,6 @@ object MicrometerConfigs {
             val appConfig = getKoinInstance<AppConfig>()
 
             override fun apiKey(): String {
-                // TODO: Add valid NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home
                 return appConfig.configuration.newrelic.apiKey
             }
 
@@ -133,7 +132,7 @@ object MicrometerConfigs {
                 // TODO: Needs Tweaking
                 return Duration.ofSeconds(appConfig.configuration.newrelic.publishInterval)
             }
-            override fun serviceName(): String { return "Hypto IAM - " + appConfig.configuration.env }
+            override fun serviceName(): String { return "Hypto IAM - " + appConfig.configuration.app.env }
             override fun enableAuditMode(): Boolean { return false }
             override fun useLicenseKey(): Boolean { return true }
         }
@@ -141,7 +140,7 @@ object MicrometerConfigs {
 
     init {
         registry.config().commonTags(
-            listOf(Tag.of("environment", getKoinInstance<AppConfig>().configuration.env))
+            listOf(Tag.of("environment", getKoinInstance<AppConfig>().configuration.app.env))
         )
     }
 
