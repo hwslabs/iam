@@ -38,7 +38,6 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/CreateOrganizationRequest'
 
-
       responses:
         '201':
           $ref: '#/components/responses/OrganizationResponse'
@@ -1239,22 +1238,56 @@ components:
       additionalProperties: false
       required:
         - name
+        - adminUser
       properties:
         name:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9]{3,50}$
+        description:
+          type: string
+          maxLength: 500
+        adminUser:
+          $ref: '#/components/schemas/AdminUser'
 
     UpdateOrganizationRequest:
       description: Payload to update organization
       type: object
       additionalProperties: false
-      required:
-        - description
       properties:
+        name:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9]{3,50}$
         description:
           type: string
           maxLength: 500
+
+    AdminUser:
+      type: object
+      description: Administrator user details for the organization
+      additionalProperties: false
+      required:
+        - username
+        - password_hash
+        - email
+        - phone
+      properties:
+        username:
+          type: string
+          maxLength: 50
+          pattern: ^[A-Za-z0-9]{3,50}$
+        password_hash:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          maxLength: 100
+          pattern: ^[A-Za-z0-9_+]{8,100}$
+        phone:
+          type: string
+          maxLength: 30
+
 
     CreateUserRequest:
       description: Payload to create ledger account
@@ -1562,7 +1595,7 @@ components:
       type: object
       additionalProperties: false
       required:
-        - id
+        - hrn
         - username
         - organization_id
         - email
@@ -1570,9 +1603,8 @@ components:
         - user_type
         - status
       properties:
-        id:
+        hrn:
           type: string
-          maxLength: 50
         username:
           type: string
           maxLength: 50
@@ -1600,10 +1632,6 @@ components:
             - active
             - inactive
             - deleted
-        created_at:
-          type: string
-          format: timestamp
-          maxLength: 20
         created_by:
           type: string
           maxLength: 50
@@ -1658,6 +1686,7 @@ components:
       required:
         - name
         - organization_id
+        - hrn
       properties:
         name:
           type: string
@@ -1665,6 +1694,8 @@ components:
         organization_id:
           type: string
           maxLength: 50
+        hrn:
+          type: string
         description:
           type: string
           maxLength: 500
@@ -1676,6 +1707,7 @@ components:
         - organization_id
         - resource_name
         - name
+        - hrn
       properties:
         organization_id:
           type: string
@@ -1686,6 +1718,8 @@ components:
         name:
           type: string
           maxLength: 50
+        hrn:
+          type: string
         description:
           type: string
           maxLength: 500
@@ -1708,6 +1742,7 @@ components:
       additionalProperties: false
       required:
         - organization_id
+        - hrn
         - name
         - version
         - statements
@@ -1718,6 +1753,8 @@ components:
         organization_id:
           type: string
           maxLength: 50
+        hrn:
+          type: string
         version:
           type: integer
           maxLength: 5

@@ -4,7 +4,7 @@ CREATE TABLE organizations (
   id VARCHAR(10) PRIMARY KEY, -- 10 char alphabets (upper case only)
   name VARCHAR(50) NOT NULL,
   description text NOT NULL,
-  admin_user VARCHAR(15),
+  admin_user VARCHAR(50),
 
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL
@@ -18,7 +18,7 @@ CREATE TABLE users (
   login_access boolean DEFAULT FALSE,
   user_type VARCHAR(10) NOT NULL,
   status VARCHAR(10) NOT NULL,
-  created_by uuid NOT NULL,
+  created_by VARCHAR(200) NOT NULL,
   organization_id VARCHAR(10),
 
   created_at timestamp NOT NULL,

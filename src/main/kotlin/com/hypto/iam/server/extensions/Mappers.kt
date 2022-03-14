@@ -11,6 +11,7 @@ import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
 import com.hypto.iam.server.db.tables.records.UsersRecord
+import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.Policy
@@ -18,12 +19,15 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
+import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPolicy
-import com.hypto.iam.server.utils.GlobalHrn
+import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+val hrnFactory = getKoinInstance<HrnFactory>()
 
 fun Credential.Companion.from(record: CredentialsRecord): Credential {
     return Credential(
@@ -82,30 +86,32 @@ fun PolicyStatement.Companion.from(policyString: String): PolicyStatement {
 }
 
 fun Policy.Companion.from(record: PoliciesRecord): Policy {
-    val hrn = HrnFactory().getHrn(record.hrn)
+    val hrn = hrnFactory.getHrn(record.hrn)
     require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
-        hrn.resourceInstance!!,
-        hrn.organization,
-        record.version,
-        record.statements.trim().lines().map { PolicyStatement.from(it) }
+        name = hrn.resourceInstance!!,
+        organizationId = hrn.organization,
+        version = record.version,
+        hrn = hrn.toString(),
+        statements = record.statements.trim().lines().map { PolicyStatement.from(it) }
     )
 }
 
 fun Policy.Companion.from(record: Policies): Policy {
-    val hrn = HrnFactory().getHrn(record.hrn)
+    val hrn = hrnFactory.getHrn(record.hrn)
     require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
-        hrn.resourceInstance!!,
-        hrn.organization,
-        record.version,
-        record.statements.split("\n").map { PolicyStatement.from(it) }
+        name = hrn.resourceInstance!!,
+        organizationId = hrn.organization,
+        version = record.version,
+        hrn = hrn.toString(),
+        statements = record.statements.split("\n").map { PolicyStatement.from(it) }
     )
 }
 
 fun Resource.Companion.from(record: ResourcesRecord): Resource {
-    val hrn = HrnFactory().getHrn(record.hrn)
-    require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
+    val hrn = hrnFactory.getHrn(record.hrn)
+    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
     return Resource(
         hrn.resource!!,
         hrn.organization,
@@ -114,12 +120,21 @@ fun Resource.Companion.from(record: ResourcesRecord): Resource {
 }
 
 fun Resource.Companion.from(record: Resources): Resource {
-    val hrn = HrnFactory().getHrn(record.hrn)
-    require(hrn is GlobalHrn) { "Hrn should be an instance of globalHrn" }
+    val hrn = hrnFactory.getHrn(record.hrn)
+    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
     return Resource(
         hrn.resource!!,
         hrn.organization,
         record.description
+    )
+}
+
+fun User.Companion.from(value: UsersRecord): User {
+    val hrn = hrnFactory.getHrn(value.hrn) as ResourceHrn
+    return User(
+        value.hrn, hrn.resourceInstance!!, value.organizationId, value.email, value.phone,
+        User.UserType.valueOf(value.userType), User.Status.valueOf(value.status),
+        value.loginAccess, value.createdBy
     )
 }
 
@@ -132,7 +147,7 @@ fun usersFrom(value: UsersRecord): Users {
 }
 
 fun UserPolicy.Companion.from(record: UserPoliciesRecord): UserPolicy {
-    val policyHrn = HrnFactory().getHrn(record.policyHrn)
+    val policyHrn = hrnFactory.getHrn(record.policyHrn)
     require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(
         policyHrn.resourceInstance!!,
@@ -141,7 +156,7 @@ fun UserPolicy.Companion.from(record: UserPoliciesRecord): UserPolicy {
 }
 
 fun UserPolicy.Companion.from(record: UserPolicies): UserPolicy {
-    val policyHrn = HrnFactory().getHrn(record.policyHrn)
+    val policyHrn = hrnFactory.getHrn(record.policyHrn)
     require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(
         policyHrn.resourceInstance!!,
@@ -163,6 +178,6 @@ fun auditEntryFrom(
     resource: String,
     operation: String
 ): AuditEntries {
-    val principalHrn: ResourceHrn = HrnFactory().getHrn(principal) as ResourceHrn
+    val principalHrn: ResourceHrn = hrnFactory.getHrn(principal) as ResourceHrn
     return AuditEntries(null, requestId, eventTime, principalHrn.organization, principal, resource, operation, null)
 }

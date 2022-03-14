@@ -5,7 +5,11 @@ import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
+import com.hypto.iam.server.models.User
 import com.hypto.iam.server.service.DatabaseFactory
+import com.hypto.iam.server.utils.Hrn
+import com.hypto.iam.server.utils.ResourceHrn
+import java.time.LocalDateTime
 import java.util.Optional
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
@@ -22,8 +26,11 @@ object UserRepo : DAOImpl<UsersRecord, Users, String>(
     /**
      * Fetch records that have `hrn = values`
      */
-    fun fetchByHrn(values: String): Users? {
-        return fetchOne(USERS.HRN, values)
+    fun fetchByHrn(hrn: String): UsersRecord? {
+        return ctx()
+            .selectFrom(table)
+            .where(USERS.HRN.equal(hrn))
+            .fetchOne()
     }
 
     /**
@@ -62,5 +69,35 @@ object UserRepo : DAOImpl<UsersRecord, Users, String>(
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
             .paginate(USERS.HRN, paginationContext)
             .fetch()
+    }
+
+    @Suppress("LongParameterList")
+    fun create(
+        hrn: ResourceHrn,
+        password: String,
+        email: String,
+        phone: String?,
+        type: User.UserType,
+        status: User.Status,
+        createdByHrn: Hrn,
+        createdAt: LocalDateTime = LocalDateTime.now(),
+        updatedAt: LocalDateTime = LocalDateTime.now()
+    ): UsersRecord {
+        val record = UsersRecord()
+            .setHrn(hrn.toString())
+            .setPasswordHash(password)
+            .setEmail(email)
+            .setPhone(phone)
+            .setLoginAccess(true)
+            .setUserType(type.value)
+            .setStatus(status.value)
+            .setCreatedBy(createdByHrn.toString())
+            .setOrganizationId(hrn.organization)
+            .setCreatedAt(createdAt)
+            .setUpdatedAt(updatedAt)
+
+        record.attach(configuration())
+        record.store()
+        return record
     }
 }

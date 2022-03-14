@@ -15,9 +15,13 @@ import java.io.Serializable
 /**
  * Payload to create organization
  * @param name
+ * @param adminUser
+ * @param description
  */
 data class CreateOrganizationRequest(
-    val name: kotlin.String
+    val name: kotlin.String,
+    val adminUser: AdminUser,
+    val description: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

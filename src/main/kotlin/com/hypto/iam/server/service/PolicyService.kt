@@ -1,6 +1,5 @@
 package com.hypto.iam.server.service
 
-import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
@@ -21,7 +20,6 @@ import org.koin.core.component.inject
 class PolicyServiceImpl : KoinComponent, PolicyService {
     private val policyRepo: PoliciesRepo by inject()
     private val userPolicyRepo: UserPoliciesRepo by inject()
-    private val gson: Gson by inject()
 
     override suspend fun createPolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
         val policyHrn = ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name)
@@ -38,8 +36,9 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     }
 
     override suspend fun getPolicy(organizationId: String, name: String): Policy {
-        val policyRecord = policyRepo.fetchByHrn(ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name).toString())
-            ?: throw EntityNotFoundException("Policy not found")
+        val policyRecord = policyRepo.fetchByHrn(
+            ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name).toString()
+        ) ?: throw EntityNotFoundException("Policy not found")
         return Policy.from(policyRecord)
     }
 
@@ -70,7 +69,9 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         context: PaginationContext
     ): PolicyPaginatedResponse {
         val policies = userPolicyRepo
-            .fetchPoliciesByUserHrnPaginated(ResourceHrn(organizationId, "", IamResourceTypes.USER, userId).toString(), context)
+            .fetchPoliciesByUserHrnPaginated(
+                ResourceHrn(organizationId, "", IamResourceTypes.USER, userId).toString(), context
+            )
         val newContext = PaginationContext.from(policies.lastOrNull()?.hrn, context)
         return PolicyPaginatedResponse(policies.map { Policy.from(it) }, newContext.nextToken, newContext.toOptions())
     }

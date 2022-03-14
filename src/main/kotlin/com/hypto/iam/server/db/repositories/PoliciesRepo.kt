@@ -63,7 +63,7 @@ object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, String>(
             .setUpdatedAt(LocalDateTime.now())
             .setStatements(statements)
 
-        record.attach(CredentialsRepo.configuration())
+        record.attach(configuration())
         record.store()
         return record
     }

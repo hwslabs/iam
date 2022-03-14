@@ -8,7 +8,7 @@ import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourcePaginatedResponse
-import com.hypto.iam.server.utils.GlobalHrn
+import com.hypto.iam.server.utils.ActionHrn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -16,7 +16,7 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
     private val resourceRepo: ResourceRepo by inject()
 
     override suspend fun createResource(organizationId: String, name: String, description: String): Resource {
-        val resourceHrn = GlobalHrn(organizationId, name, null)
+        val resourceHrn = ActionHrn(organizationId, name, null)
 
         if (resourceRepo.existsById(resourceHrn.toString())) {
             throw EntityAlreadyExistsException("Policy with name [$name] already exists")
@@ -27,7 +27,7 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
     }
 
     override suspend fun getResource(organizationId: String, name: String): Resource {
-        val resourceRecord = resourceRepo.fetchByHrn(GlobalHrn(organizationId, name, null))
+        val resourceRecord = resourceRepo.fetchByHrn(ActionHrn(organizationId, name, null))
             ?: throw EntityNotFoundException("Resource with name [$name] not found")
         return Resource.from(resourceRecord)
     }
@@ -46,7 +46,7 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
     }
 
     override suspend fun updateResource(organizationId: String, name: String, description: String): Resource {
-        val resourceHrn = GlobalHrn(organizationId, name, null)
+        val resourceHrn = ActionHrn(organizationId, name, null)
 
         val resourceRecord = resourceRepo.update(
             resourceHrn,
@@ -58,7 +58,7 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
     }
 
     override suspend fun deleteResource(organizationId: String, name: String): BaseSuccessResponse {
-        val resourceHrn = GlobalHrn(organizationId, name, null)
+        val resourceHrn = ActionHrn(organizationId, name, null)
 
         if (!resourceRepo.delete(resourceHrn)) {
             throw EntityNotFoundException("Resource not found")

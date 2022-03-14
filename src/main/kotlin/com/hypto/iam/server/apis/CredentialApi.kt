@@ -25,7 +25,7 @@ fun Route.credentialApi() {
     val credentialService: CredentialService by inject()
 
     withPermission("createCredential") {
-        post("/organizations/{organization_id}/users/{userId}/credential") {
+        post("/organizations/{organization_id}/users/{userId}/credentials") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
             val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
@@ -42,7 +42,7 @@ fun Route.credentialApi() {
     }
 
     withPermission("deleteCredential") {
-        delete("/organizations/{organization_id}/users/{userId}/credential/{id}") {
+        delete("/organizations/{organization_id}/users/{userId}/credentials/{id}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
             val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
@@ -59,7 +59,7 @@ fun Route.credentialApi() {
     }
 
     withPermission("getCredential") {
-        get("/organizations/{organization_id}/users/{userId}/credential/{id}") {
+        get("/organizations/{organization_id}/users/{userId}/credentials/{id}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
             val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
@@ -76,7 +76,7 @@ fun Route.credentialApi() {
     }
 
     withPermission("updateCredential") {
-        patch("/organizations/{organization_id}/users/{userId}/credential/{id}") {
+        patch("/organizations/{organization_id}/users/{userId}/credentials/{id}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
             val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")

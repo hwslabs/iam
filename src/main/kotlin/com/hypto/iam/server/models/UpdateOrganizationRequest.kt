@@ -14,10 +14,12 @@ package com.hypto.iam.server.models
 import java.io.Serializable
 /**
  * Payload to update organization
+ * @param name
  * @param description
  */
 data class UpdateOrganizationRequest(
-    val description: kotlin.String
+    val name: kotlin.String? = null,
+    val description: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
