@@ -121,18 +121,18 @@ object MicrometerConfigs {
 
     private fun getNewRelicRegistryConfig(): NewRelicRegistryConfig {
         return object : NewRelicRegistryConfig {
-            val appConfig = getKoinInstance<AppConfig>()
+            val appConfig = getKoinInstance<AppConfig.Config>()
 
             override fun apiKey(): String {
-                return appConfig.configuration.newrelic.apiKey
+                return appConfig.newrelic.apiKey
             }
 
             override fun get(key: String): String? { return null }
             override fun step(): Duration {
                 // TODO: Needs Tweaking
-                return Duration.ofSeconds(appConfig.configuration.newrelic.publishInterval)
+                return Duration.ofSeconds(appConfig.newrelic.publishInterval)
             }
-            override fun serviceName(): String { return "Hypto IAM - " + appConfig.configuration.app.env }
+            override fun serviceName(): String { return "Hypto IAM - " + appConfig.app.env }
             override fun enableAuditMode(): Boolean { return false }
             override fun useLicenseKey(): Boolean { return true }
         }
@@ -140,7 +140,7 @@ object MicrometerConfigs {
 
     init {
         registry.config().commonTags(
-            listOf(Tag.of("environment", getKoinInstance<AppConfig>().configuration.app.env))
+            listOf(Tag.of("environment", getKoinInstance<AppConfig.Config>().app.env))
         )
     }
 

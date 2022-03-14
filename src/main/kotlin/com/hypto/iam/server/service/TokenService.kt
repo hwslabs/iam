@@ -33,7 +33,7 @@ interface TokenService {
 
 class TokenServiceImpl : KoinComponent, TokenService {
     private val userPolicyService: UserPolicyService by inject()
-    private val appConfig: AppConfig by inject()
+    private val appConfig: AppConfig.Config by inject()
 
     companion object {
         private const val ISSUER = "https://iam.hypto.com"
@@ -55,7 +55,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
             .setIssuer(ISSUER)
             .setIssuedAt(Date())
 //            .setSubject("")
-            .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.configuration.app.jwtTokenValidity)))
+            .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity)))
 //            .setAudience("")
 //            .setId("")
             .claim(VERSION_CLAIM, VERSION_NUM)
@@ -115,10 +115,10 @@ class CachedMasterKey(
 
         private lateinit var signKeyFetchTime: Instant
         private lateinit var signKey: CachedMasterKey
-        private val appConfig = getKoinInstance<AppConfig>()
+        private val appConfig = getKoinInstance<AppConfig.Config>()
 
         private fun shouldRefreshSignKey(): Boolean {
-            return signKeyFetchTime.plusSeconds(appConfig.configuration.app.jwtTokenValidity) > Instant.now()
+            return signKeyFetchTime.plusSeconds(appConfig.app.jwtTokenValidity) > Instant.now()
         }
 
         private fun readResourceFileAsBytes(name: String): ByteArray {

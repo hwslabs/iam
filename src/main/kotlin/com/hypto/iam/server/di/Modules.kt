@@ -62,7 +62,7 @@ val applicationModule = module {
     single { ApplicationIdUtil.Generator }
     single { ApplicationIdUtil.Validator }
     single { PolicyValidator }
-    single { AppConfig() }
+    single { AppConfig().configuration }
 }
 
 /**

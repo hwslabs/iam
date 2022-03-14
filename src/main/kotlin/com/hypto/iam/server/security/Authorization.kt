@@ -37,7 +37,7 @@ class AuthorizationException(override val message: String) : Exception(message)
 @Suppress("UnusedPrivateMember")
 class Authorization(config: Configuration) : KoinComponent {
     private val policyValidator: PolicyValidator by inject()
-    private val appConfig: AppConfig by inject()
+    private val appConfig: AppConfig.Config by inject()
 
     class Configuration : KoinComponent
 
@@ -51,7 +51,7 @@ class Authorization(config: Configuration) : KoinComponent {
         pipeline.insertPhaseAfter(Authentication.ChallengePhase, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
 
-            if (appConfig.configuration.app.isDevelopment) {
+            if (appConfig.app.isDevelopment) {
                 logger.warn { "In development mode, not checking for authorization." }
                 return@intercept
             }
