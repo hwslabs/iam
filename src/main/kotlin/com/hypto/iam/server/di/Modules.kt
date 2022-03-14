@@ -1,6 +1,7 @@
 package com.hypto.iam.server.di
 
 import com.google.gson.Gson
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
@@ -61,6 +62,7 @@ val applicationModule = module {
     single { ApplicationIdUtil.Generator }
     single { ApplicationIdUtil.Validator }
     single { PolicyValidator }
+    single { AppConfig().configuration }
 }
 
 /**
