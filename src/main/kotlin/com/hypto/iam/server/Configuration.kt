@@ -2,6 +2,8 @@ package com.hypto.iam.server
 
 // Use this file to hold package-level internal functions that return receiver object passed to the `install` method.
 
+import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.di.getKoinInstance
 import com.newrelic.telemetry.micrometer.NewRelicRegistry
 import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
 import io.ktor.auth.OAuthServerSettings
@@ -119,18 +121,18 @@ object MicrometerConfigs {
 
     private fun getNewRelicRegistryConfig(): NewRelicRegistryConfig {
         return object : NewRelicRegistryConfig {
+            val appConfig = getKoinInstance<AppConfig.Config>()
+
             override fun apiKey(): String {
-                // TODO: Add valid NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home
-                return "aabb"
-//                return System.getenv("INSIGHTS_INSERT_KEY")
+                return appConfig.newrelic.apiKey
             }
 
             override fun get(key: String): String? { return null }
             override fun step(): Duration {
-                // TODO: read from config file and tweak
-                return Duration.ofSeconds(Constants.NEWRELIC_METRICS_PUBLISH_INTERVAL)
+                // TODO: Needs Tweaking
+                return Duration.ofSeconds(appConfig.newrelic.publishInterval)
             }
-            override fun serviceName(): String { return "Hypto IAM - Development" } // TODO: read from config file
+            override fun serviceName(): String { return "Hypto IAM - " + appConfig.app.env }
             override fun enableAuditMode(): Boolean { return false }
             override fun useLicenseKey(): Boolean { return true }
         }
@@ -138,7 +140,7 @@ object MicrometerConfigs {
 
     init {
         registry.config().commonTags(
-            listOf(Tag.of("environment", "development")) // TODO: read from config file
+            listOf(Tag.of("environment", getKoinInstance<AppConfig.Config>().app.env))
         )
     }
 
