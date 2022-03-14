@@ -46,7 +46,7 @@ fun ValidationBuilder<String>.dateTime(
 
 fun ValidationBuilder<String>.hrn() = addConstraint("must be a valid hrn") {
     try {
-        HrnFactory().getHrn(it)
+        HrnFactory.getHrn(it)
         true
     } catch (e: HrnParseException) {
         false

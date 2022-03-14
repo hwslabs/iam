@@ -2,12 +2,7 @@
 
 package com.hypto.iam.server.utils
 
-import com.hypto.iam.server.utils.GlobalHrn.Companion.GLOBAL_HRN_REGEX
-import com.hypto.iam.server.utils.Hrn.Companion.HRN_DELIMITER
-import com.hypto.iam.server.utils.Hrn.Companion.HRN_GLOBAL_DELIMITER
-import com.hypto.iam.server.utils.Hrn.Companion.HRN_INSTANCE_DELIMITER
-import com.hypto.iam.server.utils.Hrn.Companion.HRN_PREFIX
-import com.hypto.iam.server.utils.Hrn.Companion.resourceMap
+import com.hypto.iam.server.utils.ActionHrn.Companion.ACTION_HRN_REGEX
 import com.hypto.iam.server.utils.ResourceHrn.Companion.RESOURCE_HRN_REGEX
 import io.ktor.request.ApplicationRequest
 import io.ktor.request.path
@@ -16,36 +11,40 @@ import io.ktor.request.path
  * Hrn - Hypto Resource Name. It is a unique representation of an entity managed by iam service.
  * Hrn entities are classified into 1) ResourceHrn 2) GlobalHrn
  * 1. ResourceHrn - This identifies the instances of resources like users, policies, and any other service specific resources.
- * 2. GlobalHrn - This identifies the resource names and operations possible with the resources.
+ * 2. ActionHrn - This identifies the resource names and operations possible with the resources.
  */
-interface Hrn {
+abstract class Hrn {
     companion object {
         const val HRN_DELIMITER = ":"
         const val HRN_PREFIX = "hrn$HRN_DELIMITER"
-        const val HRN_GLOBAL_DELIMITER = "$"
+        const val HRN_ACTION_DELIMITER = "$"
         const val HRN_INSTANCE_DELIMITER = "/"
         val resourceMap: Map<String, String> = mapOf(
-            "user" to "iam-user",
-            "resource" to "iam-resource",
-            "policy" to "iam-policy",
-            "action" to "iam-action",
-            "credential" to "iam-credential"
+            "users" to "iam-user",
+            "resources" to "iam-resource",
+            "policies" to "iam-policy",
+            "actions" to "iam-action",
+            "credentials" to "iam-credential"
         )
     }
+
+    abstract val organization: String
+    abstract val resource: String?
 }
 
 /**
  * Class representing ResourceHrn
  */
 class ResourceHrn : Hrn {
-    val organization: String
+    override val organization: String
+    override val resource: String?
     val account: String?
-    val resource: String?
     val resourceInstance: String?
 
     companion object {
         val RESOURCE_HRN_REGEX =
             """^hrn:(?<organization>[^:\n]+):(?<accountId>[^:\n]*):(?<resource>[^:/\n]*)/{0,1}(?<resourceInstance>[^/\n:]*)""".toRegex()
+        private const val URL_SEPARATOR = '/'
     }
 
     constructor(
@@ -56,8 +55,8 @@ class ResourceHrn : Hrn {
     ) {
         this.organization = organization
         this.account = account
-        if (resource != null && resourceInstance == null) {
-            // Resource Hrn must have a resource instance
+        if (resource == null || resource == "") {
+            // Resource Hrn must have a resource
             throw HrnParseException("Null resourceInstance for resource hrn")
         }
         this.resource = resource
@@ -74,7 +73,6 @@ class ResourceHrn : Hrn {
     }
 
     constructor(request: ApplicationRequest) {
-        val requestPath = request.path()
         // Valid application request paths
         // 1. /organization/<organizationId>/
         // 2. /organization/<organizationId>/user/ - hrn:hypto:<accountId>:iam-organization - createUser
@@ -86,12 +84,13 @@ class ResourceHrn : Hrn {
         // 8. /organization/<organizationId>/user/<userId>/credentials/<credentialsId> - hrn:hypto:<accountId>:iam-credential/12345 - getCredentials
         // 9. /organization/<organizationId>/resource/<resourceId>/action/<actionId> - hrn:hypto:<accountId>:iam-action/12345 - updateAction
 
-        val splits = requestPath.split("/")
+        val splits = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
         if (splits.size < 2) throw IllegalArgumentException("Invalid request path")
         this.organization = splits[1]
         this.account = null
-        this.resource = getResourceAndInstance(splits).first
-        this.resourceInstance = getResourceAndInstance(splits).second
+        val resourceAndInstance = getResourceAndInstance(splits)
+        this.resource = resourceAndInstance.first
+        this.resourceInstance = resourceAndInstance.second
     }
 
     private fun getResourceAndInstance(splits: List<String>): Pair<String, String> {
@@ -99,25 +98,14 @@ class ResourceHrn : Hrn {
         val lastSplitMap = resourceMap[splits.last()]
         return if (lastSplitMap.isNullOrEmpty()) {
             val resource = resourceMap[splits[(splits.lastIndex - 1)]] ?: ""
-            val resourceInstance = lastSplitMap ?: ""
+            val resourceInstance = splits.last()
             Pair(resource, resourceInstance)
         } else {
-            val resourceInstance = resourceMap[splits[(splits.lastIndex - 1)]] ?: ""
+            val resourceInstance = splits[(splits.lastIndex - 1)] ?: ""
             val resource = resourceMap[splits[(splits.lastIndex - 2)]] ?: ""
             Pair(resource, resourceInstance)
         }
     }
-
-    private fun getResourceInstance(splits: List<String>): String? {
-        val resType = splits.getOrNull(5)
-        return resourceMap.getOrDefault(resType, "")
-    }
-
-    private fun getResource(splits: List<String>): String? {
-        val resType = splits.getOrNull(2)
-        return resourceMap.getOrDefault(resType, "")
-    }
-
     override fun toString(): String {
         // Valid Hrn Strings
         // 1. hrn:<organizationId>
@@ -142,47 +130,49 @@ class ResourceHrn : Hrn {
 /**
  * Class representing GlobalHrn
  */
-class GlobalHrn : Hrn {
-    val organization: String
-    val resource: String?
-    val operation: String?
+class ActionHrn : Hrn {
+    override val organization: String
+    override val resource: String?
+    val action: String?
 
     companion object {
-        val GLOBAL_HRN_REGEX =
-            """^hrn:(?<organization>[^:$\n]+)\$(?<resource>[^:\n]*):{0,1}(?<operation>[^/\n:]*)""".toRegex()
+        val ACTION_HRN_REGEX =
+            """^hrn:(?<organization>[^:\n]+):(?<accountId>[^:\n]*):(?<resource>[^:/\n]*)\$(?<action>[^/\n:]*)"""
+                .toRegex()
     }
 
-    constructor(organization: String, resource: String?, operation: String?) {
+    constructor(organization: String, resource: String?, action: String?) {
         this.organization = organization
         this.resource = resource
-        this.operation = operation
+        this.action = action
     }
 
     constructor(hrnString: String) {
-        val result = GLOBAL_HRN_REGEX.matchEntire(hrnString) ?: throw HrnParseException("Not a valid hrn string format")
+        val result = ACTION_HRN_REGEX.matchEntire(hrnString)
+            ?: throw HrnParseException("Not a valid hrn action string format")
         organization = result.groups["organization"]!!.value
         resource = result.groups["resource"]?.value
-        operation = result.groups["operation"]?.value
+        action = result.groups["action"]?.value
     }
 
     override fun toString(): String {
-        var hrnString = HRN_PREFIX + organization + HRN_GLOBAL_DELIMITER + resource
-        if (!operation.isNullOrEmpty()) {
-            hrnString += HRN_DELIMITER + operation
+        var hrnString = HRN_PREFIX + organization + HRN_ACTION_DELIMITER + resource
+        if (!action.isNullOrEmpty()) {
+            hrnString += HRN_DELIMITER + action
         }
         return hrnString
     }
 }
 
-class HrnFactory {
+object HrnFactory {
     /**
      * Method to convert the Hrn string to actual Hrn instance
      */
     fun getHrn(hrnString: String): Hrn {
-        return if (RESOURCE_HRN_REGEX.matches(hrnString)) {
+        return if (ACTION_HRN_REGEX.matches(hrnString)) {
+            ActionHrn(hrnString)
+        } else if (RESOURCE_HRN_REGEX.matches(hrnString)) {
             ResourceHrn(hrnString)
-        } else if (GLOBAL_HRN_REGEX.matches(hrnString)) {
-            GlobalHrn(hrnString)
         } else {
             throw HrnParseException("Invalid hrn string format")
         }

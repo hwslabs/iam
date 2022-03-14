@@ -33,7 +33,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         val credentialsRecord = repo.create(
             userHrn = userHrn,
             refreshToken = idGenerator.refreshToken(organizationId),
-            validUntil = LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            validUntil = validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
         auditLog().append(userHrn)
@@ -87,7 +87,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
 }
 
 interface CredentialService {
-    suspend fun createCredential(organizationId: String, userId: String, validUntil: String?): Credential
+    suspend fun createCredential(organizationId: String, userId: String, validUntil: String? = null): Credential
     suspend fun getCredentialWithoutSecret(organizationId: String, userId: String, id: UUID): CredentialWithoutSecret
     suspend fun updateCredentialAndGetWithoutSecret(
         organizationId: String,

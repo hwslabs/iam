@@ -59,18 +59,6 @@ object PolicyValidator {
             }
     }
 
-    fun validateAll(policyRequests: List<PolicyRequest>): Boolean {
-        return validate(samplePolicy.stream(), policyRequests)
-    }
-
-    fun validateAny(policyRequests: List<PolicyRequest>): Boolean {
-        return validateAny(samplePolicy.stream(), policyRequests)
-    }
-
-    fun validateNone(policyRequests: List<PolicyRequest>): Boolean {
-        return validateNone(samplePolicy.stream(), policyRequests)
-    }
-
     fun batchValidate(policyBuilder: PolicyBuilder, policyRequests: List<PolicyRequest>): List<Boolean> {
         val enforcer = Enforcer(model, FileAdapter(policyBuilder.stream()))
         return policyRequests.map { validate(enforcer, it) }.toList()

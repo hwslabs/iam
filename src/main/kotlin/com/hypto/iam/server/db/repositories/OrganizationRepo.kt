@@ -2,6 +2,7 @@ package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.db.tables.records.OrganizationsRecord
+import java.time.LocalDateTime
 import java.util.Optional
 import org.jooq.impl.DAOImpl
 
@@ -40,5 +41,22 @@ object OrganizationRepo : DAOImpl<OrganizationsRecord, Organizations, String?>(
      */
     fun fetchByAdminUser(vararg values: String): List<Organizations> {
         return fetch(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER, *values)
+    }
+
+    fun create(
+        id: String,
+        name: String,
+        description: String,
+        adminUser: String
+    ): OrganizationsRecord {
+        val record = OrganizationsRecord()
+            .setId(id)
+            .setName(name)
+            .setDescription(description)
+            .setAdminUser(adminUser)
+            .setCreatedAt(LocalDateTime.now())
+            .setUpdatedAt(LocalDateTime.now())
+        record.insert()
+        return record
     }
 }

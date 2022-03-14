@@ -31,7 +31,7 @@ fun Route.createAndDeleteOrganizationApi() {
     route("/organizations") {
         post {
             val request = call.receive<CreateOrganizationRequest>().validate()
-            val response = service.createOrganization(request.name, description = "")
+            val response = service.createOrganization(request.name, description = "", adminUser = request.adminUser)
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,

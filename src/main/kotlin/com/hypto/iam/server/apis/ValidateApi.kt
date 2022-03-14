@@ -26,7 +26,6 @@ fun Route.validationApi() {
 
         val response = validationService.validateIfUserHasPermissionToActions(principal.hrn, request)
 
-//        val response = validationService.checkAccessFor(principal.hrn)
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,

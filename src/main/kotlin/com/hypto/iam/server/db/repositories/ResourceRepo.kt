@@ -6,7 +6,7 @@ import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.service.DatabaseFactory
-import com.hypto.iam.server.utils.GlobalHrn
+import com.hypto.iam.server.utils.ActionHrn
 import java.time.LocalDateTime
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
@@ -31,11 +31,11 @@ object ResourceRepo : DAOImpl<ResourcesRecord, Resources, String>(
     /**
      * Fetch a unique record that has `hrn = value`
      */
-    fun fetchByHrn(hrn: GlobalHrn): ResourcesRecord? {
+    fun fetchByHrn(hrn: ActionHrn): ResourcesRecord? {
         return ctx().selectFrom(table).where(RESOURCES.HRN.equal(hrn.toString())).fetchOne()
     }
 
-    fun create(hrn: GlobalHrn, description: String): ResourcesRecord {
+    fun create(hrn: ActionHrn, description: String): ResourcesRecord {
         val record = ResourcesRecord()
             .setHrn(hrn.toString())
             .setOrganizationId(hrn.organization)
@@ -48,7 +48,7 @@ object ResourceRepo : DAOImpl<ResourcesRecord, Resources, String>(
         return record
     }
 
-    fun update(hrn: GlobalHrn, description: String): ResourcesRecord? {
+    fun update(hrn: ActionHrn, description: String): ResourcesRecord? {
         val condition = RESOURCES.HRN.equal(hrn.toString())
         return ctx().update(table)
             .set(RESOURCES.DESCRIPTION, description)
@@ -58,7 +58,7 @@ object ResourceRepo : DAOImpl<ResourcesRecord, Resources, String>(
             .fetchOne()
     }
 
-    fun delete(hrn: GlobalHrn): Boolean {
+    fun delete(hrn: ActionHrn): Boolean {
         val record = ResourcesRecord().setHrn(hrn.toString())
         record.attach(configuration())
         return record.delete() > 0
