@@ -1,5 +1,6 @@
 package com.hypto.iam.server.service
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.listeners.DeleteOrUpdateWithoutWhereListener
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -8,19 +9,22 @@ import org.jooq.Configuration
 import org.jooq.SQLDialect
 import org.jooq.impl.DefaultConfiguration
 import org.jooq.impl.DefaultExecuteListenerProvider
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-object DatabaseFactory {
-    // TODO: Read from config file instead of hardcoding
+object DatabaseFactory : KoinComponent {
+    val appConfig: AppConfig.Config by inject()
+
     private val pool: HikariDataSource = HikariDataSource(
         HikariConfig().apply {
             driverClassName = "org.postgresql.Driver"
-            jdbcUrl = "jdbc:postgresql://localhost:5435/iam"
+            jdbcUrl = appConfig.database.jdbcUrl
             maximumPoolSize = 3
             minimumIdle = 3
             isAutoCommit = true
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            username = "root"
-            password = "password"
+            username = appConfig.database.username
+            password = appConfig.database.password
         }
     )
 

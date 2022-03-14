@@ -114,7 +114,6 @@ fun Application.handleRequest() {
     masterKeysRepo.rotateKey(skipIfPresent = true)
 
     install(Authorization) {
-        isDevelopment = (System.getenv("ENVIRONMENT")?.let { it == "development" } ?: false)
     }
 
     install(Routing) {

@@ -1,0 +1,16 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": "5435",
+    "username": "root",
+    "password": "password"
+  },
+  "newrelic": {
+    "api_key": "test_key",
+    "publish_interval": 10
+  },
+  "app": {
+    "env": "development",
+    "jwt_token_validity": 300
+  }
+}

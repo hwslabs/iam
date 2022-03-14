@@ -1,5 +1,6 @@
 package com.hypto.iam.server.security
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
@@ -33,19 +34,12 @@ class AuthorizationException(override val message: String) : Exception(message)
 /**
  * This class is used in api request flow. This performs user authorization checks before allowing any action
  */
+@Suppress("UnusedPrivateMember")
 class Authorization(config: Configuration) : KoinComponent {
     private val policyValidator: PolicyValidator by inject()
-    private val isDevelopment = config.isDevelopment
+    private val appConfig: AppConfig.Config by inject()
 
-    class Configuration {
-        internal var isDevelopment: Boolean = false
-
-        fun isDevelopment(isDevelopment: Boolean) {
-            this.isDevelopment = isDevelopment
-        }
-
-        // Configuration for any future use-case to override default authorization logic in interceptPipeline(..)
-    }
+    class Configuration : KoinComponent
 
     fun interceptPipeline(
         pipeline: ApplicationCallPipeline,
@@ -57,7 +51,7 @@ class Authorization(config: Configuration) : KoinComponent {
         pipeline.insertPhaseAfter(Authentication.ChallengePhase, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
 
-            if (isDevelopment) {
+            if (appConfig.app.isDevelopment) {
                 logger.warn { "In development mode, not checking for authorization." }
                 return@intercept
             }
