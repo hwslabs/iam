@@ -660,7 +660,7 @@ paths:
         - $ref: '#/components/parameters/page_size'
         - $ref: '#/components/parameters/sort_order'
       responses:
-        '201':
+        '200':
           $ref: '#/components/responses/ActionPaginatedResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
