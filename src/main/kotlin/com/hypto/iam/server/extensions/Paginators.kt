@@ -68,7 +68,6 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
             if (nextToken != null) {
                 return from(nextToken)
             }
-            
             return PaginationContext(
                 lastItemId = null,
                 pageSize = pageSize ?: PAGINATION_DEFAULT_PAGE_SIZE,

@@ -6,8 +6,8 @@ import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
-import com.hypto.iam.server.db.tables.records.ActionsRecord
 import com.hypto.iam.server.db.tables.pojos.Users
+import com.hypto.iam.server.db.tables.records.ActionsRecord
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
@@ -114,42 +114,46 @@ fun Policy.Companion.from(record: Policies): Policy {
 
 fun Resource.Companion.from(record: ResourcesRecord): Resource {
     val hrn = hrnFactory.getHrn(record.hrn)
-    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
+    require(hrn is ResourceHrn) { "Hrn should be an instance of ResourceHrn" }
     return Resource(
         hrn.resource!!,
         hrn.organization,
+        hrn.toString(),
         record.description
     )
 }
 
 fun Resource.Companion.from(record: Resources): Resource {
     val hrn = hrnFactory.getHrn(record.hrn)
-    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
+    require(hrn is ResourceHrn) { "Hrn should be an instance of ResourceHrn" }
     return Resource(
         hrn.resource!!,
         hrn.organization,
+        hrn.toString(),
         record.description
     )
 }
 
 fun Action.Companion.from(record: ActionsRecord): Action {
     val hrn = hrnFactory.getHrn(record.hrn)
-    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
+    require(hrn is ActionHrn) { "Hrn should be an instance of ActionHrn" }
     return Action(
         hrn.organization,
         hrn.resource!!,
         hrn.action!!,
+        hrn.toString(),
         record.description
     )
 }
 
 fun Action.Companion.from(record: Actions): Action {
     val hrn = hrnFactory.getHrn(record.hrn)
-    require(hrn is ActionHrn) { "Hrn should be an instance of globalHrn" }
+    require(hrn is ActionHrn) { "Hrn should be an instance of ActionHrn" }
     return Action(
         hrn.organization,
         hrn.resource!!,
         hrn.action!!,
+        hrn.toString(),
         record.description
     )
 }

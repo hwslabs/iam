@@ -57,7 +57,7 @@ class ResourceHrn : Hrn {
         this.account = account
         if (resource == null || resource == "") {
             // Resource Hrn must have a resource
-            throw HrnParseException("Null resourceInstance for resource hrn")
+            throw HrnParseException("Null resource for resource hrn")
         }
         this.resource = resource
         this.resourceInstance = resourceInstance
@@ -106,6 +106,7 @@ class ResourceHrn : Hrn {
             Pair(resource, resourceInstance)
         }
     }
+
     override fun toString(): String {
         // Valid Hrn Strings
         // 1. hrn:<organizationId>
@@ -132,6 +133,7 @@ class ResourceHrn : Hrn {
  */
 class ActionHrn : Hrn {
     override val organization: String
+    val account: String?
     override val resource: String?
     val action: String?
 
@@ -141,8 +143,9 @@ class ActionHrn : Hrn {
                 .toRegex()
     }
 
-    constructor(organization: String, resource: String?, action: String?) {
+    constructor(organization: String, account: String?, resource: String?, action: String?) {
         this.organization = organization
+        this.account = account
         this.resource = resource
         this.action = action
     }
@@ -152,13 +155,17 @@ class ActionHrn : Hrn {
             ?: throw HrnParseException("Not a valid hrn action string format")
         organization = result.groups["organization"]!!.value
         resource = result.groups["resource"]?.value
+        account = result.groups["accountId"]?.value
         action = result.groups["action"]?.value
     }
 
     override fun toString(): String {
-        var hrnString = HRN_PREFIX + organization + HRN_ACTION_DELIMITER + resource
+        var hrnString = HRN_PREFIX + organization + HRN_DELIMITER
+        if (!account.isNullOrEmpty())
+            hrnString += account
+        hrnString += HRN_DELIMITER + resource
         if (!action.isNullOrEmpty()) {
-            hrnString += HRN_DELIMITER + action
+            hrnString += HRN_ACTION_DELIMITER + action
         }
         return hrnString
     }

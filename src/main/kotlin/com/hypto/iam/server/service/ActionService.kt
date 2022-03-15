@@ -7,7 +7,8 @@ import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.ActionPaginatedResponse
 import com.hypto.iam.server.models.BaseSuccessResponse
-import com.hypto.iam.server.utils.GlobalHrn
+import com.hypto.iam.server.utils.ActionHrn
+import com.hypto.iam.server.utils.ResourceHrn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -20,8 +21,8 @@ class ActionServiceImpl : KoinComponent, ActionService {
         name: String,
         description: String
     ): Action {
-        val actionHrn = GlobalHrn(organizationId, resourceName, name)
-        val resourceHrn = GlobalHrn(organizationId, resourceName, null)
+        val actionHrn = ActionHrn(organizationId, null, resourceName, name)
+        val resourceHrn = ResourceHrn(organizationId, null, resourceName, null)
 
         if (actionRepo.existsById(actionHrn.toString())) {
             throw IllegalArgumentException("Action with name [$name] already exists")
@@ -33,7 +34,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
     }
 
     override suspend fun getAction(organizationId: String, resourceName: String, name: String): Action {
-        val actionHrn = GlobalHrn(organizationId, resourceName, name)
+        val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
         val actionRecord =
             actionRepo.fetchByHrn(actionHrn) ?: throw EntityNotFoundException("Action with name [$name] not found")
@@ -45,7 +46,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
         resourceName: String,
         context: PaginationContext
     ): ActionPaginatedResponse {
-        val resourceHrn = GlobalHrn(organizationId, resourceName, null)
+        val resourceHrn = ResourceHrn(organizationId, null, resourceName, null)
 
         val actions = actionRepo.fetchActionsPaginated(organizationId, resourceHrn, context)
         val newContext = PaginationContext.from(actions.lastOrNull()?.hrn, context)
@@ -62,7 +63,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
         name: String,
         description: String
     ): Action {
-        val actionHrn = GlobalHrn(organizationId, resourceName, name)
+        val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
         val actionRecord = actionRepo.update(actionHrn, description)
             ?: throw IllegalStateException("Action cannot be updated")
@@ -71,7 +72,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
     }
 
     override suspend fun deleteAction(organizationId: String, resourceName: String, name: String): BaseSuccessResponse {
-        val actionHrn = GlobalHrn(organizationId, resourceName, name)
+        val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
         val response = actionRepo.delete(actionHrn)
         return BaseSuccessResponse(response)
