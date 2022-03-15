@@ -12,13 +12,13 @@ import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
 import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.extensions.usersFrom
+import com.hypto.iam.server.helpers.DataSetupHelper.mockResult
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import java.time.LocalDateTime
 import java.util.UUID
@@ -194,6 +194,12 @@ class MockPoliciesStore(private val store: MockStore) {
             store.policyIdMap[firstArg()]
         }
     }
+
+    fun mockDeleteByHrn(policiesRepo: PoliciesRepo) {
+        coEvery { policiesRepo.deleteByHrn(any()) } coAnswers {
+            store.policyIdMap.remove(firstArg()) != null
+        }
+    }
 }
 
 class MockUserPoliciesStore(private val store: MockStore) {
@@ -219,14 +225,19 @@ class MockUserPoliciesStore(private val store: MockStore) {
 
     fun mockFetchByPrincipalHrn(userPoliciesRepo: UserPoliciesRepo) {
         coEvery { userPoliciesRepo.fetchByPrincipalHrn(any()) } coAnswers {
-            val a = store.userToPolicyMap[firstArg()]
+            val userPolicies = store.userToPolicyMap[firstArg()]
 
-            val mockResult = mockk<org.jooq.Result<UserPoliciesRecord>>(
-                moreInterfaces = arrayOf(Iterable::class)
-            ) {
-                every { iterator() } returns a!!.iterator()
-            }
-            mockResult
+            mockResult(userPolicies as List<UserPoliciesRecord>)
+        }
+    }
+
+    fun mockFetchPoliciesByUserHrnPaginated(userPoliciesRepo: UserPoliciesRepo) {
+        coEvery { userPoliciesRepo.fetchPoliciesByUserHrnPaginated(any(), any()) } coAnswers {
+            val policyHrns = store.userToPolicyMap[firstArg()]?.map { it.policyHrn }
+            val policies = mutableListOf<PoliciesRecord>()
+            policyHrns?.mapTo(policies) { store.policyIdMap[it]!! }
+
+            mockResult(policies)
         }
     }
 }

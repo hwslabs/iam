@@ -6,7 +6,6 @@ import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.service.DatabaseFactory
-import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
 import org.jooq.Result
@@ -68,9 +67,8 @@ object PoliciesRepo : DAOImpl<PoliciesRecord, Policies, String>(
         return record
     }
 
-    fun delete(organizationId: String, name: String): Boolean {
-        // TODO: Update account id details in the Hrn when introduced
-        val record = PoliciesRecord().setHrn(ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name).toString())
+    fun deleteByHrn(hrn: String): Boolean {
+        val record = PoliciesRecord().setHrn(hrn)
         record.attach(configuration())
         return record.delete() > 0
     }

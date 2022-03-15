@@ -13,10 +13,17 @@ import io.ktor.http.HttpMethod
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
+import org.jooq.Record
+import org.jooq.Result
+import org.jooq.impl.getResultImpl
 
 object DataSetupHelper {
     private val gson = Gson()
     private const val rootToken = "hypto-root-secret-key"
+
+    fun <T : Record?> mockResult(records: List<T>): Result<T> {
+        return getResultImpl(records)
+    }
 
     fun createOrganizationUserCredential(
         engine: TestApplicationEngine,
