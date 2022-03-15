@@ -58,7 +58,8 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     }
 
     override suspend fun deletePolicy(organizationId: String, name: String): BaseSuccessResponse {
-        if (!policyRepo.delete(organizationId, name)) { throw EntityNotFoundException("Policy not found") }
+        val policyHrnStr = ResourceHrn(organizationId, "", IamResourceTypes.POLICY, name).toString()
+        if (!policyRepo.deleteByHrn(policyHrnStr)) { throw EntityNotFoundException("Policy not found") }
 
         return BaseSuccessResponse(true)
     }

@@ -31,7 +31,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
     @DisplayName("Create policy API tests")
     inner class CreatePolicyTest {
         @Test
-        fun `happy case`() {
+        fun `valid policy - success`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, _) = DataSetupHelper
                     .createOrganization(this)
@@ -78,5 +78,356 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 DataSetupHelper.deleteOrganization(createdOrganization.id, this)
             }
         }
+
+        @Test
+        fun `policy name already in use`() {
+            withTestApplication(Application::handleRequest) {
+                // Arrange
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                val policyName = "SamplePolicy"
+                val policyStatements = listOf(PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                    )
+                    setBody(gson.toJson(requestBody))
+                }
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                        setBody(gson.toJson(requestBody))
+                    }
+                ) {
+                    // Asset
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+            }
+        }
+
+        @Test
+        fun `policy without statements - failure`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                val policyName = "SamplePolicy"
+                val requestBody = CreatePolicyRequest(policyName, listOf())
+
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                        setBody(gson.toJson(requestBody))
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+            }
+        }
+
+        @Test
+        fun `policy with too many policy statements - failure`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                val policyName = "SamplePolicy"
+//                val policyStatements = mutableListOf<PolicyStatement>()
+
+                val requestBody = CreatePolicyRequest(
+                    policyName,
+                    (0..50).map {
+                        PolicyStatement("resource$it", "action$it", PolicyStatement.Effect.allow)
+                    }
+                )
+
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                        setBody(gson.toJson(requestBody))
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+            }
+        }
     }
+
+    @Nested
+    @DisplayName("Get policy API tests")
+    inner class GetPolicyTest {
+        @Test
+        fun `existing policy - success`() {
+            withTestApplication(Application::handleRequest) {
+                // Arrange
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                val policyName = "SamplePolicy"
+                val policyStatements = listOf(PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                val createPolicyCall = handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                    )
+                    setBody(gson.toJson(requestBody))
+                }
+
+                val createdPolicy = gson.fromJson(createPolicyCall.response.content, Policy::class.java)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/${createdPolicy.name}"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+
+                    val responseBody = gson.fromJson(response.content, Policy::class.java)
+                    Assertions.assertEquals(createOrganizationResponse.organization?.id, responseBody.organizationId)
+
+                    val expectedPolicyHrn = ResourceHrn(
+                        organization = createOrganizationResponse.organization?.id!!,
+                        resource = IamResourceTypes.POLICY,
+                        account = null,
+                        resourceInstance = policyName
+                    )
+
+                    Assertions.assertEquals(expectedPolicyHrn.toString(), responseBody.hrn)
+                    Assertions.assertEquals(policyName, responseBody.name)
+                    Assertions.assertEquals(1, responseBody.version)
+                    Assertions.assertEquals(policyStatements, responseBody.statements)
+                }
+            }
+        }
+
+        @Test
+        fun `non existing policy`() {
+            withTestApplication(Application::handleRequest) {
+                // Arrange
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Delete policy API tests")
+    inner class DeletePolicyTest {
+        @Test
+        fun `delete existing policy`() {
+            withTestApplication(Application::handleRequest) {
+                // Arrange
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                val policyName = "SamplePolicy"
+                val policyStatements = listOf(PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                val createPolicyCall = handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                    )
+                    setBody(gson.toJson(requestBody))
+                }
+
+                val createdPolicy = gson.fromJson(createPolicyCall.response.content, Policy::class.java)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Delete,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/${createdPolicy.name}"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+            }
+        }
+
+        @Test
+        fun `delete non existent policy`() {
+            withTestApplication(Application::handleRequest) {
+                // Arrange
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Delete,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existent+policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+            }
+        }
+    }
+
+//    @Nested
+//    @DisplayName("Get policies attached to user API test")
+//    inner class GetPoliciesByUserTest {
+//        @Test
+//        fun `get policies of a user`() {
+//            withTestApplication(Application::handleRequest) {
+//                // Arrange
+//                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+//
+//                (1..5).forEach {
+//                    with(handleRequest(
+//                        HttpMethod.Post,
+//                        "/organizations/${createOrganizationResponse.organization?.id}/policies"
+//                    ) {
+//                        val policyStatements = listOf(
+//                            PolicyStatement("resource", "action", PolicyStatement.Effect.allow)
+//                        )
+//                        val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
+//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+//                        addHeader(
+//                            HttpHeaders.Authorization,
+//                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+//                        )
+//                        setBody(gson.toJson(requestBody))
+//                    }) {
+//                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
+//                    }
+//                }
+//
+//                // Act
+//                with(
+//                    handleRequest(
+//                        HttpMethod.Get,
+//                        "/organizations/${createOrganizationResponse.organization?.id}/users/" +
+//                            "${ResourceHrn(
+//                                createOrganizationResponse.organization!!.id,
+//                                "",
+//                                IamResourceTypes.USER,
+//                                createdUser.username
+//                            )}" +
+//                            "/policies"
+//                    ) {
+//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+//                        addHeader(
+//                            HttpHeaders.Authorization,
+//                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+//                        )
+//                    }
+//                ) {
+//                    // Assert
+//                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+//                    Assertions.assertEquals(
+//                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+//                        response.contentType()
+//                    )
+//
+////                    val results = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+//                    println(response.content)
+//                }
+//            }
+//        }
+//    }
 }
