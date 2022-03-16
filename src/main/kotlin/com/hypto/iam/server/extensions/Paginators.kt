@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.hypto.iam.server.Constants.Companion.PAGINATION_DEFAULT_PAGE_SIZE
 import com.hypto.iam.server.Constants.Companion.PAGINATION_DEFAULT_SORT_ORDER
+import com.hypto.iam.server.Constants.Companion.PAGINATION_MAX_PAGE_SIZE
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PaginationOptions.SortOrder
@@ -20,7 +21,9 @@ fun <R : Record, T : Any> customPaginate(
     context: PaginationContext
 ): SelectForUpdateStep<R> {
     val selectSeekStep = step.orderBy(getSort(sortField, context))
-    if (context.lastItemId == null) { return selectSeekStep.limit(context.pageSize) }
+    if (context.lastItemId == null) {
+        return selectSeekStep.limit(context.pageSize)
+    }
     return selectSeekStep.seek(context.lastItemId as T).limit(context.pageSize)
 }
 
@@ -58,6 +61,10 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
         }
 
         fun from(nextToken: String?, pageSize: Int?, sortOrder: SortOrder?): PaginationContext {
+            if (pageSize != null && pageSize > PAGINATION_MAX_PAGE_SIZE) {
+                throw IllegalArgumentException("Page Size must be less than or equal to $PAGINATION_MAX_PAGE_SIZE")
+            }
+
             if (nextToken != null) {
                 return from(nextToken)
             }
@@ -81,5 +88,7 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
             return String(Base64.getEncoder().encode(gson.toJson(this).encodeToByteArray()))
         }
 
-    fun toOptions(): PaginationOptions { return PaginationOptions(pageSize, sortOrder) }
+    fun toOptions(): PaginationOptions {
+        return PaginationOptions(pageSize, sortOrder)
+    }
 }

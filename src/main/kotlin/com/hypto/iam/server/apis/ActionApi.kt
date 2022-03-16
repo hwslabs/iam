@@ -1,75 +1,117 @@
-@file:Suppress("ThrowsCount", "UnusedPrivateMember")
-
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreateActionRequest
+import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateActionRequest
 import com.hypto.iam.server.security.withPermission
+import com.hypto.iam.server.service.ActionService
+import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
-import io.ktor.response.respond
+import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
-import io.ktor.routing.route
 import org.koin.ktor.ext.inject
 
 fun Route.actionApi() {
-
+    val actionService: ActionService by inject()
     val gson: Gson by inject()
-    route("/organizations/{organization_id}/resources/{resourceId}/action") {
-        withPermission("createAction") {
-            post {
-                val organizationId = call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
-                val resourceId = call.parameters["resourceId"]
-                    ?: throw IllegalArgumentException("Required resourceId to create an action")
-                val request = call.receive<CreateActionRequest>() // .validate()
-                call.respond(HttpStatusCode.NotImplemented)
-            }
+
+    withPermission("createAction") {
+        post("/organizations/{organization_id}/resources/{resource_name}/actions") {
+            val organizationId = call.parameters["organization_id"]
+            val resourceName = call.parameters["resource_name"]
+            val request = call.receive<CreateActionRequest>().validate()
+
+            val response =
+                actionService.createAction(organizationId!!, resourceName!!, request.name, request.description ?: "")
+
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.Created
+            )
         }
+    }
 
-        route("/{id}") {
-            withPermission("deleteAction") {
-                delete {
-                    val organizationId = call.parameters["organization_id"]
-                        ?: throw IllegalArgumentException("organization_id required")
-                    val resourceId = call.parameters["resourceId"]
-                        ?: throw IllegalArgumentException("Required resourceId to delete an action")
-                    val id =
-                        call.parameters["id"] ?: throw IllegalArgumentException("Required id to delete a resource")
-                    call.respond(HttpStatusCode.NotImplemented)
-                }
+    withPermission("listAction") {
+        get("/organizations/{organization_id}/resources/{resource_name}/actions") {
+            val organizationId = call.parameters["organization_id"]
+            val resourceName = call.parameters["resource_name"]
+            val nextToken = call.request.queryParameters["next_token"]
+            val pageSize = call.request.queryParameters["page_size"]
+            val sortOrder = call.request.queryParameters["sort_order"]
 
-                withPermission("getAction") {
-                    get {
-                        val organizationId = call.parameters["organization_id"]
-                            ?: throw IllegalArgumentException("organization_id required")
-                        val resourceId = call.parameters["resourceId"]
-                            ?: throw IllegalArgumentException("Required resourceId to get an action")
-                        val id = call.parameters["id"]
-                            ?: throw IllegalArgumentException("Required id to get the resource")
-                        call.respond(HttpStatusCode.NotImplemented)
-                    }
-                }
+            val context = PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
+            )
 
-                withPermission("updateAction") {
-                    patch {
-                        val organizationId = call.parameters["organization_id"]
-                            ?: throw IllegalArgumentException("organization_id required")
-                        val resourceId = call.parameters["resourceId"]
-                            ?: throw IllegalArgumentException("Required resourceId to update an action")
-                        val id = call.parameters["id"]
-                            ?: throw IllegalArgumentException("Required id to update a resource")
-                        val request = call.receive<UpdateActionRequest>() // .validate()
-                        call.respond(HttpStatusCode.NotImplemented)
-                    }
-                }
-            }
+            val response = actionService.listActions(organizationId!!, resourceName!!, context)
+
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
+
+    withPermission("getAction") {
+        get("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
+            val organizationId = call.parameters["organization_id"]
+            val resourceName = call.parameters["resource_name"]
+            val actionName = call.parameters["action_name"]
+
+            val response = actionService.getAction(organizationId!!, resourceName!!, actionName!!)
+
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
+
+    withPermission("updateAction") {
+        patch("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
+            val organizationId = call.parameters["organization_id"]
+            val resourceName = call.parameters["resource_name"]
+            val actionName = call.parameters["action_name"]
+            val request = call.receive<UpdateActionRequest>().validate()
+
+            val response =
+                actionService.updateAction(organizationId!!, resourceName!!, actionName!!, request.description ?: "")
+
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
+
+    withPermission("deleteAction") {
+        delete("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
+            val organizationId = call.parameters["organization_id"]
+            val resourceName = call.parameters["resource_name"]
+            val actionName = call.parameters["action_name"]
+
+            val response = actionService.deleteAction(organizationId!!, resourceName!!, actionName!!)
+
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
         }
     }
 }

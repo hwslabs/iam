@@ -2,6 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
+    <ID>ConstructorParameterNaming:ActionPaginatedResponse.kt$ActionPaginatedResponse$val `data`: kotlin.collections.List&lt;Action&gt;? = null</ID>
     <ID>ConstructorParameterNaming:PolicyPaginatedResponse.kt$PolicyPaginatedResponse$val `data`: kotlin.collections.List&lt;Policy&gt;? = null</ID>
     <ID>ConstructorParameterNaming:ResourcePaginatedResponse.kt$ResourcePaginatedResponse$val `data`: kotlin.collections.List&lt;Resource&gt;? = null</ID>
     <ID>ConstructorParameterNaming:UserPaginatedResponse.kt$UserPaginatedResponse$val `data`: kotlin.collections.List&lt;User&gt;? = null</ID>
@@ -41,7 +42,6 @@
     <ID>MagicNumber:Configuration.kt$4</ID>
     <ID>MagicNumber:Configuration.kt$60</ID>
     <ID>MagicNumber:DatabaseFactory.kt$DatabaseFactory$3</ID>
-    <ID>MagicNumber:Hrn.kt$ResourceHrn$5</ID>
     <ID>MaxLineLength:Configuration.kt$MicrometerConfigs$/* * TODO: Configure "LoggingMeterRegistry" with a logging sink to direct metrics logs to a separate "iam_metrics.log" logback appender * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer) */</ID>
     <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 5. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt; - hrn:hypto:&lt;accountId&gt;:iam-resource/12345 - updateResource</ID>
@@ -50,14 +50,10 @@
     <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 8. /organization/&lt;organizationId&gt;/user/&lt;userId&gt;/credentials/&lt;credentialsId&gt; - hrn:hypto:&lt;accountId&gt;:iam-credential/12345 - getCredentials</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 9. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt;/action/&lt;actionId&gt; - hrn:hypto:&lt;accountId&gt;:iam-action/12345 - updateAction</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn.Companion$"""^hrn:(?&lt;organization&gt;[^:\n]+):(?&lt;accountId&gt;[^:\n]*):(?&lt;resource&gt;[^:/\n]*)/{0,1}(?&lt;resourceInstance&gt;[^/\n:]*)""".toRegex()</ID>
-    <ID>MaxLineLength:PolicyService.kt$PolicyServiceImpl$.</ID>
-    <ID>MaxLineLength:PolicyService.kt$PolicyServiceImpl$val</ID>
     <ID>ThrowsCount:ResourceApi.kt$fun Route.resourceApi()</ID>
     <ID>TooGenericExceptionThrown:AuditEventHandler.kt$AuditEventHandler$throw Exception("few Batch inserts failed")</ID>
     <ID>TooManyFunctions:Mappers.kt$com.hypto.iam.server.extensions.Mappers.kt</ID>
     <ID>TooManyFunctions:RequestModelValidator.kt$com.hypto.iam.server.validators.RequestModelValidator.kt</ID>
     <ID>UnusedPrivateMember:Configuration.kt$MicrometerConfigs$private fun getNewRelicMeterRegistry(): NewRelicRegistry</ID>
-    <ID>UnusedPrivateMember:Hrn.kt$ResourceHrn$private fun getResource(splits: List&lt;String&gt;): String?</ID>
-    <ID>UnusedPrivateMember:Hrn.kt$ResourceHrn$private fun getResourceInstance(splits: List&lt;String&gt;): String?</ID>
   </CurrentIssues>
 </SmellBaseline>

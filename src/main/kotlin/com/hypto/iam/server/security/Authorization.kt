@@ -59,7 +59,7 @@ class Authorization(config: Configuration) : KoinComponent {
             val denyReasons = mutableListOf<String>()
             all?.let {
                 val policyRequests = all.map {
-                    val actionHrn = ActionHrn(resourceHrn.organization, resourceHrn.resource, it)
+                    val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
                     PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
                 if (!policyValidator.validate(principal.policies.stream(), policyRequests)) {
@@ -70,7 +70,7 @@ class Authorization(config: Configuration) : KoinComponent {
 
             any?.let {
                 val policyRequests = any.map {
-                    val actionHrn = ActionHrn(resourceHrn.organization, resourceHrn.resource, it)
+                    val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
                     PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
                 if (!policyValidator.validateAny(principal.policies.stream(), policyRequests)) {
@@ -81,7 +81,7 @@ class Authorization(config: Configuration) : KoinComponent {
 
             none?.let {
                 val policyRequests = none.map {
-                    val actionHrn = ActionHrn(resourceHrn.organization, resourceHrn.resource, it)
+                    val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
                     PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
                 if (!policyValidator.validateNone(principal.policies.stream(), policyRequests)) {

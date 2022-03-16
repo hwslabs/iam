@@ -1,7 +1,14 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.db.Tables.ACTIONS
 import com.hypto.iam.server.db.tables.pojos.Actions
 import com.hypto.iam.server.db.tables.records.ActionsRecord
+import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.paginate
+import com.hypto.iam.server.utils.ActionHrn
+import com.hypto.iam.server.utils.ResourceHrn
+import java.time.LocalDateTime
+import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
 object ActionRepo : DAOImpl<ActionsRecord, Actions, String>(
@@ -11,6 +18,51 @@ object ActionRepo : DAOImpl<ActionsRecord, Actions, String>(
 ) {
     override fun getId(action: Actions): String {
         return action.hrn
+    }
+
+    fun fetchByHrn(hrn: ActionHrn): ActionsRecord? {
+        return ctx().selectFrom(table).where(ACTIONS.HRN.eq(hrn.toString())).fetchOne()
+    }
+
+    fun create(orgId: String, resourceHrn: ResourceHrn, hrn: ActionHrn, description: String?): ActionsRecord {
+        val record = ActionsRecord()
+            .setHrn(hrn.toString())
+            .setOrganizationId(orgId)
+            .setResourceHrn(resourceHrn.toString())
+            .setDescription(description)
+            .setCreatedAt(LocalDateTime.now())
+            .setUpdatedAt(LocalDateTime.now())
+
+        record.attach(CredentialsRepo.configuration())
+        record.store()
+        return record
+    }
+
+    fun update(hrn: ActionHrn, description: String): ActionsRecord? {
+        val condition = ACTIONS.HRN.eq(hrn.toString())
+        return ctx().update(table)
+            .set(ACTIONS.DESCRIPTION, description)
+            .set(ACTIONS.UPDATED_AT, LocalDateTime.now())
+            .where(condition)
+            .returning()
+            .fetchOne()
+    }
+
+    fun fetchActionsPaginated(
+        organizationId: String,
+        resourceHrn: ResourceHrn,
+        paginationContext: PaginationContext
+    ): Result<ActionsRecord> {
+        return ctx().selectFrom(table)
+            .where(ACTIONS.ORGANIZATION_ID.eq(organizationId).and(ACTIONS.RESOURCE_HRN.eq(resourceHrn.toString())))
+            .paginate(ACTIONS.HRN, paginationContext)
+            .fetch()
+    }
+
+    fun delete(hrn: ActionHrn): Boolean {
+        val record = ActionsRecord().setHrn(hrn.toString())
+        record.attach(configuration())
+        return record.delete() > 0
     }
 
     /**

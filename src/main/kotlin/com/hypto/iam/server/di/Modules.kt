@@ -11,6 +11,8 @@ import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
+import com.hypto.iam.server.service.ActionService
+import com.hypto.iam.server.service.ActionServiceImpl
 import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.service.CredentialServiceImpl
 import com.hypto.iam.server.service.OrganizationsService
@@ -39,11 +41,11 @@ import org.koin.dsl.module
 // DI module to get repositories
 val repositoryModule = module {
     single { MasterKeysRepo }
-    single { ActionRepo }
     single { CredentialsRepo }
     single { OrganizationRepo }
     single { PoliciesRepo }
     single { ResourceRepo }
+    single { ActionRepo }
     single { UserAuthProvidersRepo }
     single { UserPoliciesRepo }
     single { UserRepo }
@@ -58,6 +60,7 @@ val controllerModule = module {
     single { ValidationServiceImpl() } bind ValidationService::class
     single { UserPolicyServiceImpl() } bind UserPolicyService::class
     single { ResourceServiceImpl() } bind ResourceService::class
+    single { ActionServiceImpl() } bind ActionService::class
     single { UsersServiceImpl() } bind UsersService::class
 }
 

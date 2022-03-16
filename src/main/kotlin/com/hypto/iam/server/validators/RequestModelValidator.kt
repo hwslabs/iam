@@ -10,6 +10,7 @@ import com.hypto.iam.server.extensions.dateTime
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
+import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
@@ -17,6 +18,7 @@ import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResourceAction
+import com.hypto.iam.server.models.UpdateActionRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.UpdatePolicyRequest
@@ -100,6 +102,31 @@ fun CreateResourceRequest.validate(): CreateResourceRequest {
 fun UpdateResourceRequest.validate(): UpdateResourceRequest {
     return Validation<UpdateResourceRequest> {
         UpdateResourceRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+/**
+ * Extension function to validate CreateActionRequest input from client
+ */
+fun CreateActionRequest.validate(): CreateActionRequest {
+    return Validation<CreateActionRequest> {
+        CreateActionRequest::name required {
+            run(nameCheck)
+        }
+        CreateActionRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
+/**
+ * Extension function to validate UpdateActionRequest input from client
+ */
+fun UpdateActionRequest.validate(): UpdateActionRequest {
+    return Validation<UpdateActionRequest> {
+        UpdateActionRequest::description required {
             run(descriptionCheck)
         }
     }.validateAndThrowOnFailure(this)
