@@ -11,6 +11,7 @@
   },
   "app": {
     "env": "development",
-    "jwt_token_validity": 300
+    "jwt_token_validity": 300,
+    "signKeyFetchInterval": 30
   }
 }

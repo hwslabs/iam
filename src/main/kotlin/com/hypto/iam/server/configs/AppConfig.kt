@@ -17,7 +17,12 @@ class AppConfig {
             get() = "jdbc:postgresql://$host:$port/iam"
     }
 
-    data class App(val env: String, val jwtTokenValidity: Long) {
+    /**
+     * env: Environment - "development" / "staging" / "production"
+     * jwtTokenValidity: Represents how long the JWT token must be valid from the instant of creation
+     * signKeyFetchInterval: Represents how frequently the private key for signing JWT tokens must be fetched from DB
+     */
+    data class App(val env: String, val jwtTokenValidity: Long, val signKeyFetchInterval: Long) {
         val isDevelopment: Boolean
             get() = env == "development"
     }

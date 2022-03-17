@@ -28,6 +28,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         val organizationId = idGenerator.organizationId()
         val adminUserHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, adminUser.username)
 
+        // TODO: #0 - Wrap all queries into a transaction
         // TODO: #1 - Update schema to include description, createdBy, updatedBy fields
         // TODO: #2 - Add transaction to create iam resource_types and actions
         // TODO: #3 - Add transaction to create admin user

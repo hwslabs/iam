@@ -20,7 +20,6 @@ import com.hypto.iam.server.helpers.MockUserStore
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResourceTypes
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.application.Application
@@ -424,54 +423,85 @@ class PolicyApiTest : AutoCloseKoinTest() {
         }
     }
 
-    @Nested
-    @DisplayName("Get policies attached to user API test")
-    inner class GetPoliciesByUserTest {
-        @Test
-        fun `get policies of a user`() {
-            withTestApplication(Application::handleRequest) {
-                // Arrange
-                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
-                    .createOrganizationUserCredential(this, mockStore)
-
-                (1..5).forEach {
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${createdOrganization.id}/policies"
-                    ) {
-                        val policyStatements = listOf(
-                            PolicyStatement("resource", "action", PolicyStatement.Effect.allow)
-                        )
-                        val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
-                        setBody(gson.toJson(requestBody))
-                    }
-                }
-
-                // Act
-                with(
-                    handleRequest(
-                        HttpMethod.Get,
-                        "/organizations/${createdOrganization.id}/users/" +
-                            "${(HrnFactory.getHrn(createdUser.hrn) as ResourceHrn).resourceInstance}" +
-                            "/policies"
-                    ) {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
-                    }
-                ) {
-                    // Assert
-                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-
+//    @Nested
+//    @DisplayName("Get policies attached to user API test")
+//    inner class GetPoliciesByUserTest {
+//        @Test
+//        fun `get policies of a user`() {
+//            withTestApplication(Application::handleRequest) {
+//                // Arrange
+//                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+//                    .createOrganizationUserCredential(this, mockStore)
+//
+//                (1..5).forEach {
+//                    handleRequest(
+//                        HttpMethod.Post,
+//                        "/organizations/${createdOrganization.id}/policies"
+//                    ) {
+//                        val policyStatements = listOf(
+//                            PolicyStatement("resource", "action", PolicyStatement.Effect.allow)
+//                        )
+//                        val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
+//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+//                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+//                        setBody(gson.toJson(requestBody))
+//                    }
+//                }
+//
+//                // Act
+//                val pageSize = 3
+//                var nextToken: String? = null
+//
+//                // First page
+//                with(
+//                    handleRequest(
+//                        HttpMethod.Get,
+//                        "/organizations/${createdOrganization.id}/users/" +
+//                            "${(HrnFactory.getHrn(createdUser.hrn) as ResourceHrn).resourceInstance}" +
+//                            "/policies?page_size=$pageSize${nextToken?.let {"&next_token=$it"}}"
+//                    ) {
+//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+//                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+//                    }
+//                ) {
+//                    // Assert
+//                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+//                    Assertions.assertEquals(
+//                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+//                        response.contentType()
+//                    )
+//
 //                    val results = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
-                    println(response.content)
-                }
-            }
-        }
-    }
+//                    Assertions.assertEquals(pageSize, results.data?.size)
+//                    Assertions.assertNotNull(results.nextToken)
+//
+//                    nextToken = results.nextToken
+//                }
+//
+//                // Second page
+//                with(
+//                    handleRequest(
+//                        HttpMethod.Get,
+//                        "/organizations/${createdOrganization.id}/users/" +
+//                            "${(HrnFactory.getHrn(createdUser.hrn) as ResourceHrn).resourceInstance}" +
+//                            "/policies?page_size=$pageSize${nextToken?.let {"&next_token=$it"}}"
+//                    ) {
+//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+//                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+//                    }
+//                ) {
+//                    // Assert
+//                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+//                    Assertions.assertEquals(
+//                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+//                        response.contentType()
+//                    )
+//
+//                    val results = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+//                    Assertions.assertEquals(2, results.data?.size)
+//                    Assertions.assertNull(results.nextToken)
+//                }
+//            }
+//        }
+//    }
 }

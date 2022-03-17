@@ -1,16 +1,16 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 buildscript {
-    ext.kotlin_version = '1.6.0'
+    ext.kotlin_version = '1.6.10'
     ext.ktor_version = '1.6.7'
-    ext.koin_version = '3.1.4'
+    ext.koin_version = '3.1.5'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
     ext.jooq_version = '3.16.4'
 //    ext.h2Version = "2.1.210"
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = "5.8.2"
-    ext.flyway_version = '8.5.0'
+    ext.flyway_version = '8.5.2'
     ext.casbin_version = "1.22.1"
     ext.postgres_jdbc_driver = "42.3.2"
 
@@ -91,6 +91,9 @@ jacocoTestReport {
             fileTree(dir: it, exclude: [
                     'com/hypto/iam/server/db/tables/*',
                     'com/hypto/iam/server/models',
+                    'com/hypto/iam/server/db/*',
+
+                    // TODO: Remove this once test container changes are committed
                     'com/hypto/iam/server/db/repositories'
 
             ])
@@ -272,7 +275,7 @@ dependencies {
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-apache:$ktor_version")
     implementation("io.ktor:ktor-auth:$ktor_version")
-    implementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
     implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
     implementation("org.postgresql:postgresql:$postgres_jdbc_driver") // DB JDBC driver

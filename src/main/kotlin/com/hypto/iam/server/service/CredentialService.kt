@@ -77,6 +77,14 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
     override suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse {
         if (!repo.delete(organizationId, userId, id)) { throw EntityNotFoundException("Credential not found") }
 
+        auditLog().append(
+            ResourceHrn(
+                organization = organizationId,
+                resource = IamResourceTypes.USER,
+                resourceInstance = userId
+            )
+        )
+
         return BaseSuccessResponse(true)
     }
 
