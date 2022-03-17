@@ -375,10 +375,11 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 //        fun `get policies of a user`() {
 //            withTestApplication(Application::handleRequest) {
 //                // Arrange
-//                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+//                val (createdOrganization, createdUser, createdCredentials) = DataSetupHelper
+//                    .createOrganizationUserCredential(this, mockStore)
 //
 //                (1..5).forEach {
-//                    with(handleRequest(
+//                    handleRequest(
 //                        HttpMethod.Post,
 //                        "/organizations/${createOrganizationResponse.organization?.id}/policies"
 //                    ) {
@@ -392,29 +393,23 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 //                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
 //                        )
 //                        setBody(gson.toJson(requestBody))
-//                    }) {
-//                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
 //                    }
 //                }
 //
 //                // Act
+//                val pageSize = 3
+//                var nextToken: String? = null
+//
+//                // First page
 //                with(
 //                    handleRequest(
 //                        HttpMethod.Get,
-//                        "/organizations/${createOrganizationResponse.organization?.id}/users/" +
-//                            "${ResourceHrn(
-//                                createOrganizationResponse.organization!!.id,
-//                                "",
-//                                IamResourceTypes.USER,
-//                                createdUser.username
-//                            )}" +
-//                            "/policies"
+//                        "/organizations/${createdOrganization.id}/users/" +
+//                            "${(HrnFactory.getHrn(createdUser.hrn) as ResourceHrn).resourceInstance}" +
+//                            "/policies?page_size=$pageSize${nextToken?.let {"&next_token=$it"}}"
 //                    ) {
 //                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//                        addHeader(
-//                            HttpHeaders.Authorization,
-//                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
-//                        )
+//                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
 //                    }
 //                ) {
 //                    // Assert
@@ -424,8 +419,35 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 //                        response.contentType()
 //                    )
 //
-////                    val results = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
-//                    println(response.content)
+//                    val results = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+//                    Assertions.assertEquals(pageSize, results.data?.size)
+//                    Assertions.assertNotNull(results.nextToken)
+//
+//                    nextToken = results.nextToken
+//                }
+//
+//                // Second page
+//                with(
+//                    handleRequest(
+//                        HttpMethod.Get,
+//                        "/organizations/${createdOrganization.id}/users/" +
+//                            "${(HrnFactory.getHrn(createdUser.hrn) as ResourceHrn).resourceInstance}" +
+//                            "/policies?page_size=$pageSize${nextToken?.let {"&next_token=$it"}}"
+//                    ) {
+//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+//                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+//                    }
+//                ) {
+//                    // Assert
+//                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+//                    Assertions.assertEquals(
+//                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+//                        response.contentType()
+//                    )
+//
+//                    val results = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+//                    Assertions.assertEquals(2, results.data?.size)
+//                    Assertions.assertNull(results.nextToken)
 //                }
 //            }
 //        }

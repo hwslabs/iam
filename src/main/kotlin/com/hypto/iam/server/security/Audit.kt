@@ -32,12 +32,10 @@ import org.koin.core.component.KoinComponent
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 
-private val logger = KotlinLogging.logger { }
-
 class AuditException(override val message: String) : Exception(message)
 
 /**
- * This class is used in api request flow. This records audit info for the performed action
+ * This class is used in api request flow. These records audit info for the performed action
  */
 class Audit(config: Configuration) : KoinComponent {
     private val enabled: Boolean = config.enabled
@@ -50,8 +48,8 @@ class Audit(config: Configuration) : KoinComponent {
         override val key = AttributeKey<Audit>("AuditFeature")
         val AuditContextKey = AttributeKey<AuditContext>("AuditContext")
 
-        val auditPhase = PipelinePhase("Audit")
-        val auditCommitPhase = PipelinePhase("AuditCommit")
+        private val auditPhase = PipelinePhase("Audit")
+        private val auditCommitPhase = PipelinePhase("AuditCommit")
 
         override fun install(
             pipeline: ApplicationCallPipeline,
@@ -93,13 +91,15 @@ suspend fun auditLog(): AuditContext {
     return callData().call.attributes[Audit.AuditContextKey]
 }
 
-private const val AUDIT_LOGGER_NAME = "audit-logger"
-private val auditLogger: KLogger = LoggerFactory.getLogger(AUDIT_LOGGER_NAME).toKLogger()
-private val auditMarker = MarkerFactory.getMarker("AUDIT")
-private val gson: Gson = getKoinInstance()
-
 class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
+    companion object {
+        private const val AUDIT_LOGGER_NAME = "audit-logger"
+        private val auditLogger: KLogger = LoggerFactory.getLogger(AUDIT_LOGGER_NAME).toKLogger()
+        private val auditMarker = MarkerFactory.getMarker("AUDIT")
+        private val gson: Gson = getKoinInstance()
+    }
     val entries = mutableListOf<ResourceHrn>()
+    private val logger = KotlinLogging.logger { }
 
     fun append(resourceHrn: ResourceHrn): Boolean {
         return try {
@@ -127,7 +127,7 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
         }
     }
 
-    private fun persistEntry(applicationCall: ApplicationCall, message: Any, resource: String) {
+    private fun persistEntry(applicationCall: ApplicationCall, message: Any, resourceHrnStr: String) {
         val principalHrn = applicationCall.principal<UserPrincipal>()?.hrn as ResourceHrn?
             ?: throw IllegalStateException("User principal missing in application context")
         applicationCall.callId ?: throw IllegalStateException("Request id missing in application context")
@@ -144,7 +144,7 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
             LocalDateTime.now(),
             principalHrn.toString(),
             principalHrn.organization,
-            resource,
+            resourceHrnStr,
             applicationCall.request.path(),
             JSON.valueOf(gson.toJson(meta))
         )

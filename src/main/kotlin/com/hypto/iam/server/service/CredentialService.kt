@@ -79,6 +79,14 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             throw EntityNotFoundException("Credential not found")
         }
 
+        auditLog().append(
+            ResourceHrn(
+                organization = organizationId,
+                resource = IamResourceTypes.USER,
+                resourceInstance = userId
+            )
+        )
+
         return BaseSuccessResponse(true)
     }
 

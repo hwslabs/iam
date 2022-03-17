@@ -10,8 +10,8 @@ import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
+import com.hypto.iam.server.apis.validationApi
 import com.hypto.iam.server.configs.AppConfig
-import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
@@ -21,10 +21,10 @@ import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Audit
 import com.hypto.iam.server.security.Authorization
 import com.hypto.iam.server.security.TokenCredential
-import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
-import com.hypto.iam.server.service.UserPolicyService
+import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.ktor.application.Application
 import io.ktor.application.install
@@ -55,10 +55,8 @@ private const val PORT_NUMBER = 8080
 
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
-    val credentialsRepo: CredentialsRepo by inject()
-//    val userRepo: UserRepo by inject()
-    val userPoliciesService: UserPolicyService by inject()
     val appConfig: AppConfig.Config by inject()
+    val userPrincipalService: UserPrincipalService by inject()
 
     install(DefaultHeaders)
     install(CallLogging)
@@ -95,17 +93,14 @@ fun Application.handleRequest() {
         }
         bearer("bearer-auth") {
             validate { tokenCredential: TokenCredential ->
-                return@validate tokenCredential.value?.let {
-                    return@let credentialsRepo.fetchByRefreshToken(it)
-//                        ?.let { credential -> userRepo.fetchByHrn(credential.userHrn) }
-//                        ?.let { user -> UserPrincipal(tokenCredential, user.hrn) }
-                        ?.let { credential ->
-                            UserPrincipal(
-                                tokenCredential,
-                                credential.userHrn,
-                                userPoliciesService.fetchEntitlements(credential.userHrn)
-                            )
-                        }
+                if (tokenCredential.value == null) {
+                    return@validate null
+                }
+                return@validate if (tokenCredential.type == TokenType.CREDENTIAL) {
+                    userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
+                } else {
+                    // tokenCredential.type == TokenType.JWT
+                    userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
                 }
             }
         }
@@ -131,6 +126,7 @@ fun Application.handleRequest() {
             resourceApi()
             tokenApi()
             usersApi()
+            validationApi()
         }
     }
 }
