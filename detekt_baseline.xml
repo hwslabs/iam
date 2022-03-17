@@ -35,7 +35,6 @@
     <ID>EnumNaming:User.kt$User.UserType.apiOnly$apiOnly</ID>
     <ID>EnumNaming:User.kt$User.UserType.normal$normal</ID>
     <ID>EnumNaming:User.kt$User.UserType.system$system</ID>
-    <ID>MagicNumber:Application.kt$8081</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
     <ID>MagicNumber:Configuration.kt$365</ID>

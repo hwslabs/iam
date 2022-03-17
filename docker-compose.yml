@@ -1,16 +1,18 @@
 version: '3'
 services:
-#  web:
-#    build:
-#      context: .
-#      dockerfile: ./docker/iam-web/Dockerfile
-#    command: java -server -Xms4g -Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -jar hypto-iam-server-1.0.jar
-#    volumes:
-#      - .:/iam
-#    ports:
-#      - "80:8080"
-#    depends_on:
-#      - pg
+  web:
+    build:
+      context: .
+      dockerfile: ./docker/iam-web/Dockerfile
+    volumes:
+      - .:/iam
+    ports:
+      - "8080:8081"
+    depends_on:
+      - pg
+    command: ./docker/iam-web/run.sh
+    env_file:
+      - ./docker/iam-web/dev.env
   pg:
     image: postgres:14.1
     ports:
