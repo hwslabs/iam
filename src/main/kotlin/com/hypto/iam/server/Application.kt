@@ -120,8 +120,9 @@ fun Application.handleRequest() {
     install(Routing) {
         authenticate("hypto-iam-root-auth") {
             createAndDeleteOrganizationApi()
+        }
 
-            // TODO: change to bearer-auth after credential api is created
+        authenticate("bearer-auth") {
             getAndUpdateOrganizationApi()
             actionApi()
             credentialApi()
@@ -129,9 +130,6 @@ fun Application.handleRequest() {
             resourceApi()
             tokenApi()
             usersApi()
-        }
-
-        authenticate("bearer-auth") {
         }
     }
 }

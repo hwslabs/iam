@@ -5,9 +5,11 @@ import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
+import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.application.Application
@@ -29,7 +31,6 @@ import org.flywaydb.core.api.configuration.ClassicConfiguration
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.junit5.AutoCloseKoinTest
@@ -85,11 +86,6 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
         }
     }
 
-    @BeforeEach
-    fun setUpBeforeEach() {
-        mockStore.clear()
-    }
-
     @AfterEach
     fun tearDown() {
         mockStore.clear()
@@ -116,14 +112,16 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     setBody(gson.toJson(requestBody))
                 }
             ) {
-                val responseBody = gson.fromJson(response.content, Organization::class.java)
-                orgId = responseBody.id
+                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
+                orgId = responseBody.organization!!.id
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-                assertEquals(requestBody.name, responseBody.name)
-                assertEquals(10, responseBody.id.length)
+                assertEquals(requestBody.name, responseBody.organization!!.name)
+                assertEquals(10, responseBody.organization!!.id.length)
             }
+
+            DataSetupHelper.deleteOrganization(orgId, this)
         }
     }
 
@@ -173,10 +171,11 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     )
                 )
             }
-            val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
+            val createdOrganization =
+                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.id}") {
+                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, "Bearer test-bearer-token")
                 }
@@ -185,6 +184,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                 assertFalse(response.headers.contains(HttpHeaders.ContentType))
                 assertEquals(null, response.content)
             }
+
+            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
         }
     }
 
@@ -205,13 +206,13 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     )
                 )
             }
-            val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
+            val createdOrganization =
+                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.id}") {
+                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredential.secret}")
-                    addHeader("X-Api-Key", rootToken)
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential!!.secret}")
                 }
 
             ) {
@@ -219,8 +220,10 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
                 val fetchedOrganization = gson.fromJson(response.content, Organization::class.java)
-                assertEquals(createdOrganization, fetchedOrganization)
+                assertEquals(createdOrganization.organization, fetchedOrganization)
             }
+
+            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
         }
     }
 
@@ -242,13 +245,16 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     )
                 )
             }
-            val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
+            val createdOrganization =
+                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
                 handleRequest(HttpMethod.Get, "/organizations/inValidOrganizationId") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
-                    addHeader("X-Api-Key", rootToken)
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.adminUserCredential!!.secret}"
+                    )
                 }
 
             ) {
@@ -259,6 +265,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     response.contentType()
                 )
             }
+
+            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
         }
     }
 }

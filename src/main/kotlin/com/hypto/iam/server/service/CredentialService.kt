@@ -36,7 +36,8 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             validUntil = validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
-        auditLog().append(userHrn)
+        // TODO: remove it after resolving error
+//        auditLog().append(userHrn)
 
         return Credential.from(credentialsRecord)
     }
@@ -75,7 +76,9 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
     }
 
     override suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse {
-        if (!repo.delete(organizationId, userId, id)) { throw EntityNotFoundException("Credential not found") }
+        if (!repo.delete(organizationId, userId, id)) {
+            throw EntityNotFoundException("Credential not found")
+        }
 
         return BaseSuccessResponse(true)
     }
@@ -96,5 +99,6 @@ interface CredentialService {
         status: UpdateCredentialRequest.Status?,
         validUntil: String?
     ): CredentialWithoutSecret
+
     suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse
 }
