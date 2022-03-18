@@ -3,7 +3,11 @@
     "host": "localhost",
     "port": "5435",
     "username": "root",
-    "password": "password"
+    "password": "password",
+    "maximum_pool_size": 3,
+    "minimum_idle": 3,
+    "is_auto_commit": true,
+    "transaction_isolation": "TRANSACTION_REPEATABLE_READ"
   },
   "newrelic": {
     "api_key": "test_key",

@@ -1,18 +1,18 @@
 version: '3'
 services:
-#  web:
-#    build:
-#      context: .
-#      dockerfile: ./docker/iam-web/Dockerfile
-#    volumes:
-#      - .:/iam
-#    ports:
-#      - "8080:8080"
-#    depends_on:
-#      - pg
-#    command: ./docker/iam-web/run.sh
-#    env_file:
-#      - ./docker/iam-web/dev.env
+  web:
+    build:
+      context: .
+      dockerfile: ./docker/iam-web/Dockerfile
+    volumes:
+      - .:/iam
+    ports:
+      - "8080:8080"
+    depends_on:
+      - pg
+    command: ./docker/iam-web/run.sh
+    env_file:
+      - ./docker/iam-web/dev.env
   pg:
     image: postgres:14.1
     ports:
