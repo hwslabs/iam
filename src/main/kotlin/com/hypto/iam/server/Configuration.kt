@@ -86,8 +86,8 @@ internal val ApplicationExecutors = Executors.newFixedThreadPool(Runtime.getRunt
 // Provides all resources and configurations for application telemetry using micrometer
 object MicrometerConfigs {
     private val registry = CompositeMeterRegistry()
-//        .add(getNewRelicMeterRegistry()) // TODO: Uncomment this to publish metrics to new relic
-
+        // TODO: Uncomment this to publish metrics to new relic
+//        .add(getNewRelicMeterRegistry())
         /*
          * TODO: Configure "LoggingMeterRegistry" with a logging sink to direct metrics logs to a separate "iam_metrics.log" logback appender
          * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer)
@@ -132,6 +132,7 @@ object MicrometerConfigs {
                 // TODO: Needs Tweaking
                 return Duration.ofSeconds(appConfig.newrelic.publishInterval)
             }
+            // TODO: [IMPORTANT] Read service name from appConfig
             override fun serviceName(): String { return "Hypto IAM - " + appConfig.app.env }
             override fun enableAuditMode(): Boolean { return false }
             override fun useLicenseKey(): Boolean { return true }

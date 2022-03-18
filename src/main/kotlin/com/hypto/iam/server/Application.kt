@@ -15,6 +15,7 @@ import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
+import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.features.globalcalldata.GlobalCallData
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Audit
@@ -83,7 +84,7 @@ fun Application.handleRequest() {
         apiKeyAuth("hypto-iam-root-auth") {
             validate { tokenCredential: TokenCredential ->
                 when (tokenCredential.value) {
-                    // TODO: Get secret key from db or cache
+                    // TODO:[IMPORTANT] Get secret key from db or cache
                     "hypto-root-secret-key" -> ApiPrincipal(tokenCredential, "hypto-root")
                     else -> null
                 }
@@ -94,11 +95,10 @@ fun Application.handleRequest() {
                 if (tokenCredential.value == null) {
                     return@validate null
                 }
-                return@validate if (tokenCredential.type == TokenType.CREDENTIAL) {
-                    userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
-                } else {
-                    // tokenCredential.type == TokenType.JWT
-                    userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
+                return@validate when (tokenCredential.type) {
+                    TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
+                    TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
+                    else -> throw InternalException("Invalid token credential")
                 }
             }
         }

@@ -44,8 +44,8 @@ object MasterKeysRepo : DAOImpl<MasterKeysRecord, MasterKeys, UUID>(
      * Rotate master key in DB
      * @param oldKeyTtl TTL in seconds until which the rotated key must be available for verifying signatures.
      */
-    // TODO: #1 - Move TTL to config file
-    // TODO: #2 - Encrypt private keys stored in database with a passphrase
+    // TODO: #1 - [IMPORTANT] Move TTL to config file
+    // TODO: #2 - [IMPORTANT] Encrypt private keys stored in database with a passphrase
     // TODO: #3 - GRANT only necessary permissions for iam application user to the master_keys table
     fun rotateKey(oldKeyTtl: Long = 600 /* 2X the local cache duration */, skipIfPresent: Boolean = false): Boolean {
 
