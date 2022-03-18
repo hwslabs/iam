@@ -1,5 +1,5 @@
-FROM openjdk:8-jre-alpine
-
-COPY ./build/libs/hypto-iam-server-1.0.jar /iam/hypto-iam-server-1.0.jar
-RUN mkdir /iam
+FROM openjdk:11.0.2
+FROM gradle:6.9-jdk11-alpine
+RUN apk add --no-cache bash
 WORKDIR /iam
+

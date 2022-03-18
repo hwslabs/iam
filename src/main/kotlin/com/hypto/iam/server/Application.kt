@@ -50,6 +50,7 @@ import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-ID"
+private const val PORT_NUMBER = 8080
 
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
@@ -146,5 +147,5 @@ fun main(args: Array<String>) {
     // https://www.baeldung.com/java-bouncy-castle#setup-unlimited-strength-jurisdiction-policy-files
     Security.setProperty("crypto.policy", "unlimited")
 
-    embeddedServer(Netty, 8081, module = Application::module).start(wait = true)
+    embeddedServer(Netty, PORT_NUMBER, module = Application::module).start(wait = true)
 }
