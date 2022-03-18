@@ -11,9 +11,14 @@ import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
+import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.AdminUser
+import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
+import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.Credential
+import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -35,7 +40,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
     private val resourceRepo: ResourceRepo by inject()
     private val credentialRepo: CredentialsRepo by inject()
 
-    fun createOrganizationUserCredential(
+    fun createOrganization(
         engine: TestApplicationEngine
     ): Pair<CreateOrganizationResponse, AdminUser> {
         with(engine) {
@@ -70,9 +75,53 @@ object DataSetupHelper : AutoCloseKoinTest() {
         }
     }
 
+    fun createResource(
+        orgId: String,
+        userCredential: Credential,
+        engine: TestApplicationEngine,
+        resourceName: String? = null
+    ): Resource {
+        with(engine) {
+            val name = resourceName ?: ("test-resource" + IdGenerator.randomId())
+
+            val createResourceCall = handleRequest(HttpMethod.Post, "/organizations/$orgId/resources") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer ${userCredential.secret}")
+                setBody(gson.toJson(CreateResourceRequest(name = name)))
+            }
+
+            return gson
+                .fromJson(createResourceCall.response.content, Resource::class.java)
+        }
+    }
+
+    fun createAction(
+        orgId: String,
+        resource: Resource? = null,
+        userCredential: Credential,
+        engine: TestApplicationEngine
+    ): Pair<Action, Resource> {
+        with(engine) {
+            val createdResource = resource ?: createResource(orgId, userCredential, engine)
+            val actionName = "test-action" + IdGenerator.randomId()
+
+            val createActionCall =
+                handleRequest(HttpMethod.Post, "/organizations/$orgId/resources/${createdResource.name}/actions") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer ${userCredential.secret}")
+                    setBody(gson.toJson(CreateActionRequest(name = actionName)))
+                }
+
+            val createdAction = gson
+                .fromJson(createActionCall.response.content, Action::class.java)
+
+            return Pair(createdAction, createdResource)
+        }
+    }
+
     fun deleteOrganization(orgId: String, engine: TestApplicationEngine) {
         with(engine) {
-            // TODO: Optimize the queries to do it one query
+            // TODO: Optimize the queries to do it one query (CASCADE DELETE)
             policyRepo.fetchByOrganizationId(orgId).forEach { policies ->
                 userPolicyRepo.fetch(USER_POLICIES.POLICY_HRN, policies.hrn).forEach {
                     userPolicyRepo.delete(it)

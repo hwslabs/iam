@@ -5,6 +5,7 @@ import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
+import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.models.AdminUser
@@ -25,23 +26,16 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.mockkClass
 import kotlin.test.assertFalse
 import kotlin.text.Charsets.UTF_8
-import org.flywaydb.core.Flyway
-import org.flywaydb.core.api.Location
-import org.flywaydb.core.api.configuration.ClassicConfiguration
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.junit5.AutoCloseKoinTest
 import org.koin.test.junit5.KoinTestExtension
 import org.koin.test.junit5.mock.MockProviderExtension
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
-internal class OrganizationApiKtTest : AutoCloseKoinTest() {
+internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     private val gson = Gson()
     private val rootToken = "hypto-root-secret-key"
 
@@ -56,35 +50,6 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
     val koinMockProvider = MockProviderExtension.create { mockkClass(it) }
 
     private val mockStore = MockStore()
-
-    companion object {
-        @JvmStatic
-        @Container
-        private val container =
-            PostgreSQLContainer("postgres:14.1-alpine")
-                .withDatabaseName("iam")
-                .withUsername("root")
-                .withPassword("password")
-                .withReuse(true)
-
-        @JvmStatic
-        @BeforeAll
-        fun setUp() {
-
-            container.start()
-            val configuration = ClassicConfiguration()
-            configuration.setDataSource(container.jdbcUrl, container.username, container.password)
-            configuration.setLocations(Location("filesystem:src/main/resources/db/migration"))
-            val flyway = Flyway(configuration)
-            flyway.migrate()
-
-            System.setProperty("config.override.database.name", "iam")
-            System.setProperty("config.override.database.user", "root")
-            System.setProperty("config.override.database.password", "password")
-            System.setProperty("config.override.database.host", container.host)
-            System.setProperty("config.override.database.port", container.firstMappedPort.toString())
-        }
-    }
 
     @AfterEach
     fun tearDown() {

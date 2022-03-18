@@ -1,3 +1,5 @@
+@file:Suppress("TooGenericExceptionCaught")
+
 package com.hypto.iam.server.security
 
 import com.google.gson.Gson
@@ -31,6 +33,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 
 private val logger = KotlinLogging.logger { }
+
 class AuditException(override val message: String) : Exception(message)
 
 /**
@@ -71,12 +74,16 @@ class Audit(config: Configuration) : KoinComponent {
     }
 
     private fun interceptBeforeReceive(context: PipelineContext<Unit, ApplicationCall>) {
-        if (!enabled) { return }
+        if (!enabled) {
+            return
+        }
         context.call.attributes.put(AuditContextKey, AuditContext(context))
     }
 
     private fun interceptAfterSend(pipelineContext: PipelineContext<Any, ApplicationCall>, message: Any) {
-        if (!enabled) { return }
+        if (!enabled) {
+            return
+        }
         val auditContext = pipelineContext.call.attributes[AuditContextKey]
         auditContext.persist(message)
     }
@@ -95,12 +102,23 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
     val entries = mutableListOf<ResourceHrn>()
 
     fun append(resourceHrn: ResourceHrn): Boolean {
-        return entries.add(resourceHrn)
+        // TODO: remove try block after fixing the issue with audit log
+        return try {
+            entries.add(resourceHrn)
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to append resource to audit log" }
+            false
+        }
     }
 
     fun persist(message: Any) {
-        entries.forEach {
-            persistEntry(context.call, message, it.toString())
+        // TODO: Remove after getting rid of the exception
+        try {
+            entries.forEach {
+                persistEntry(context.call, message, it.toString())
+            }
+        } catch (e: Exception) {
+            logger.error("Audit error", e)
         }
     }
 

@@ -5,6 +5,7 @@ import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
+import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.models.CreatePolicyRequest
@@ -23,23 +24,16 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import io.mockk.mockkClass
-import org.flywaydb.core.Flyway
-import org.flywaydb.core.api.Location
-import org.flywaydb.core.api.configuration.ClassicConfiguration
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.junit5.AutoCloseKoinTest
 import org.koin.test.junit5.KoinTestExtension
 import org.koin.test.junit5.mock.MockProviderExtension
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
 
-class PolicyApiTest : AutoCloseKoinTest() {
+class PolicyApiTest : AbstractContainerBaseTest() {
     private val gson = Gson()
 
     @JvmField
@@ -59,35 +53,6 @@ class PolicyApiTest : AutoCloseKoinTest() {
         mockStore.clear()
     }
 
-    companion object {
-        @JvmStatic
-        @Container
-        private val container =
-            PostgreSQLContainer("postgres:14.1-alpine")
-                .withDatabaseName("iam")
-                .withUsername("root")
-                .withPassword("password")
-                .withReuse(true)
-
-        @JvmStatic
-        @BeforeAll
-        fun setUp() {
-
-            container.start()
-            val configuration = ClassicConfiguration()
-            configuration.setDataSource(container.jdbcUrl, container.username, container.password)
-            configuration.setLocations(Location("filesystem:src/main/resources/db/migration"))
-            val flyway = Flyway(configuration)
-            flyway.migrate()
-
-            System.setProperty("config.override.database.name", "iam")
-            System.setProperty("config.override.database.user", "root")
-            System.setProperty("config.override.database.password", "password")
-            System.setProperty("config.override.database.host", container.host)
-            System.setProperty("config.override.database.port", container.firstMappedPort.toString())
-        }
-    }
-
     @Nested
     @DisplayName("Create policy API tests")
     inner class CreatePolicyTest {
@@ -95,7 +60,7 @@ class PolicyApiTest : AutoCloseKoinTest() {
         fun `happy case`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, _) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
 
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!

@@ -5,6 +5,7 @@ import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
+import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.models.CreateCredentialRequest
@@ -24,23 +25,16 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.text.Charsets.UTF_8
-import org.flywaydb.core.Flyway
-import org.flywaydb.core.api.Location
-import org.flywaydb.core.api.configuration.ClassicConfiguration
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.junit5.AutoCloseKoinTest
 import org.koin.test.junit5.KoinTestExtension
 import org.koin.test.junit5.mock.MockProviderExtension
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
 
-internal class CredentialApiKtTest : AutoCloseKoinTest() {
+internal class CredentialApiKtTest : AbstractContainerBaseTest() {
     private val gson = Gson()
 
     @JvmField
@@ -60,35 +54,6 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         mockStore.clear()
     }
 
-    companion object {
-        @JvmStatic
-        @Container
-        private val container =
-            PostgreSQLContainer("postgres:14.1-alpine")
-                .withDatabaseName("iam")
-                .withUsername("root")
-                .withPassword("password")
-                .withReuse(true)
-
-        @JvmStatic
-        @BeforeAll
-        fun setUp() {
-
-            container.start()
-            val configuration = ClassicConfiguration()
-            configuration.setDataSource(container.jdbcUrl, container.username, container.password)
-            configuration.setLocations(Location("filesystem:src/main/resources/db/migration"))
-            val flyway = Flyway(configuration)
-            flyway.migrate()
-
-            System.setProperty("config.override.database.name", "iam")
-            System.setProperty("config.override.database.user", "root")
-            System.setProperty("config.override.database.password", "password")
-            System.setProperty("config.override.database.host", container.host)
-            System.setProperty("config.override.database.port", container.firstMappedPort.toString())
-        }
-    }
-
     @Nested
     @DisplayName("Create credential API tests")
     inner class CreateCredentialTest {
@@ -96,7 +61,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `without expiry - success`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
 
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
@@ -133,7 +98,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
             withTestApplication(Application::handleRequest) {
 
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
                 val userName = createdUser.username
@@ -176,7 +141,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
             withTestApplication(Application::handleRequest) {
 
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
                 val userName = createdUser.username
@@ -214,7 +179,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `delete existing credential`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
                 val userName = createdUser.username
@@ -279,7 +244,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `credential not found`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
                 val userName = createdUser.username
@@ -308,8 +273,8 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `unauthorized access`() {
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse1, user1) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
-                val (organizationResponse2, _) = DataSetupHelper.createOrganizationUserCredential(this)
+                    .createOrganization(this)
+                val (organizationResponse2, _) = DataSetupHelper.createOrganization(this)
                 val user1Name = user1.username
 
                 val organization1 = organizationResponse1.organization!!
@@ -342,7 +307,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `success - response does not have secret`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
                 val userName = createdUser.username
@@ -373,7 +338,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `not found`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
                 val userName = createdUser.username
@@ -400,7 +365,7 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         fun `invalid credential id`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
-                    .createOrganizationUserCredential(this)
+                    .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
                 val userName = createdUser.username

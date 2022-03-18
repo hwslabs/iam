@@ -36,8 +36,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             validUntil = validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
-        // TODO: remove it after resolving error
-//        auditLog().append(userHrn)
+        auditLog().append(userHrn)
 
         return Credential.from(credentialsRecord)
     }
