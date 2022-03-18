@@ -32,8 +32,8 @@ buildscript {
 }
 
 plugins {
-    id('org.flywaydb.flyway') version "$flyway_version"
-    id("nu.studer.jooq") version "7.1"
+    id 'org.flywaydb.flyway' version "$flyway_version"
+    id 'nu.studer.jooq' version '7.1'
     id "io.gitlab.arturbosch.detekt" version "1.19.0"
     id "org.jlleitschuh.gradle.ktlint" version "9.1.1"
     id "jacoco"
@@ -44,7 +44,7 @@ group 'com.hypto'
 version '1.0.0'
 
 wrapper {
-    gradleVersion = '6.1.1'
+    gradleVersion = '6.9.2'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
 
@@ -110,9 +110,9 @@ configurations {
 
 flyway {
     configurations = ['flywayMigration']
-    user = System.getenv("DATABASE.USER") ?: "root"
-    password = System.getenv("DATABASE.PASSWOORD") ?: "password"
-    url = "jdbc:postgresql://localhost:5435/iam"
+    user = System.getenv("database__user") ?: "root"
+    password = System.getenv("database__password") ?: "password"
+    url = "jdbc:postgresql://${System.getenv("database__host") ?: "localhost"}:${System.getenv("database__port") ?: "5435"}/iam"
 }
 
 jooq {
