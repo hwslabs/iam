@@ -12,7 +12,16 @@ class AppConfig {
     E.g. For Database - database__host, database__port, database__username, database__password
      */
 
-    data class Database(val host: String, val port: Int, val username: String, val password: String) {
+    data class Database(
+        val host: String,
+        val port: Int,
+        val username: String,
+        val password: String,
+        val maximumPoolSize: Int,
+        val minimumIdle: Int,
+        val isAutoCommit: Boolean,
+        val transactionIsolation: String
+    ) {
         val jdbcUrl: String
             get() = "jdbc:postgresql://$host:$port/iam"
     }

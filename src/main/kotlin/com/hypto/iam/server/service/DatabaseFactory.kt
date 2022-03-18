@@ -13,16 +13,16 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 object DatabaseFactory : KoinComponent {
-    val appConfig: AppConfig.Config by inject()
+    private val appConfig: AppConfig.Config by inject()
 
     private val pool: HikariDataSource = HikariDataSource(
         HikariConfig().apply {
             driverClassName = "org.postgresql.Driver"
             jdbcUrl = appConfig.database.jdbcUrl
-            maximumPoolSize = 3
-            minimumIdle = 3
-            isAutoCommit = true
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            maximumPoolSize = appConfig.database.maximumPoolSize
+            minimumIdle = appConfig.database.minimumIdle
+            isAutoCommit = appConfig.database.isAutoCommit
+            transactionIsolation = appConfig.database.transactionIsolation
             username = appConfig.database.username
             password = appConfig.database.password
         }

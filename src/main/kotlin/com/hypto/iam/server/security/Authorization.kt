@@ -1,6 +1,5 @@
 package com.hypto.iam.server.security
 
-import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
@@ -37,7 +36,6 @@ class AuthorizationException(override val message: String) : Exception(message)
 @Suppress("UnusedPrivateMember")
 class Authorization(config: Configuration) : KoinComponent {
     private val policyValidator: PolicyValidator by inject()
-    private val appConfig: AppConfig.Config by inject()
 
     class Configuration : KoinComponent
 
