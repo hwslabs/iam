@@ -20,7 +20,7 @@ fun Route.tokenApi() {
     withPermission("generateToken") {
         post("/token") {
             val principal = context.principal<UserPrincipal>()!!
-            // TODO: Check if the user has permission to invoke this API and return / raise if necessary
+            // TODO: [IMPORTANT] Check if the user has permission to invoke this API and return / raise if necessary
             val response = tokenService.generateJwtToken(principal.hrn)
             call.respondText(
                 text = gson.toJson(response),

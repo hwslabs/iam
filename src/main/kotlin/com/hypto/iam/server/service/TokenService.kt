@@ -10,6 +10,7 @@ import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import io.jsonwebtoken.Claims
+import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jws
 import io.jsonwebtoken.JwsHeader
 import io.jsonwebtoken.Jwts
@@ -34,7 +35,6 @@ val logger = KotlinLogging.logger("service.TokenService")
  */
 interface TokenService {
     suspend fun generateJwtToken(userHrn: Hrn): TokenResponse
-//    suspend fun parseHeader(token: String): JwtHeader
     suspend fun validateJwtToken(token: String): Jws<Claims>
 }
 
@@ -92,7 +92,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
         val versionNum: String? = body.get(VERSION_CLAIM, String::class.java)
         require(versionNum != null)
 
-        // TODO: Validate issued_at and entitlement claims
+        // TODO: [IMPORTANT] Validate issued_at and entitlement claims
         // body[ENTITLEMENTS_CLAIM]
 
         return jws
@@ -116,10 +116,10 @@ class TokenServiceImpl : KoinComponent, TokenService {
                 .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
                 .claim(ENTITLEMENTS_CLAIM, userPolicyService.fetchEntitlements(userHrn.toString()).toString())
                 .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
-                // TODO: Uncomment before taking to prod
+                // TODO: [IMPORTANT] Uncomment before taking to prod
                 // Eventually move to Brotli from GZIP:
                 // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
-                // .compressWith(CompressionCodecs.GZIP)
+                .compressWith(CompressionCodecs.GZIP)
                 .compact()
         )
     }

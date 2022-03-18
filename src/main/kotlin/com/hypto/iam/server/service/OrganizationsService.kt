@@ -36,7 +36,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
         // TODO: #0 - Wrap all queries into a transaction
         // TODO: #1 - Update schema to include description, createdBy, updatedBy fields
-        // TODO: #2 - Add transaction to create iam resource_types and actions
+        // TODO: #2 - [IMPORTANT] Add transaction to create iam resource_types and actions
         // TODO: #3 - Add transaction to create admin user
 
         // Create Organization
@@ -85,11 +85,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     }
 
     override suspend fun updateOrganization(id: String, description: String): Organization {
-        TODO("Not yet implemented")
+        TODO("[IMPORTANT] Not yet implemented")
     }
 
     override suspend fun deleteOrganization(id: String) {
-        TODO("Not yet implemented")
+        TODO("[IMPORTANT] Not yet implemented")
     }
 }
 

@@ -32,13 +32,14 @@ import org.koin.core.component.KoinComponent
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 
-class AuditException(override val message: String) : Exception(message)
-
 /**
  * This class is used in api request flow. These records audit info for the performed action
+ * TODO: Support auditing custom resource-actions as well.
+ *       Currently, Audit module records only requests pertaining to IAM module.
  */
 class Audit(config: Configuration) : KoinComponent {
     private val enabled: Boolean = config.enabled
+    private val logger = KotlinLogging.logger { }
 
     class Configuration {
         internal var enabled: Boolean = true
@@ -78,12 +79,15 @@ class Audit(config: Configuration) : KoinComponent {
         context.call.attributes.put(AuditContextKey, AuditContext(context))
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun interceptAfterSend(pipelineContext: PipelineContext<Any, ApplicationCall>, message: Any) {
-        if (!enabled) {
-            return
+        if (!enabled) { return }
+        try {
+            val auditContext = pipelineContext.call.attributes[AuditContextKey]
+            auditContext.persist(message)
+        } catch (e: Exception) {
+            logger.warn(e) { "Exception occurred in audit module" }
         }
-        val auditContext = pipelineContext.call.attributes[AuditContextKey]
-        auditContext.persist(message)
     }
 }
 
@@ -134,7 +138,7 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
 
         val meta = hashMapOf(
             Pair("HttpMethod", applicationCall.request.httpMethod.value),
-            Pair("Referer", applicationCall.request.userAgent()), // TODO: Verify this is not ALB address
+            Pair("Referer", applicationCall.request.userAgent()), // TODO: [IMPORTANT] Verify this is not ALB address
             Pair("StatusCode", fetchStatusCode(message)?.value.toString())
         )
 

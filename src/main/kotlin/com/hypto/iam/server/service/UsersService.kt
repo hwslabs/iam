@@ -30,7 +30,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw EntityAlreadyExistsException("User name already exist")
         }
 
-        // TODO: Remove this impl and use cognito
+        // TODO: [IMPORTANT] Remove this impl and use cognito
         return repo.create(
             userHrn,
             password,

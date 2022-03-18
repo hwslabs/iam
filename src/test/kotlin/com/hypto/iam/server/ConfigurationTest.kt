@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.koin.test.KoinTest
 
+// TODO: [IMPORTANT] Cleanup / delete this file
 internal class ConfigurationTest : KoinTest {
 
     @Test

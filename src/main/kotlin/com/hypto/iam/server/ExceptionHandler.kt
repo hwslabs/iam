@@ -47,7 +47,7 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<DataAccessException>(HttpStatusCode.Unauthorized)
     sendStatus<UnknownError>(HttpStatusCode.InternalServerError, true, "Unknown Error Occurred")
     sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
-    /* TODO: Handle the following exceptions
+    /* TODO: [IMPORTANT] Handle the following exceptions
 
         UnsupportedJwtException – if the claimsJws argument does not represent an Claims JWS
         MalformedJwtException – if the claimsJws string is not a valid JWS
