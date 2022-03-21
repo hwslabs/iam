@@ -12,6 +12,8 @@
   "app": {
     "env": "development",
     "jwt_token_validity": 300,
-    "signKeyFetchInterval": 30
+    "signKeyFetchInterval": 30,
+    "old_key_ttl": 600,
+    "secret_key": "iam-secret-key"
   }
 }

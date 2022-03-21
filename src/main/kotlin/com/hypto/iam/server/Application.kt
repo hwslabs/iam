@@ -11,6 +11,7 @@ import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.apis.validationApi
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
@@ -55,6 +56,7 @@ private const val REQUEST_ID_HEADER = "X-Request-ID"
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val userPrincipalService: UserPrincipalService by inject()
+    val appConfig: AppConfig.Config by inject()
 
     install(DefaultHeaders)
     install(CallLogging)
@@ -84,8 +86,7 @@ fun Application.handleRequest() {
         apiKeyAuth("hypto-iam-root-auth") {
             validate { tokenCredential: TokenCredential ->
                 when (tokenCredential.value) {
-                    // TODO:[IMPORTANT] Get secret key from db or cache
-                    "hypto-root-secret-key" -> ApiPrincipal(tokenCredential, "hypto-root")
+                    appConfig.app.secretKey -> ApiPrincipal(tokenCredential, "hypto-root")
                     else -> null
                 }
             }

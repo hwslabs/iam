@@ -1,5 +1,6 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
 import com.hypto.iam.server.db.tables.records.MasterKeysRecord
 import com.hypto.iam.server.utils.MasterKeyUtil
@@ -9,12 +10,16 @@ import java.time.ZoneOffset
 import java.util.UUID
 import org.jooq.Configuration
 import org.jooq.impl.DAOImpl
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-object MasterKeysRepo : DAOImpl<MasterKeysRecord, MasterKeys, UUID>(
+object MasterKeysRepo : KoinComponent, DAOImpl<MasterKeysRecord, MasterKeys, UUID>(
     com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS,
     MasterKeys::class.java,
     com.hypto.iam.server.service.DatabaseFactory.getConfiguration()
 ) {
+    private val appConfig: AppConfig.Config by inject()
+
     override fun getId(masterKey: MasterKeys): UUID {
         return masterKey.id
     }
@@ -40,14 +45,9 @@ object MasterKeysRepo : DAOImpl<MasterKeysRecord, MasterKeys, UUID>(
         return fetchOne(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.SIGNING.value)
     }
 
-    /**
-     * Rotate master key in DB
-     * @param oldKeyTtl TTL in seconds until which the rotated key must be available for verifying signatures.
-     */
-    // TODO: #1 - [IMPORTANT] Move TTL to config file
     // TODO: #2 - [IMPORTANT] Encrypt private keys stored in database with a passphrase
     // TODO: #3 - GRANT only necessary permissions for iam application user to the master_keys table
-    fun rotateKey(oldKeyTtl: Long = 600 /* 2X the local cache duration */, skipIfPresent: Boolean = false): Boolean {
+    fun rotateKey(skipIfPresent: Boolean = false): Boolean {
 
         ctx().transaction { c ->
             if (getMasterKeyOperationLock(c) && shouldRotate(skipIfPresent)) {
@@ -60,7 +60,8 @@ object MasterKeysRepo : DAOImpl<MasterKeysRecord, MasterKeys, UUID>(
                     .where(
                         com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS.eq(Status.VERIFYING.value),
                         com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.UPDATED_AT.lessThan(
-                            LocalDateTime.ofInstant(Instant.now().minusSeconds(oldKeyTtl), ZoneOffset.systemDefault())
+                            LocalDateTime.ofInstant(Instant.now().minusSeconds(appConfig.app.oldKeyTtl),
+                                ZoneOffset.systemDefault())
                         )
                     ).execute()
 
