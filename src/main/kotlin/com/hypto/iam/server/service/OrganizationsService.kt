@@ -4,6 +4,7 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.models.AdminUser
+import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.User
@@ -23,8 +24,13 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val hrnFactory: HrnFactory by inject()
     private val userPolicyService: UserPolicyService by inject()
     private val idGenerator: ApplicationIdUtil.Generator by inject()
+    private val credentialService: CredentialService by inject()
 
-    override suspend fun createOrganization(name: String, description: String, adminUser: AdminUser): Organization {
+    override suspend fun createOrganization(
+        name: String,
+        description: String,
+        adminUser: AdminUser
+    ): Pair<Organization, Credential> {
         val organizationId = idGenerator.organizationId()
         val adminUserHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, adminUser.username)
 
@@ -46,7 +52,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         // Create admin user for the organization
         val user = usersService.createUser(
             organizationId = organizationId,
-            userName = adminUser.username!!,
+            userName = adminUser.username,
             password = adminUser.passwordHash,
             email = adminUser.email,
             userType = User.UserType.admin,
@@ -54,15 +60,17 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             status = User.Status.active, phone = adminUser.phone
         )
 
+        val credential = credentialService.createCredential(organizationId, adminUser.username)
+
         // Add policies for the admin user
         val organization = getOrganization(organizationId)
         val policyStatements = listOf(
-            PolicyStatement(organization.id, "*", PolicyStatement.Effect.allow),
+            PolicyStatement("hrn:${organization.id}", "*", PolicyStatement.Effect.allow),
             PolicyStatement("hrn:$organizationId::*", "*", PolicyStatement.Effect.allow)
         )
         val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
         userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.hrn), listOf(hrnFactory.getHrn(policy.hrn)))
-        return organization
+        return Pair(organization, credential)
     }
 
     @Timed("organization.get") // TODO: Make this work
@@ -88,7 +96,12 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
  * Service which holds logic related to Organization operations
  */
 interface OrganizationsService {
-    suspend fun createOrganization(name: String, description: String, adminUser: AdminUser): Organization
+    suspend fun createOrganization(
+        name: String,
+        description: String,
+        adminUser: AdminUser
+    ): Pair<Organization, Credential>
+
     suspend fun getOrganization(id: String): Organization
     suspend fun updateOrganization(id: String, description: String): Organization
     suspend fun deleteOrganization(id: String)

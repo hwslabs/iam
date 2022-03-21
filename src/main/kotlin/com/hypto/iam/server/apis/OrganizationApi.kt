@@ -2,6 +2,7 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
@@ -31,9 +32,13 @@ fun Route.createAndDeleteOrganizationApi() {
     route("/organizations") {
         post {
             val request = call.receive<CreateOrganizationRequest>().validate()
-            val response = service.createOrganization(request.name, description = "", adminUser = request.adminUser)
+            val (organization, credential) = service.createOrganization(
+                request.name,
+                description = "",
+                adminUser = request.adminUser
+            )
             call.respondText(
-                text = gson.toJson(response),
+                text = gson.toJson(CreateOrganizationResponse(organization, credential)),
                 contentType = ContentType.Application.Json,
                 status = HttpStatusCode.Created
             )

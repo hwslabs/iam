@@ -85,6 +85,15 @@ test {
 }
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    'com/hypto/iam/server/db/tables/*',
+                    'com/hypto/iam/server/models',
+                    'com/hypto/iam/server/db/*',
+            ])
+        }))
+    }
 }
 jacoco {
     toolVersion = "0.8.7"
@@ -316,6 +325,10 @@ dependencies {
 //    testImplementation("com.h2database:h2:$h2Version")
     testImplementation "io.mockk:mockk:1.12.2"
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
+
+    testImplementation "org.testcontainers:junit-jupiter:1.16.3"
+    testImplementation "org.testcontainers:testcontainers:1.16.3"
+    testImplementation "org.testcontainers:postgresql:1.16.3"
 }
 
 // configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources

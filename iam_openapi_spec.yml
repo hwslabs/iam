@@ -1157,12 +1157,21 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+
+    CreateOrganizationResponse:
+      description: Response for Organization requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateOrganizationResponse'
+
     OrganizationResponse:
       description: Response for Organization requests
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Organization'
+
 
     CreateUserResponse:
       description: Response for CreateUserRequest
@@ -1533,6 +1542,15 @@ components:
           type: string
           description: error description
           maxLength: 500
+
+    CreateOrganizationResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        organization:
+          $ref: '#/components/schemas/Organization'
+        adminUserCredential:
+          $ref: '#/components/schemas/Credential'
 
     GetUserPoliciesResponse:
       type: object

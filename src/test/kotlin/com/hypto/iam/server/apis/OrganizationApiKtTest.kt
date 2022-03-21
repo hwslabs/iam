@@ -1,25 +1,14 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.db.repositories.CredentialsRepo
-import com.hypto.iam.server.db.repositories.OrganizationRepo
-import com.hypto.iam.server.db.repositories.PoliciesRepo
-import com.hypto.iam.server.db.repositories.UserPoliciesRepo
-import com.hypto.iam.server.db.repositories.UserRepo
-import com.hypto.iam.server.di.applicationModule
-import com.hypto.iam.server.di.controllerModule
-import com.hypto.iam.server.di.repositoryModule
-import com.hypto.iam.server.extensions.usersFrom
 import com.hypto.iam.server.handleRequest
-import com.hypto.iam.server.helpers.MockCredentialsStore
-import com.hypto.iam.server.helpers.MockOrganizationStore
-import com.hypto.iam.server.helpers.MockPoliciesStore
-import com.hypto.iam.server.helpers.MockStore
-import com.hypto.iam.server.helpers.MockUserPoliciesStore
-import com.hypto.iam.server.helpers.MockUserStore
+import com.hypto.iam.server.helpers.AbstractContainerBaseTest
+import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
+import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.application.Application
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -30,84 +19,28 @@ import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
-import io.mockk.mockkClass
 import kotlin.test.assertFalse
 import kotlin.text.Charsets.UTF_8
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.junit5.AutoCloseKoinTest
-import org.koin.test.junit5.KoinTestExtension
-import org.koin.test.junit5.mock.MockProviderExtension
-import org.koin.test.mock.declareMock
+import org.testcontainers.junit.jupiter.Testcontainers
 
-internal class OrganizationApiKtTest : AutoCloseKoinTest() {
+@Testcontainers
+internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     private val gson = Gson()
     private val rootToken = "hypto-root-secret-key"
 
-    @JvmField
-    @RegisterExtension
-    val koinTestExtension = KoinTestExtension.create {
-        modules(repositoryModule, controllerModule, applicationModule)
-    }
-
-    @JvmField
-    @RegisterExtension
-    val koinMockProvider = MockProviderExtension.create { mockkClass(it) }
-
-    private val mockStore = MockStore()
-
-    @AfterEach
-    fun tearDown() {
-        mockStore.clear()
-    }
-
-    @BeforeEach
-    fun setUp() {
-        declareMock<OrganizationRepo> {
-            with(MockOrganizationStore(mockStore)) {
-                mockInsert(this@declareMock)
-                mockFindById(this@declareMock)
-            }
-        }
-
-        declareMock<CredentialsRepo> {
-            MockCredentialsStore(mockStore).mockFetchByRefreshToken(this@declareMock)
-        }
-        declareMock<UserRepo> {
-            with(MockUserStore(mockStore)) {
-                mockFetchByHrn(this@declareMock)
-                mockExistsById(this@declareMock)
-                mockCreate(this@declareMock)
-            }
-        }
-
-        declareMock<PoliciesRepo> {
-            with(MockPoliciesStore(mockStore)) {
-                mockCreate(this@declareMock)
-                mockExistsById(this@declareMock)
-                mockExistsByIds(this@declareMock)
-                mockFetchByHrn(this@declareMock)
-            }
-        }
-
-        declareMock<UserPoliciesRepo> {
-            with(MockUserPoliciesStore(mockStore)) {
-                mockInsert(this@declareMock)
-                mockFetchByPrincipalHrn(this@declareMock)
-            }
-        }
-    }
-
     @Test
     fun `create organization with valid root credentials`() {
+
         withTestApplication(Application::handleRequest) {
+            val orgName = "test-org" + IdGenerator.randomId()
+            val userName = "test-user" + IdGenerator.randomId()
+            lateinit var orgId: String
             val requestBody = CreateOrganizationRequest(
-                "testName",
+                orgName,
                 AdminUser(
-                    "testPassword",
+                    userName,
                     "testEmail", "testPhone", "testUserName"
                 )
             )
@@ -118,20 +51,24 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     setBody(gson.toJson(requestBody))
                 }
             ) {
-                val responseBody = gson.fromJson(response.content, Organization::class.java)
-
+                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
+                orgId = responseBody.organization!!.id
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-                assertEquals(requestBody.name, responseBody.name)
-                assertEquals(10, responseBody.id.length)
+                assertEquals(requestBody.name, responseBody.organization!!.name)
+                assertEquals(10, responseBody.organization!!.id.length)
             }
+
+            DataSetupHelper.deleteOrganization(orgId, this)
         }
     }
 
     @Test
     fun `create organization with invalid root credentials`() {
         withTestApplication(Application::handleRequest) {
+            val orgName = "test-org" + IdGenerator.randomId()
+            val userName = "test-user" + IdGenerator.randomId()
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -139,9 +76,9 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     setBody(
                         gson.toJson(
                             CreateOrganizationRequest(
-                                "testName",
+                                orgName,
                                 AdminUser(
-                                    "testPassword",
+                                    userName,
                                     "testEmail", "testPhone", "testUserName"
                                 )
                             )
@@ -159,23 +96,25 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
     @Test
     fun `get organization with invalid credentials`() {
         withTestApplication(Application::handleRequest) {
-
+            val orgName = "test-org" + IdGenerator.randomId()
+            val userName = "test-user" + IdGenerator.randomId()
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
                 setBody(
                     gson.toJson(
                         CreateOrganizationRequest(
-                            "testName",
-                            AdminUser("testUserName", "testPassword", "testEmail", "testPhone")
+                            orgName,
+                            AdminUser(userName, "testPassword", "testEmail", "testPhone")
                         )
                     )
                 )
             }
-            val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
+            val createdOrganization =
+                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.id}") {
+                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, "Bearer test-bearer-token")
                 }
@@ -184,67 +123,54 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                 assertFalse(response.headers.contains(HttpHeaders.ContentType))
                 assertEquals(null, response.content)
             }
+
+            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
         }
     }
 
     @Test
     fun `get organization success`() {
         withTestApplication(Application::handleRequest) {
-
-            // Create organization
+            val orgName = "test-org" + IdGenerator.randomId()
+            val userName = "test-user" + IdGenerator.randomId()
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
                 setBody(
                     gson.toJson(
                         CreateOrganizationRequest(
-                            "testName",
-                            AdminUser("testUserName", "testPassword", "testEmail", "testPhone")
+                            orgName,
+                            AdminUser(userName, "testPassword", "testEmail", "testPhone")
                         )
                     )
                 )
             }
-            val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
-
-//            // Create User
-//            // TODO: Replace createUser method call with API call
-//            val createdUser = MockUserStore(mockStore).createUser(createdOrganization.id, "testUserName")
-
-            val adminUserId = mockStore.organizationIdMap[createdOrganization.id]!!.adminUser
-            val createdUser = usersFrom(mockStore.userIdMap[adminUserId]!!)
-
-            // Create Credential
-            // TODO: Replace createCredential method call with API call
-            val createdCredentials = MockCredentialsStore(mockStore).createCredential(createdUser.hrn)
-
-//            Cannot create credential without an existing credentials ;)
-//            val createCredentialCall = handleRequest(
-//                HttpMethod.Get,
-//                "/organizations/${createdOrganization.id}/users/testUserName/credential"
-//            ) {
-//                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//                addHeader(HttpHeaders.Authorization, "Bearer test-bearer-token")
-//            }
+            val createdOrganization =
+                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.id}") {
+                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential!!.secret}")
                 }
+
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
                 val fetchedOrganization = gson.fromJson(response.content, Organization::class.java)
-                assertEquals(createdOrganization, fetchedOrganization)
+                assertEquals(createdOrganization.organization, fetchedOrganization)
             }
+
+            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
         }
     }
 
     @Test
     fun `get organization not found`() {
         withTestApplication(Application::handleRequest) {
-
+            val orgName = "test-org" + IdGenerator.randomId()
+            val userName = "test-user" + IdGenerator.randomId()
             // Create organization
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -252,26 +178,24 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                 setBody(
                     gson.toJson(
                         CreateOrganizationRequest(
-                            "testName",
-                            AdminUser("testUserName", "testPassword", "testEmail", "testPhone")
+                            orgName,
+                            AdminUser(userName, "testPassword", "testEmail", "testPhone")
                         )
                     )
                 )
             }
-            val createdOrganization = gson.fromJson(createOrganizationCall.response.content, Organization::class.java)
-
-            val adminUserId = mockStore.organizationIdMap[createdOrganization.id]!!.adminUser
-            val createdUser = usersFrom(mockStore.userIdMap[adminUserId]!!)
-
-            // Create Credential
-            // TODO: Replace createCredential method call with API call
-            val createdCredentials = MockCredentialsStore(mockStore).createCredential(createdUser.hrn)
+            val createdOrganization =
+                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
-                handleRequest(HttpMethod.Get, "/organizations/onvalidOrganizationId") {
+                handleRequest(HttpMethod.Get, "/organizations/inValidOrganizationId") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.refreshToken}")
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.adminUserCredential!!.secret}"
+                    )
                 }
+
             ) {
                 // These assertions
                 assertEquals(HttpStatusCode.NotFound, response.status())
@@ -280,6 +204,8 @@ internal class OrganizationApiKtTest : AutoCloseKoinTest() {
                     response.contentType()
                 )
             }
+
+            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
         }
     }
 }
