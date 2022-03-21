@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 services:
   web:
     build:
@@ -8,8 +8,11 @@ services:
       - .:/iam
     ports:
       - "8080:8080"
-    depends_on:
+    links:
       - pg
+    depends_on:
+      pg:
+        condition: service_healthy
     command: ./docker/iam-web/run.sh
     env_file:
       - ./docker/iam-web/dev.env
@@ -25,3 +28,8 @@ services:
     volumes:
       - ./docker/iam-pg/data:/var/lib/postgresql/data
     command: ["-c", "max_connections=500"]
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "iam", "-U", "root" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
