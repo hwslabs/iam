@@ -85,15 +85,15 @@ test {
 }
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
-
+    reports {
+        csv.enabled = true
+    }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
                     'com/hypto/iam/server/db/tables/*',
                     'com/hypto/iam/server/models',
                     'com/hypto/iam/server/db/*',
-                    // TODO: Remove this once test container changes are committed
-                    'com/hypto/iam/server/db/repositories'
             ])
         }))
     }

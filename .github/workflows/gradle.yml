@@ -23,3 +23,7 @@ jobs:
         with:
           gradle-version: '6.9.2'
           arguments: build
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          jacoco-csv-file: build/jacoco/test/jacocoTestReport.csv
