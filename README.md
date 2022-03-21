@@ -1,3 +1,5 @@
+![Coverage](.github/badges/jacoco.svg)
+
 # com.hypto.iam - Kotlin Server for Hypto IAM
 
 APIs for Hypto IAM Service.
