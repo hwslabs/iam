@@ -5,21 +5,24 @@ import org.flywaydb.core.api.Location
 import org.flywaydb.core.api.configuration.ClassicConfiguration
 import org.testcontainers.containers.PostgreSQLContainer
 
+/**
+ * This object is used to initialize the testcontainers only once for all the tests.
+ */
 object PostgresInit {
     init {
-        val container =
+        val testContainer =
             PostgreSQLContainer("postgres:14.1-alpine")
                 .withDatabaseName("iam")
                 .withUsername("root")
                 .withPassword("password")
 
-        container.start()
+        testContainer.start()
 
         val configuration = ClassicConfiguration()
         configuration.setDataSource(
-            container.jdbcUrl,
-            container.username,
-            container.password
+            testContainer.jdbcUrl,
+            testContainer.username,
+            testContainer.password
         )
         configuration.setLocations(Location("filesystem:src/main/resources/db/migration"))
         val flyway = Flyway(configuration)
@@ -28,10 +31,10 @@ object PostgresInit {
         System.setProperty("config.override.database.name", "iam")
         System.setProperty("config.override.database.user", "root")
         System.setProperty("config.override.database.password", "password")
-        System.setProperty("config.override.database.host", container.host)
+        System.setProperty("config.override.database.host", testContainer.host)
         System.setProperty(
             "config.override.database.port",
-            container.firstMappedPort.toString()
+            testContainer.firstMappedPort.toString()
         )
     }
 }

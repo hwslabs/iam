@@ -102,7 +102,6 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
     val entries = mutableListOf<ResourceHrn>()
 
     fun append(resourceHrn: ResourceHrn): Boolean {
-        // TODO: remove try block after fixing the issue with audit log
         return try {
             entries.add(resourceHrn)
         } catch (e: Exception) {
@@ -112,7 +111,6 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
     }
 
     fun persist(message: Any) {
-        // TODO: Remove after getting rid of the exception
         try {
             entries.forEach {
                 persistEntry(context.call, message, it.toString())

@@ -1,13 +1,9 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.di.applicationModule
-import com.hypto.iam.server.di.controllerModule
-import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.ActionPaginatedResponse
 import com.hypto.iam.server.models.BaseSuccessResponse
@@ -23,36 +19,14 @@ import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
-import io.mockk.mockkClass
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.junit5.KoinTestExtension
-import org.koin.test.junit5.mock.MockProviderExtension
 
 class ActionApiTest : AbstractContainerBaseTest() {
     private val gson = Gson()
 
-    @JvmField
-    @RegisterExtension
-    val koinTestExtension = KoinTestExtension.create {
-        modules(repositoryModule, controllerModule, applicationModule)
-    }
-
-    @JvmField
-    @RegisterExtension
-    val koinMockProvider = MockProviderExtension.create { mockkClass(it) }
-
-    private val mockStore = MockStore()
-
-    @AfterEach
-    fun tearDown() {
-        mockStore.clear()
-    }
-
     @Test
-    fun `create action`() {
+    fun `create action success case`() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
@@ -74,7 +48,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 )
 
                 assertEquals(organization.id, responseBody.organizationId)
-                assertEquals(responseBody.description, "")
+                assertEquals("", responseBody.description)
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)
@@ -105,9 +79,9 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 )
 
                 val responseBody = gson.fromJson(response.content, Action::class.java)
-                assertEquals(responseBody.name, action.name)
-                assertEquals(responseBody.organizationId, organization.id)
-                assertEquals(responseBody.resourceName, resource.name)
+                assertEquals(action.name, responseBody.name)
+                assertEquals(organization.id, responseBody.organizationId)
+                assertEquals(resource.name, responseBody.resourceName)
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)
@@ -115,7 +89,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
     }
 
     @Test
-    fun `get action from different organization user`() {
+    fun `get action failure for unauthorized user access`() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse1, _) = DataSetupHelper.createOrganization(this)
             val organization1 = organizationResponse1.organization!!
@@ -170,6 +144,18 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 assertEquals(true, responseBody.success)
             }
 
+            // Check that the action is not available
+            with(
+                handleRequest(
+                    HttpMethod.Get,
+                    "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
+                ) {
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                }
+            ) {
+                assertEquals(HttpStatusCode.NotFound, response.status())
+            }
+
             DataSetupHelper.deleteOrganization(organization.id, this)
         }
     }
@@ -199,7 +185,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 )
 
                 val responseBody = gson.fromJson(response.content, ActionPaginatedResponse::class.java)
-                assertEquals(responseBody.data!!.size, 2)
+                assertEquals(2, responseBody.data!!.size)
                 assert(responseBody.data!!.contains(action1))
                 assert(responseBody.data!!.contains(action2))
             }
@@ -235,9 +221,9 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 )
 
                 val responseBody = gson.fromJson(response.content, Action::class.java)
-                assertEquals(responseBody.name, action.name)
-                assertEquals(responseBody.resourceName, resource.name)
-                assertEquals(responseBody.description, newDescription)
+                assertEquals(action.name, responseBody.name)
+                assertEquals(resource.name, responseBody.resourceName)
+                assertEquals(newDescription, responseBody.description)
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)

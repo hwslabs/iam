@@ -1,13 +1,9 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.di.applicationModule
-import com.hypto.iam.server.di.controllerModule
-import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.Resource
@@ -23,39 +19,17 @@ import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
-import io.mockk.mockkClass
 import kotlin.text.Charsets.UTF_8
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.junit5.KoinTestExtension
-import org.koin.test.junit5.mock.MockProviderExtension
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
 internal class ResourceApiTest : AbstractContainerBaseTest() {
     private val gson = Gson()
 
-    @JvmField
-    @RegisterExtension
-    val koinTestExtension = KoinTestExtension.create {
-        modules(repositoryModule, controllerModule, applicationModule)
-    }
-
-    @JvmField
-    @RegisterExtension
-    val koinMockProvider = MockProviderExtension.create { mockkClass(it) }
-
-    private val mockStore = MockStore()
-
-    @AfterEach
-    fun tearDown() {
-        mockStore.clear()
-    }
-
     @Test
-    fun `create resource`() {
+    fun `create resource success case`() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
@@ -76,7 +50,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
                 assertEquals(resourceName, responseBody.name)
                 assertEquals(organization.id, responseBody.organizationId)
-                assertEquals(responseBody.description, "")
+                assertEquals("", responseBody.description)
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)
@@ -102,7 +76,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
                 val responseBody = gson.fromJson(response.content, Resource::class.java)
-                assertEquals(responseBody.name, resourceName)
+                assertEquals(resourceName, responseBody.name)
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)
@@ -110,7 +84,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
     }
 
     @Test
-    fun `get resource from different organization user`() {
+    fun `get resource failure for unauthorized user access`() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse1, _) = DataSetupHelper.createOrganization(this)
             val organization1 = organizationResponse1.organization!!
@@ -154,6 +128,15 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
                 val responseBody = gson.fromJson(response.content, BaseSuccessResponse::class.java)
                 assertEquals(true, responseBody.success)
+            }
+
+            // Check that the resource is no longer available
+            with(
+                handleRequest(HttpMethod.Get, "/organizations/${organization.id}/resources/${resource.name}") {
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                }
+            ) {
+                assertEquals(HttpStatusCode.NotFound, response.status())
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)
@@ -209,8 +192,8 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
                 val responseBody = gson.fromJson(response.content, Resource::class.java)
-                assertEquals(responseBody.name, resource.name)
-                assertEquals(responseBody.description, newDescription)
+                assertEquals(resource.name, responseBody.name)
+                assertEquals(newDescription, responseBody.description)
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)

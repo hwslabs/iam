@@ -1,13 +1,9 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.di.applicationModule
-import com.hypto.iam.server.di.controllerModule
-import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.helpers.MockStore
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyStatement
@@ -23,35 +19,13 @@ import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
-import io.mockk.mockkClass
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.test.junit5.KoinTestExtension
-import org.koin.test.junit5.mock.MockProviderExtension
 
 class PolicyApiTest : AbstractContainerBaseTest() {
     private val gson = Gson()
-
-    @JvmField
-    @RegisterExtension
-    val koinTestExtension = KoinTestExtension.create {
-        modules(repositoryModule, controllerModule, applicationModule)
-    }
-
-    @JvmField
-    @RegisterExtension
-    val koinMockProvider = MockProviderExtension.create { mockkClass(it) }
-
-    private val mockStore = MockStore()
-
-    @AfterEach
-    fun tearDown() {
-        mockStore.clear()
-    }
 
     @Nested
     @DisplayName("Create policy API tests")
