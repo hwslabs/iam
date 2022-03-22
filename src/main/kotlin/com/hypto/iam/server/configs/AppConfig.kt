@@ -29,10 +29,10 @@ class AppConfig {
     enum class Environment { Development, Staging, Production }
 
     /**
-     * @jwtTokenValidity: Represents how long the JWT token must be valid from the instant of creation
-     * @signKeyFetchInterval: Represents how frequently the private key for signing JWT tokens must be fetched from DB
-     * @oldKeyTtl: Represents the TTL in seconds until which the rotated key must be available for verifying signatures
-                   (Default: 600s, 2X the local cache duration)
+     * @param jwtTokenValidity Represents how long the JWT token must be valid from the instant of creation
+     * @param oldKeyTtl Represents the TTL in seconds until which the rotated key must be available for
+        verifying signatures (Default: 600s, 2X the local cache duration)
+     * @param secretKey Internal key to create & delete organizations
      */
     data class App(
         val env: Environment,
