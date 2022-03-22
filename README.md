@@ -1,5 +1,4 @@
-![Coverage](.github/badges/jacoco.svg)
-
+[![Build](https://github.com/hwslabs/iam/actions/workflows/build.yml/badge.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
 # com.hypto.iam - Kotlin Server for Hypto IAM
 
 APIs for Hypto IAM Service.
