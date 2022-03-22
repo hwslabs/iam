@@ -28,7 +28,6 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     private val gson = Gson()
-    private val rootToken = "hypto-root-secret-key"
 
     @Test
     fun `create organization with valid root credentials`() {
@@ -198,11 +197,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             ) {
                 // These assertions
-                assertEquals(HttpStatusCode.NotFound, response.status())
-                assertEquals(
-                    ContentType.Application.Json.withCharset(UTF_8),
-                    response.contentType()
-                )
+                assertEquals(HttpStatusCode.Forbidden, response.status())
             }
 
             DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)

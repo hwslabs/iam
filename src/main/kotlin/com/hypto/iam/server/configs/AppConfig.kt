@@ -3,7 +3,7 @@ package com.hypto.iam.server.configs
 import com.sksamuel.hoplite.ConfigLoader
 
 class AppConfig {
-    /*
+    /**
     Environment variables should be in Snake case.
     E.g. env, token_validity
 
@@ -26,9 +26,22 @@ class AppConfig {
             get() = "jdbc:postgresql://$host:$port/iam"
     }
 
-    data class App(val env: String, val jwtTokenValidity: Long) {
+    enum class Environment { Development, Staging, Production }
+
+    /**
+     * @param jwtTokenValidity Represents how long the JWT token must be valid from the instant of creation
+     * @param oldKeyTtl Represents the TTL in seconds until which the rotated key must be available for
+        verifying signatures (Default: 600s, 2X the local cache duration)
+     * @param secretKey Internal key to create & delete organizations
+     */
+    data class App(
+        val env: Environment,
+        val jwtTokenValidity: Long,
+        val oldKeyTtl: Long,
+        val secretKey: String
+    ) {
         val isDevelopment: Boolean
-            get() = env == "development"
+            get() = env == Environment.Development
     }
 
     // Get NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home

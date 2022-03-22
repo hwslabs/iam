@@ -1,7 +1,9 @@
 package com.hypto.iam.server.helpers
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
+import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.di.repositoryModule
 import io.mockk.mockkClass
 import org.junit.jupiter.api.AfterEach
@@ -12,6 +14,7 @@ import org.koin.test.junit5.KoinTestExtension
 import org.koin.test.junit5.mock.MockProviderExtension
 
 abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
+    protected var rootToken: String = ""
 
     @JvmField
     @RegisterExtension
@@ -27,6 +30,7 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
 
     @BeforeEach
     fun setup() {
+        rootToken = getKoinInstance<AppConfig.Config>().app.secretKey
         mockCognitoClient()
     }
 

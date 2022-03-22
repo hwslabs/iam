@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
@@ -66,25 +67,30 @@ fun Route.getAndUpdateOrganizationApi() {
     val gson: Gson by inject()
 
     route("/organizations/{id}") {
-        get {
-            val id = call.parameters["id"]!!
-            val response = service.getOrganization(id)
-            call.respondText(
-                text = gson.toJson(response),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
+        withPermission("getOrganization") {
+            get {
+                val id = call.parameters["id"]!!
+                val response = service.getOrganization(id)
+                call.respondText(
+                    text = gson.toJson(response),
+                    contentType = ContentType.Application.Json,
+                    status = HttpStatusCode.OK
+                )
+            }
         }
 
-        patch {
-            val id = call.parameters["id"]!!
-            val request = call.receive<UpdateOrganizationRequest>().validate()
-            val response = service.updateOrganization(id = id, name = request.name, description = request.description)
-            call.respondText(
-                text = gson.toJson(response),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
+        withPermission("updateOrganization") {
+            patch {
+                val id = call.parameters["id"]!!
+                val request = call.receive<UpdateOrganizationRequest>().validate()
+                val response =
+                    service.updateOrganization(id = id, name = request.name, description = request.description)
+                call.respondText(
+                    text = gson.toJson(response),
+                    contentType = ContentType.Application.Json,
+                    status = HttpStatusCode.OK
+                )
+            }
         }
     }
 }
