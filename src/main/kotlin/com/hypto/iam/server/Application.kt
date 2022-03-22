@@ -88,7 +88,6 @@ fun Application.handleRequest() {
         apiKeyAuth("hypto-iam-root-auth") {
             validate { tokenCredential: TokenCredential ->
                 when (tokenCredential.value) {
-                    // TODO: Get secret key from db or cache
                     appConfig.app.secretKey -> ApiPrincipal(tokenCredential, "hypto-root")
                     else -> null
                 }
