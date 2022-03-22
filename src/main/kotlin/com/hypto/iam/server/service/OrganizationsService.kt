@@ -10,7 +10,7 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
@@ -32,10 +32,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         adminUser: AdminUser
     ): Pair<Organization, Credential> {
         val organizationId = idGenerator.organizationId()
-        val adminUserHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, adminUser.username)
+        val adminUserHrn = ResourceHrn(organizationId, "", IamResources.USER, adminUser.username)
 
+        // TODO: #0 - Wrap all queries into a transaction
         // TODO: #1 - Update schema to include description, createdBy, updatedBy fields
-        // TODO: #2 - Add transaction to create iam resource_types and actions
+        // TODO: #2 - [IMPORTANT] Add transaction to create iam resource_types and actions
         // TODO: #3 - Add transaction to create admin user
 
         // Create Organization
@@ -84,11 +85,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     }
 
     override suspend fun updateOrganization(id: String, description: String): Organization {
-        TODO("Not yet implemented")
+        TODO("[IMPORTANT] Not yet implemented")
     }
 
     override suspend fun deleteOrganization(id: String) {
-        TODO("Not yet implemented")
+        TODO("[IMPORTANT] Not yet implemented")
     }
 }
 

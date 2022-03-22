@@ -15,6 +15,7 @@ import com.hypto.iam.server.service.ActionService
 import com.hypto.iam.server.service.ActionServiceImpl
 import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.service.CredentialServiceImpl
+import com.hypto.iam.server.service.MasterKeyCache
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.service.OrganizationsServiceImpl
 import com.hypto.iam.server.service.PolicyService
@@ -25,6 +26,8 @@ import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserPolicyService
 import com.hypto.iam.server.service.UserPolicyServiceImpl
+import com.hypto.iam.server.service.UserPrincipalService
+import com.hypto.iam.server.service.UserPrincipalServiceImpl
 import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.service.UsersServiceImpl
 import com.hypto.iam.server.service.ValidationService
@@ -49,7 +52,6 @@ val repositoryModule = module {
     single { UserAuthProvidersRepo }
     single { UserPoliciesRepo }
     single { UserRepo }
-    single { HrnFactory }
 }
 
 val controllerModule = module {
@@ -62,15 +64,18 @@ val controllerModule = module {
     single { ResourceServiceImpl() } bind ResourceService::class
     single { ActionServiceImpl() } bind ActionService::class
     single { UsersServiceImpl() } bind UsersService::class
+    single { UserPrincipalServiceImpl() } bind UserPrincipalService::class
 }
 
 val applicationModule = module {
     single { Gson() }
     single { IdGenerator }
+    single { HrnFactory }
     single { ApplicationIdUtil.Generator }
     single { ApplicationIdUtil.Validator }
     single { PolicyValidator }
     single { AppConfig().configuration }
+    single { MasterKeyCache }
 }
 
 /**

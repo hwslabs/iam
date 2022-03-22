@@ -19,6 +19,8 @@ abstract class Hrn {
         const val HRN_PREFIX = "hrn$HRN_DELIMITER"
         const val HRN_ACTION_DELIMITER = "$"
         const val HRN_INSTANCE_DELIMITER = "/"
+
+        // TODO: This can be clubbed with the IamResources object
         val resourceMap: Map<String, String> = mapOf(
             "users" to "iam-user",
             "resources" to "iam-resource",
@@ -49,13 +51,13 @@ class ResourceHrn : Hrn {
 
     constructor(
         organization: String,
-        account: String?,
-        resource: String?,
+        account: String? = null,
+        resource: String,
         resourceInstance: String?
     ) {
         this.organization = organization
         this.account = account
-        if (resource == null || resource == "") {
+        if (resource == "") {
             // Resource Hrn must have a resource
             throw HrnParseException("Null resource for resource hrn")
         }
@@ -143,7 +145,7 @@ class ActionHrn : Hrn {
                 .toRegex()
     }
 
-    constructor(organization: String, account: String?, resource: String?, action: String?) {
+    constructor(organization: String, account: String? = null, resource: String?, action: String?) {
         this.organization = organization
         this.account = account
         this.resource = resource
@@ -182,6 +184,15 @@ object HrnFactory {
             ResourceHrn(hrnString)
         } else {
             throw HrnParseException("Invalid hrn string format")
+        }
+    }
+
+    fun isValid(hrnString: String): Boolean {
+        return try {
+            getHrn(hrnString)
+            true
+        } catch (e: HrnParseException) {
+            false
         }
     }
 }

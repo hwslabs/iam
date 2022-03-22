@@ -11,7 +11,7 @@ import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.security.auditLog
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.Hrn
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -28,7 +28,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         userId: String,
         validUntil: String?
     ): Credential {
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userId)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
         // TODO: Limit number of active credentials for a single user
         val credentialsRecord = repo.create(
             userHrn = userHrn,
@@ -36,7 +36,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             validUntil = validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
-        auditLog().append(userHrn)
+        auditLog()?.append(userHrn)
 
         return Credential.from(credentialsRecord)
     }
@@ -46,7 +46,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         userId: String,
         id: UUID
     ): CredentialWithoutSecret {
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userId)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
         return CredentialWithoutSecret.from(fetchCredential(userHrn, id))
     }
 
@@ -57,7 +57,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         status: UpdateCredentialRequest.Status?,
         validUntil: String?
     ): CredentialWithoutSecret {
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userId)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
         // TODO: 3 DB queries are being made in this method. Try to optimize
         fetchCredential(userHrn, id) // Validation
 
@@ -69,7 +69,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
 
         credentialsRecord ?: throw IllegalStateException("Update unsuccessful")
 
-        auditLog().append(userHrn)
+        auditLog()?.append(userHrn)
 
         return CredentialWithoutSecret.from(credentialsRecord)
     }
@@ -78,6 +78,14 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         if (!repo.delete(organizationId, userId, id)) {
             throw EntityNotFoundException("Credential not found")
         }
+
+        auditLog()?.append(
+            ResourceHrn(
+                organization = organizationId,
+                resource = IamResources.USER,
+                resourceInstance = userId
+            )
+        )
 
         return BaseSuccessResponse(true)
     }

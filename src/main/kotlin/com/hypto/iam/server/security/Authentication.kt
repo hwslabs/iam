@@ -1,5 +1,10 @@
 package com.hypto.iam.server.security
 
+import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import com.hypto.iam.server.di.getKoinInstance
+import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.policy.PolicyBuilder
@@ -17,6 +22,7 @@ import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
 import io.ktor.request.ApplicationRequest
 import io.ktor.response.respond
+import java.util.Base64
 
 data class AuthenticationException(override val message: String) : Exception(message)
 
@@ -25,8 +31,13 @@ enum class TokenLocation(val location: String) {
     HEADER("header")
 }
 
+enum class TokenType(val type: String) {
+    CREDENTIAL("credential"),
+    JWT("jwt")
+}
+
 /** Class which stores the token credentials sent by the client */
-data class TokenCredential(val value: String?) : Credential
+data class TokenCredential(val value: String?, val type: TokenType?) : Credential
 
 /** Class to store the Principal authenticated using ApiKey auth **/
 data class ApiPrincipal(
@@ -138,8 +149,33 @@ fun ApplicationRequest.tokenAuthenticationCredentials(
     val result = if (transform != null && value != null) {
         transform.invoke(value)
     } else value
+    val type = if (result != null && isIamJWT(result)) { TokenType.JWT } else { TokenType.CREDENTIAL }
     return when (result) {
         null -> null
-        else -> TokenCredential(result)
+        else -> TokenCredential(result, type)
     }
+}
+
+private const val ALGORITHM = "alg"
+private const val KEY_ID = "kid"
+
+private val gson: Gson = getKoinInstance()
+
+fun isIamJWT(jwt: String): Boolean {
+    val jwtComponents = jwt.split(".")
+    if (jwtComponents.size != MagicNumber.THREE) // The JWT is composed of three parts
+        return false
+    var result = true
+    try {
+        val jsonFirstPart = String(Base64.getDecoder().decode(jwtComponents[0]))
+        // The first part of the JWT is a JSON
+        val firstPart = gson.fromJson(jsonFirstPart, JsonElement::class.java).asJsonObject
+        // The first part has the attribute "alg" and "kid"
+        if (!firstPart.has(ALGORITHM) || !firstPart.has(KEY_ID))
+            result = false
+        // Put the validations you think are necessary for the data the JWT should take to validate
+    } catch (err: JsonParseException) {
+        result = false
+    }
+    return result
 }

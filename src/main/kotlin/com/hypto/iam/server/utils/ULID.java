@@ -77,12 +77,6 @@ public class ULID
         this.random = random;
     }
 
-    public void appendULID(StringBuilder stringBuilder)
-    {
-        Objects.requireNonNull(stringBuilder, "stringBuilder must not be null!");
-        internalAppendULID(stringBuilder, System.currentTimeMillis(), random);
-    }
-
     public String nextULID()
     {
         return nextULID(System.currentTimeMillis());
@@ -93,27 +87,14 @@ public class ULID
         return internalUIDString(timestamp, random);
     }
 
-    public Value nextValue()
+    /*public Value nextValue()
     {
         return nextValue(System.currentTimeMillis());
-    }
+    }*/
 
     public Value nextValue(long timestamp)
     {
         return internalNextValue(timestamp, random);
-    }
-
-    /**
-     * Returns the next monotonic value. If an overflow happened while incrementing
-     * the random part of the given previous ULID value then the returned value will
-     * have a zero random part.
-     *
-     * @param previousUlid the previous ULID value.
-     * @return the next monotonic value.
-     */
-    public Value nextMonotonicValue(Value previousUlid)
-    {
-        return nextMonotonicValue(previousUlid, System.currentTimeMillis());
     }
 
     /**
@@ -135,17 +116,17 @@ public class ULID
         return nextValue(timestamp);
     }
 
-    /**
+    /*
      * Returns the next monotonic value or empty if an overflow happened while incrementing
      * the random part of the given previous ULID value.
      *
      * @param previousUlid the previous ULID value.
      * @return the next monotonic value or empty if an overflow happened.
      */
-    public Optional<Value> nextStrictlyMonotonicValue(Value previousUlid)
+    /*public Optional<Value> nextStrictlyMonotonicValue(Value previousUlid)
     {
         return nextStrictlyMonotonicValue(previousUlid, System.currentTimeMillis());
-    }
+    }*/
 
     /**
      * Returns the next monotonic value or empty if an overflow happened while incrementing
@@ -189,26 +170,6 @@ public class ULID
         return new Value(most, least);
     }
 
-    public static Value fromBytes(byte[] data)
-    {
-        Objects.requireNonNull(data, "data must not be null!");
-        if(data.length != 16)
-        {
-            throw new IllegalArgumentException("data must be 16 bytes in length!");
-        }
-        long mostSignificantBits = 0;
-        long leastSignificantBits = 0;
-        for (int i=0; i<8; i++)
-        {
-            mostSignificantBits = (mostSignificantBits << 8) | (data[i] & 0xff);
-        }
-        for (int i=8; i<16; i++)
-        {
-            leastSignificantBits = (leastSignificantBits << 8) | (data[i] & 0xff);
-        }
-        return new Value(mostSignificantBits, leastSignificantBits);
-    }
-
     public static class Value implements Comparable<Value>, Serializable
     {
         private static final long serialVersionUID = -3563159514112487717L;
@@ -229,43 +190,9 @@ public class ULID
             this.leastSignificantBits = leastSignificantBits;
         }
 
-        /**
-         * Returns the most significant 64 bits of this ULID's 128 bit value.
-         *
-         * @return  The most significant 64 bits of this ULID's 128 bit value
-         */
-        public long getMostSignificantBits() {
-            return mostSignificantBits;
-        }
-
-        /**
-         * Returns the least significant 64 bits of this ULID's 128 bit value.
-         *
-         * @return  The least significant 64 bits of this ULID's 128 bit value
-         */
-        public long getLeastSignificantBits() {
-            return leastSignificantBits;
-        }
-
-
         public long timestamp()
         {
             return mostSignificantBits >>> 16;
-        }
-
-        public byte[] toBytes()
-        {
-            byte[] result=new byte[16];
-            for (int i=0; i<8; i++)
-            {
-                result[i] = (byte)((mostSignificantBits >> ((7-i)*8)) & 0xFF);
-            }
-            for (int i=8; i<16; i++)
-            {
-                result[i] = (byte)((leastSignificantBits >> ((15-i)*8)) & 0xFF);
-            }
-
-            return result;
         }
 
         public Value increment()
@@ -390,16 +317,6 @@ public class ULID
         internalWriteCrockford(buffer, random.nextLong(), 8, 18);
 
         return new String(buffer);
-    }
-
-    static void internalAppendULID(StringBuilder builder, long timestamp, Random random)
-    {
-        checkTimestamp(timestamp);
-
-        internalAppendCrockford(builder, timestamp, 10);
-        // could use nextBytes(byte[] bytes) instead
-        internalAppendCrockford(builder, random.nextLong(), 8);
-        internalAppendCrockford(builder, random.nextLong(), 8);
     }
 
     static Value internalNextValue(long timestamp, Random random)

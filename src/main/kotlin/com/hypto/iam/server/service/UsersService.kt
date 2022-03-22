@@ -8,7 +8,7 @@ import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.Hrn
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -25,12 +25,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
         status: User.Status,
         phone: String?
     ): UsersRecord {
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userName)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         if (repo.existsById(userHrn.toString())) {
             throw EntityAlreadyExistsException("User name already exist")
         }
 
-        // TODO: Remove this impl and use cognito
+        // TODO: [IMPORTANT] Remove this impl and use cognito
         return repo.create(
             userHrn,
             password,
