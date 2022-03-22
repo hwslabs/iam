@@ -1,6 +1,8 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
@@ -22,13 +24,19 @@ import io.ktor.server.testing.withTestApplication
 import kotlin.test.assertFalse
 import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     private val gson = Gson()
-    private val rootToken = "hypto-root-secret-key"
+    private lateinit var rootToken: String
+
+    @BeforeEach
+    fun setup() {
+        rootToken = getKoinInstance<AppConfig.Config>().app.secretKey
+    }
 
     @Test
     fun `create organization with valid root credentials`() {
