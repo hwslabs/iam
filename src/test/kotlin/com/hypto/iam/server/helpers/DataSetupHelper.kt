@@ -1,6 +1,7 @@
 package com.hypto.iam.server.helpers
 
 import com.google.gson.Gson
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.Tables.ACTIONS
 import com.hypto.iam.server.db.Tables.CREDENTIALS
 import com.hypto.iam.server.db.Tables.RESOURCES
@@ -33,7 +34,8 @@ import org.koin.test.junit5.AutoCloseKoinTest
 
 object DataSetupHelper : AutoCloseKoinTest() {
     private val gson = Gson()
-    private const val rootToken = "hypto-root-secret-key"
+    private val appConfig: AppConfig.Config by inject()
+    private val rootToken = appConfig.app.secretKey
 
     private val organizationRepo: OrganizationRepo by inject()
     private val userRepo: UserRepo by inject()

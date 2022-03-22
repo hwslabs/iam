@@ -10,6 +10,7 @@ import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.di.applicationModule
@@ -57,6 +58,7 @@ fun Application.handleRequest() {
     val credentialsRepo: CredentialsRepo by inject()
 //    val userRepo: UserRepo by inject()
     val userPoliciesService: UserPolicyService by inject()
+    val appConfig: AppConfig.Config by inject()
 
     install(DefaultHeaders)
     install(CallLogging)
@@ -87,7 +89,7 @@ fun Application.handleRequest() {
             validate { tokenCredential: TokenCredential ->
                 when (tokenCredential.value) {
                     // TODO: Get secret key from db or cache
-                    "hypto-root-secret-key" -> ApiPrincipal(tokenCredential, "hypto-root")
+                    appConfig.app.secretKey -> ApiPrincipal(tokenCredential, "hypto-root")
                     else -> null
                 }
             }
