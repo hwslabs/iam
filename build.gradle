@@ -199,6 +199,17 @@ task installGitHooks(type: Exec) {
     }
 }
 
+task generateAPIDocs(type: GenerateTask) {
+    generatorName = "markdown"
+    verbose = true
+    inputSpec = "$rootDir/iam_openapi_spec.yml".toString()
+    outputDir = "$rootDir/docs".toString()
+    generateModelTests = false
+    generateModelDocumentation = true
+    generateApiTests = false
+    generateApiDocumentation = true
+}
+
 task generateOpenAPIModels(type: GenerateTask) {
     generatorName = "kotlin-server"
     inputSpec = "$rootDir/iam_openapi_spec.yml".toString()
