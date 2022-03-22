@@ -140,7 +140,7 @@ object MicrometerConfigs {
 
     init {
         registry.config().commonTags(
-            listOf(Tag.of("environment", getKoinInstance<AppConfig.Config>().app.env))
+            listOf(Tag.of("environment", getKoinInstance<AppConfig.Config>().app.env.toString()))
         )
     }
 

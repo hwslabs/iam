@@ -26,21 +26,22 @@ class AppConfig {
             get() = "jdbc:postgresql://$host:$port/iam"
     }
 
+    enum class Environment { Development, Staging, Production }
+
     /**
-     * @env: Environment - "development" / "staging" / "production"
      * @jwtTokenValidity: Represents how long the JWT token must be valid from the instant of creation
      * @signKeyFetchInterval: Represents how frequently the private key for signing JWT tokens must be fetched from DB
      * @oldKeyTtl: Represents the TTL in seconds until which the rotated key must be available for verifying signatures
                    (Default: 600s, 2X the local cache duration)
      */
     data class App(
-        val env: String,
+        val env: Environment,
         val jwtTokenValidity: Long,
         val oldKeyTtl: Long,
         val secretKey: String
     ) {
         val isDevelopment: Boolean
-            get() = env == "development"
+            get() = env == Environment.Development
     }
 
     // Get NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home
