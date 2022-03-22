@@ -45,7 +45,7 @@ object MasterKeysRepo : KoinComponent, DAOImpl<MasterKeysRecord, MasterKeys, UUI
         return fetchOne(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.SIGNING.value)
     }
 
-    // TODO: #1 - Encrypt private keys stored in database with a passphrase
+    // TODO: #1 - [IMPORTANT] Encrypt private keys stored in database with a passphrase
     // TODO: #2 - GRANT only necessary permissions for iam application user to the master_keys table
     fun rotateKey(skipIfPresent: Boolean = false): Boolean {
 
@@ -60,8 +60,10 @@ object MasterKeysRepo : KoinComponent, DAOImpl<MasterKeysRecord, MasterKeys, UUI
                     .where(
                         com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS.eq(Status.VERIFYING.value),
                         com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.UPDATED_AT.lessThan(
-                            LocalDateTime.ofInstant(Instant.now().minusSeconds(appConfig.app.oldKeyTtl),
-                                ZoneOffset.systemDefault())
+                            LocalDateTime.ofInstant(
+                                Instant.now().minusSeconds(appConfig.app.oldKeyTtl),
+                                ZoneOffset.systemDefault()
+                            )
                         )
                     ).execute()
 

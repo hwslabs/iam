@@ -9,19 +9,6 @@ object PolicyValidator {
     private val modelPath = this::class.java.classLoader.getResource("casbin_model.conf")?.path
     private val model = newModel(modelPath, "")
 
-    // TODO: Get the policy from DB
-    val samplePolicy = PolicyBuilder()
-        .withStatement(
-            PolicyStatement.p("hrn:hypto::iam-user/alice",
-                "hrn:hypto:swiggy:ledger-ledgerAccount/12345",
-                "hrn:hypto\$ledger-ledgerAccount:addTransactions",
-                "allow"))
-        .withStatement(
-            PolicyStatement.p("hrn:hypto:swiggy:iam-user/bob",
-                "hrn:hypto\$iam-resource",
-                "hrn:hypto\$iam-resource:createAction",
-                "allow"))
-
     fun validate(policyBuilder: PolicyBuilder, policyRequest: PolicyRequest): Boolean {
         return validate(policyBuilder.stream(), policyRequest)
     }
@@ -33,7 +20,7 @@ object PolicyValidator {
     fun validate(inputStream: InputStream, policyRequests: List<PolicyRequest>): Boolean {
         return policyRequests
             .all {
-                Enforcer(modelPath, FileAdapter(inputStream))
+                Enforcer(model, FileAdapter(inputStream))
                     .enforce(it.principal, it.resource, it.action)
             }
     }
@@ -46,7 +33,7 @@ object PolicyValidator {
     fun validateAny(inputStream: InputStream, policyRequests: List<PolicyRequest>): Boolean {
         return policyRequests
             .any {
-                Enforcer(modelPath, FileAdapter(inputStream))
+                Enforcer(model, FileAdapter(inputStream))
                     .enforce(it.principal, it.resource, it.action)
             }
     }
@@ -54,7 +41,7 @@ object PolicyValidator {
     fun validateNone(inputStream: InputStream, policyRequests: List<PolicyRequest>): Boolean {
         return policyRequests
             .none {
-                Enforcer(modelPath, FileAdapter(inputStream))
+                Enforcer(model, FileAdapter(inputStream))
                     .enforce(it.principal, it.resource, it.action)
             }
     }
