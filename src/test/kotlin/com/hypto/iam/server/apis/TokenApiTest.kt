@@ -11,7 +11,7 @@ import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.ValidationRequest
 import com.hypto.iam.server.models.ValidationResponse
 import com.hypto.iam.server.utils.ActionHrn
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.application.Application
 import io.ktor.http.ContentType
@@ -66,12 +66,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                         ResourceAction(
                                             ResourceHrn(
                                                 organization = createdOrganization.organization!!.id,
-                                                resource = IamResourceTypes.USER,
+                                                resource = IamResources.USER,
                                                 resourceInstance = createdUser.username
                                             ).toString(),
                                             ActionHrn(
                                                 organization = createdOrganization.organization!!.id,
-                                                resource = IamResourceTypes.USER,
+                                                resource = IamResources.USER,
                                                 action = "createCredentials"
                                             ).toString()
                                         )
@@ -135,12 +135,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                         ResourceAction(
                                             ResourceHrn(
                                                 organization = createdOrganization.organization!!.id,
-                                                resource = IamResourceTypes.USER,
+                                                resource = IamResources.USER,
                                                 resourceInstance = createdUser.username
                                             ).toString(),
                                             ActionHrn(
                                                 organization = createdOrganization.organization!!.id,
-                                                resource = IamResourceTypes.USER,
+                                                resource = IamResources.USER,
                                                 action = "createCredentials"
                                             ).toString()
                                         )

@@ -47,9 +47,9 @@ fun Route.policyApi() {
         get("/organizations/{organization_id}/policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to get user")
-            val nextToken = call.request.queryParameters["next_token"]
-            val pageSize = call.request.queryParameters["page_size"]
-            val sortOrder = call.request.queryParameters["sort_order"]
+            val nextToken = call.request.queryParameters["nextToken"]
+            val pageSize = call.request.queryParameters["pageSize"]
+            val sortOrder = call.request.queryParameters["sortOrder"]
 
             val context = PaginationContext.from(
                 nextToken,

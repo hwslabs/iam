@@ -5,9 +5,11 @@ import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.models.CreatePolicyRequest
+import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.Policy
+import com.hypto.iam.server.models.PolicyPaginatedResponse
 import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.application.Application
 import io.ktor.http.ContentType
@@ -64,7 +66,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                     val expectedPolicyHrn = ResourceHrn(
                         organization = createdOrganization.id,
-                        resource = IamResourceTypes.POLICY,
+                        resource = IamResources.POLICY,
                         account = null,
                         resourceInstance = policyName
                     )
@@ -245,7 +247,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                     val expectedPolicyHrn = ResourceHrn(
                         organization = createOrganizationResponse.organization?.id!!,
-                        resource = IamResourceTypes.POLICY,
+                        resource = IamResources.POLICY,
                         account = null,
                         resourceInstance = policyName
                     )
@@ -283,6 +285,187 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
                         response.contentType()
                     )
+                }
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("List policies API tests")
+    inner class ListPoliciesTest {
+        @Test
+        fun `existing policy - first page, more pages available`() {
+            withTestApplication(Application::handleRequest) {
+                // Arrange
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                // We create 2 policies in addition to 1 ADMIN_ROOT_POLICY.
+                // So, list API must return 3 policies in total.
+                (1..2).forEach {
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    ) {
+                        val policyStatements = listOf(
+                            PolicyStatement("resource", "action", PolicyStatement.Effect.allow)
+                        )
+                        val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                        setBody(gson.toJson(requestBody))
+                    }
+                }
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies?pageSize=2"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                    }
+                ) {
+                    // Assert - first page
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+
+                    val responseBody = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+                    Assertions.assertNotNull(responseBody.nextToken)
+                    Assertions.assertEquals(2, responseBody.data?.size)
+                    Assertions.assertEquals(2, responseBody.context?.pageSize)
+                    Assertions.assertEquals(PaginationOptions.SortOrder.asc, responseBody.context?.sortOrder)
+
+                    // Assert - Last page
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Get,
+                            "/organizations/${createOrganizationResponse.organization?.id}/policies?" +
+                                "pageSize=3&nextToken=${responseBody.nextToken}"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+
+                        val responseBody2 = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+
+                        Assertions.assertNotNull(responseBody2.nextToken)
+                        Assertions.assertEquals(1, responseBody2.data?.size)
+                        Assertions.assertEquals(2, responseBody2.context?.pageSize)
+                        Assertions.assertEquals(PaginationOptions.SortOrder.asc, responseBody2.context?.sortOrder)
+
+                        // Assert - Empty page
+
+                        with(
+                            handleRequest(
+                                HttpMethod.Get,
+                                "/organizations/${createOrganizationResponse.organization?.id}/policies?" +
+                                    "pageSize=2&nextToken=${responseBody2.nextToken}"
+                            ) {
+                                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                                addHeader(
+                                    HttpHeaders.Authorization,
+                                    "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                                )
+                            }
+                        ) {
+                            Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                            Assertions.assertEquals(
+                                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                                response.contentType()
+                            )
+
+                            val responseBody3 = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+
+                            Assertions.assertNull(responseBody3.nextToken)
+                            Assertions.assertEquals(0, responseBody3.data?.size)
+                            Assertions.assertEquals(2, responseBody3.context?.pageSize)
+                            Assertions.assertEquals(PaginationOptions.SortOrder.asc, responseBody3.context?.sortOrder)
+                        }
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `no policies available (Just root policy)`() {
+            withTestApplication(Application::handleRequest) {
+                // Arrange
+                val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies?pageSize=2"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        )
+                    }
+                ) {
+                    // Assert - first page
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+
+                    val responseBody = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+                    Assertions.assertNotNull(responseBody.nextToken)
+                    Assertions.assertEquals(1, responseBody.data?.size)
+                    Assertions.assertEquals(2, responseBody.context?.pageSize)
+                    Assertions.assertEquals(PaginationOptions.SortOrder.asc, responseBody.context?.sortOrder)
+
+                    // Assert - Empty page
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Get,
+                            "/organizations/${createOrganizationResponse.organization?.id}/policies?" +
+                                "pageSize=2&nextToken=${responseBody.nextToken}"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+
+                        val responseBody2 = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+
+                        Assertions.assertNull(responseBody2.nextToken)
+                        Assertions.assertEquals(0, responseBody2.data?.size)
+                        Assertions.assertEquals(2, responseBody2.context?.pageSize)
+                        Assertions.assertEquals(PaginationOptions.SortOrder.asc, responseBody2.context?.sortOrder)
+                    }
                 }
             }
         }

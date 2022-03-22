@@ -12,7 +12,7 @@ import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.UserPolicyService
 import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.utils.HrnFactory
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
@@ -45,7 +45,7 @@ fun Route.usersApi() {
             val request = call.receive<PolicyAssociationRequest>().validate()
 
             val response = userPolicyService.attachPoliciesToUser(
-                ResourceHrn(organizationId, "", IamResourceTypes.USER, userId),
+                ResourceHrn(organizationId, "", IamResources.USER, userId),
                 request.policies.map { hrnFactory.getHrn(it) }
             )
 
@@ -109,7 +109,7 @@ fun Route.usersApi() {
             val request = call.receive<PolicyAssociationRequest>().validate()
 
             val response = userPolicyService.detachPoliciesToUser(
-                ResourceHrn(organizationId, "", IamResourceTypes.USER, userId),
+                ResourceHrn(organizationId, "", IamResources.USER, userId),
                 request.policies.map { hrnFactory.getHrn(it) }
             )
 

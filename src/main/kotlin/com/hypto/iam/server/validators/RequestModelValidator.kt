@@ -141,6 +141,7 @@ fun CreatePolicyRequest.validate(): CreatePolicyRequest {
             minItems(MIN_POLICY_STATEMENTS)
             maxItems(MAX_POLICY_STATEMENTS)
         }
+        // TODO: [IMPORTANT] should we do a hrn check for resource and action in a policy statement?
         CreatePolicyRequest::statements onEach {
             PolicyStatement::resource required { run(nameCheck) }
             PolicyStatement::action required { run(nameCheck) }

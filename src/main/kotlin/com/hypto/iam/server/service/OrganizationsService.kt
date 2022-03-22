@@ -10,7 +10,7 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
@@ -32,7 +32,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         adminUser: AdminUser
     ): Pair<Organization, Credential> {
         val organizationId = idGenerator.organizationId()
-        val adminUserHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, adminUser.username)
+        val adminUserHrn = ResourceHrn(organizationId, "", IamResources.USER, adminUser.username)
 
         // TODO: #0 - Wrap all queries into a transaction
         // TODO: #1 - Update schema to include description, createdBy, updatedBy fields
