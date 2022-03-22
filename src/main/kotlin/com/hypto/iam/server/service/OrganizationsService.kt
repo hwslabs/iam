@@ -16,7 +16,7 @@ import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
-import org.jooq.JSON
+import org.jooq.JSONB
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -51,7 +51,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 name,
                 description,
                 adminUser.username,
-                JSON.json(gson.toJson(identityGroup)),
+                JSONB.jsonb(gson.toJson(identityGroup)),
                 LocalDateTime.now(), LocalDateTime.now()
             )
         )
@@ -64,7 +64,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 email = adminUser.email,
                 phoneNumber = adminUser.phone, password = adminUser.passwordHash
             ),
-            createdBy = "hypto-root"
+            createdBy = "iam-system"
         )
 
         // Add policies for the admin user

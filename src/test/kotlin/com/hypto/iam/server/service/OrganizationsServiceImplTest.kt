@@ -24,7 +24,7 @@ import io.mockk.verify
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
-import org.jooq.JSON
+import org.jooq.JSONB
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -66,7 +66,7 @@ internal class OrganizationsServiceImplTest : AutoCloseKoinTest() {
                     "testName",
                     "",
                     "adminUser",
-                    JSON.json("{\"id\":\"test\", \"name\":\"testName\", \"identitySource\": \"AWS_COGNITO\", " +
+                    JSONB.jsonb("{\"id\":\"test\", \"name\":\"testName\", \"identitySource\": \"AWS_COGNITO\", " +
                         "\"metadata\": {\"iam-client-id\": \"testClientId\"}}"),
                     LocalDateTime.MAX, LocalDateTime.MAX)
             }

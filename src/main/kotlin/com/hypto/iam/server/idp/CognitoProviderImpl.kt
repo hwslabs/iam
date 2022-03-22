@@ -2,17 +2,19 @@
 
 package com.hypto.iam.server.idp
 
-import com.hypto.iam.server.idp.CognitoConstants.ACTION_SUPRESS
+import com.hypto.iam.server.idp.CognitoConstants.ACTION_SUPPRESS
 import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_ID
 import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_NAME
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_CREATED_BY
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
-import com.hypto.iam.server.service.logger
+import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AddCustomAttributesRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisableUserRequest
@@ -20,22 +22,29 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeDataType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthFlowType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ChallengeNameType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ExplicitAuthFlowsType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.SchemaAttributeType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.StringAttributeConstraintsType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserStatusType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UsernameExistsException
+
+private val logger = KotlinLogging.logger {}
 
 object CognitoConstants {
     const val ATTRIBUTE_EMAIL = "email"
     const val ATTRIBUTE_PHONE = "phone_number"
     const val ATTRIBUTE_CREATED_BY = "createdBy"
-    const val ACTION_SUPRESS = "SUPRESS"
+    const val ATTRIBUTE_PREFIX_CUSTOM = "custom:"
+    const val ACTION_SUPPRESS = "SUPPRESS"
     const val APP_CLIENT_NAME = "iam-client"
     const val APP_CLIENT_ID = "iam-client-id"
     const val EMPTY = ""
@@ -59,6 +68,18 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 .explicitAuthFlows(ExplicitAuthFlowsType.USER_PASSWORD_AUTH, ExplicitAuthFlowsType.ADMIN_NO_SRP_AUTH)
                 .build()
 
+            // Add custom attribute schema for the created user pool
+            val customAttributeRequest = AddCustomAttributesRequest.builder().userPoolId(createUserPoolResponse
+                .userPool().id()).customAttributes(SchemaAttributeType.builder().name(ATTRIBUTE_CREATED_BY)
+                    .attributeDataType(AttributeDataType.STRING)
+                    .stringAttributeConstraints(
+                        StringAttributeConstraintsType.builder()
+                            .maxLength("100")
+                            .minLength("3").build())
+                    .build())
+                .build()
+            cognitoClient.addCustomAttributes(customAttributeRequest)
+
             // Create app client to access the user pool
             val appClientResponse = cognitoClient.createUserPoolClient(createUserPoolClientRequest)
             val metadata = mapOf(APP_CLIENT_ID to appClientResponse.userPoolClient().clientId())
@@ -70,7 +91,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 IdentityProvider.IdentitySource.AWS_COGNITO, metadata
             )
         } catch (e: Exception) {
-            logger.error { "Error while trying to create user pool" + e.message }
+            logger.error(e) { "Error while trying to create user pool with message = ${e.message}" }
             throw UnknownError("Unknown error while trying to create identity group")
         }
     }
@@ -80,7 +101,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             val deletePoolRequest = DeleteUserPoolRequest.builder().userPoolId(identityGroup.id).build()
             cognitoClient.deleteUserPool(deletePoolRequest)
         } catch (e: Exception) {
-            logger.error { "Error while trying to delete user pool" + e.message }
+            logger.error(e) { "Error while trying to delete user pool with message = ${e.message}" }
             throw UnknownError("Unknown error while trying to delete identity group")
         }
     }
@@ -98,9 +119,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 else -> throw UnsupportedCredentialsException("Credential type not supported")
             }
         } catch (e: UsernameExistsException) {
+            logger.info(e) { "Error while trying to create user = ${e.message}" }
             throw UserAlreadyExistException("Username: ${userCredentials.userName} already present in the organization")
         } catch (e: Exception) {
-            logger.error { "Error while trying to create user" + e.message }
+            logger.error(e) { "Error while trying to create user = ${e.message}" }
             throw UnknownError("Unknown error while trying to create user")
         }
     }
@@ -130,10 +152,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 createdAt = response.userCreateDate().toString()
             )
         } catch (e: UserNotFoundException) {
-            logger.info { "Unable to find the user $userName in the organization" }
+            logger.info(e) { "Unable to find the user $userName in the organization" }
             throw com.hypto.iam.server.idp.UserNotFoundException("Unable to find the user $userName in the given org")
         } catch (e: Exception) {
-            logger.error { "Error while trying to get user information for $userName" + e.message }
+            logger.error(e) { "Error while trying to get user information for $userName" + e.message }
             throw UnknownError("Unknown error while trying to get the user information")
         }
     }
@@ -179,7 +201,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             .name(ATTRIBUTE_PHONE)
             .value(credentials.phoneNumber).build()
         val createdBy = AttributeType.builder()
-            .name(ATTRIBUTE_CREATED_BY)
+            .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY)
             .value(context.requestedPrincipal).build()
 
         // Creates user in cognito
@@ -188,7 +210,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             .username(credentials.userName)
             .temporaryPassword(credentials.password)
             .userAttributes(emailAttr, phoneNumberAttr, createdBy)
-            .messageAction(ACTION_SUPRESS) // TODO: Make welcome email as configuration option
+            .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
             .build()
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
 
@@ -218,6 +240,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         val initiateAuthRequest = AdminInitiateAuthRequest.builder()
             .userPoolId(identityGroup.id)
             .clientId(identityGroup.metadata[APP_CLIENT_ID])
+            .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
             .authParameters(mapOf("USERNAME" to credentials.userName, "PASSWORD" to credentials.password)).build()
         val initiateAuthResponse = cognitoClient.adminInitiateAuth(initiateAuthRequest)
 
@@ -227,7 +250,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             .clientId(identityGroup.metadata[APP_CLIENT_ID])
             .challengeName(ChallengeNameType.NEW_PASSWORD_REQUIRED)
             .session(initiateAuthResponse.session())
-            .challengeResponses(mapOf("USERNAME" to credentials.userName, "PASSWORD" to credentials.password)).build()
+            .challengeResponses(mapOf("USERNAME" to credentials.userName, "NEW_PASSWORD" to credentials.password))
+            .build()
         cognitoClient.adminRespondToAuthChallenge(adminRespondToAuthRequest)
     }
 
@@ -256,7 +280,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             }.toList()
             return Pair(users, response.paginationToken())
         } catch (e: Exception) {
-            logger.error {
+            logger.error(e) {
                 "Error while trying to list users" +
                     " from the identity pool ${identityGroup.id}" + e.message
             }
@@ -271,7 +295,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 .userPoolId(identityGroup.id).username(userName).build()
             cognitoClient.adminDeleteUser(adminDeleteUserRequest)
         } catch (e: Exception) {
-            logger.error {
+            logger.error(e) {
                 "Error while trying to delete user $userName" +
                     " from the identity pool ${identityGroup.id}" + e.message
             }

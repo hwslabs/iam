@@ -112,47 +112,6 @@ internal class CredentialApiKtTest : AutoCloseKoinTest() {
         }
 
         mockCognitoClient()
-
-        /* declareMock<CognitoIdentityProviderClient> {
-            coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
-                val result = CreateUserPoolResponse.builder()
-                    .userPool(UserPoolType.builder().id("").name("").build())
-                    .build()
-                result
-            }
-            coEvery { this@declareMock.createUserPoolClient(any<CreateUserPoolClientRequest>()) } coAnswers {
-                CreateUserPoolClientResponse.builder()
-                    .userPoolClient(UserPoolClientType.builder().clientId("").build())
-                    .build()
-            }
-            coEvery { this@declareMock.deleteUserPool(any<DeleteUserPoolRequest>()) } returns DeleteUserPoolResponse
-                .builder().build()
-            coEvery { this@declareMock.adminGetUser(any<AdminGetUserRequest>()) } coAnswers {
-                AdminGetUserResponse.builder()
-                    .enabled(true)
-                    .userAttributes(listOf())
-                    .username("")
-                    .userCreateDate(Instant.now())
-                    .build()
-            }
-            coEvery { this@declareMock.adminDisableUser(any<AdminDisableUserRequest>()) } returns mockk()
-            coEvery { this@declareMock.adminCreateUser(any<AdminCreateUserRequest>()) } coAnswers {
-                AdminCreateUserResponse.builder()
-                    .user(UserType.builder().attributes(listOf())
-                        .username("")
-                        .userCreateDate(Instant.now())
-                        .build())
-                    .build()
-            }
-            coEvery { this@declareMock.adminInitiateAuth(any<AdminInitiateAuthRequest>()) } coAnswers {
-                AdminInitiateAuthResponse.builder()
-                    .session("").build()
-            }
-            coEvery { this@declareMock.adminRespondToAuthChallenge(
-                any<AdminRespondToAuthChallengeRequest>()) } returns mockk()
-            coEvery { this@declareMock.listUsers(any<ListUsersRequest>()) } returns mockk()
-            coEvery { this@declareMock.adminDeleteUser(any<AdminDeleteUserRequest>()) } returns mockk()
-        } */
     }
 
     @Nested

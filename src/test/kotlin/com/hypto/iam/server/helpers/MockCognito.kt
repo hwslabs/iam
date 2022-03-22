@@ -6,6 +6,7 @@ import java.time.Instant
 import org.koin.test.KoinTest
 import org.koin.test.mock.declareMock
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AddCustomAttributesRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest
@@ -67,5 +68,6 @@ fun KoinTest.mockCognitoClient() {
             any<AdminRespondToAuthChallengeRequest>()) } returns mockk()
         coEvery { this@declareMock.listUsers(any<ListUsersRequest>()) } returns mockk()
         coEvery { this@declareMock.adminDeleteUser(any<AdminDeleteUserRequest>()) } returns mockk()
+        coEvery { this@declareMock.addCustomAttributes(any<AddCustomAttributesRequest>()) } returns mockk()
     }
 }

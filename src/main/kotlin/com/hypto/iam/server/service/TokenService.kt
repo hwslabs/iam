@@ -23,7 +23,7 @@ import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-val logger = KotlinLogging.logger("service.TokenService")
+private val logger = KotlinLogging.logger("service.TokenService")
 
 /**
  * Service which holds logic related to Organization operations

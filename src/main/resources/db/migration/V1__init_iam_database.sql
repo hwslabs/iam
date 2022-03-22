@@ -4,8 +4,8 @@ CREATE TABLE organizations (
   id VARCHAR(10) PRIMARY KEY, -- 10 char alphabets (upper case only)
   name VARCHAR(50) NOT NULL,
   description text NOT NULL,
-  admin_user_name VARCHAR(50) UNIQUE,
-  metadata JSON,
+  admin_user_email VARCHAR(50) UNIQUE,
+  metadata JSONB,
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL
 );
