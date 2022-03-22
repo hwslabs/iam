@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 
 private val logger = KotlinLogging.logger { }
+
 class AuditException(override val message: String) : Exception(message)
 
 /**
@@ -97,17 +98,21 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
     val entries = mutableListOf<ResourceHrn>()
 
     fun append(resourceHrn: ResourceHrn): Boolean {
-        return entries.add(resourceHrn)
+        return try {
+            entries.add(resourceHrn)
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to append resource to audit log" }
+            false
+        }
     }
 
     fun persist(message: Any) {
-        entries.forEach {
-            try {
+        try {
+            entries.forEach {
                 persistEntry(context.call, message, it.toString())
-            } catch (e: Exception) {
-                // Catching generic exception to avoid request failure on any audit persist failures
-                logger.error { "Error while persisting the audit info to destination with msg: ${e.message}" }
             }
+        } catch (e: Exception) {
+            logger.error("Audit error", e)
         }
     }
 
