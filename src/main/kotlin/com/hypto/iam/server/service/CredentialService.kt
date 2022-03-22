@@ -36,7 +36,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             validUntil = validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
-        auditLog().append(userHrn)
+        auditLog()?.append(userHrn)
 
         return Credential.from(credentialsRecord)
     }
@@ -69,7 +69,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
 
         credentialsRecord ?: throw IllegalStateException("Update unsuccessful")
 
-        auditLog().append(userHrn)
+        auditLog()?.append(userHrn)
 
         return CredentialWithoutSecret.from(credentialsRecord)
     }
@@ -79,7 +79,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             throw EntityNotFoundException("Credential not found")
         }
 
-        auditLog().append(
+        auditLog()?.append(
             ResourceHrn(
                 organization = organizationId,
                 resource = IamResources.USER,

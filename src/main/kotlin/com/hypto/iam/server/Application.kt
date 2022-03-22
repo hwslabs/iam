@@ -82,7 +82,9 @@ fun Application.handleRequest() {
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
     install(Compression, applicationCompressionConfiguration()) // see http://ktor.io/features/compression.html
     install(Locations) // see http://ktor.io/features/locations.html
-    install(Audit)
+    install(Audit) {
+        enabled = false
+    }
     install(Authentication) {
         apiKeyAuth("hypto-iam-root-auth") {
             validate { tokenCredential: TokenCredential ->

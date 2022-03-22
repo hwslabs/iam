@@ -91,8 +91,8 @@ class Audit(config: Configuration) : KoinComponent {
     }
 }
 
-suspend fun auditLog(): AuditContext {
-    return callData().call.attributes[Audit.AuditContextKey]
+suspend fun auditLog(): AuditContext? {
+    return callData().call.attributes.getOrNull(Audit.AuditContextKey)
 }
 
 class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {

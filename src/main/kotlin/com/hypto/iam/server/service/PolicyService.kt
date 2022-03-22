@@ -53,7 +53,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
             policyHrnStr,
             newPolicyBuilder.build()
         )
-        policyRecord ?: throw IllegalStateException("Update unsuccessful")
+        policyRecord ?: throw EntityNotFoundException("cannot find policy: $name")
         return Policy.from(policyRecord)
     }
 
