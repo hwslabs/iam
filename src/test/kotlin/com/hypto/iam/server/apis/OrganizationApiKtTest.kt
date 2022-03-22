@@ -198,11 +198,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             ) {
                 // These assertions
-                assertEquals(HttpStatusCode.NotFound, response.status())
-                assertEquals(
-                    ContentType.Application.Json.withCharset(UTF_8),
-                    response.contentType()
-                )
+                assertEquals(HttpStatusCode.Forbidden, response.status())
             }
 
             DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
