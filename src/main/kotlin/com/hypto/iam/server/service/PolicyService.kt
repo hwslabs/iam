@@ -28,7 +28,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         }
 
         // TODO: Validate policy statements (actions and resourceTypes)
-        val newPolicyBuilder = PolicyBuilder(policyHrn.toString())
+        val newPolicyBuilder = PolicyBuilder(policyHrn)
         statements.forEach { newPolicyBuilder.withStatement(it) }
 
         val policyRecord = policyRepo.create(policyHrn, newPolicyBuilder.build())
@@ -43,10 +43,11 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     }
 
     override suspend fun updatePolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
-        val policyHrnStr = ResourceHrn(organizationId, "", IamResources.POLICY, name).toString()
+        val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, name)
+        val policyHrnStr = policyHrn.toString()
 
         // TODO: Validate policy statements (actions and resourceTypes)
-        val newPolicyBuilder = PolicyBuilder(policyHrnStr)
+        val newPolicyBuilder = PolicyBuilder(policyHrn)
         statements.forEach { newPolicyBuilder.withStatement(it) }
 
         val policyRecord = policyRepo.update(
@@ -59,7 +60,9 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 
     override suspend fun deletePolicy(organizationId: String, name: String): BaseSuccessResponse {
         val policyHrnStr = ResourceHrn(organizationId, "", IamResources.POLICY, name).toString()
-        if (!policyRepo.deleteByHrn(policyHrnStr)) { throw EntityNotFoundException("Policy not found") }
+        if (!policyRepo.deleteByHrn(policyHrnStr)) {
+            throw EntityNotFoundException("Policy not found")
+        }
 
         return BaseSuccessResponse(true)
     }
@@ -94,5 +97,6 @@ interface PolicyService {
         userId: String,
         context: PaginationContext
     ): PolicyPaginatedResponse
+
     suspend fun listPolicies(organizationId: String, context: PaginationContext): PolicyPaginatedResponse
 }

@@ -73,8 +73,9 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         // Add policies for the admin user
         val organization = getOrganization(organizationId)
         val policyStatements = listOf(
-            PolicyStatement("hrn:${organization.id}", "*", PolicyStatement.Effect.allow),
-            PolicyStatement("hrn:$organizationId::*", "*", PolicyStatement.Effect.allow)
+            // TODO: Change organization admin's policy string to hrn:::iam-organization/$orgId
+            PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
+            PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
         )
         val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
         userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.hrn), listOf(hrnFactory.getHrn(policy.hrn)))

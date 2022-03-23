@@ -5,6 +5,7 @@ import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.exceptions.JwtExpiredException
+import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
 import com.hypto.iam.server.idp.UserAlreadyExistException
 import com.hypto.iam.server.idp.UserNotFoundException
@@ -52,6 +53,7 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<MalformedJwtException>(HttpStatusCode.BadRequest)
     sendStatus<SignatureException>(HttpStatusCode.BadRequest)
     sendStatus<JwtExpiredException>(HttpStatusCode.Unauthorized)
+    sendStatus<PolicyFormatException>(HttpStatusCode.BadRequest)
     sendStatus<InternalException>(HttpStatusCode.InternalServerError, true)
     sendStatus<DeleteOrUpdateWithoutWhereException>(HttpStatusCode.InternalServerError)
     sendStatus<HrnParseException>(HttpStatusCode.InternalServerError, true)

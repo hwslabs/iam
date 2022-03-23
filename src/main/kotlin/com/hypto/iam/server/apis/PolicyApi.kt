@@ -7,10 +7,13 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdatePolicyRequest
+import com.hypto.iam.server.security.AuthorizationException
+import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.PolicyService
 import com.hypto.iam.server.validators.validate
 import io.ktor.application.call
+import io.ktor.auth.principal
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
@@ -32,6 +35,11 @@ fun Route.policyApi() {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
             val request = call.receive<CreatePolicyRequest>().validate()
+
+            val principal = context.principal<UserPrincipal>()!!
+            if (principal.hrn.organization != organizationId) {
+                throw AuthorizationException("Cross organization policy creation is not supported")
+            }
 
             val policy = policyService.createPolicy(organizationId, request.name, request.statements)
 

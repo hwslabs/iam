@@ -117,14 +117,15 @@ class ResourceHrn : Hrn {
         // 4. hrn:<organizationId>:<accountId>:<resourceType>/<resourceInstance>
 
         var hrnString = HRN_PREFIX + organization
-        if (!account.isNullOrEmpty()) {
-            hrnString += account
+        if (account.isNullOrEmpty() && resource.isNullOrEmpty()) {
+            return hrnString
         }
+        hrnString += HRN_DELIMITER + (account ?: "")
         if (!resource.isNullOrEmpty()) {
-            if (account.isNullOrEmpty()) {
-                hrnString += HRN_DELIMITER + HRN_DELIMITER
+            hrnString += HRN_DELIMITER + resource
+            if (!resourceInstance.isNullOrEmpty()) {
+                hrnString += HRN_INSTANCE_DELIMITER + resourceInstance
             }
-            hrnString += resource + HRN_INSTANCE_DELIMITER + resourceInstance
         }
         return hrnString
     }

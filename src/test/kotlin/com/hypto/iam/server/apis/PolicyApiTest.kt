@@ -43,8 +43,16 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val createdOrganization = createdOrganizationResponse.organization!!
                 val createdCredentials = createdOrganizationResponse.adminUserCredential!!
 
-                val policyName = "SamplePolicy"
-                val policyStatements = listOf(PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val policyName = "test-policy"
+
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    createdOrganization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 with(
@@ -88,9 +96,17 @@ class PolicyApiTest : AbstractContainerBaseTest() {
             withTestApplication(Application::handleRequest) {
                 // Arrange
                 val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val createdOrganization = createOrganizationResponse.organization!!
 
-                val policyName = "SamplePolicy"
-                val policyStatements = listOf(PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val policyName = "samplePolicy"
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    createdOrganization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 handleRequest(
@@ -195,6 +211,48 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
             }
         }
+
+        @Test
+        fun `create policy with different org in principal - failure`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganizationResponse, _) = DataSetupHelper
+                    .createOrganization(this)
+
+                val createdOrganization = createdOrganizationResponse.organization!!
+                val createdCredentials = createdOrganizationResponse.adminUserCredential!!
+
+                val policyName = "testPolicy"
+
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    "randomId",
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createdOrganization.id}/policies"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        setBody(gson.toJson(requestBody))
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+
+                DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+            }
+        }
     }
 
     @Nested
@@ -205,9 +263,17 @@ class PolicyApiTest : AbstractContainerBaseTest() {
             withTestApplication(Application::handleRequest) {
                 // Arrange
                 val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val createdOrganization = createOrganizationResponse.organization!!
 
-                val policyName = "SamplePolicy"
-                val policyStatements = listOf(PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val policyName = "samplePolicy"
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    createdOrganization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall = handleRequest(
@@ -300,6 +366,16 @@ class PolicyApiTest : AbstractContainerBaseTest() {
             withTestApplication(Application::handleRequest) {
                 // Arrange
                 val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val createdOrganization = createOrganizationResponse.organization!!
+
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    createdOrganization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
 
                 // We create 2 policies in addition to 1 ADMIN_ROOT_POLICY.
                 // So, list API must return 3 policies in total.
@@ -308,9 +384,6 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         HttpMethod.Post,
                         "/organizations/${createOrganizationResponse.organization?.id}/policies"
                     ) {
-                        val policyStatements = listOf(
-                            PolicyStatement("resource", "action", PolicyStatement.Effect.allow)
-                        )
                         val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
@@ -480,23 +553,33 @@ class PolicyApiTest : AbstractContainerBaseTest() {
         fun `update policy`() {
             withTestApplication(Application::handleRequest) {
                 // Arrange
-                val (createdOrganization, _) = DataSetupHelper.createOrganization(this)
+                val (createdOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
 
                 // Create a policy
-                val policyName = "SamplePolicy"
+                val createdOrganization = createdOrganizationResponse.organization!!
+
+                val policyName = "samplePolicy"
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    createdOrganization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${createdOrganization.organization?.id}/policies"
+                        "/organizations/${createdOrganization.id}/policies"
                     ) {
                         val policyStatements = listOf(
-                            PolicyStatement("resource", "action", PolicyStatement.Effect.allow)
+                            PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow)
                         )
                         val requestBody = CreatePolicyRequest(policyName, policyStatements)
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                         )
                         setBody(gson.toJson(requestBody))
                     }
@@ -508,18 +591,20 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Update the created policy
 
-                val updatePolicyRequest = UpdatePolicyRequest(listOf(
-                    PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val updatePolicyRequest = UpdatePolicyRequest(
+                    listOf(
+                        PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow)
+                    )
                 )
                 with(
                     handleRequest(
                         HttpMethod.Patch,
-                        "/organizations/${createdOrganization.organization?.id}/policies/$policyName"
+                        "/organizations/${createdOrganization.id}/policies/$policyName"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                         )
 
                         setBody(gson.toJson(updatePolicyRequest))
@@ -537,28 +622,39 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
             }
         }
+
         @Test
         fun `update non-existent policy`() {
             withTestApplication(Application::handleRequest) {
                 // Arrange
-                val (createdOrganization, _) = DataSetupHelper.createOrganization(this)
+                val (createdOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
 
                 // Act
 
                 // Update the created policy
+                val createdOrganization = createdOrganizationResponse.organization!!
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    createdOrganization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
 
-                val updatePolicyRequest = UpdatePolicyRequest(listOf(
-                    PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val updatePolicyRequest = UpdatePolicyRequest(
+                    listOf(
+                        PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow)
+                    )
                 )
                 with(
                     handleRequest(
                         HttpMethod.Patch,
-                        "/organizations/${createdOrganization.organization?.id}/policies/non_existent_policy"
+                        "/organizations/${createdOrganization.id}/policies/non_existent_policy"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                         )
 
                         setBody(gson.toJson(updatePolicyRequest))
@@ -584,8 +680,18 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Arrange
                 val (createOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
 
-                val policyName = "SamplePolicy"
-                val policyStatements = listOf(PolicyStatement("resource", "action", PolicyStatement.Effect.allow))
+                val createdOrganization = createOrganizationResponse.organization!!
+
+                val policyName = "samplePolicy"
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    createdOrganization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall = handleRequest(
@@ -662,22 +768,32 @@ class PolicyApiTest : AbstractContainerBaseTest() {
         fun `get policies of a user`() {
             withTestApplication(Application::handleRequest) {
                 // Arrange
-                val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+                val (createdOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+                val createdOrganization = createdOrganizationResponse.organization!!
 
                 (1..2).forEach {
                     with(
                         handleRequest(
                             HttpMethod.Post,
-                            "/organizations/${createdOrganization.organization?.id}/policies"
+                            "/organizations/${createdOrganization.id}/policies"
                         ) {
-                            val policyStatements = listOf(
-                                PolicyStatement("resource", "action", PolicyStatement.Effect.allow)
+                            val resourceName = "resource"
+//                            val resourceHrn = ResourceHrn(createdOrganization.id, null, resourceName, null).toString()
+//                            val actionHrn = ActionHrn(createdOrganization.id, null, resourceName, "action").toString()
+                            val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                                createdOrganization.id,
+                                null,
+                                resourceName,
+                                "action"
                             )
+                            val policyStatements =
+                                listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+
                             val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
                                 HttpHeaders.Authorization,
-                                "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                                "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                             )
                             setBody(gson.toJson(requestBody))
                         }
@@ -689,14 +805,14 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         with(
                             handleRequest(
                                 HttpMethod.Put,
-                                "/organizations/${createdOrganization.organization?.id}/users/" +
+                                "/organizations/${createdOrganization.id}/users/" +
                                     "${createdUser.username}/attach_policies"
                             ) {
                                 val createAssociationRequest = PolicyAssociationRequest(listOf(responseBody.hrn))
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(
                                     HttpHeaders.Authorization,
-                                    "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                                    "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                                 )
                                 setBody(gson.toJson(createAssociationRequest))
                             }
@@ -714,13 +830,13 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.organization?.id}/users/${createdUser.username}" +
+                        "/organizations/${createdOrganization.id}/users/${createdUser.username}" +
                             "/policies?pageSize=$pageSize"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -742,13 +858,13 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.organization?.id}/users/${createdUser.username}" +
-                            "/policies?pageSize=$pageSize${nextToken?.let {"&nextToken=$it"}}"
+                        "/organizations/${createdOrganization.id}/users/${createdUser.username}" +
+                            "/policies?pageSize=$pageSize${nextToken?.let { "&nextToken=$it" }}"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -770,13 +886,13 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.organization?.id}/users/${createdUser.username}" +
-                            "/policies?pageSize=$pageSize${nextToken?.let {"&nextToken=$it"}}"
+                        "/organizations/${createdOrganization.id}/users/${createdUser.username}" +
+                            "/policies?pageSize=$pageSize${nextToken?.let { "&nextToken=$it" }}"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
                         )
                     }
                 ) {
