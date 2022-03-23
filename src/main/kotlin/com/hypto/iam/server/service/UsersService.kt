@@ -14,7 +14,7 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
-import com.hypto.iam.server.utils.IamResourceTypes
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -32,7 +32,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, credentials.userName)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, credentials.userName)
         val user = identityProvider.createUser(
             RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user"),
             identityGroup, credentials
@@ -43,7 +43,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun getUser(organizationId: String, userName: String): User {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userName)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val user = identityProvider.getUser(identityGroup, userName)
         return getUser(userHrn, user)
@@ -61,8 +61,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
             pageToken = nextToken, limit = pageSize)
         val pageContext = PaginationOptions(pageSize)
         val externalUserTypeUsers = users.map { user ->
-                val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, user.username)
-                getUser(userHrn, user)
+            val userHrn = ResourceHrn(organizationId, "", IamResources.USER, user.username)
+            getUser(userHrn, user)
         }.toList()
         return Triple(externalUserTypeUsers, nextToken, pageContext)
     }
@@ -89,7 +89,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): User {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
-        val userHrn = ResourceHrn(organizationId, "", IamResourceTypes.USER, userName)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val userStatus = status?.toUserStatus()
         val user = identityProvider.updateUser(identityGroup = identityGroup,

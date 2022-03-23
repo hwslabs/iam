@@ -4,12 +4,12 @@ import com.sksamuel.hoplite.ConfigLoader
 
 class AppConfig {
     /**
-    Environment variables should be in Snake case.
-    E.g. env, token_validity
+     Environment variables should be in Snake case.
+     E.g. env, token_validity
 
-    Nested variables should be defined with the data class name followed by 2 underscores and then the variable name
-    {data_class_name}__{variable_name}
-    E.g. For Database - database__host, database__port, database__username, database__password
+     Nested variables should be defined with the data class name followed by 2 underscores and then the variable name
+     {data_class_name}__{variable_name}
+     E.g. For Database - database__host, database__port, database__username, database__password
      */
 
     data class Database(
@@ -31,14 +31,17 @@ class AppConfig {
     /**
      * @param jwtTokenValidity Represents how long the JWT token must be valid from the instant of creation
      * @param oldKeyTtl Represents the TTL in seconds until which the rotated key must be available for
-        verifying signatures (Default: 600s, 2X the local cache duration)
+     *                    verifying signatures (Default: 600s, 2X the local cache duration)
      * @param secretKey Internal key to create & delete organizations
+     * @param signKeyFetchInterval Represents how frequently the private key
+     *                                  for signing JWT tokens must be fetched from DB
      */
     data class App(
         val env: Environment,
         val jwtTokenValidity: Long,
         val oldKeyTtl: Long,
-        val secretKey: String
+        val secretKey: String,
+        val signKeyFetchInterval: Long
     ) {
         val isDevelopment: Boolean
             get() = env == Environment.Development

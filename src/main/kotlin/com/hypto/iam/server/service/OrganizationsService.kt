@@ -33,8 +33,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
 
-    override suspend fun createOrganization(name: String, description: String, adminUser: AdminUser):
-        Pair<Organization, Credential> {
+    override suspend fun createOrganization(
+        name: String,
+        description: String,
+        adminUser: AdminUser
+    ): Pair<Organization, Credential> {
         val organizationId = idGenerator.organizationId()
 
         val organizations = organizationRepo.fetchByAdminUser(adminUser.email)
@@ -50,7 +53,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 organizationId,
                 name,
                 description,
-                adminUser.username,
+                adminUser.email,
                 JSONB.jsonb(gson.toJson(identityGroup)),
                 LocalDateTime.now(), LocalDateTime.now()
             )

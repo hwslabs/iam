@@ -37,10 +37,13 @@ private val logger = KotlinLogging.logger { }
 class AuditException(override val message: String) : Exception(message)
 
 /**
- * This class is used in api request flow. This records audit info for the performed action
+ * This class is used in api request flow. These records audit info for the performed action
+ * TODO: Support auditing custom resource-actions as well.
+ *       Currently, Audit module records only requests pertaining to IAM module.
  */
 class Audit(config: Configuration) : KoinComponent {
     private val enabled: Boolean = config.enabled
+    private val logger = KotlinLogging.logger { }
 
     class Configuration {
         internal var enabled: Boolean = true
@@ -50,8 +53,8 @@ class Audit(config: Configuration) : KoinComponent {
         override val key = AttributeKey<Audit>("AuditFeature")
         val AuditContextKey = AttributeKey<AuditContext>("AuditContext")
 
-        val auditPhase = PipelinePhase("Audit")
-        val auditCommitPhase = PipelinePhase("AuditCommit")
+        private val auditPhase = PipelinePhase("Audit")
+        private val auditCommitPhase = PipelinePhase("AuditCommit")
 
         override fun install(
             pipeline: ApplicationCallPipeline,
@@ -74,28 +77,37 @@ class Audit(config: Configuration) : KoinComponent {
     }
 
     private fun interceptBeforeReceive(context: PipelineContext<Unit, ApplicationCall>) {
-        if (!enabled) { return }
+        if (!enabled) {
+            return
+        }
         context.call.attributes.put(AuditContextKey, AuditContext(context))
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private fun interceptAfterSend(pipelineContext: PipelineContext<Any, ApplicationCall>, message: Any) {
         if (!enabled) { return }
-        val auditContext = pipelineContext.call.attributes[AuditContextKey]
-        auditContext.persist(message)
+        try {
+            val auditContext = pipelineContext.call.attributes[AuditContextKey]
+            auditContext.persist(message)
+        } catch (e: Exception) {
+            logger.warn(e) { "Exception occurred in audit module" }
+        }
     }
 }
 
-suspend fun auditLog(): AuditContext {
-    return callData().call.attributes[Audit.AuditContextKey]
+suspend fun auditLog(): AuditContext? {
+    return callData().call.attributes.getOrNull(Audit.AuditContextKey)
 }
 
-private const val AUDIT_LOGGER_NAME = "audit-logger"
-private val auditLogger: KLogger = LoggerFactory.getLogger(AUDIT_LOGGER_NAME).toKLogger()
-private val auditMarker = MarkerFactory.getMarker("AUDIT")
-private val gson: Gson = getKoinInstance()
-
 class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
+    companion object {
+        private const val AUDIT_LOGGER_NAME = "audit-logger"
+        private val auditLogger: KLogger = LoggerFactory.getLogger(AUDIT_LOGGER_NAME).toKLogger()
+        private val auditMarker = MarkerFactory.getMarker("AUDIT")
+        private val gson: Gson = getKoinInstance()
+    }
     val entries = mutableListOf<ResourceHrn>()
+    private val logger = KotlinLogging.logger { }
 
     fun append(resourceHrn: ResourceHrn): Boolean {
         return try {
@@ -123,14 +135,14 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
         }
     }
 
-    private fun persistEntry(applicationCall: ApplicationCall, message: Any, resource: String) {
+    private fun persistEntry(applicationCall: ApplicationCall, message: Any, resourceHrnStr: String) {
         val principalHrn = applicationCall.principal<UserPrincipal>()?.hrn as ResourceHrn?
             ?: throw IllegalStateException("User principal missing in application context")
         applicationCall.callId ?: throw IllegalStateException("Request id missing in application context")
 
         val meta = hashMapOf(
             Pair("HttpMethod", applicationCall.request.httpMethod.value),
-            Pair("Referer", applicationCall.request.userAgent()), // TODO: Verify this is not ALB address
+            Pair("Referer", applicationCall.request.userAgent()), // TODO: [IMPORTANT] Verify this is not ALB address
             Pair("StatusCode", fetchStatusCode(message)?.value.toString())
         )
 
@@ -140,7 +152,7 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
             LocalDateTime.now(),
             principalHrn.toString(),
             principalHrn.organization,
-            resource,
+            resourceHrnStr,
             applicationCall.request.path(),
             JSON.valueOf(gson.toJson(meta))
         )

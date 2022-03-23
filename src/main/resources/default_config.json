@@ -17,7 +17,8 @@
     "env": "Development",
     "jwt_token_validity": 300,
     "old_key_ttl": 600,
-    "secret_key": "iam-secret-key"
+    "secret_key": "iam-secret-key",
+    "signKeyFetchInterval": 30
   },
   "aws": {
     "region": "us-east-1",
