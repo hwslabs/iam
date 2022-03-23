@@ -7,9 +7,11 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import java.time.LocalDateTime
+import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
+private val logger = KotlinLogging.logger {}
 class UserPolicyServiceImpl : UserPolicyService, KoinComponent {
     private val policiesRepo: PoliciesRepo by inject()
     private val userPoliciesRepo: UserPoliciesRepo by inject()

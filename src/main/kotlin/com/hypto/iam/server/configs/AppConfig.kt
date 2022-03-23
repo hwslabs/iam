@@ -50,6 +50,7 @@ class AppConfig {
     // Get NewRelic licence key from https://one.newrelic.com/admin-portal/api-keys/home
     data class Newrelic(val apiKey: String, val publishInterval: Long)
 
-    data class Config(val app: App, val database: Database, val newrelic: Newrelic)
+    data class Aws(val region: String, val accessKey: String, val secretKey: String)
+    data class Config(val app: App, val database: Database, val newrelic: Newrelic, val aws: Aws)
     val configuration: Config = ConfigLoader().loadConfigOrThrow("/default_config.json")
 }
