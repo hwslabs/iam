@@ -28,11 +28,10 @@ data class UpdateUserRequest(
     }
     /**
     *
-    * Values: active,inactive,deleted
+    * Values: enabled,disabled
     */
     enum class Status(val value: kotlin.String) {
-        active("active"),
-        inactive("inactive"),
-        deleted("deleted");
+        enabled("enabled"),
+        disabled("disabled");
     }
 }

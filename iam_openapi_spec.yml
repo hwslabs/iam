@@ -173,7 +173,6 @@ paths:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/next_token'
         - $ref: '#/components/parameters/page_size'
-        - $ref: '#/components/parameters/sort_order'
       responses:
         '201':
           $ref: '#/components/responses/UserPaginatedResponse'
@@ -1157,21 +1156,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-
     CreateOrganizationResponse:
       description: Response for Organization requests
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/CreateOrganizationResponse'
-
-    OrganizationResponse:
-      description: Response for Organization requests
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Organization'
-
 
     CreateUserResponse:
       description: Response for CreateUserRequest
@@ -1383,9 +1373,8 @@ components:
         status:
           type: string
           enum:
-            - active
-            - inactive
-            - deleted
+            - enabled
+            - disabled
 
     CreateCredentialRequest:
       description: Payload to create credential
@@ -1543,15 +1532,6 @@ components:
           description: error description
           maxLength: 500
 
-    CreateOrganizationResponse:
-      type: object
-      additionalProperties: false
-      properties:
-        organization:
-          $ref: '#/components/schemas/Organization'
-        adminUserCredential:
-          $ref: '#/components/schemas/Credential'
-
     GetUserPoliciesResponse:
       type: object
       additionalProperties: false
@@ -1584,6 +1564,15 @@ components:
           maxItems: 50
           items:
             $ref: "#/components/schemas/ResourceActionEffect"
+
+    CreateOrganizationResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        organization:
+          $ref: "#/components/schemas/Organization"
+        adminUserCredential:
+          $ref: "#/components/schemas/Credential"
 
     UserPaginatedResponse:
       type: object
@@ -1693,9 +1682,8 @@ components:
         status:
           type: string
           enum:
-            - active
-            - inactive
-            - deleted
+            - enabled
+            - disabled
         created_by:
           type: string
           maxLength: 50

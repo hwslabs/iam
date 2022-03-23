@@ -32,6 +32,10 @@ import org.koin.core.component.KoinComponent
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
 
+private val logger = KotlinLogging.logger { }
+
+class AuditException(override val message: String) : Exception(message)
+
 /**
  * This class is used in api request flow. These records audit info for the performed action
  * TODO: Support auditing custom resource-actions as well.

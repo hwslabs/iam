@@ -5,8 +5,11 @@ import com.hypto.iam.server.models.PaginationOptions
 class Constants private constructor() {
     // Validation constants
     companion object {
-        const val MIN_NAME_LENGTH = 2
+        const val MIN_LENGTH = 2
+        const val MIN_USERNAME_LENGTH = 8
+        const val MIN_EMAIL_LENGTH = 4
         const val MAX_NAME_LENGTH = 50
+        const val MAX_USERNAME_LENGTH = 50
         const val MIN_DESC_LENGTH = 2
         const val MAX_DESC_LENGTH = 100
         const val MIN_POLICY_STATEMENTS = 1

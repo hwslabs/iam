@@ -22,6 +22,7 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
+import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPolicy
 import com.hypto.iam.server.utils.ActionHrn
@@ -209,4 +210,9 @@ fun auditEntryFrom(
 ): AuditEntries {
     val principalHrn: ResourceHrn = hrnFactory.getHrn(principal) as ResourceHrn
     return AuditEntries(null, requestId, eventTime, principalHrn.organization, principal, resource, operation, null)
+}
+
+fun UpdateUserRequest.Status.toUserStatus() = when (this) {
+        UpdateUserRequest.Status.enabled -> User.Status.enabled
+        UpdateUserRequest.Status.disabled -> User.Status.disabled
 }
