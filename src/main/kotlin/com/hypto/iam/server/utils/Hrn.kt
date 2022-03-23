@@ -120,9 +120,9 @@ class ResourceHrn : Hrn {
         if (account.isNullOrEmpty() && resource.isNullOrEmpty()) {
             return hrnString
         }
-        hrnString += ":" + (account ?: "")
+        hrnString += HRN_DELIMITER + (account ?: "")
         if (!resource.isNullOrEmpty()) {
-            hrnString += ":$resource"
+            hrnString += HRN_DELIMITER + resource
             if (!resourceInstance.isNullOrEmpty()) {
                 hrnString += HRN_INSTANCE_DELIMITER + resourceInstance
             }

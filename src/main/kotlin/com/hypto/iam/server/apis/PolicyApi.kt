@@ -38,7 +38,7 @@ fun Route.policyApi() {
 
             val principal = context.principal<UserPrincipal>()!!
             if (principal.hrn.organization != organizationId) {
-                throw AuthorizationException("User does not have permission to create policy for this organization")
+                throw AuthorizationException("Cross organization policy creation is not supported")
             }
 
             val policy = policyService.createPolicy(organizationId, request.name, request.statements)

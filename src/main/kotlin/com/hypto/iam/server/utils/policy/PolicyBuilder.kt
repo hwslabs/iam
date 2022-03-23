@@ -2,8 +2,9 @@ package com.hypto.iam.server.utils.policy
 
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
-import com.hypto.iam.server.exceptions.IncorrectPolicyException
+import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.ResourceHrn
 import java.io.InputStream
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -11,12 +12,12 @@ import org.koin.core.component.inject
 class PolicyBuilder() : KoinComponent {
     val hrnFactory: HrnFactory by inject()
 
-    constructor(policyName: String) : this() {
-        this.policyName = policyName
-        this.orgId = hrnFactory.getHrn(policyName).organization
+    constructor(policyHrn: ResourceHrn) : this() {
+        this.policyHrnStr = policyHrn.toString()
+        this.orgId = policyHrn.organization
     }
 
-    lateinit var policyName: String
+    lateinit var policyHrnStr: String
     lateinit var orgId: String
     var policyStatements = ArrayList<PolicyStatement>()
     var policies = ArrayList<PoliciesRecord>()
@@ -26,16 +27,16 @@ class PolicyBuilder() : KoinComponent {
         val prefix = "hrn:${this.orgId}"
 
         if (!statement.resource.startsWith(prefix)) {
-            throw IncorrectPolicyException("Organization id does not match for resource: ${statement.resource}")
+            throw PolicyFormatException("Organization id does not match for resource: ${statement.resource}")
         }
         if (!statement.resource.startsWith(prefix)) {
-            throw IncorrectPolicyException("Organization id does not match for action: ${statement.action}")
+            throw PolicyFormatException("Organization id does not match for action: ${statement.action}")
         }
     }
 
     fun withStatement(
         statement: com.hypto.iam.server.models.PolicyStatement,
-        principal: String = policyName
+        principal: String = policyHrnStr
     ): PolicyBuilder {
         validateStatement(statement = statement)
         this.policyStatements.add(PolicyStatement.of(principal, statement))

@@ -211,6 +211,48 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
             }
         }
+
+        @Test
+        fun `create policy with different org in principal - failure`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganizationResponse, _) = DataSetupHelper
+                    .createOrganization(this)
+
+                val createdOrganization = createdOrganizationResponse.organization!!
+                val createdCredentials = createdOrganizationResponse.adminUserCredential!!
+
+                val policyName = "testPolicy"
+
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    "randomId",
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createdOrganization.id}/policies"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        setBody(gson.toJson(requestBody))
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+
+                DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+            }
+        }
     }
 
     @Nested

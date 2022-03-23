@@ -19,7 +19,7 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
         val orgId = "sampleOrgId"
         val resourceName1 = "sampleResourceName1"
         val resourceName2 = "sampleResourceName2"
-        val policyHrn = ResourceHrn(orgId, "", IamResources.POLICY, "policy1").toString()
+        val policyHrn = ResourceHrn(orgId, "", IamResources.POLICY, "policy1")
 
         val (resourceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn(orgId, null, resourceName1, "action1")
         val (resourceHrn2, actionHrn2) = DataSetupHelper.createResourceActionHrn(orgId, null, resourceName2, "action2")
@@ -49,7 +49,8 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
     fun `test policy builder - only policies`() {
         val orgId = "sampleOrgId"
 
-        val policy1Hrn = ResourceHrn(orgId, "", IamResources.POLICY, "policy1").toString()
+        val policy1Hrn = ResourceHrn(orgId, "", IamResources.POLICY, "policy1")
+        val policy1HrnStr = policy1Hrn.toString()
 
         val (resourceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn(
             orgId,
@@ -81,11 +82,11 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
             .toString()
 
         val policyRecord = PoliciesRecord(
-            policy1Hrn, orgId, 1, policy1Statements, LocalDateTime.now(), LocalDateTime.now()
+            policy1HrnStr, orgId, 1, policy1Statements, LocalDateTime.now(), LocalDateTime.now()
         )
 
         val userHrn = ResourceHrn(orgId, "", IamResources.USER, "user1").toString()
-        val userPoliciesRecord = UserPoliciesRecord(UUID.randomUUID(), userHrn, policy1Hrn, LocalDateTime.now())
+        val userPoliciesRecord = UserPoliciesRecord(UUID.randomUUID(), userHrn, policy1HrnStr, LocalDateTime.now())
 
         val expectedPolicyText =
             "p, $policy1Hrn, $resourceHrn1, $actionHrn1, allow\n" +
