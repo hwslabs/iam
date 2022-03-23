@@ -148,7 +148,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 email = getAttribute(attrs, ATTRIBUTE_EMAIL),
                 loginAccess = true,
                 isEnabled = response.enabled(),
-                createdBy = getAttribute(attrs, ATTRIBUTE_CREATED_BY),
+                createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
                 createdAt = response.userCreateDate().toString()
             )
         } catch (e: UserNotFoundException) {
@@ -225,7 +225,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             email = getAttribute(attrs, ATTRIBUTE_EMAIL),
             loginAccess = true,
             isEnabled = true,
-            createdBy = getAttribute(attrs, ATTRIBUTE_CREATED_BY),
+            createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
             createdAt = adminCreateUserResponse.user().userCreateDate().toString()
         )
     }
@@ -274,7 +274,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                     phoneNumber = getAttribute(user.attributes(), ATTRIBUTE_PHONE),
                     loginAccess = true,
                     isEnabled = user.userStatus() != UserStatusType.ARCHIVED,
-                    createdBy = getAttribute(user.attributes(), ATTRIBUTE_CREATED_BY),
+                    createdBy = getAttribute(user.attributes(), ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
                     createdAt = user.userCreateDate().toString()
                 )
             }.toList()
