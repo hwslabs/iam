@@ -4,6 +4,7 @@ import com.hypto.iam.server.db.listeners.DeleteOrUpdateWithoutWhereException
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.exceptions.JwtExpiredException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
 import com.hypto.iam.server.idp.UserAlreadyExistException
 import com.hypto.iam.server.idp.UserNotFoundException
@@ -11,11 +12,14 @@ import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.service.OrganizationAlreadyExistException
 import com.hypto.iam.server.utils.HrnParseException
+import io.jsonwebtoken.MalformedJwtException
+import io.jsonwebtoken.UnsupportedJwtException
 import io.ktor.application.call
 import io.ktor.features.StatusPages
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respondText
+import java.security.SignatureException
 import org.jooq.exception.DataAccessException
 
 inline fun <reified T : Throwable> StatusPages.Configuration.sendStatus(
@@ -44,6 +48,10 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<OrganizationAlreadyExistException>(HttpStatusCode.BadRequest)
     sendStatus<EntityNotFoundException>(HttpStatusCode.NotFound)
     sendStatus<UserNotFoundException>(HttpStatusCode.NotFound)
+    sendStatus<UnsupportedJwtException>(HttpStatusCode.BadRequest)
+    sendStatus<MalformedJwtException>(HttpStatusCode.BadRequest)
+    sendStatus<SignatureException>(HttpStatusCode.BadRequest)
+    sendStatus<JwtExpiredException>(HttpStatusCode.Unauthorized)
     sendStatus<InternalException>(HttpStatusCode.InternalServerError, true)
     sendStatus<DeleteOrUpdateWithoutWhereException>(HttpStatusCode.InternalServerError)
     sendStatus<HrnParseException>(HttpStatusCode.InternalServerError, true)
@@ -53,12 +61,4 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<DataAccessException>(HttpStatusCode.Unauthorized)
     sendStatus<UnknownError>(HttpStatusCode.InternalServerError, true, "Unknown Error Occurred")
     sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
-    /* TODO: [IMPORTANT] Handle the following exceptions
-
-        UnsupportedJwtException – if the claimsJws argument does not represent an Claims JWS
-        MalformedJwtException – if the claimsJws string is not a valid JWS
-        SignatureException – if the claimsJws JWS signature validation fails
-        JwtExpiredException – if the specified JWT is a Claims JWT and the Claims has
-                an expiration time before the time this method is invoked.
-     */
 }
