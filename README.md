@@ -24,12 +24,15 @@ Hypto IAM service provides APIs to manage the authentication and authorization o
 # Concepts
 
 ## Organization
+    hrn:::iam-organization:<organization-id>
 // TODO: Explain about organization and point to organization management APIs
 
 ## Account
+    hrn:<organization-id>::iam-account:<account-name>
 // TODO: Explain about account and mention this is under development
 
 ## User
+    hrn:<organization-id>:<account-id>:iam-user:<user-name>
 // TODO: Explain about user and point to user management APIs
 
 ## Credential
@@ -44,10 +47,30 @@ Hypto IAM service provides APIs to manage the authentication and authorization o
 ## Policy
 // TODO: Explain what is Policy, its structure, regex support, etc. and point to Policy management APIs
 
-## Hrn
-// TODO: Explain
-  - what is Hrn
-  - Types of Hrn and their formats
+## HRN
+
+Hypto Resource Names (HRNs) uniquely identify **resources** and **actions** within IAM. We require an HRN when you need to
+specify a resource unambiguously across all of IAM, such as in policies and API calls. Every resource and action created
+in IAM will have a HRN.
+
+### HRN Format
+
+The following are the general formats for HRNs. The specific formats depend on the resource. To use an
+HRN, replace the text within '<' and '>' with the resource-specific information. Be aware that the HRNs for
+some resources omit the Organization ID, the account ID, or both the Organization ID and the account ID.
+
+#### Resource HRN
+These uniquely identifies a resource or instance of a resources
+
+    hrn:<organization-id>:<account-name>:<resource>:<resource-name>
+
+#### Action HRN
+These uniquely identifies an action that can be performed on a resource
+
+    hrn:<organization-id>:<account-id>:<resource>$<action>
+
+Note: All internal entities are modeled as resources with names prefixed with "iam-" allowing users to create a custom
+resource with the same names.
 
 # APIs
 
