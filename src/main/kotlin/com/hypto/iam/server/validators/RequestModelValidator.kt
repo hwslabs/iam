@@ -145,8 +145,8 @@ fun CreatePolicyRequest.validate(): CreatePolicyRequest {
         }
         // TODO: [IMPORTANT] should we do a hrn check for resource and action in a policy statement?
         CreatePolicyRequest::statements onEach {
-            PolicyStatement::resource required { run(nameCheck) }
-            PolicyStatement::action required { run(nameCheck) }
+            PolicyStatement::resource required { run(hrnCheck) }
+            PolicyStatement::action required { run(hrnCheck) }
             PolicyStatement::effect required {}
         }
     }.validateAndThrowOnFailure(this)
@@ -214,6 +214,7 @@ fun UpdateUserRequest.validate(): UpdateUserRequest {
 
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
 const val PHONE_NUMBER_REGEX = "^\\+?-?\\d+\$"
+const val HRN_PREFIX_REGEX = "^hrn:[^\n]*"
 const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
 val nameCheck = Validation<String> {
     minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
@@ -243,9 +244,13 @@ val descriptionCheck = Validation<String> {
         "description is ${Constants.MAX_DESC_LENGTH} characters"
 }
 
+val hrnCheck = Validation<String> {
+    pattern(HRN_PREFIX_REGEX) hint "HRN must start with a valid organization Id"
+}
+
 val policyStatementValidation = Validation<PolicyStatement> {
-    PolicyStatement::resource required { run(nameCheck) }
-    PolicyStatement::action required { run(nameCheck) }
+    PolicyStatement::resource required { run(hrnCheck) }
+    PolicyStatement::action required { run(hrnCheck) }
     PolicyStatement::effect required {}
 }
 
