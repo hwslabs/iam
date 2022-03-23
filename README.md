@@ -54,7 +54,10 @@ A user in AWS consists of a name, identity information and credentials.
 ## Credential
 
 IAM requires different types of security credentials depending on how you access IAM. For example, you need a
-user name and password to sign in to invoke the /login API and you need secret key to make programmatic calls to IAM.
+username and password to sign in to invoke the `/login` API and you need secret key to make programmatic calls to IAM.
+
+Note that the resource iam-credential refers to the Secret Key credential alone and not other credential types.
+More information on this can be found in [Authentication Section](README.md#Authentication). 
 
 ### Types
 - Username / Password (Only for Login API)
@@ -87,7 +90,7 @@ A policy is an object in IAM that, when associated with an entity (iam-user), de
 IAM evaluates these policies when a principal, such as a user, makes a request or when /validate API is invoked.
 Permissions in the policies determine whether the request is allowed or denied.
 
-IAM provides a [**policy definition language**](README.md#policyDefinitionLanguage) to ease defining policies and permissions.
+IAM provides a [**policy definition language**](README.md#policyDefinition) to ease defining policies and permissions.
 Internally, policy definitions are stored in IAM as
 [**Casbin policy definitions**](https://casbin.org/docs/en/syntax-for-models#policy-definition).
 
@@ -109,33 +112,96 @@ some resources omit the Organization ID, the account ID, or both the Organizatio
 
 <a name="resourceHrn"></a>
 #### Resource HRN
-These uniquely identifies a resource or instance of a resources
+Resource HRN uniquely identifies a resource or instance of a resources.
 
     hrn:<organization-id>:<account-name>:<resource>:<resource-name>
 
 <a name="actionHrn"></a>
 #### Action HRN
-These uniquely identifies an action that can be performed on a resource
+Action HRN uniquely identifies an action that can be performed on a resource.
 
     hrn:<organization-id>:<account-id>:<resource>$<action-name>
 
 Note: All internal entities are modeled as resources with names prefixed with "iam-" allowing users to create a custom
 resource with the same names.
 
-<a name="policyDefinitionLanguage"></a>
-## Policy definition language
+<a name="policyDefinition"></a>
+## Policy definition
 
-// TODO: Explain IAM's internal policy definition language: structure, regex support, prefix validation etc.
-// TODO: Mention that cross origin is currently not supported
+### Structure
+
+```json
+{
+  "name": "policy_name",
+  "statements": [
+    {
+      "action": "actionHrn or actionHrn regex",
+      "resource": "resourceHrn or resourceHrn regex",
+      "effect": "allow | deny"
+    },
+    {
+      "action": "actionHrn or actionHrn regex",
+      "resource": "resourceHrn or resourceHrn regex",
+      "effect": "allow | deny"
+    }
+  ]
+}
+```
+
+- A single policy can contain an array of statements.
+- Policies can have a maximum of 50 statements.
+- Default effect of any permission in IAM is deny.
+    i.e, if any permission is not explicitly declared to "allow" via a statement, it is considered to be "deny".
+- action or resource or both can contain Hrn regexes. A **Hrn Regex** is nothing but a regex which matches a pattern of HRNs
+- It is mandatory for all HRNs and HRN Regexes in a policy to be prefixed with "hrn:<policy's organization-id>" as
+     **cross organization access is not supported at the moment**.
+> **💡️ DEVELOPER TIP:**  
+> These statements are internally converted into casbin documents and stored in database.
+([Code Reference](https://github.com/hwslabs/iam/blob/development/src/main/kotlin/com/hypto/iam/server/utils/policy/PolicyBuilder.kt#L12))
 
 # APIs
 
+<a name="Authentication"></a>
 ## Authentication
-// TODOS:
-- Root key: explain purpose
-- Credentials: explain or link to Credentials under concepts
-- JWT
+IAM being a headless service, exposes APIs which can be accessed by going through any of
+the available authentication mechanisms listed below.
 
+### App secret key:
+This is a single master key which is the only available authentication mechanism to invoke first level
+IAM management APIs, generally used for initial setup of the IAM service.
+Which is just Create and Delete organization APIs at the moment.
+This Key can be configured in `default_config.json` under the path `app.secret_key` or as environment variable.
+
+### Username / Password:
+Every user created in IAM will have username and a password pair. APIs using this mechanism of authentication accepts
+the pair over [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication).
+
+At the moment, this authentication mechanism is used just by the login API
+// TODO: Link to Login API
+
+
+### Credential secret:
+Credential secret for a user is a long-lived token which can be created user using
+[Create Credential API](//TODO: link to API). The credential secret is available for download only when you create it.
+If you don't save your secret or if you lose it, you must create a new one. When you disable the secret, you can't
+use it. After you delete the secret, it's gone forever and can't be restored, but it can be replaced with a new secret.
+
+### JWT token:
+A short-lived JWT token can be generated using the [Generate Token API](// TODO: Link API).
+This can be used as a replacement to the credential secret. The JWT token contains information regarding the
+policies and permissions assigned to the authenticated user at the time of token generation. This can be useful to
+improve authentication performance by having an intelligent client which understands the JWT data format and
+performs authorization using this information thereby avoiding an API call to IAM.
+
+Things to note:
+- Clients are currently unavailable and are being worked upon.
+- A possible issue with this approach is, the client will be unaware of any changes to permissions of the user during
+     the lifetime of the JWT token. This can be handled by having shorter TTL of JWT tokens or by introducing
+     a push mechanism to invalidate JWT token on client side in case, the permissions of user has changed.
+
+// TODO: Write a separate README about structure of JWT token and it's compression
+
+<a name="Authorization"></a>
 ## Authorization
 // TODOS:
 - JWT
