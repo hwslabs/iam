@@ -13,11 +13,11 @@ class PolicyBuilder() : KoinComponent {
     val hrnFactory: HrnFactory by inject()
 
     constructor(policyHrn: ResourceHrn) : this() {
-        this.policyHrnStr = policyHrn.toString()
+        this.policyHrn = policyHrn
         this.orgId = policyHrn.organization
     }
 
-    lateinit var policyHrnStr: String
+    lateinit var policyHrn: ResourceHrn
     lateinit var orgId: String
     var policyStatements = ArrayList<PolicyStatement>()
     var policies = ArrayList<PoliciesRecord>()
@@ -36,10 +36,10 @@ class PolicyBuilder() : KoinComponent {
 
     fun withStatement(
         statement: com.hypto.iam.server.models.PolicyStatement,
-        principal: String = policyHrnStr
+        principal: ResourceHrn = policyHrn
     ): PolicyBuilder {
         validateStatement(statement = statement)
-        this.policyStatements.add(PolicyStatement.of(principal, statement))
+        this.policyStatements.add(PolicyStatement.of(principal.toString(), statement))
         return this
     }
 
