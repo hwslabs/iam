@@ -22,7 +22,9 @@ import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Resource
+import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IdGenerator
+import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -123,6 +125,18 @@ object DataSetupHelper : AutoCloseKoinTest() {
 
             return Pair(createdAction, createdResource)
         }
+    }
+
+    fun createResourceActionHrn(
+        orgId: String,
+        accountId: String?,
+        resourceName: String,
+        actionName: String,
+        resourceInstance: String? = null
+    ): Pair<String, String> {
+        val resourceHrn = ResourceHrn(orgId, accountId, resourceName, resourceInstance).toString()
+        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toString()
+        return Pair(resourceHrn, actionHrn)
     }
 
     // This function is used for cleaning up all the data created during the test for the organization
