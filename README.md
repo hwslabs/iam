@@ -23,63 +23,121 @@ Hypto IAM service provides APIs to manage the authentication and authorization o
 
 # Concepts
 
+<a name="organization"></a>
 ## Organization
     hrn:::iam-organization:<organization-id>
-// TODO: Explain about organization and point to organization management APIs
 
+Organizations in IAM helps you centrally govern your environment, namespace all your entities
+and provide a level of isolation.
+
+// TODO: Link to organization management APIs
+
+<a name="account"></a>
 ## Account
     hrn:<organization-id>::iam-account:<account-name>
-// TODO: Explain about account and mention this is under development
 
+Note: Account is currently under development and not supported. Hence, must be left out of all HRNs
+
+<a name="user"></a>
 ## User
     hrn:<organization-id>:<account-id>:iam-user:<user-name>
-// TODO: Explain about user and point to user management APIs
 
+A user is an entity that you create in IAM to represent the person or application that uses
+it to interact with IAM and it's in-build resources or wish to interact with
+custom resources modeled in IAM. 
+
+A user in AWS consists of a name, identity information and credentials.
+
+// TODO: Link to user management APIs
+
+<a name="credential"></a>
 ## Credential
-// TODO: Explain about credential and point to credential management APIs
 
+IAM requires different types of security credentials depending on how you access IAM. For example, you need a
+user name and password to sign in to invoke the /login API and you need secret key to make programmatic calls to IAM.
+
+### Types
+- Username / Password (Only for Login API)
+- Secret key
+- JWT token
+
+// TODO: Link to credential APIs
+
+<a name="resource"></a>
 ## Resource
-// TODO: Explain about Resource and point to Resource management APIs
 
+A resource is a representation of any entity in your product / service which requires access management
+
+// TODO: Link to Resource management APIs
+
+<a name="action"></a>
 ## Action
-// TODO: Explain about Action and point to Action management APIs
 
+An action represents either an operation that can be performed on a resource or
+any other form of interaction that the resource supports.
+
+// TODO: Link to Action management APIs
+
+<a name="policy"></a>
 ## Policy
-// TODO: Explain what is Policy, its structure, regex support, etc. and point to Policy management APIs
 
+You manage access in IAM by creating policies and attaching them to IAM identities
+
+A policy is an object in IAM that, when associated with an entity (iam-user), defines their permissions.
+IAM evaluates these policies when a principal, such as a user, makes a request or when /validate API is invoked.
+Permissions in the policies determine whether the request is allowed or denied.
+
+IAM provides a [**policy definition language**](README.md#policyDefinitionLanguage) to ease defining policies and permissions.
+Internally, policy definitions are stored in IAM as
+[**Casbin policy definitions**](https://casbin.org/docs/en/syntax-for-models#policy-definition).
+
+// TODO: Link to Policy management APIs
+
+<a name="hrn"></a>
 ## HRN
 
 Hypto Resource Names (HRNs) uniquely identify **resources** and **actions** within IAM. We require an HRN when you need to
 specify a resource unambiguously across all of IAM, such as in policies and API calls. Every resource and action created
 in IAM will have a HRN.
 
+<a name="hrnFormat"></a>
 ### HRN Format
 
 The following are the general formats for HRNs. The specific formats depend on the resource. To use an
 HRN, replace the text within '<' and '>' with the resource-specific information. Be aware that the HRNs for
 some resources omit the Organization ID, the account ID, or both the Organization ID and the account ID.
 
+<a name="resourceHrn"></a>
 #### Resource HRN
 These uniquely identifies a resource or instance of a resources
 
     hrn:<organization-id>:<account-name>:<resource>:<resource-name>
 
+<a name="actionHrn"></a>
 #### Action HRN
 These uniquely identifies an action that can be performed on a resource
 
-    hrn:<organization-id>:<account-id>:<resource>$<action>
+    hrn:<organization-id>:<account-id>:<resource>$<action-name>
 
 Note: All internal entities are modeled as resources with names prefixed with "iam-" allowing users to create a custom
 resource with the same names.
 
+<a name="policyDefinitionLanguage"></a>
+## Policy definition language
+
+// TODO: Explain IAM's internal policy definition language: structure, regex support, prefix validation etc.
+// TODO: Mention that cross origin is currently not supported
+
 # APIs
 
 ## Authentication
+// TODOS:
 - Root key: explain purpose
 - Credentials: explain or link to Credentials under concepts
 - JWT
 
 ## Authorization
+// TODOS:
 - JWT
   - Explain structure of JWT, Compression: jjwt lib, MasterKey and it's rotation 
   - Authorization for IAM APIs
