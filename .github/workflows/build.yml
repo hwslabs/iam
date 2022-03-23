@@ -73,7 +73,9 @@ jobs:
            git config --local user.email "action@github.com"
            git config --local user.name "GitHub Action"
            git add "${BRANCH}"
-           git commit -m "Add/Update badge"
+          
+           # Will give error if badge did not changed
+           git commit -m "Add/Update badge" || true
           popd
       - name: Push badge commit
         uses: ad-m/github-push-action@master
