@@ -1,5 +1,11 @@
 package com.hypto.iam.server.service
 
+import com.hypto.iam.server.ErrorMessages.Companion.JWT_EXPIRED
+import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_ISSUED_AT
+import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_ISSUER
+import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_ORGANIZATION
+import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_USER_HRN
+import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_VERSION_NUMBER
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
@@ -44,14 +50,14 @@ class TokenServiceImpl : KoinComponent, TokenService {
     private val masterKeyCache: MasterKeyCache by inject()
 
     companion object {
-        private const val ISSUER = "https://iam.hypto.com"
+        const val ISSUER = "https://iam.hypto.com"
 
-        private const val VERSION_CLAIM = "ver"
+        const val VERSION_CLAIM = "ver"
         const val USER_CLAIM = "usr"
-        private const val ORGANIZATION_CLAIM = "org"
-        private const val ENTITLEMENTS_CLAIM = "entitlements"
-        private const val KEY_ID = "kid"
-        private const val VERSION_NUM = "1.0"
+        const val ORGANIZATION_CLAIM = "org"
+        const val ENTITLEMENTS_CLAIM = "entitlements"
+        const val KEY_ID = "kid"
+        const val VERSION_NUM = "1.0"
     }
 
     /**
@@ -76,24 +82,26 @@ class TokenServiceImpl : KoinComponent, TokenService {
         val body = jws.body
 
         val issuer: String? = body.get(Claims.ISSUER, String::class.java)
-        require(issuer != null && issuer == ISSUER)
+        require(issuer != null && issuer == ISSUER) { JWT_INVALID_ISSUER }
 
         val userHrnStr: String? = body.get(USER_CLAIM, String::class.java)
-        require(userHrnStr != null && HrnFactory.isValid(userHrnStr))
+        require(userHrnStr != null && HrnFactory.isValid(userHrnStr)) { JWT_INVALID_USER_HRN }
 
         val organization: String? = body.get(ORGANIZATION_CLAIM, String::class.java)
-        require(organization != null)
+        require(organization != null) { JWT_INVALID_ORGANIZATION }
 
         val expiry: Date? = body.get(Claims.EXPIRATION, Date::class.java)
         if (!(expiry is Date && expiry.toInstant() > Instant.now())) {
-            throw JwtExpiredException("Jwt token expired on $expiry")
+            throw JwtExpiredException(String.format(JWT_EXPIRED, expiry))
         }
 
         val versionNum: String? = body.get(VERSION_CLAIM, String::class.java)
-        require(versionNum != null)
+        require(versionNum != null) { JWT_INVALID_VERSION_NUMBER }
 
-        // TODO: [IMPORTANT] Validate issued_at and entitlement claims
-        // body[ENTITLEMENTS_CLAIM]
+        val issuedAt: Date? = body.get(Claims.ISSUED_AT, Date::class.java)
+        require(issuedAt is Date && issuedAt.toInstant() <= Instant.now()) {
+            String.format(JWT_INVALID_ISSUED_AT, issuedAt)
+        }
 
         return jws
     }

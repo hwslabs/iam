@@ -1,29 +1,28 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.ErrorMessages
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.models.ResourceAction
-import com.hypto.iam.server.models.ResourceActionEffect
-import com.hypto.iam.server.models.TokenResponse
-import com.hypto.iam.server.models.ValidationRequest
-import com.hypto.iam.server.models.ValidationResponse
+import com.hypto.iam.server.models.*
+import com.hypto.iam.server.service.MasterKeyCache
+import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
-import io.ktor.application.Application
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.withCharset
-import io.ktor.server.testing.contentType
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
+import io.jsonwebtoken.CompressionCodecs
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.server.testing.*
+import java.time.Instant
+import java.util.*
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 
@@ -159,6 +158,251 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     validationResponseBody.results.forEach {
                         Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
                     }
+                }
+            }
+        }
+    }
+
+    @Suppress("LongParameterList")
+    @Nested
+    @DisplayName("Validate JWT token test")
+    inner class ValidateJwtToken {
+        private val masterKeyCache: MasterKeyCache by inject()
+
+        private fun generateToken(
+            createdOrganizationResponse: CreateOrganizationResponse,
+            createdUser: AdminUser,
+            issuedAt: Date = Date(),
+            issuer: String = TokenServiceImpl.ISSUER,
+            userHrn: String = ResourceHrn(
+                organization = createdOrganizationResponse.organization!!.id,
+                resource = IamResources.USER,
+                resourceInstance = createdUser.username
+            ).toString(),
+            organization: String? = createdOrganizationResponse.organization!!.name,
+            expiration: Date = Date.from(Instant.now().plusSeconds(100)),
+            version: String? = TokenServiceImpl.VERSION_NUM
+        ): String {
+            val signingKey = masterKeyCache.forSigning()
+            return Jwts.builder()
+                .setHeaderParam(TokenServiceImpl.KEY_ID, signingKey.id)
+                .setIssuedAt(issuedAt)
+                .setIssuer(issuer)
+                .claim(TokenServiceImpl.USER_CLAIM, userHrn)
+                .setExpiration(expiration)
+                .claim(TokenServiceImpl.ORGANIZATION_CLAIM, organization)
+                .claim(TokenServiceImpl.VERSION_CLAIM, version)
+                .claim(TokenServiceImpl.ENTITLEMENTS_CLAIM, "TEST_CLAIM")
+                .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
+                .compressWith(CompressionCodecs.GZIP)
+                .compact()
+        }
+
+        @Test
+        fun `Invalid issuer`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+                val jwt = generateToken(
+                    createdOrganizationResponse = createOrganizationResponse,
+                    createdUser = createdUser,
+                    issuer = "Invalid_Issuer")
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
+                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_ISSUER, responseBody.message)
+                }
+            }
+        }
+
+        @Test
+        fun `Invalid userHrn`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+                val jwt = generateToken(
+                    createdOrganizationResponse = createOrganizationResponse,
+                    createdUser = createdUser,
+                    userHrn = "InvalidHrnFormat")
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt"
+                        )
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
+                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_USER_HRN, responseBody.message)
+                }
+            }
+        }
+
+        @Test
+        fun `Invalid Organization`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+                val jwt = generateToken(
+                    createdOrganizationResponse = createOrganizationResponse,
+                    createdUser = createdUser,
+                    organization = null)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
+                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_ORGANIZATION, responseBody.message)
+                }
+            }
+        }
+
+        // TODO: Handle ExpiredJwtException and uncomment
+//        @Test
+//        fun `Token Expired`() {
+//            withTestApplication(Application::handleRequest) {
+//                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+//                val expiry = Date.from(Instant.now().minusSeconds(100))
+//                val jwt = generateToken(
+//                    createdOrganizationResponse = createOrganizationResponse,
+//                    createdUser = createdUser,
+//                    expiration = expiry)
+//
+//                // Act
+//                with(
+//                    handleRequest(
+//                        HttpMethod.Get,
+//                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+//                    ) {
+//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+//                        addHeader(
+//                            HttpHeaders.Authorization,
+//                            "Bearer $jwt"
+//                        )
+//                    }
+//                ) {
+//                    // Assert
+//                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+//                    Assertions.assertEquals(
+//                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+//                        response.contentType()
+//                    )
+//                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
+//                    Assertions.assertEquals(String.format(ErrorMessages.JWT_EXPIRED, expiry), responseBody.message)
+//                }
+//            }
+//        }
+
+        @Test
+        fun `Invalid version`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+                val jwt = generateToken(
+                    createdOrganizationResponse = createOrganizationResponse,
+                    createdUser = createdUser,
+                    version = null)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
+                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_VERSION_NUMBER, responseBody.message)
+                }
+            }
+        }
+
+        @Test
+        fun `Invalid issuedAt`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+                val issuedAt = Date.from(Instant.now().plusSeconds(1000))
+                val jwt = generateToken(
+                    createdOrganizationResponse = createOrganizationResponse,
+                    createdUser = createdUser,
+                    issuedAt = issuedAt)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
+                    Assertions.assertEquals(
+                        String.format(ErrorMessages.JWT_INVALID_ISSUED_AT, issuedAt),
+                        responseBody.message
+                    )
                 }
             }
         }
