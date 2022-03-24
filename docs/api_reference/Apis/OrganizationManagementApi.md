@@ -5,9 +5,9 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**createOrganization**](OrganizationManagementApi.md#createOrganization) | **POST** /organizations | Creates an organization.
-[**deleteOrganization**](OrganizationManagementApi.md#deleteOrganization) | **DELETE** /organizations/{id} | Delete an organization
-[**getOrganization**](OrganizationManagementApi.md#getOrganization) | **GET** /organizations/{id} | Get an organization
-[**updateOrganization**](OrganizationManagementApi.md#updateOrganization) | **PATCH** /organizations/{id} | Update an organization
+[**deleteOrganization**](OrganizationManagementApi.md#deleteOrganization) | **DELETE** /organizations/{organization_id} | Delete an organization
+[**getOrganization**](OrganizationManagementApi.md#getOrganization) | **GET** /organizations/{organization_id} | Get an organization
+[**updateOrganization**](OrganizationManagementApi.md#updateOrganization) | **PATCH** /organizations/{organization_id} | Update an organization
 
 
 <a name="createOrganization"></a>
@@ -39,7 +39,7 @@ Name | Type | Description  | Notes
 
 <a name="deleteOrganization"></a>
 # **deleteOrganization**
-> BaseSuccessResponse deleteOrganization(id)
+> BaseSuccessResponse deleteOrganization(organization\_id)
 
 Delete an organization
 
@@ -49,7 +49,7 @@ Delete an organization
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
+ **organization\_id** | **String**|  | [default to null]
 
 ### Return type
 
@@ -66,7 +66,7 @@ Name | Type | Description  | Notes
 
 <a name="getOrganization"></a>
 # **getOrganization**
-> Organization getOrganization(id)
+> Organization getOrganization(organization\_id)
 
 Get an organization
 
@@ -76,7 +76,7 @@ Get an organization
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
+ **organization\_id** | **String**|  | [default to null]
 
 ### Return type
 
@@ -93,7 +93,7 @@ Name | Type | Description  | Notes
 
 <a name="updateOrganization"></a>
 # **updateOrganization**
-> Organization updateOrganization(id, UpdateOrganizationRequest)
+> Organization updateOrganization(organization\_id, UpdateOrganizationRequest)
 
 Update an organization
 
@@ -103,7 +103,7 @@ Update an organization
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
+ **organization\_id** | **String**|  | [default to null]
  **UpdateOrganizationRequest** | [**UpdateOrganizationRequest**](../Models/UpdateOrganizationRequest.md)| Payload to update organization |
 
 ### Return type

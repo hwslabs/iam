@@ -30,7 +30,7 @@ Hypto IAM service provides APIs to manage the authentication and authorization o
 Organizations in IAM helps you centrally govern your environment, namespace all your entities
 and provide a level of isolation.
 
-// TODO: Link to organization management APIs
+Refer [Organization Management APIs](docs/api_reference/Apis/OrganizationManagementApi.md) for more info.
 
 <a name="account"></a>
 ## Account
@@ -48,7 +48,7 @@ custom resources modeled in IAM.
 
 A user in AWS consists of a name, identity information and credentials.
 
-// TODO: Link to user management APIs
+Refer [User Management APIs](docs/api_reference/Apis/UserManagementApi.md) for more info.
 
 <a name="credential"></a>
 ## Credential
@@ -64,14 +64,14 @@ More information on this can be found in [Authentication Section](README.md#Auth
 - Secret key
 - JWT token
 
-// TODO: Link to credential APIs
+Refer [Credential Management APIs](docs/api_reference/Apis/UserCredentialManagementApi.md) for more info.
 
 <a name="resource"></a>
 ## Resource
 
 A resource is a representation of any entity in your product / service which requires access management
 
-// TODO: Link to Resource management APIs
+Refer [Resource Management APIs](docs/api_reference/Apis/ResourceManagementApi.md) for more info.
 
 <a name="action"></a>
 ## Action
@@ -79,7 +79,7 @@ A resource is a representation of any entity in your product / service which req
 An action represents either an operation that can be performed on a resource or
 any other form of interaction that the resource supports.
 
-// TODO: Link to Action management APIs
+Refer [Action Management APIs](docs/api_reference/Apis/ResourceActionManagementApi.md) for more info.
 
 <a name="policy"></a>
 ## Policy
@@ -90,11 +90,11 @@ A policy is an object in IAM that, when associated with an entity (iam-user), de
 IAM evaluates these policies when a principal, such as a user, makes a request or when /validate API is invoked.
 Permissions in the policies determine whether the request is allowed or denied.
 
-IAM provides a [**policy definition language**](README.md#policyDefinition) to ease defining policies and permissions.
+IAM provides a [**policy definition language**](README.md#policy-definition) to ease defining policies and permissions.
 Internally, policy definitions are stored in IAM as
 [**Casbin policy definitions**](https://casbin.org/docs/en/syntax-for-models#policy-definition).
 
-// TODO: Link to Policy management APIs
+Refer [Policy Management APIs](docs/api_reference/Apis/PolicyManagementApi.md) for more info.
 
 <a name="hrn"></a>
 ## HRN
@@ -176,18 +176,19 @@ This Key can be configured in `default_config.json` under the path `app.secret_k
 Every user created in IAM will have username and a password pair. APIs using this mechanism of authentication accepts
 the pair over [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication).
 
-At the moment, this authentication mechanism is used just by the login API
-// TODO: Link to Login API
+At the moment, this authentication mechanism is used just by the
+[Token generation API](docs/api_reference/Apis/UserAuthorizationApi.md#gettoken)
 
 
 ### Credential secret:
 Credential secret for a user is a long-lived token which can be created user using
-[Create Credential API](//TODO: link to API). The credential secret is available for download only when you create it.
-If you don't save your secret or if you lose it, you must create a new one. When you disable the secret, you can't
-use it. After you delete the secret, it's gone forever and can't be restored, but it can be replaced with a new secret.
+[Create Credential API](docs/api_reference/Apis/UserCredentialManagementApi.md#createcredential).
+The credential secret is available for download only when you create it. If you don't save your secret or
+if you lose it, you must create a new one. When you disable the secret, you can't use it. After you delete the secret,
+it's gone forever and can't be restored, but it can be replaced with a new secret.
 
 ### JWT token:
-A short-lived JWT token can be generated using the [Generate Token API](// TODO: Link API).
+A short-lived JWT token can be generated using [Generate Token API](docs/api_reference/Apis/UserAuthorizationApi.md#gettoken).
 This can be used as a replacement to the credential secret. The JWT token contains information regarding the
 policies and permissions assigned to the authenticated user at the time of token generation. This can be useful to
 improve authentication performance by having an intelligent client which understands the JWT data format and
@@ -213,7 +214,7 @@ Details on permission(s) required for each IAM API can be found in [API document
 
 ### For custom actions
 For using IAM as authorization engine when your users access custom resources,
-a call has to be made to [Validate API](// TODO: Link validate API) with necessary parameters.
+a call has to be made to [Validate API](docs/api_reference/Apis/UserAuthorizationApi.md#validate) with necessary parameters.
 IAM service will return the effect ("allow" / "deny") based on the policies that are associated
 to the user. You can then decide whether to allow the requesting user perform action on the
 requested resource based on the response.

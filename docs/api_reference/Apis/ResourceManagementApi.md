@@ -5,10 +5,10 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**createResource**](ResourceManagementApi.md#createResource) | **POST** /organizations/{organization_id}/resources | Create a resource name in an organization.
-[**deleteResource**](ResourceManagementApi.md#deleteResource) | **DELETE** /organizations/{organization_id}/resources/{id} | Delete a resource
-[**getResource**](ResourceManagementApi.md#getResource) | **GET** /organizations/{organization_id}/resources/{id} | Get the resource details
+[**deleteResource**](ResourceManagementApi.md#deleteResource) | **DELETE** /organizations/{organization_id}/resources/{resource_name} | Delete a resource
+[**getResource**](ResourceManagementApi.md#getResource) | **GET** /organizations/{organization_id}/resources/{resource_name} | Get the resource details
 [**listResources**](ResourceManagementApi.md#listResources) | **GET** /organizations/{organization_id}/resources | List Resources
-[**updateResource**](ResourceManagementApi.md#updateResource) | **PATCH** /organizations/{organization_id}/resources/{id} | Update a resource
+[**updateResource**](ResourceManagementApi.md#updateResource) | **PATCH** /organizations/{organization_id}/resources/{resource_name} | Update a resource
 
 
 <a name="createResource"></a>
@@ -41,7 +41,7 @@ Name | Type | Description  | Notes
 
 <a name="deleteResource"></a>
 # **deleteResource**
-> BaseSuccessResponse deleteResource(organization\_id, id)
+> BaseSuccessResponse deleteResource(organization\_id, resource\_name)
 
 Delete a resource
 
@@ -52,7 +52,7 @@ Delete a resource
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
- **id** | **String**|  | [default to null]
+ **resource\_name** | **String**|  | [default to null]
 
 ### Return type
 
@@ -69,7 +69,7 @@ Name | Type | Description  | Notes
 
 <a name="getResource"></a>
 # **getResource**
-> Resource getResource(organization\_id, id)
+> Resource getResource(organization\_id, resource\_name)
 
 Get the resource details
 
@@ -80,7 +80,7 @@ Get the resource details
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
- **id** | **String**|  | [default to null]
+ **resource\_name** | **String**|  | [default to null]
 
 ### Return type
 
@@ -127,7 +127,7 @@ Name | Type | Description  | Notes
 
 <a name="updateResource"></a>
 # **updateResource**
-> Resource updateResource(organization\_id, id, UpdateResourceRequest)
+> Resource updateResource(organization\_id, resource\_name, UpdateResourceRequest)
 
 Update a resource
 
@@ -138,7 +138,7 @@ Update a resource
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
- **id** | **String**|  | [default to null]
+ **resource\_name** | **String**|  | [default to null]
  **UpdateResourceRequest** | [**UpdateResourceRequest**](../Models/UpdateResourceRequest.md)| Payload to update resource |
 
 ### Return type

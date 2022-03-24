@@ -4,14 +4,14 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**attachPolicies**](UserPolicyManagementApi.md#attachPolicies) | **PATCH** /organizations/{organization_id}/users/{user_id}/attach_policies | Attach policies to user
-[**detachPolicies**](UserPolicyManagementApi.md#detachPolicies) | **PATCH** /organizations/{organization_id}/users/{id}/detach_policies | Detach policies from user
-[**getUserPolicies**](UserPolicyManagementApi.md#getUserPolicies) | **GET** /organizations/{organization_id}/users/{user_id}/policies | List all policies associated with user
+[**attachPolicies**](UserPolicyManagementApi.md#attachPolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/attach_policies | Attach policies to user
+[**detachPolicies**](UserPolicyManagementApi.md#detachPolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/detach_policies | Detach policies from user
+[**getUserPolicies**](UserPolicyManagementApi.md#getUserPolicies) | **GET** /organizations/{organization_id}/users/{user_name}/policies | List all policies associated with user
 
 
 <a name="attachPolicies"></a>
 # **attachPolicies**
-> BaseSuccessResponse attachPolicies(user\_id, organization\_id, PolicyAssociationRequest)
+> BaseSuccessResponse attachPolicies(user\_name, organization\_id, PolicyAssociationRequest)
 
 Attach policies to user
 
@@ -21,7 +21,7 @@ Attach policies to user
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user\_id** | **String**|  | [default to null]
+ **user\_name** | **String**|  | [default to null]
  **organization\_id** | **String**|  | [default to null]
  **PolicyAssociationRequest** | [**PolicyAssociationRequest**](../Models/PolicyAssociationRequest.md)| Payload to attach / detach a policy to a user / resource |
 
@@ -40,7 +40,7 @@ Name | Type | Description  | Notes
 
 <a name="detachPolicies"></a>
 # **detachPolicies**
-> BaseSuccessResponse detachPolicies(id, organization\_id, PolicyAssociationRequest)
+> BaseSuccessResponse detachPolicies(user\_name, organization\_id, PolicyAssociationRequest)
 
 Detach policies from user
 
@@ -50,7 +50,7 @@ Detach policies from user
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
+ **user\_name** | **String**|  | [default to null]
  **organization\_id** | **String**|  | [default to null]
  **PolicyAssociationRequest** | [**PolicyAssociationRequest**](../Models/PolicyAssociationRequest.md)| Payload to attach / detach a policy to a user / resource |
 
@@ -69,7 +69,7 @@ Name | Type | Description  | Notes
 
 <a name="getUserPolicies"></a>
 # **getUserPolicies**
-> PolicyPaginatedResponse getUserPolicies(user\_id, organization\_id, nextToken, pageSize, sortOrder)
+> PolicyPaginatedResponse getUserPolicies(user\_name, organization\_id, nextToken, pageSize, sortOrder)
 
 List all policies associated with user
 
@@ -79,7 +79,7 @@ List all policies associated with user
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **user\_id** | **String**|  | [default to null]
+ **user\_name** | **String**|  | [default to null]
  **organization\_id** | **String**|  | [default to null]
  **nextToken** | **String**|  | [optional] [default to null]
  **pageSize** | **String**|  | [optional] [default to null]

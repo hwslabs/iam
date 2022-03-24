@@ -100,7 +100,7 @@ paths:
       security:
         - apiKeyAuth: [ hypto-internal-secret-key ]
 
-  /organizations/{id}:
+  /organizations/{organization_id}:
     get:
       tags:
         - Organization Management
@@ -108,7 +108,7 @@ paths:
       description: Get an organization and the metadata for the given organization.
       operationId: getOrganization
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
           $ref: '#/components/responses/OrganizationResponse'
@@ -132,7 +132,7 @@ paths:
       description: Update an organization
       operationId: updateOrganization
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/UpdateOrganizationRequest'
       responses:
@@ -158,7 +158,7 @@ paths:
       description: Delete an organization. This is a privileged api and only internal application will have access to delete organization.
       operationId: deleteOrganization
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
@@ -227,7 +227,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/users/{user_id}:
+  /organizations/{organization_id}/users/{user_name}:
     get:
       tags:
         - User Management
@@ -235,7 +235,7 @@ paths:
       description: Get a User
       operationId: getUser
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
@@ -260,7 +260,7 @@ paths:
       description: Update a User
       operationId: updateUser
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/UpdateUserRequest'
@@ -287,7 +287,7 @@ paths:
       description: Delete a User
       operationId: deleteUser
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
@@ -305,7 +305,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/users/{user_id}/policies:
+  /organizations/{organization_id}/users/{user_name}/policies:
     get:
       tags:
         - User Policy Management
@@ -313,7 +313,7 @@ paths:
       description: List all policies associated with user
       operationId: getUserPolicies
       parameters:
-        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/next_token'
         - $ref: '#/components/parameters/page_size'
@@ -335,7 +335,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
 
-  /organizations/{organization_id}/users/{user_id}/attach_policies:
+  /organizations/{organization_id}/users/{user_name}/attach_policies:
     patch:
       tags:
         - User Policy Management
@@ -343,7 +343,7 @@ paths:
       description: Attach policies to user
       operationId: attachPolicies
       parameters:
-        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/PolicyAssociationRequest'
@@ -363,7 +363,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/users/{id}/detach_policies:
+  /organizations/{organization_id}/users/{user_name}/detach_policies:
     patch:
       tags:
         - User Policy Management
@@ -371,7 +371,7 @@ paths:
       description: Detach policies from user
       operationId: detachPolicies
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/PolicyAssociationRequest'
@@ -392,7 +392,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
   # credential
-  /organizations/{organization_id}/users/{user_id}/credentials:
+  /organizations/{organization_id}/users/{user_name}/credentials:
     post:
       tags:
         - User Credential Management
@@ -400,7 +400,7 @@ paths:
       description: Create a new credential for a user. This API returns the credential's secret key, which will be available only in the response of this API.
       operationId: createCredential
       parameters:
-        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
       requestBody:
         $ref: '#/components/requestBodies/CreateCredentialRequest'
@@ -422,7 +422,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
 
-  /organizations/{organization_id}/users/{user_id}/credentials/{id}:
+  /organizations/{organization_id}/users/{user_name}/credentials/{credential_id}:
     get:
       tags:
         - User Credential Management
@@ -431,8 +431,8 @@ paths:
       operationId: getCredential
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/user_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/credential_id'
       responses:
         '200':
           $ref: '#/components/responses/GetCredentialResponse'
@@ -457,8 +457,8 @@ paths:
       operationId: updateCredential
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/user_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/credential_id'
       requestBody:
         $ref: '#/components/requestBodies/UpdateCredentialRequest'
       responses:
@@ -485,8 +485,8 @@ paths:
       operationId: deleteCredential
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/user_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/credential_id'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
@@ -556,7 +556,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/resources/{id}:
+  /organizations/{organization_id}/resources/{resource_name}:
     get:
       tags:
         - Resource Management
@@ -565,7 +565,7 @@ paths:
       operationId: getResource
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/resource_name'
       responses:
         '200':
           $ref: '#/components/responses/ResourceResponse'
@@ -590,7 +590,7 @@ paths:
       operationId: updateResource
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/resource_name'
       requestBody:
         $ref: '#/components/requestBodies/UpdateResourceRequest'
       responses:
@@ -617,7 +617,7 @@ paths:
       operationId: deleteResource
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/resource_name'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
@@ -633,7 +633,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-  
+
   # action
   /organizations/{organization_id}/resources/{resource_name}/actions:
     post:
@@ -691,7 +691,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
 
-  /organizations/{organization_id}/resources/{resource_name}/actions/{id}:
+  /organizations/{organization_id}/resources/{resource_name}/actions/{action_name}:
     get:
       tags:
         - Resource Action Management
@@ -701,7 +701,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/resource_name'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/action_name'
       responses:
         '200':
           $ref: '#/components/responses/ActionResponse'
@@ -727,7 +727,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/resource_name'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/action_name'
       requestBody:
         $ref: '#/components/requestBodies/UpdateActionRequest'
       responses:
@@ -755,7 +755,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/resource_name'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/action_name'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
@@ -826,7 +826,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/policies/{id}:
+  /organizations/{organization_id}/policies/{policy_name}:
     get:
       tags:
         - Policy Management
@@ -835,7 +835,7 @@ paths:
       operationId: getPolicy
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/policy_name'
       responses:
         '200':
           $ref: '#/components/responses/PolicyResponse'
@@ -860,7 +860,7 @@ paths:
       operationId: updatePolicy
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/policy_name'
       requestBody:
         $ref: '#/components/requestBodies/UpdatePolicyRequest'
       responses:
@@ -887,7 +887,7 @@ paths:
       operationId: deletePolicy
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/policy_name'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
@@ -961,28 +961,17 @@ components:
       name: X-API-Key
 
   parameters:
-    id:
+    user_name:
       in: path
-      name: id
+      name: user_name
       required: true
       content:
         application/json:
           schema:
             type: string
             maxLength: 50
-            pattern: ^[A-Za-z0-9]{3,50}$
-            example: "1234567890"
-    user_id:
-      in: path
-      name: user_id
-      required: true
-      content:
-        application/json:
-          schema:
-            type: string
-            maxLength: 50
-            pattern: ^[A-Za-z0-9]{3,50}$
-            example: "Bob"
+            pattern: ^[A-Za-z0-9_]{3,50}$
+            example: Bob
 
     resource_name:
       in: path
@@ -993,8 +982,32 @@ components:
           schema:
             type: string
             maxLength: 50
-            pattern: ^[A-Za-z0-9]{3,50}$
-            example: "invoice"
+            pattern: ^[A-Za-z0-9_]{3,50}$
+            example: invoice
+
+    action_name:
+      in: path
+      name: action_name
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_]{3,50}$
+            example: view
+
+    policy_name:
+      in: path
+      name: policy_name
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            pattern: ^[A-Za-z0-9_]{3,50}$
+            example: policy_viewer
 
     organization_id:
       in: path
@@ -1007,6 +1020,17 @@ components:
             maxLength: 10
             pattern: ^[A-Z]{10}$
             example: "XlK5h64gND"
+
+    credential_id:
+      in: path
+      name: credential_id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            example: "1f44ada7-7196-4f2d-8380-4c76f8bddec2"
 
     next_token:
       in: query

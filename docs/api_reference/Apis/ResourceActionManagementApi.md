@@ -5,10 +5,10 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**createAction**](ResourceActionManagementApi.md#createAction) | **POST** /organizations/{organization_id}/resources/{resource_name}/actions | Create an action
-[**deleteAction**](ResourceActionManagementApi.md#deleteAction) | **DELETE** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Delete an action
-[**getAction**](ResourceActionManagementApi.md#getAction) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Get an action
+[**deleteAction**](ResourceActionManagementApi.md#deleteAction) | **DELETE** /organizations/{organization_id}/resources/{resource_name}/actions/{action_name} | Delete an action
+[**getAction**](ResourceActionManagementApi.md#getAction) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions/{action_name} | Get an action
 [**listActions**](ResourceActionManagementApi.md#listActions) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions | List actions
-[**updateAction**](ResourceActionManagementApi.md#updateAction) | **PATCH** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Update an action
+[**updateAction**](ResourceActionManagementApi.md#updateAction) | **PATCH** /organizations/{organization_id}/resources/{resource_name}/actions/{action_name} | Update an action
 
 
 <a name="createAction"></a>
@@ -42,7 +42,7 @@ Name | Type | Description  | Notes
 
 <a name="deleteAction"></a>
 # **deleteAction**
-> BaseSuccessResponse deleteAction(organization\_id, resource\_name, id)
+> BaseSuccessResponse deleteAction(organization\_id, resource\_name, action\_name)
 
 Delete an action
 
@@ -54,7 +54,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
  **resource\_name** | **String**|  | [default to null]
- **id** | **String**|  | [default to null]
+ **action\_name** | **String**|  | [default to null]
 
 ### Return type
 
@@ -71,7 +71,7 @@ Name | Type | Description  | Notes
 
 <a name="getAction"></a>
 # **getAction**
-> Action getAction(organization\_id, resource\_name, id)
+> Action getAction(organization\_id, resource\_name, action\_name)
 
 Get an action
 
@@ -83,7 +83,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
  **resource\_name** | **String**|  | [default to null]
- **id** | **String**|  | [default to null]
+ **action\_name** | **String**|  | [default to null]
 
 ### Return type
 
@@ -131,7 +131,7 @@ Name | Type | Description  | Notes
 
 <a name="updateAction"></a>
 # **updateAction**
-> Action updateAction(organization\_id, resource\_name, id, UpdateActionRequest)
+> Action updateAction(organization\_id, resource\_name, action\_name, UpdateActionRequest)
 
 Update an action
 
@@ -143,7 +143,7 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
  **resource\_name** | **String**|  | [default to null]
- **id** | **String**|  | [default to null]
+ **action\_name** | **String**|  | [default to null]
  **UpdateActionRequest** | [**UpdateActionRequest**](../Models/UpdateActionRequest.md)| Payload to update action |
 
 ### Return type

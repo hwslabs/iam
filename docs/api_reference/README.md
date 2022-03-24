@@ -8,38 +8,38 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *OrganizationManagementApi* | [**createOrganization**](Apis/OrganizationManagementApi.md#createorganization) | **POST** /organizations | Creates an organization.
-*OrganizationManagementApi* | [**deleteOrganization**](Apis/OrganizationManagementApi.md#deleteorganization) | **DELETE** /organizations/{id} | Delete an organization
-*OrganizationManagementApi* | [**getOrganization**](Apis/OrganizationManagementApi.md#getorganization) | **GET** /organizations/{id} | Get an organization
-*OrganizationManagementApi* | [**updateOrganization**](Apis/OrganizationManagementApi.md#updateorganization) | **PATCH** /organizations/{id} | Update an organization
+*OrganizationManagementApi* | [**deleteOrganization**](Apis/OrganizationManagementApi.md#deleteorganization) | **DELETE** /organizations/{organization_id} | Delete an organization
+*OrganizationManagementApi* | [**getOrganization**](Apis/OrganizationManagementApi.md#getorganization) | **GET** /organizations/{organization_id} | Get an organization
+*OrganizationManagementApi* | [**updateOrganization**](Apis/OrganizationManagementApi.md#updateorganization) | **PATCH** /organizations/{organization_id} | Update an organization
 *PolicyManagementApi* | [**createPolicy**](Apis/PolicyManagementApi.md#createpolicy) | **POST** /organizations/{organization_id}/policies | Create a policy
-*PolicyManagementApi* | [**deletePolicy**](Apis/PolicyManagementApi.md#deletepolicy) | **DELETE** /organizations/{organization_id}/policies/{id} | Delete a policy
-*PolicyManagementApi* | [**getPolicy**](Apis/PolicyManagementApi.md#getpolicy) | **GET** /organizations/{organization_id}/policies/{id} | Get a policy
+*PolicyManagementApi* | [**deletePolicy**](Apis/PolicyManagementApi.md#deletepolicy) | **DELETE** /organizations/{organization_id}/policies/{policy_name} | Delete a policy
+*PolicyManagementApi* | [**getPolicy**](Apis/PolicyManagementApi.md#getpolicy) | **GET** /organizations/{organization_id}/policies/{policy_name} | Get a policy
 *PolicyManagementApi* | [**listPolicies**](Apis/PolicyManagementApi.md#listpolicies) | **GET** /organizations/{organization_id}/policies | List policies
-*PolicyManagementApi* | [**updatePolicy**](Apis/PolicyManagementApi.md#updatepolicy) | **PATCH** /organizations/{organization_id}/policies/{id} | Update a policy
+*PolicyManagementApi* | [**updatePolicy**](Apis/PolicyManagementApi.md#updatepolicy) | **PATCH** /organizations/{organization_id}/policies/{policy_name} | Update a policy
 *ResourceActionManagementApi* | [**createAction**](Apis/ResourceActionManagementApi.md#createaction) | **POST** /organizations/{organization_id}/resources/{resource_name}/actions | Create an action
-*ResourceActionManagementApi* | [**deleteAction**](Apis/ResourceActionManagementApi.md#deleteaction) | **DELETE** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Delete an action
-*ResourceActionManagementApi* | [**getAction**](Apis/ResourceActionManagementApi.md#getaction) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Get an action
+*ResourceActionManagementApi* | [**deleteAction**](Apis/ResourceActionManagementApi.md#deleteaction) | **DELETE** /organizations/{organization_id}/resources/{resource_name}/actions/{action_name} | Delete an action
+*ResourceActionManagementApi* | [**getAction**](Apis/ResourceActionManagementApi.md#getaction) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions/{action_name} | Get an action
 *ResourceActionManagementApi* | [**listActions**](Apis/ResourceActionManagementApi.md#listactions) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions | List actions
-*ResourceActionManagementApi* | [**updateAction**](Apis/ResourceActionManagementApi.md#updateaction) | **PATCH** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Update an action
+*ResourceActionManagementApi* | [**updateAction**](Apis/ResourceActionManagementApi.md#updateaction) | **PATCH** /organizations/{organization_id}/resources/{resource_name}/actions/{action_name} | Update an action
 *ResourceManagementApi* | [**createResource**](Apis/ResourceManagementApi.md#createresource) | **POST** /organizations/{organization_id}/resources | Create a resource name in an organization.
-*ResourceManagementApi* | [**deleteResource**](Apis/ResourceManagementApi.md#deleteresource) | **DELETE** /organizations/{organization_id}/resources/{id} | Delete a resource
-*ResourceManagementApi* | [**getResource**](Apis/ResourceManagementApi.md#getresource) | **GET** /organizations/{organization_id}/resources/{id} | Get the resource details
+*ResourceManagementApi* | [**deleteResource**](Apis/ResourceManagementApi.md#deleteresource) | **DELETE** /organizations/{organization_id}/resources/{resource_name} | Delete a resource
+*ResourceManagementApi* | [**getResource**](Apis/ResourceManagementApi.md#getresource) | **GET** /organizations/{organization_id}/resources/{resource_name} | Get the resource details
 *ResourceManagementApi* | [**listResources**](Apis/ResourceManagementApi.md#listresources) | **GET** /organizations/{organization_id}/resources | List Resources
-*ResourceManagementApi* | [**updateResource**](Apis/ResourceManagementApi.md#updateresource) | **PATCH** /organizations/{organization_id}/resources/{id} | Update a resource
+*ResourceManagementApi* | [**updateResource**](Apis/ResourceManagementApi.md#updateresource) | **PATCH** /organizations/{organization_id}/resources/{resource_name} | Update a resource
 *UserAuthorizationApi* | [**getToken**](Apis/UserAuthorizationApi.md#gettoken) | **POST** /token | Generate a token
 *UserAuthorizationApi* | [**validate**](Apis/UserAuthorizationApi.md#validate) | **POST** /validate | Validate an auth request
-*UserCredentialManagementApi* | [**createCredential**](Apis/UserCredentialManagementApi.md#createcredential) | **POST** /organizations/{organization_id}/users/{user_id}/credentials | Create a new credential for a user
-*UserCredentialManagementApi* | [**deleteCredential**](Apis/UserCredentialManagementApi.md#deletecredential) | **DELETE** /organizations/{organization_id}/users/{user_id}/credentials/{id} | Delete a credential
-*UserCredentialManagementApi* | [**getCredential**](Apis/UserCredentialManagementApi.md#getcredential) | **GET** /organizations/{organization_id}/users/{user_id}/credentials/{id} | Gets credential for the user
-*UserCredentialManagementApi* | [**updateCredential**](Apis/UserCredentialManagementApi.md#updatecredential) | **PATCH** /organizations/{organization_id}/users/{user_id}/credentials/{id} | Update the status of credential
+*UserCredentialManagementApi* | [**createCredential**](Apis/UserCredentialManagementApi.md#createcredential) | **POST** /organizations/{organization_id}/users/{user_name}/credentials | Create a new credential for a user
+*UserCredentialManagementApi* | [**deleteCredential**](Apis/UserCredentialManagementApi.md#deletecredential) | **DELETE** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Delete a credential
+*UserCredentialManagementApi* | [**getCredential**](Apis/UserCredentialManagementApi.md#getcredential) | **GET** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Gets credential for the user
+*UserCredentialManagementApi* | [**updateCredential**](Apis/UserCredentialManagementApi.md#updatecredential) | **PATCH** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Update the status of credential
 *UserManagementApi* | [**createUser**](Apis/UserManagementApi.md#createuser) | **POST** /organizations/{organization_id}/users | Create a user
-*UserManagementApi* | [**deleteUser**](Apis/UserManagementApi.md#deleteuser) | **DELETE** /organizations/{organization_id}/users/{user_id} | Delete a User
-*UserManagementApi* | [**getUser**](Apis/UserManagementApi.md#getuser) | **GET** /organizations/{organization_id}/users/{user_id} | Gets a user entity associated with the organization
+*UserManagementApi* | [**deleteUser**](Apis/UserManagementApi.md#deleteuser) | **DELETE** /organizations/{organization_id}/users/{user_name} | Delete a User
+*UserManagementApi* | [**getUser**](Apis/UserManagementApi.md#getuser) | **GET** /organizations/{organization_id}/users/{user_name} | Gets a user entity associated with the organization
 *UserManagementApi* | [**listUsers**](Apis/UserManagementApi.md#listusers) | **GET** /organizations/{organization_id}/users | List users
-*UserManagementApi* | [**updateUser**](Apis/UserManagementApi.md#updateuser) | **PATCH** /organizations/{organization_id}/users/{user_id} | Update a User
-*UserPolicyManagementApi* | [**attachPolicies**](Apis/UserPolicyManagementApi.md#attachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_id}/attach_policies | Attach policies to user
-*UserPolicyManagementApi* | [**detachPolicies**](Apis/UserPolicyManagementApi.md#detachpolicies) | **PATCH** /organizations/{organization_id}/users/{id}/detach_policies | Detach policies from user
-*UserPolicyManagementApi* | [**getUserPolicies**](Apis/UserPolicyManagementApi.md#getuserpolicies) | **GET** /organizations/{organization_id}/users/{user_id}/policies | List all policies associated with user
+*UserManagementApi* | [**updateUser**](Apis/UserManagementApi.md#updateuser) | **PATCH** /organizations/{organization_id}/users/{user_name} | Update a User
+*UserPolicyManagementApi* | [**attachPolicies**](Apis/UserPolicyManagementApi.md#attachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/attach_policies | Attach policies to user
+*UserPolicyManagementApi* | [**detachPolicies**](Apis/UserPolicyManagementApi.md#detachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/detach_policies | Detach policies from user
+*UserPolicyManagementApi* | [**getUserPolicies**](Apis/UserPolicyManagementApi.md#getuserpolicies) | **GET** /organizations/{organization_id}/users/{user_name}/policies | List all policies associated with user
 
 
 <a name="documentation-for-models"></a>

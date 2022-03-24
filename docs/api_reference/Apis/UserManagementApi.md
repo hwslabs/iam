@@ -5,10 +5,10 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**createUser**](UserManagementApi.md#createUser) | **POST** /organizations/{organization_id}/users | Create a user
-[**deleteUser**](UserManagementApi.md#deleteUser) | **DELETE** /organizations/{organization_id}/users/{user_id} | Delete a User
-[**getUser**](UserManagementApi.md#getUser) | **GET** /organizations/{organization_id}/users/{user_id} | Gets a user entity associated with the organization
+[**deleteUser**](UserManagementApi.md#deleteUser) | **DELETE** /organizations/{organization_id}/users/{user_name} | Delete a User
+[**getUser**](UserManagementApi.md#getUser) | **GET** /organizations/{organization_id}/users/{user_name} | Gets a user entity associated with the organization
 [**listUsers**](UserManagementApi.md#listUsers) | **GET** /organizations/{organization_id}/users | List users
-[**updateUser**](UserManagementApi.md#updateUser) | **PATCH** /organizations/{organization_id}/users/{user_id} | Update a User
+[**updateUser**](UserManagementApi.md#updateUser) | **PATCH** /organizations/{organization_id}/users/{user_name} | Update a User
 
 
 <a name="createUser"></a>
@@ -41,7 +41,7 @@ Name | Type | Description  | Notes
 
 <a name="deleteUser"></a>
 # **deleteUser**
-> BaseSuccessResponse deleteUser(id, organization\_id)
+> BaseSuccessResponse deleteUser(user\_name, organization\_id)
 
 Delete a User
 
@@ -51,7 +51,7 @@ Delete a User
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
+ **user\_name** | **String**|  | [default to null]
  **organization\_id** | **String**|  | [default to null]
 
 ### Return type
@@ -69,7 +69,7 @@ Name | Type | Description  | Notes
 
 <a name="getUser"></a>
 # **getUser**
-> User getUser(id, organization\_id)
+> User getUser(user\_name, organization\_id)
 
 Gets a user entity associated with the organization
 
@@ -79,7 +79,7 @@ Gets a user entity associated with the organization
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
+ **user\_name** | **String**|  | [default to null]
  **organization\_id** | **String**|  | [default to null]
 
 ### Return type
@@ -126,7 +126,7 @@ Name | Type | Description  | Notes
 
 <a name="updateUser"></a>
 # **updateUser**
-> User updateUser(id, organization\_id, UpdateUserRequest)
+> User updateUser(user\_name, organization\_id, UpdateUserRequest)
 
 Update a User
 
@@ -136,7 +136,7 @@ Update a User
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
+ **user\_name** | **String**|  | [default to null]
  **organization\_id** | **String**|  | [default to null]
  **UpdateUserRequest** | [**UpdateUserRequest**](../Models/UpdateUserRequest.md)| Payload to update user |
 
