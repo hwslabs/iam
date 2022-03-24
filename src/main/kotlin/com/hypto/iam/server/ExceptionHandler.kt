@@ -4,7 +4,6 @@ import com.hypto.iam.server.db.listeners.DeleteOrUpdateWithoutWhereException
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
-import com.hypto.iam.server.exceptions.JwtExpiredException
 import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
 import com.hypto.iam.server.idp.UserAlreadyExistException
@@ -13,6 +12,7 @@ import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.service.OrganizationAlreadyExistException
 import com.hypto.iam.server.utils.HrnParseException
+import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
 import io.ktor.application.call
@@ -52,7 +52,7 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<UnsupportedJwtException>(HttpStatusCode.BadRequest)
     sendStatus<MalformedJwtException>(HttpStatusCode.BadRequest)
     sendStatus<SignatureException>(HttpStatusCode.BadRequest)
-    sendStatus<JwtExpiredException>(HttpStatusCode.Unauthorized)
+    sendStatus<ExpiredJwtException>(HttpStatusCode.Unauthorized)
     sendStatus<PolicyFormatException>(HttpStatusCode.BadRequest)
     sendStatus<InternalException>(HttpStatusCode.InternalServerError, true)
     sendStatus<DeleteOrUpdateWithoutWhereException>(HttpStatusCode.InternalServerError)
