@@ -163,15 +163,14 @@ fun User.Companion.from(value: UsersRecord): User {
     val hrn = hrnFactory.getHrn(value.hrn) as ResourceHrn
     return User(
         value.hrn, hrn.resourceInstance!!, value.organizationId, value.email, value.phone,
-        User.UserType.valueOf(value.userType), User.Status.valueOf(value.status),
-        value.loginAccess, value.createdBy.toString()
+        User.Status.valueOf(value.status), value.loginAccess, value.createdBy.toString()
     )
 }
 
 fun usersFrom(value: UsersRecord): Users {
     return Users(
         value.hrn, value.passwordHash, value.email, value.phone,
-        value.loginAccess, value.userType, value.status, value.createdBy,
+        value.loginAccess, value.status, value.createdBy,
         value.organizationId, value.createdAt, value.updatedAt
     )
 }

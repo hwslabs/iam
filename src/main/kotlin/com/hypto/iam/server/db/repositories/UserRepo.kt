@@ -77,7 +77,6 @@ object UserRepo : DAOImpl<UsersRecord, Users, String>(
         password: String,
         email: String,
         phone: String?,
-        type: User.UserType,
         status: User.Status,
         createdByHrn: Hrn,
         createdAt: LocalDateTime = LocalDateTime.now(),
@@ -89,7 +88,6 @@ object UserRepo : DAOImpl<UsersRecord, Users, String>(
             .setEmail(email)
             .setPhone(phone)
             .setLoginAccess(true)
-            .setUserType(type.value)
             .setStatus(status.value)
             .setCreatedBy(createdByHrn.toString())
             .setOrganizationId(hrn.organization)

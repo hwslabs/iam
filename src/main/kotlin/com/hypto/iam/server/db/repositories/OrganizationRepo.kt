@@ -38,26 +38,19 @@ object OrganizationRepo : DAOImpl<OrganizationsRecord, Organizations, String?>(
     }
 
     /**
-     * Fetch records that have `admin_user IN (values)`
-     */
-    fun fetchByAdminUser(vararg values: String): List<Organizations> {
-        return fetch(com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS.ADMIN_USER_EMAIL, *values)
-    }
-
-    /**
      * Create a new organization with given input values
      */
     fun create(
         id: String,
         name: String,
         description: String,
-        adminUser: String
+        adminUserHrn: String
     ): OrganizationsRecord {
         val record = OrganizationsRecord()
             .setId(id)
             .setName(name)
             .setDescription(description)
-            .setAdminUserEmail(adminUser)
+            .setAdminUserHrn(adminUserHrn)
             .setCreatedAt(LocalDateTime.now())
             .setUpdatedAt(LocalDateTime.now())
         record.insert()

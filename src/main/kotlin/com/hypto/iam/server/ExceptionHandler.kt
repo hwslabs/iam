@@ -8,6 +8,7 @@ import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
 import com.hypto.iam.server.idp.UserAlreadyExistException
 import com.hypto.iam.server.idp.UserNotFoundException
+import com.hypto.iam.server.models.ErrorResponse
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.service.OrganizationAlreadyExistException
@@ -29,7 +30,14 @@ inline fun <reified T : Throwable> StatusPages.Configuration.sendStatus(
     message: String? = null
 ) {
     exception<T> { cause ->
-        val response = ErrorResponse(cause.message ?: message)
+        val response = ErrorResponse(
+            message
+                ?: if (statusCode.value < HttpStatusCode.InternalServerError.value && cause.message != null) {
+                    cause.message!!
+                } else {
+                    "Unknown Error Occurred"
+                }
+        )
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
@@ -38,8 +46,6 @@ inline fun <reified T : Throwable> StatusPages.Configuration.sendStatus(
         shouldThrowException && throw cause
     }
 }
-
-data class ErrorResponse(val message: String?)
 
 fun StatusPages.Configuration.statusPages() {
     sendStatus<AuthenticationException>(HttpStatusCode.Unauthorized)
