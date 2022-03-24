@@ -157,7 +157,7 @@ No authorization required
 
 <a name="listUsers"></a>
 # **listUsers**
-> UserPaginatedResponse listUsers(organization\_id, nextToken, pageSize, sortOrder)
+> UserPaginatedResponse listUsers(organization\_id, nextToken, pageSize)
 
 List users
 
@@ -170,7 +170,6 @@ Name | Type | Description  | Notes
  **organization\_id** | **String**|  | [default to null]
  **nextToken** | **String**|  | [optional] [default to null]
  **pageSize** | **String**|  | [optional] [default to null]
- **sortOrder** | **String**|  | [optional] [default to null] [enum: asc, desc]
 
 ### Return type
 

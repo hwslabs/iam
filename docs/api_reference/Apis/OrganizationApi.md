@@ -12,7 +12,7 @@ Method | HTTP request | Description
 
 <a name="createOrganization"></a>
 # **createOrganization**
-> Organization createOrganization(CreateOrganizationRequest)
+> createOrganization(CreateOrganizationRequest)
 
 Create an organization
 
@@ -26,7 +26,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Organization**](../Models/Organization.md)
+null (empty response body)
 
 ### Authorization
 
@@ -66,7 +66,7 @@ No authorization required
 
 <a name="getOrganization"></a>
 # **getOrganization**
-> Organization getOrganization(id)
+> getOrganization(id)
 
 Get an organization
 
@@ -80,7 +80,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Organization**](../Models/Organization.md)
+null (empty response body)
 
 ### Authorization
 
@@ -93,7 +93,7 @@ No authorization required
 
 <a name="updateOrganization"></a>
 # **updateOrganization**
-> Organization updateOrganization(id, UpdateOrganizationRequest)
+> updateOrganization(id, UpdateOrganizationRequest)
 
 Update an organization
 
@@ -108,7 +108,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Organization**](../Models/Organization.md)
+null (empty response body)
 
 ### Authorization
 
