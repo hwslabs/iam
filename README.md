@@ -12,9 +12,17 @@ Hypto IAM service provides APIs to manage the authentication and authorization o
 * AWS Account with admin access
 
 ## Usage
-//TODO: Steps to create aws creds and add to dev.env
-* Clone the repository 
-* From the folder run `docker-compose up`
+* Clone the repository to your local environment
+* Setup your AWS account
+  * Create an [AWS IAM User](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) in your AWS account with [cognito power user access](https://docs.aws.amazon.com/cognito/latest/developerguide/security-iam-awsmanpol.html)
+  * Create an [access key](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html) for the above iam user.
+  * Update the access & secret keys in the docker environment variable file. (Environment variables are configured in "$ROOT/docker/iam-web/dev.env" file, so add your iam user access & secret keys with cognito access to "dev.env" file in below format)
+     ```
+          aws.accessKey=<AWS_ACCESS_KEY_OF_COGNITO_POWER_USER>
+          aws.secretKey=<AWS_SECRET_KEY_OF_COGNITO_POWER_USER>
+     ```
+* As a last step, run `docker-compose up` to start the service.
+* Secure your applications happily :)
 
 ## Tech stack
 * Kotlin 1.6.10
@@ -240,4 +248,11 @@ requested resource based on the response.
 1. Run using ```java -jar ./build/libs/hypto-iam-server.jar```
 
 ## Gradle tasks
-// TODO: List important / all gradle tasks and their purposes
+Important gradle tasks to know for working in this repository.
+
+build - Assembles and tests this project. It also invokes the other important sub tasks (flymigrate, compile, style checks, tests, coverage) to push any change for PR.
+flywayMigrate - Migrates the postgres schema to the latest version.
+generateJooq - Generates the jOOQ sources based on Postgres table schemas.
+
+
+You can look all the available tasks using this command `gradle tasks`
