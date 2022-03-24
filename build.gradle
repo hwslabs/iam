@@ -200,11 +200,11 @@ task installGitHooks(type: Exec) {
     }
 }
 
-task deleteOpenAPIDocs {
-//    delete fileTree(dir: "$rootDir/docs/api_reference")
+task cleanAPIDocs(type: Delete) {
+    delete "$rootDir/docs/api_reference"
 }
 
-task generateAPIDocs(/*dependsOn: [deleteOpenAPIDocs],*/ type: GenerateTask) {
+task generateAPIDocs(dependsOn: [cleanAPIDocs], type: GenerateTask) {
     generatorName = "markdown"
     verbose = false
     inputSpec = "$rootDir/iam_openapi_spec.yml".toString()
@@ -215,11 +215,11 @@ task generateAPIDocs(/*dependsOn: [deleteOpenAPIDocs],*/ type: GenerateTask) {
     generateApiDocumentation = true
 }
 
-task deleteOpenAPIModels {
-//    delete fileTree(dir: "$rootDir/src/main/kotlin/com/hypto/iam/server/models/")
+task cleanAPIModels(type: Delete) {
+    delete "$rootDir/src/main/kotlin/com/hypto/iam/server/models/"
 }
 
-task generateOpenAPIModels(dependsOn: [deleteOpenAPIModels], type: GenerateTask) {
+task generateAPIModels(dependsOn: [clean], type: GenerateTask) {
     generatorName = "kotlin-server"
     inputSpec = "$rootDir/iam_openapi_spec.yml".toString()
     outputDir = "$buildDir/openapi-generated-src".toString()
@@ -231,13 +231,16 @@ task generateOpenAPIModels(dependsOn: [deleteOpenAPIModels], type: GenerateTask)
     ]
 }
 
-task generateAndMoveOpenAPIModels(dependsOn: [generateOpenAPIModels], type: Copy) {
+task generateAndMoveAPIModels(dependsOn: [generateAPIModels, cleanAPIModels], type: Copy) {
     from("$buildDir/openapi-generated-src/src/main/kotlin/com/hypto/iam/server/models") {
         include '**/*'
     }
-//    destinationDir(new File("$rootDir/src/main/kotlin/com/hypto/iam/server/models"))
     into "$rootDir/src/main/kotlin/com/hypto/iam/server/models"
     finalizedBy(ktlintFormat)
+}
+
+task generateOpenAPI {
+    dependsOn generateAndMoveAPIModels, generateAPIDocs
 }
 
 task dockerDistJar {

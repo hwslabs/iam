@@ -256,8 +256,7 @@ Important gradle tasks to know for working in this repository.
 * `gradlew flywayMigrate` - Migrates the postgres schema to the latest version.
 * `gradlew generateJooq` - Generates the jOOQ sources based on Postgres table schemas.
 * `gradlew test` - Run the unit tests
-* `gradlew generateAPIDocs` - Generates markdown docs from the open api yml specification
-* `gradlew generateAndMoveOpenAPIModels` - Generates model classes declared in the open api yml specification
+* `gradlew generateOpenAPI`- Generates Markdown docs and request / response model classes declared in the open api yml specification
 
 
 You can look all the available tasks using this command `gradlew tasks`
