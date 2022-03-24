@@ -250,9 +250,9 @@ requested resource based on the response.
 ## Gradle tasks
 Important gradle tasks to know for working in this repository.
 
-build - Assembles and tests this project. It also invokes the other important sub tasks (flymigrate, compile, style checks, tests, coverage) to push any change for PR.
-flywayMigrate - Migrates the postgres schema to the latest version.
-generateJooq - Generates the jOOQ sources based on Postgres table schemas.
+* `gradlew build` - Assembles and tests this project. It also invokes the other important sub tasks (flymigrate, compile, style checks, tests, coverage) to push any change for PR.
+* `gradlew flywayMigrate` - Migrates the postgres schema to the latest version.
+* `gradlew generateJooq` - Generates the jOOQ sources based on Postgres table schemas.
 
 
-You can look all the available tasks using this command `gradle tasks`
+You can look all the available tasks using this command `gradlew tasks`
