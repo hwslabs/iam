@@ -1,11 +1,10 @@
 package com.hypto.iam.server.service
 
-import com.hypto.iam.server.ErrorMessages.Companion.JWT_EXPIRED
-import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_ISSUED_AT
-import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_ISSUER
-import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_ORGANIZATION
-import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_USER_HRN
-import com.hypto.iam.server.ErrorMessages.Companion.JWT_INVALID_VERSION_NUMBER
+import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ISSUED_AT
+import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ISSUER
+import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ORGANIZATION
+import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_USER_HRN
+import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_VERSION_NUMBER
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
@@ -89,11 +88,6 @@ class TokenServiceImpl : KoinComponent, TokenService {
 
         val organization: String? = body.get(ORGANIZATION_CLAIM, String::class.java)
         require(organization != null) { JWT_INVALID_ORGANIZATION }
-
-        val expiry: Date? = body.get(Claims.EXPIRATION, Date::class.java)
-        if (!(expiry is Date && expiry.toInstant() > Instant.now())) {
-            throw JwtExpiredException(String.format(JWT_EXPIRED, expiry))
-        }
 
         val versionNum: String? = body.get(VERSION_CLAIM, String::class.java)
         require(versionNum != null) { JWT_INVALID_VERSION_NUMBER }

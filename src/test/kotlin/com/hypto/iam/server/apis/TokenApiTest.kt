@@ -1,7 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.ErrorMessages
+import com.hypto.iam.server.ErrorMessageStrings
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
@@ -199,6 +199,41 @@ class TokenApiTest : AbstractContainerBaseTest() {
         }
 
         @Test
+        fun `Token Expired`() {
+            withTestApplication(Application::handleRequest) {
+                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+                val expiry = Date.from(Instant.now().minusSeconds(100))
+                val jwt = generateToken(
+                    createdOrganizationResponse = createOrganizationResponse,
+                    createdUser = createdUser,
+                    expiration = expiry)
+
+                // Act
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt"
+                        )
+                    }
+                ) {
+                    // Assert
+                    Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
+                    Assertions.assertTrue(responseBody.message.contains("JWT expired"))
+                }
+            }
+        }
+
+        @Test
         fun `Invalid issuer`() {
             withTestApplication(Application::handleRequest) {
                 val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
@@ -227,7 +262,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         response.contentType()
                     )
                     val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_ISSUER, responseBody.message)
+                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_ISSUER, responseBody.message)
                 }
             }
         }
@@ -260,7 +295,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         response.contentType()
                     )
                     val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_USER_HRN, responseBody.message)
+                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_USER_HRN, responseBody.message)
                 }
             }
         }
@@ -294,46 +329,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         response.contentType()
                     )
                     val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_ORGANIZATION, responseBody.message)
+                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_ORGANIZATION, responseBody.message)
                 }
             }
         }
-
-        // TODO: Handle ExpiredJwtException and uncomment
-//        @Test
-//        fun `Token Expired`() {
-//            withTestApplication(Application::handleRequest) {
-//                val (createOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
-//                val expiry = Date.from(Instant.now().minusSeconds(100))
-//                val jwt = generateToken(
-//                    createdOrganizationResponse = createOrganizationResponse,
-//                    createdUser = createdUser,
-//                    expiration = expiry)
-//
-//                // Act
-//                with(
-//                    handleRequest(
-//                        HttpMethod.Get,
-//                        "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
-//                    ) {
-//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//                        addHeader(
-//                            HttpHeaders.Authorization,
-//                            "Bearer $jwt"
-//                        )
-//                    }
-//                ) {
-//                    // Assert
-//                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-//                    Assertions.assertEquals(
-//                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-//                        response.contentType()
-//                    )
-//                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-//                    Assertions.assertEquals(String.format(ErrorMessages.JWT_EXPIRED, expiry), responseBody.message)
-//                }
-//            }
-//        }
 
         @Test
         fun `Invalid version`() {
@@ -364,7 +363,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         response.contentType()
                     )
                     val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessages.JWT_INVALID_VERSION_NUMBER, responseBody.message)
+                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_VERSION_NUMBER, responseBody.message)
                 }
             }
         }
@@ -400,7 +399,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     )
                     val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
                     Assertions.assertEquals(
-                        String.format(ErrorMessages.JWT_INVALID_ISSUED_AT, issuedAt),
+                        String.format(ErrorMessageStrings.JWT_INVALID_ISSUED_AT, issuedAt),
                         responseBody.message
                     )
                 }
