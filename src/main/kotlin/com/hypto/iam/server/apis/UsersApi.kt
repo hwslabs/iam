@@ -27,7 +27,6 @@ import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.patch
 import io.ktor.routing.post
-import io.ktor.routing.put
 import org.koin.ktor.ext.inject
 
 fun Route.usersApi() {
@@ -131,7 +130,7 @@ fun Route.usersApi() {
 
     // Detach policy
     withPermission("detachPolicies") {
-        put("/organizations/{organization_id}/users/{user_id}/detach_policies") {
+        patch("/organizations/{organization_id}/users/{user_id}/detach_policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to detach policies")
             val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to detach policies")
@@ -151,7 +150,7 @@ fun Route.usersApi() {
 
     // Attach policy
     withPermission("attachPolicies") {
-        put("/organizations/{organization_id}/users/{user_id}/attach_policies") {
+        patch("/organizations/{organization_id}/users/{user_id}/attach_policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to attach policies")
             val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to attach policies")
