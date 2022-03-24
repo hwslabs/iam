@@ -199,7 +199,12 @@ task installGitHooks(type: Exec) {
     }
 }
 
-task generateAPIDocs(type: GenerateTask) {
+
+task deleteOpenAPIDocs {
+    delete fileTree(dir: "$rootDir/docs/api_reference")
+}
+
+task generateAPIDocs(dependsOn: [deleteOpenAPIDocs], type: GenerateTask) {
     generatorName = "markdown"
     verbose = true
     inputSpec = "$rootDir/iam_openapi_spec.yml".toString()

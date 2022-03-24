@@ -1,22 +1,22 @@
-# OrganizationApi
+# OrganizationManagementApi
 
 All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**createOrganization**](OrganizationApi.md#createOrganization) | **POST** /organizations | Create an organization
-[**deleteOrganization**](OrganizationApi.md#deleteOrganization) | **DELETE** /organizations/{id} | Delete an organization
-[**getOrganization**](OrganizationApi.md#getOrganization) | **GET** /organizations/{id} | Get an organization
-[**updateOrganization**](OrganizationApi.md#updateOrganization) | **PATCH** /organizations/{id} | Update an organization
+[**createOrganization**](OrganizationManagementApi.md#createOrganization) | **POST** /organizations | Creates an organization.
+[**deleteOrganization**](OrganizationManagementApi.md#deleteOrganization) | **DELETE** /organizations/{id} | Delete an organization
+[**getOrganization**](OrganizationManagementApi.md#getOrganization) | **GET** /organizations/{id} | Get an organization
+[**updateOrganization**](OrganizationManagementApi.md#updateOrganization) | **PATCH** /organizations/{id} | Update an organization
 
 
 <a name="createOrganization"></a>
 # **createOrganization**
-> createOrganization(CreateOrganizationRequest)
+> CreateOrganizationResponse createOrganization(CreateOrganizationRequest)
 
-Create an organization
+Creates an organization.
 
-    Create an organization
+    Organization is the top level entity. All resources (like user, actions, policies) are created and managed under an organization. This is a privileged api and only internal applications has access to create an Organization.
 
 ### Parameters
 
@@ -26,11 +26,11 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-null (empty response body)
+[**CreateOrganizationResponse**](../Models/CreateOrganizationResponse.md)
 
 ### Authorization
 
-No authorization required
+[apiKeyAuth](../README.md#apiKeyAuth)
 
 ### HTTP request headers
 
@@ -43,7 +43,7 @@ No authorization required
 
 Delete an organization
 
-    Delete an organization
+    Delete an organization. This is a privileged api and only internal application will have access to delete organization.
 
 ### Parameters
 
@@ -57,7 +57,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[apiKeyAuth](../README.md#apiKeyAuth)
 
 ### HTTP request headers
 
@@ -66,11 +66,11 @@ No authorization required
 
 <a name="getOrganization"></a>
 # **getOrganization**
-> getOrganization(id)
+> Organization getOrganization(id)
 
 Get an organization
 
-    Get an organization
+    Get an organization and the metadata for the given organization.
 
 ### Parameters
 
@@ -80,11 +80,11 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-null (empty response body)
+[**Organization**](../Models/Organization.md)
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -93,7 +93,7 @@ No authorization required
 
 <a name="updateOrganization"></a>
 # **updateOrganization**
-> updateOrganization(id, UpdateOrganizationRequest)
+> Organization updateOrganization(id, UpdateOrganizationRequest)
 
 Update an organization
 
@@ -108,11 +108,11 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-null (empty response body)
+[**Organization**](../Models/Organization.md)
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 

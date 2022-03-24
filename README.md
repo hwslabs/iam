@@ -203,13 +203,6 @@ For more information on JWT token, see [JWT Docs](docs/docs/JWT.md)
 
 <a name="Authorization"></a>
 ## Authorization
-// TODOS:
-- JWT
-  - Explain structure of JWT, Compression: jjwt lib, MasterKey and it's rotation 
-  - Authorization for IAM APIs
-    // TODO: Point to /docs/docs/IAMResourcesAndActions.md
-  - Authorization for external resources (/generate_token and /validate API)
-  - Explicitly mention that the power of jwt is not fully used now, and it's a work is progress.
 
 ### For IAM APIs
 Upon passing the authentication phase, requests to IAM APIs enter the authorization phase where

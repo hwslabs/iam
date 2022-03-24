@@ -1,13 +1,14 @@
-# ActionApi
+# ResourceActionManagementApi
 
 All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**createAction**](ActionApi.md#createAction) | **POST** /organizations/{organization_id}/resources/{resource_name}/actions | Create an action
-[**deleteAction**](ActionApi.md#deleteAction) | **DELETE** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Delete an action
-[**getAction**](ActionApi.md#getAction) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Get an action
-[**updateAction**](ActionApi.md#updateAction) | **PATCH** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Update an action
+[**createAction**](ResourceActionManagementApi.md#createAction) | **POST** /organizations/{organization_id}/resources/{resource_name}/actions | Create an action
+[**deleteAction**](ResourceActionManagementApi.md#deleteAction) | **DELETE** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Delete an action
+[**getAction**](ResourceActionManagementApi.md#getAction) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Get an action
+[**listActions**](ResourceActionManagementApi.md#listActions) | **GET** /organizations/{organization_id}/resources/{resource_name}/actions | List actions
+[**updateAction**](ResourceActionManagementApi.md#updateAction) | **PATCH** /organizations/{organization_id}/resources/{resource_name}/actions/{id} | Update an action
 
 
 <a name="createAction"></a>
@@ -32,7 +33,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -61,7 +62,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -90,7 +91,38 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+<a name="listActions"></a>
+# **listActions**
+> ActionPaginatedResponse listActions(organization\_id, resource\_name, nextToken, pageSize, sortOrder)
+
+List actions
+
+    List actions
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **organization\_id** | **String**|  | [default to null]
+ **resource\_name** | **String**|  | [default to null]
+ **nextToken** | **String**|  | [optional] [default to null]
+ **pageSize** | **String**|  | [optional] [default to null]
+ **sortOrder** | **String**|  | [optional] [default to null] [enum: asc, desc]
+
+### Return type
+
+[**ActionPaginatedResponse**](../Models/ActionPaginatedResponse.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -120,7 +152,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 

@@ -1,51 +1,51 @@
-# ResourceApi
+# PolicyManagementApi
 
 All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**createResource**](ResourceApi.md#createResource) | **POST** /organizations/{organization_id}/resources | Create a resource
-[**deleteResource**](ResourceApi.md#deleteResource) | **DELETE** /organizations/{organization_id}/resources/{id} | Delete a resource
-[**getResource**](ResourceApi.md#getResource) | **GET** /organizations/{organization_id}/resources/{id} | Get a resource
-[**listResources**](ResourceApi.md#listResources) | **GET** /organizations/{organization_id}/resources | List Resources
-[**updateResource**](ResourceApi.md#updateResource) | **PATCH** /organizations/{organization_id}/resources/{id} | Update a resource
+[**createPolicy**](PolicyManagementApi.md#createPolicy) | **POST** /organizations/{organization_id}/policies | Create a policy
+[**deletePolicy**](PolicyManagementApi.md#deletePolicy) | **DELETE** /organizations/{organization_id}/policies/{id} | Delete a policy
+[**getPolicy**](PolicyManagementApi.md#getPolicy) | **GET** /organizations/{organization_id}/policies/{id} | Get a policy
+[**listPolicies**](PolicyManagementApi.md#listPolicies) | **GET** /organizations/{organization_id}/policies | List policies
+[**updatePolicy**](PolicyManagementApi.md#updatePolicy) | **PATCH** /organizations/{organization_id}/policies/{id} | Update a policy
 
 
-<a name="createResource"></a>
-# **createResource**
-> Resource createResource(organization\_id, CreateResourceRequest)
+<a name="createPolicy"></a>
+# **createPolicy**
+> Policy createPolicy(organization\_id, CreatePolicyRequest)
 
-Create a resource
+Create a policy
 
-    Create a resource
+    Create a policy
 
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
- **CreateResourceRequest** | [**CreateResourceRequest**](../Models/CreateResourceRequest.md)| Payload to create resource |
+ **CreatePolicyRequest** | [**CreatePolicyRequest**](../Models/CreatePolicyRequest.md)| Payload to create policy |
 
 ### Return type
 
-[**Resource**](../Models/Resource.md)
+[**Policy**](../Models/Policy.md)
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
 - **Content-Type**: application/json
 - **Accept**: application/json
 
-<a name="deleteResource"></a>
-# **deleteResource**
-> BaseSuccessResponse deleteResource(organization\_id, id)
+<a name="deletePolicy"></a>
+# **deletePolicy**
+> BaseSuccessResponse deletePolicy(organization\_id, id)
 
-Delete a resource
+Delete a policy
 
-    Delete a resource
+    Delete a policy
 
 ### Parameters
 
@@ -60,20 +60,20 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="getResource"></a>
-# **getResource**
-> Resource getResource(organization\_id, id)
+<a name="getPolicy"></a>
+# **getPolicy**
+> Policy getPolicy(organization\_id, id)
 
-Get a resource
+Get a policy
 
-    Get a resource
+    Get a policy
 
 ### Parameters
 
@@ -84,24 +84,24 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Resource**](../Models/Resource.md)
+[**Policy**](../Models/Policy.md)
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="listResources"></a>
-# **listResources**
-> ResourcePaginatedResponse listResources(organization\_id, nextToken, pageSize, sortOrder)
+<a name="listPolicies"></a>
+# **listPolicies**
+> PolicyPaginatedResponse listPolicies(organization\_id, nextToken, pageSize, sortOrder)
 
-List Resources
+List policies
 
-    List Resources
+    List policies
 
 ### Parameters
 
@@ -114,24 +114,24 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**ResourcePaginatedResponse**](../Models/ResourcePaginatedResponse.md)
+[**PolicyPaginatedResponse**](../Models/PolicyPaginatedResponse.md)
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="updateResource"></a>
-# **updateResource**
-> Resource updateResource(organization\_id, id, UpdateResourceRequest)
+<a name="updatePolicy"></a>
+# **updatePolicy**
+> Policy updatePolicy(organization\_id, id, UpdatePolicyRequest)
 
-Update a resource
+Update a policy
 
-    Update a resource
+    Update a policy
 
 ### Parameters
 
@@ -139,15 +139,15 @@ Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **organization\_id** | **String**|  | [default to null]
  **id** | **String**|  | [default to null]
- **UpdateResourceRequest** | [**UpdateResourceRequest**](../Models/UpdateResourceRequest.md)| Payload to update resource |
+ **UpdatePolicyRequest** | [**UpdatePolicyRequest**](../Models/UpdatePolicyRequest.md)| Payload to update policy |
 
 ### Return type
 
-[**Resource**](../Models/Resource.md)
+[**Policy**](../Models/Policy.md)
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 

@@ -1,46 +1,15 @@
-# UsersApi
+# UserManagementApi
 
 All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**attachPolicies**](UsersApi.md#attachPolicies) | **PUT** /organizations/{organization_id}/users/{id}/attach_policies | Attach policies to user
-[**createUser**](UsersApi.md#createUser) | **POST** /organizations/{organization_id}/users | Create a user
-[**deleteUser**](UsersApi.md#deleteUser) | **DELETE** /organizations/{organization_id}/users/{id} | Delete a User
-[**detachPolicies**](UsersApi.md#detachPolicies) | **PUT** /organizations/{organization_id}/users/{id}/detach_policies | Detach policies to user
-[**getUser**](UsersApi.md#getUser) | **GET** /organizations/{organization_id}/users/{id} | Get a User
-[**listUsers**](UsersApi.md#listUsers) | **GET** /organizations/{organization_id}/users | List users
-[**updateUser**](UsersApi.md#updateUser) | **PATCH** /organizations/{organization_id}/users/{id} | Update a User
+[**createUser**](UserManagementApi.md#createUser) | **POST** /organizations/{organization_id}/users | Create a user
+[**deleteUser**](UserManagementApi.md#deleteUser) | **DELETE** /organizations/{organization_id}/users/{user_id} | Delete a User
+[**getUser**](UserManagementApi.md#getUser) | **GET** /organizations/{organization_id}/users/{user_id} | Gets a user entity associated with the organization
+[**listUsers**](UserManagementApi.md#listUsers) | **GET** /organizations/{organization_id}/users | List users
+[**updateUser**](UserManagementApi.md#updateUser) | **PATCH** /organizations/{organization_id}/users/{user_id} | Update a User
 
-
-<a name="attachPolicies"></a>
-# **attachPolicies**
-> BaseSuccessResponse attachPolicies(id, organization\_id, PolicyAssociationRequest)
-
-Attach policies to user
-
-    Attach policies to user
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
- **organization\_id** | **String**|  | [default to null]
- **PolicyAssociationRequest** | [**PolicyAssociationRequest**](../Models/PolicyAssociationRequest.md)| Payload to attach / detach a policy to a user / resource |
-
-### Return type
-
-[**BaseSuccessResponse**](../Models/BaseSuccessResponse.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: application/json
 
 <a name="createUser"></a>
 # **createUser**
@@ -48,7 +17,7 @@ No authorization required
 
 Create a user
 
-    Create a user
+    User is an entity which represent a person who is part of the organization or account. This user entity can be created either through user name, password or the user can be federated through an identity provider like Google, Facebook or any SAML 2.0, OIDC identity provider. This is a sign-up api to create a new user in an organization.
 
 ### Parameters
 
@@ -63,7 +32,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -91,47 +60,18 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
 - **Content-Type**: Not defined
 - **Accept**: application/json
 
-<a name="detachPolicies"></a>
-# **detachPolicies**
-> BaseSuccessResponse detachPolicies(id, organization\_id, PolicyAssociationRequest)
-
-Detach policies to user
-
-    Detach policies to user
-
-### Parameters
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **id** | **String**|  | [default to null]
- **organization\_id** | **String**|  | [default to null]
- **PolicyAssociationRequest** | [**PolicyAssociationRequest**](../Models/PolicyAssociationRequest.md)| Payload to attach / detach a policy to a user / resource |
-
-### Return type
-
-[**BaseSuccessResponse**](../Models/BaseSuccessResponse.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: application/json
-
 <a name="getUser"></a>
 # **getUser**
 > User getUser(id, organization\_id)
 
-Get a User
+Gets a user entity associated with the organization
 
     Get a User
 
@@ -148,7 +88,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -161,7 +101,7 @@ No authorization required
 
 List users
 
-    List users
+    List users associated with the organization. This is a pagniated api which returns the list of users with a next page token.
 
 ### Parameters
 
@@ -177,7 +117,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 
@@ -206,7 +146,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[bearerAuth](../README.md#bearerAuth)
 
 ### HTTP request headers
 

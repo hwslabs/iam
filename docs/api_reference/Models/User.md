@@ -9,7 +9,6 @@ Name | Type | Description | Notes
 **email** | **String** |  | [default to null]
 **phone** | **String** |  | [default to null]
 **login\_access** | **Boolean** |  | [optional] [default to null]
-**user\_type** | **String** |  | [default to null]
 **status** | **String** |  | [default to null]
 **created\_by** | **String** |  | [optional] [default to null]
 
