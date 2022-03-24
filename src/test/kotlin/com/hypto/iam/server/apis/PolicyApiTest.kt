@@ -804,7 +804,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         // Associate policy to a user
                         with(
                             handleRequest(
-                                HttpMethod.Put,
+                                HttpMethod.Patch,
                                 "/organizations/${createdOrganization.id}/users/" +
                                     "${createdUser.username}/attach_policies"
                             ) {
