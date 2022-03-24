@@ -14,6 +14,8 @@ import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.IamResources
+import com.hypto.iam.server.utils.ResourceHrn
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
 import org.jooq.JSONB
@@ -40,12 +42,6 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     ): Pair<Organization, Credential> {
         val organizationId = idGenerator.organizationId()
 
-        val organizations = organizationRepo.fetchByAdminUser(adminUser.email)
-        if (organizations.isNotEmpty()) {
-            throw OrganizationAlreadyExistException("User email ${adminUser.email} already has an org. Cannot create " +
-                "a new organization")
-        }
-
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
         // Create Organization
         organizationRepo.insert(
@@ -53,7 +49,9 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 organizationId,
                 name,
                 description,
-                adminUser.email,
+                ResourceHrn(
+                    organization = organizationId, resource = IamResources.USER, resourceInstance = adminUser.username
+                ).toString(),
                 JSONB.jsonb(gson.toJson(identityGroup)),
                 LocalDateTime.now(), LocalDateTime.now()
             )
@@ -90,7 +88,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         return Organization(
             id = response.id,
             name = response.name,
-            description = response.description
+            description = response.description,
+            adminUserHrn = response.adminUserHrn
         )
     }
 

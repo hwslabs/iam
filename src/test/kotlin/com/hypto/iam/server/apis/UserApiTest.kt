@@ -37,7 +37,6 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest = CreateUserRequest(username = "testUserName",
                                                     passwordHash = "testPasswordHash",
                                                     email = testEmail,
-                                                    userType = CreateUserRequest.UserType.normal,
                                                     status = CreateUserRequest.Status.active,
                                                     phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
@@ -75,7 +74,6 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest = CreateUserRequest(username = "testUserName",
             passwordHash = "testPasswordHash",
             email = testEmail,
-            userType = CreateUserRequest.UserType.normal,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
@@ -114,7 +112,6 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest = CreateUserRequest(username = "testUserName",
             passwordHash = "testPasswordHash",
             email = testEmail,
-            userType = CreateUserRequest.UserType.normal,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
@@ -147,7 +144,6 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest = CreateUserRequest(username = "testUserName",
             passwordHash = "testPasswordHash",
             email = testEmail,
-            userType = CreateUserRequest.UserType.normal,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
@@ -185,13 +181,11 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest1 = CreateUserRequest(username = "testUserName",
             passwordHash = "testPasswordHash",
             email = testEmail,
-            userType = CreateUserRequest.UserType.normal,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
         val createUserRequest2 = CreateUserRequest(username = "testUserName",
             passwordHash = "testPasswordHash",
             email = testEmail,
-            userType = CreateUserRequest.UserType.normal,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
@@ -244,7 +238,6 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest = CreateUserRequest(username = "testUserName",
                 passwordHash = "testPasswordHash",
                 email = testEmail,
-                userType = CreateUserRequest.UserType.normal,
                 status = CreateUserRequest.Status.active,
                 phone = "+919626012778")
 

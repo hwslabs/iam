@@ -1231,9 +1231,8 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
           examples:
             ErrorResponse:
-              summary: A sample error response
+              summary: Error message
               value:
-                code: <ERROR_CODE>
                 message: "<Reason message>"
 
     CreateOrganizationResponse:
@@ -1443,7 +1442,6 @@ components:
         password_hash: nii2du35bdtuethntv3q7416
         email: bob@acme.com
         phone: +1234071628
-        user_type: normal
         status: active
 
     UpdateUserRequest:
@@ -1577,7 +1575,6 @@ components:
             email: bob@acme.com
             phone: +1234071628
             login_access: true
-            user_type: normal
             status: active
             created_at: 2020-01-01T00:00:00
             updated_at: 2020-03-21T16:30:06
@@ -1638,6 +1635,7 @@ components:
         id: XlK5h64gND
         name: ACME Enterprise
         description: Brief description about ACME
+        adminUserHrn: "hrn:XlK5h64gND::iam-user/admin-user-name"
     User:
       summary: A sample user
       value:
@@ -1645,9 +1643,8 @@ components:
         username: Bob
         password_hash: nii2du35bdtuethntv3q7416
         email: bob@acme.com
-        phone: +1234071628
+        phone: "+1234071628"
         login_access: true
-        user_type: normal
         status: active
         created_at: 2020-01-01T00:00:00
         updated_at: 2020-03-21T16:30:06
@@ -1813,7 +1810,6 @@ components:
         - username
         - password_hash
         - email
-        - user_type
         - status
       properties:
         username:
@@ -1830,13 +1826,6 @@ components:
         phone:
           type: string
           maxLength: 30
-        user_type:
-          type: string
-          enum:
-            - normal
-            - admin
-            - api_only
-            - system
         status:
           type: string
           enum:
@@ -2003,14 +1992,8 @@ components:
       type: object
       additionalProperties: false
       required:
-        - code
         - message
       properties:
-        code:
-          type: string
-          description: error code
-          maxLength: 20
-          pattern: ^[A-Z0-9_]{3,20}$
         message:
           type: string
           description: error description
@@ -2128,8 +2111,8 @@ components:
         description:
           type: string
           maxLength: 500
-        adminUser:
-          $ref: '#/components/schemas/User'
+        adminUserHrn:
+          type: string
 
     User:
       type: object
