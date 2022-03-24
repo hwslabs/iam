@@ -2,6 +2,7 @@
 
 package com.hypto.iam.server.idp
 
+import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.idp.CognitoConstants.ACTION_SUPPRESS
 import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_ID
 import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_NAME
@@ -10,6 +11,7 @@ import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
+import io.ktor.features.BadRequestException
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -31,6 +33,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserP
 import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ExplicitAuthFlowsType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException
 import software.amazon.awssdk.services.cognitoidentityprovider.model.SchemaAttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.StringAttributeConstraintsType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException
@@ -69,14 +72,19 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 .build()
 
             // Add custom attribute schema for the created user pool
-            val customAttributeRequest = AddCustomAttributesRequest.builder().userPoolId(createUserPoolResponse
-                .userPool().id()).customAttributes(SchemaAttributeType.builder().name(ATTRIBUTE_CREATED_BY)
+            val customAttributeRequest = AddCustomAttributesRequest.builder().userPoolId(
+                createUserPoolResponse
+                    .userPool().id()
+            ).customAttributes(
+                SchemaAttributeType.builder().name(ATTRIBUTE_CREATED_BY)
                     .attributeDataType(AttributeDataType.STRING)
                     .stringAttributeConstraints(
                         StringAttributeConstraintsType.builder()
                             .maxLength("100")
-                            .minLength("3").build())
-                    .build())
+                            .minLength("3").build()
+                    )
+                    .build()
+            )
                 .build()
             cognitoClient.addCustomAttributes(customAttributeRequest)
 
@@ -215,7 +223,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
 
         // Initiate auth
-        initiateAuth(identityGroup, credentials)
+        initiateNewUserAuth(identityGroup, credentials)
 
         // Setting the result in User object
         val attrs = adminCreateUserResponse.user().attributes()
@@ -230,7 +238,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         )
     }
 
-    private fun initiateAuth(
+    private fun initiateNewUserAuth(
         identityGroup: IdentityGroup,
         credentials: PasswordCredentials
     ) {
@@ -305,6 +313,24 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
 
     override suspend fun getIdentitySource(): IdentityProvider.IdentitySource {
         return IdentityProvider.IdentitySource.AWS_COGNITO
+    }
+
+    override suspend fun authenticate(identityGroup: IdentityGroup, userName: String, password: String): User {
+        try {
+            val initiateAuthRequest = AdminInitiateAuthRequest.builder()
+                .userPoolId(identityGroup.id)
+                .clientId(identityGroup.metadata[APP_CLIENT_ID])
+                .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
+                .authParameters(mapOf("USERNAME" to userName, "PASSWORD" to password)).build()
+            val initiateAuthResponse = cognitoClient.adminInitiateAuth(initiateAuthRequest)
+            return getUser(identityGroup, userName)
+        } catch (e: NotAuthorizedException) {
+            logger.info { "Invalid username/password combo from user" }
+            throw BadRequestException("Invalid username and password combination")
+        } catch (e: Exception) {
+            logger.error(e) { "Error while trying to authenticate from cognito" }
+            throw InternalException("Internal error while trying to authenticate the identity.")
+        }
     }
 
     private fun getAttribute(attrs: List<AttributeType>, key: String): String {

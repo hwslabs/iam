@@ -23,14 +23,18 @@ import com.hypto.iam.server.security.Audit
 import com.hypto.iam.server.security.Authorization
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
+import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
+import com.hypto.iam.server.service.UserPolicyService
 import com.hypto.iam.server.service.UserPrincipalService
+import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
+import io.ktor.auth.basic
 import io.ktor.features.AutoHeadResponse
 import io.ktor.features.CallId
 import io.ktor.features.CallLogging
@@ -47,6 +51,7 @@ import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.security.Security
+import org.koin.core.component.inject
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
@@ -58,6 +63,8 @@ fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val appConfig: AppConfig.Config by inject()
     val userPrincipalService: UserPrincipalService by inject()
+    val usersService: UsersService by inject()
+    val userPoliciesService: UserPolicyService by inject()
 
     install(DefaultHeaders)
     install(CallLogging)
@@ -94,6 +101,17 @@ fun Application.handleRequest() {
                 }
             }
         }
+        basic("basic-auth") {
+            validate { credentials ->
+                val organizationId = this.parameters["organization_id"]!!
+                val user = usersService.authenticate(organizationId, credentials.name, credentials.password)
+                return@validate UserPrincipal(
+                    TokenCredential(credentials.toString(), TokenType.BASIC),
+                    user.hrn,
+                    userPoliciesService.fetchEntitlements(user.hrn)
+                )
+            }
+        }
         bearer("bearer-auth") {
             validate { tokenCredential: TokenCredential ->
                 if (tokenCredential.value == null) {
@@ -126,9 +144,12 @@ fun Application.handleRequest() {
             credentialApi()
             policyApi()
             resourceApi()
-            tokenApi()
             usersApi()
             validationApi()
+        }
+
+        authenticate("basic-auth", "bearer-auth") {
+            tokenApi()
         }
     }
 }

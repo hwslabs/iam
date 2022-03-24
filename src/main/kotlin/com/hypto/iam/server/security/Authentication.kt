@@ -33,7 +33,8 @@ enum class TokenLocation(val location: String) {
 
 enum class TokenType(val type: String) {
     CREDENTIAL("credential"),
-    JWT("jwt")
+    JWT("jwt"),
+    BASIC("basic")
 }
 
 /** Class which stores the token credentials sent by the client */

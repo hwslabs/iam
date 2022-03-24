@@ -16,7 +16,7 @@ fun Route.tokenApi() {
     val tokenService: TokenService by inject()
     val gson: Gson by inject()
 
-    post("/token") {
+    post("/organizations/{organization_id}/token") {
         val principal = context.principal<UserPrincipal>()!!
         // TODO: [IMPORTANT] Check if the user has permission to invoke this API and return / raise if necessary
         val response = tokenService.generateJwtToken(principal.hrn)

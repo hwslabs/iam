@@ -16,6 +16,7 @@ import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
 import io.ktor.application.call
+import io.ktor.features.BadRequestException
 import io.ktor.features.StatusPages
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -45,6 +46,7 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<AuthenticationException>(HttpStatusCode.Unauthorized)
     sendStatus<AuthorizationException>(HttpStatusCode.Forbidden)
     sendStatus<EntityAlreadyExistsException>(HttpStatusCode.BadRequest)
+    sendStatus<BadRequestException>(HttpStatusCode.BadRequest)
     sendStatus<UserAlreadyExistException>(HttpStatusCode.BadRequest)
     sendStatus<OrganizationAlreadyExistException>(HttpStatusCode.BadRequest)
     sendStatus<EntityNotFoundException>(HttpStatusCode.NotFound)
