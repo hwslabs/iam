@@ -239,10 +239,11 @@ requested resource based on the response.
   ```brew cask install intellij-idea-ce``` & ```brew install --cask docker```
 2. Install Java 11. (You can easily manage multiple java versions using [SDKMan](https://sdkman.io/usage)) 
 3. Clone repo - ```git clone git@github.com:hwslabs/iam.git```
-4. Create gradle wrapper script to build - ```gradle wrapper```
-5. Run ```./gradlew installGitHooks``` to install git hooks
-6. Run ```docker-compose up``` to initialize postgres db
-7. Run ```./gradlew build```
+4. Follow the steps mentioned in [Usage section](https://github.com/hwslabs/iam#usage) and setup your AWS iam user credentials
+5. Create gradle wrapper script to build - ```gradle wrapper```
+6. Run ```./gradlew installGitHooks``` to install git hooks
+7. Run ```docker-compose up``` to initialize postgres db
+8. Run ```./gradlew build```
 
 ### Run local server
 1. Run using ```java -jar ./build/libs/hypto-iam-server.jar```
@@ -253,6 +254,9 @@ Important gradle tasks to know for working in this repository.
 * `gradlew build` - Assembles and tests this project. It also invokes the other important sub tasks (flymigrate, compile, style checks, tests, coverage) to push any change for PR.
 * `gradlew flywayMigrate` - Migrates the postgres schema to the latest version.
 * `gradlew generateJooq` - Generates the jOOQ sources based on Postgres table schemas.
+* `gradlew test` - Run the unit tests
+* `gradlew generateAPIDocs` - Generates markdown docs from the open api yml specification
+* `gradlew generateAndMoveOpenAPIModels` - Generates model classes declared in the open api yml specification
 
 
 You can look all the available tasks using this command `gradlew tasks`
