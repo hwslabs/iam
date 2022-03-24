@@ -904,13 +904,15 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /token:
+  /organizations/{organization_id}/token:
     post:
       tags:
         - User Authorization
       summary: Generate a token
       description: Generate a token for the given user credential
       operationId: getToken
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
           $ref: '#/components/responses/TokenResponse'

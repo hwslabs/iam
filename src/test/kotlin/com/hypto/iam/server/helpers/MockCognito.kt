@@ -38,7 +38,7 @@ fun KoinTest.mockCognitoClient() {
         }
         coEvery { this@declareMock.createUserPoolClient(any<CreateUserPoolClientRequest>()) } coAnswers {
             CreateUserPoolClientResponse.builder()
-                .userPoolClient(UserPoolClientType.builder().clientId("").build())
+                .userPoolClient(UserPoolClientType.builder().clientId("12345").build())
                 .build()
         }
         coEvery { this@declareMock.deleteUserPool(any<DeleteUserPoolRequest>()) } returns DeleteUserPoolResponse

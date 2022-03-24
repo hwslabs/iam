@@ -31,6 +31,7 @@ import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
+import io.ktor.auth.basic
 import io.ktor.features.AutoHeadResponse
 import io.ktor.features.CallId
 import io.ktor.features.CallLogging
@@ -94,6 +95,15 @@ fun Application.handleRequest() {
                 }
             }
         }
+        basic("basic-auth") {
+            validate { credentials ->
+                val organizationId = this.parameters["organization_id"]!!
+                return@validate userPrincipalService.getUserPrincipalByCredentials(
+                    organizationId, credentials.name,
+                    credentials.password
+                )
+            }
+        }
         bearer("bearer-auth") {
             validate { tokenCredential: TokenCredential ->
                 if (tokenCredential.value == null) {
@@ -126,9 +136,12 @@ fun Application.handleRequest() {
             credentialApi()
             policyApi()
             resourceApi()
-            tokenApi()
             usersApi()
             validationApi()
+        }
+
+        authenticate("basic-auth", "bearer-auth") {
+            tokenApi()
         }
     }
 }

@@ -104,6 +104,15 @@ class UsersServiceImpl : KoinComponent, UsersService {
         identityProvider.deleteUser(identityGroup, userName)
         return BaseSuccessResponse(true)
     }
+
+    override suspend fun authenticate(organizationId: String, userName: String, password: String): User {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to authenticate user")
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val user = identityProvider.authenticate(identityGroup, userName, password)
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
+        return getUser(userHrn, user)
+    }
 }
 
 /**
@@ -122,4 +131,5 @@ interface UsersService {
         status: UpdateUserRequest.Status? = null
     ): User
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
+    suspend fun authenticate(organizationId: String, userName: String, password: String): User
 }
