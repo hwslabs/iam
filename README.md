@@ -1,8 +1,8 @@
 # Hypto IAM (Identity and Access Management) Service
 
 [![Build](https://github.com/hwslabs/iam/actions/workflows/build.yml/badge.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
-[![Coverage](../badges/development/jacoco.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
-[![Branches](../badges/development/branches.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
+[![Coverage](../badges/main/jacoco.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
+[![Branches](../badges/main/branches.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
 
 Provide fine-grained access control to your internal & external services / products / resources.
 Hypto IAM service provides APIs to manage the authentication and authorization of your users.
