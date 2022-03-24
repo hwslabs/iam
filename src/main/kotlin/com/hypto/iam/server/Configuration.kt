@@ -12,7 +12,6 @@ import io.ktor.features.HSTS
 import io.ktor.features.deflate
 import io.ktor.features.gzip
 import io.ktor.features.minimumSize
-import io.ktor.util.KtorExperimentalAPI
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.binder.MeterBinder
@@ -66,7 +65,6 @@ internal fun applicationCompressionConfiguration(): Compression.Configuration.()
 }
 
 // Defines authentication mechanisms used throughout the application.
-@KtorExperimentalAPI
 val ApplicationAuthProviders: Map<String, OAuthServerSettings> = listOf<OAuthServerSettings>(
 //        OAuthServerSettings.OAuth2ServerSettings(
 //                name = "facebook",
