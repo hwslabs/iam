@@ -199,7 +199,7 @@ Things to note:
      the lifetime of the JWT token. This can be handled by having shorter TTL of JWT tokens or by introducing
      a push mechanism to invalidate JWT token on client side in case, the permissions of user has changed.
 
-// TODO: Write a separate README about structure of JWT token and it's compression
+For more information on JWT token, see [JWT Docs](docs/docs/JWT.md)
 
 <a name="Authorization"></a>
 ## Authorization
@@ -207,13 +207,28 @@ Things to note:
 - JWT
   - Explain structure of JWT, Compression: jjwt lib, MasterKey and it's rotation 
   - Authorization for IAM APIs
+    // TODO: Point to /docs/docs/IAMResourcesAndActions.md
   - Authorization for external resources (/generate_token and /validate API)
-  - Explicitly mention that the power of jwt is not fully used now, and it's a work is progress. 
+  - Explicitly mention that the power of jwt is not fully used now, and it's a work is progress.
+
+### For IAM APIs
+Upon passing the authentication phase, requests to IAM APIs enter the authorization phase where
+the system checks if the requesting user (principal) has all the required permissions to
+perform the action on the resource or instance of the resource.
+
+Details on permission(s) required for each IAM API can be found in [API documentation](docs/api_reference/README.md).
+
+### For custom actions
+For using IAM as authorization engine when your users access custom resources,
+a call has to be made to [Validate API](// TODO: Link validate API) with necessary parameters.
+IAM service will return the effect ("allow" / "deny") based on the policies that are associated
+to the user. You can then decide whether to allow the requesting user perform action on the
+requested resource based on the response.
 
 
 ## Documentation for API Endpoints
 
-[**Documentation for API Endpoints**](docs/README.md)
+[**Documentation for API Endpoints**](docs/api_reference/README.md)
 
 # Contribution
 

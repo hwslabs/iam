@@ -203,7 +203,7 @@ task generateAPIDocs(type: GenerateTask) {
     generatorName = "markdown"
     verbose = true
     inputSpec = "$rootDir/iam_openapi_spec.yml".toString()
-    outputDir = "$rootDir/docs".toString()
+    outputDir = "$rootDir/docs/api_reference".toString()
     generateModelTests = false
     generateModelDocumentation = true
     generateApiTests = false
