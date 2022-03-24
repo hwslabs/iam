@@ -4,7 +4,7 @@ CREATE TABLE organizations (
   id VARCHAR(10) PRIMARY KEY, -- 10 char alphabets (upper case only)
   name VARCHAR(50) NOT NULL,
   description text NOT NULL,
-  admin_user_email VARCHAR(50) UNIQUE,
+  admin_user_hrn VARCHAR(200),
   metadata JSONB,
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL
@@ -16,7 +16,6 @@ CREATE TABLE users (
   email VARCHAR(50) NOT NULL,
   phone VARCHAR(50) NOT NULL,
   login_access boolean DEFAULT FALSE,
-  user_type VARCHAR(10) NOT NULL,
   status VARCHAR(10) NOT NULL,
   created_by VARCHAR(200) NOT NULL,
   organization_id VARCHAR(10),

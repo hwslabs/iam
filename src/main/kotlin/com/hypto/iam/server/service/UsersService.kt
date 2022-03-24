@@ -77,7 +77,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         email = user.email,
         phone = user.phoneNumber,
         status = if (user.isEnabled) User.Status.enabled else User.Status.disabled,
-        loginAccess = true, createdBy = user.createdBy, userType = User.UserType.normal
+        loginAccess = true, createdBy = user.createdBy
     )
 
     override suspend fun updateUser(

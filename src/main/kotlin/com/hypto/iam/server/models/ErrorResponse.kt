@@ -14,12 +14,9 @@ package com.hypto.iam.server.models
 import java.io.Serializable
 /**
  *
- * @param code error code
  * @param message error description
  */
 data class ErrorResponse(
-    /* error code */
-    val code: kotlin.String,
     /* error description */
     val message: kotlin.String
 ) : Serializable {

@@ -57,7 +57,7 @@ IAM requires different types of security credentials depending on how you access
 username and password to sign in to invoke the `/login` API and you need secret key to make programmatic calls to IAM.
 
 Note that the resource iam-credential refers to the Secret Key credential alone and not other credential types.
-More information on this can be found in [Authentication Section](README.md#Authentication). 
+More information on this can be found in [Authentication Section](README.md#Authentication).
 
 ### Types
 - Username / Password (Only for Login API)
