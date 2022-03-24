@@ -30,6 +30,7 @@ interface IdentityProvider {
     suspend fun listUsers(identityGroup: IdentityGroup, pageToken: String?, limit: Int?): Pair<List<User>, NextToken?>
     suspend fun deleteUser(identityGroup: IdentityGroup, userName: String)
     suspend fun getIdentitySource(): IdentitySource
+    suspend fun authenticate(identityGroup: IdentityGroup, userName: String, password: String): User
 }
 
 typealias NextToken = String

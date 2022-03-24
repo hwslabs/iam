@@ -6,7 +6,14 @@ import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.models.*
+import com.hypto.iam.server.models.AdminUser
+import com.hypto.iam.server.models.CreateOrganizationResponse
+import com.hypto.iam.server.models.ErrorResponse
+import com.hypto.iam.server.models.ResourceAction
+import com.hypto.iam.server.models.ResourceActionEffect
+import com.hypto.iam.server.models.TokenResponse
+import com.hypto.iam.server.models.ValidationRequest
+import com.hypto.iam.server.models.ValidationResponse
 import com.hypto.iam.server.service.MasterKeyCache
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.ActionHrn
@@ -15,9 +22,16 @@ import com.hypto.iam.server.utils.ResourceHrn
 import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.server.testing.*
+import io.ktor.application.Application
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.withCharset
+import io.ktor.server.testing.contentType
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.setBody
+import io.ktor.server.testing.withTestApplication
 import java.time.Instant
 import java.util.*
 import org.junit.jupiter.api.Assertions
@@ -36,13 +50,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
             with(
                 handleRequest(
-                    HttpMethod.Post,
-                    "/token"
-                ) {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential?.secret}")
-                }
+                HttpMethod.Post,
+                "/organizations/${createdOrganization.organization?.id}/token"
             ) {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential?.secret}")
+            }) {
                 Assertions.assertEquals(HttpStatusCode.OK, response.status())
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
@@ -95,6 +108,28 @@ class TokenApiTest : AbstractContainerBaseTest() {
     }
 
     @Test
+    fun `generate token with basic credentials`() {
+        withTestApplication(Application::handleRequest) {
+            val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+            with(
+                handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${createdOrganization.organization?.id}/token"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Basic bmFtZTEwOlBhc3N3b3JkQDEyMw==")
+                }) {
+                Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                Assertions.assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+            }
+        }
+    }
+
+    @Test
     fun `generate token and validate action after key rotation`() {
         withTestApplication(Application::handleRequest) {
             val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
@@ -102,7 +137,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
             with(
                 handleRequest(
                     HttpMethod.Post,
-                    "/token"
+                    "/organizations/${createdOrganization.organization?.id}/token"
                 ) {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential?.secret}")
