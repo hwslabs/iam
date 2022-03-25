@@ -3,6 +3,7 @@
 [![Build](https://github.com/hwslabs/iam/actions/workflows/build.yml/badge.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
 [![Coverage](../badges/main/jacoco.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
 [![Branches](../badges/main/branches.svg)](https://github.com/hwslabs/iam/actions/workflows/build.yml)
+![GitHub](https://img.shields.io/github/license/hwslabs/iam)
 
 Provide fine-grained access control to your internal & external services / products / resources.
 Hypto IAM service provides APIs to manage the authentication and authorization of your users.
@@ -33,7 +34,7 @@ Hypto IAM service provides APIs to manage the authentication and authorization o
 
 <a name="organization"></a>
 ## Organization
-    hrn:::iam-organization:<organization-id>
+    hrn:::iam-organization/<organization-id>
 
 Organizations in IAM helps you centrally govern your environment, namespace all your entities
 and provide a level of isolation.
@@ -42,13 +43,13 @@ Refer [Organization Management APIs](docs/api_reference/Apis/OrganizationManagem
 
 <a name="account"></a>
 ## Account
-    hrn:<organization-id>::iam-account:<account-name>
+    hrn:<organization-id>::iam-account/<account-name>
 
 Note: Account is currently under development and not supported. Hence, must be left out of all HRNs
 
 <a name="user"></a>
 ## User
-    hrn:<organization-id>:<account-id>:iam-user:<user-name>
+    hrn:<organization-id>:<account-id>:iam-user/<user-name>
 
 A user is an entity that you create in IAM to represent the person or application that uses
 it to interact with IAM and it's in-build resources or wish to interact with
@@ -122,7 +123,7 @@ some resources omit the Organization ID, the account ID, or both the Organizatio
 #### Resource HRN
 Resource HRN uniquely identifies a resource or instance of a resources.
 
-    hrn:<organization-id>:<account-name>:<resource>:<resource-name>
+    hrn:<organization-id>:<account-name>:<resource>/<resource-id>
 
 <a name="actionHrn"></a>
 #### Action HRN
@@ -260,3 +261,9 @@ Important gradle tasks to know for working in this repository.
 
 
 You can look all the available tasks using this command `gradlew tasks`
+
+## 📣 Let's chat
+Join our Slack channel for any new contributions or issues with the project.
+
+[![slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://join.slack.com/t/hypto-community/shared_invite/zt-160bce60l-5cIm2qJFaJP8rs3gKHRLLg/)
+
