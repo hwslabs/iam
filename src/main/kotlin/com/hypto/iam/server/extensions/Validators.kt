@@ -10,6 +10,7 @@ import io.konform.validation.ValidationBuilder
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minLength
 import io.konform.validation.jsonschema.pattern
+import io.ktor.features.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -67,7 +68,7 @@ val nameCheck = Validation<String> {
 fun <T> Validation<T>.validateAndThrowOnFailure(value: T): T {
     val result = validate(value)
     if (result is Invalid<T>) {
-        throw IllegalArgumentException(result.errors.toString())
+        throw BadRequestException(result.errors.toString())
     }
     return value
 }
