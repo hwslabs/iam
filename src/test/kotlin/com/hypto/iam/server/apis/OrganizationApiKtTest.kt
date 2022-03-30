@@ -35,13 +35,13 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
             lateinit var orgId: String
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                AdminUser(
-                    userName,
-                    "testEmail", "testPhone", "testUserName"
-                )
+                AdminUser(userName, testPassword, testEmail, testPhone)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -51,10 +51,10 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 }
             ) {
                 val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
-                orgId = responseBody.organization!!.id
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
+                orgId = responseBody.organization!!.id
                 assertEquals(requestBody.name, responseBody.organization!!.name)
                 assertEquals(10, responseBody.organization!!.id.length)
             }
@@ -68,6 +68,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -76,10 +79,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         gson.toJson(
                             CreateOrganizationRequest(
                                 orgName,
-                                AdminUser(
-                                    userName,
-                                    "testEmail", "testPhone", "testUserName"
-                                )
+                                AdminUser(userName, testPassword, testEmail, testPhone)
                             )
                         )
                     )
@@ -97,6 +97,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
@@ -104,7 +107,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, "testPassword", "testEmail", "testPhone")
+                            AdminUser(userName, testPassword, testEmail, testPhone)
                         )
                     )
                 )
@@ -132,6 +135,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
@@ -139,7 +145,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, "testPassword", "testEmail", "testPhone")
+                            AdminUser(userName, testPassword, testEmail, testPhone)
                         )
                     )
                 )
@@ -170,6 +176,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
             // Create organization
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -178,7 +187,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, "testPassword", "testEmail", "testPhone")
+                            AdminUser(userName, testPassword, testEmail, testPhone)
                         )
                     )
                 )

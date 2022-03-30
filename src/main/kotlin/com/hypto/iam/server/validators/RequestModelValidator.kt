@@ -10,22 +10,7 @@ import com.hypto.iam.server.extensions.dateTime
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
-import com.hypto.iam.server.models.CreateActionRequest
-import com.hypto.iam.server.models.CreateCredentialRequest
-import com.hypto.iam.server.models.CreateOrganizationRequest
-import com.hypto.iam.server.models.CreatePolicyRequest
-import com.hypto.iam.server.models.CreateResourceRequest
-import com.hypto.iam.server.models.CreateUserRequest
-import com.hypto.iam.server.models.PolicyAssociationRequest
-import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.models.ResourceAction
-import com.hypto.iam.server.models.UpdateActionRequest
-import com.hypto.iam.server.models.UpdateCredentialRequest
-import com.hypto.iam.server.models.UpdateOrganizationRequest
-import com.hypto.iam.server.models.UpdatePolicyRequest
-import com.hypto.iam.server.models.UpdateResourceRequest
-import com.hypto.iam.server.models.UpdateUserRequest
-import com.hypto.iam.server.models.ValidationRequest
+import com.hypto.iam.server.models.*
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxItems
 import io.konform.validation.jsonschema.maxLength
@@ -43,6 +28,9 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
         // Name is mandatory parameter and max length should be 50
         CreateOrganizationRequest::name required {
             run(nameCheck)
+        }
+        CreateOrganizationRequest::adminUser required {
+            run(adminUserRequestValidation)
         }
     }.validateAndThrowOnFailure(this)
 }
@@ -276,4 +264,18 @@ val resourceActionValidation = Validation<ResourceAction> {
 val passwordCheck = Validation<String> {
     minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PASSWORD_LENGTH}"
     pattern(PASSWORD_REGEX) hint PASSWORD_REGEX_HINT
+}
+val adminUserRequestValidation = Validation<AdminUser> {
+    AdminUser::username required {
+        run(userNameCheck)
+    }
+    AdminUser::phone required {
+        run(phoneNumberCheck)
+    }
+    AdminUser::email required {
+        run(emailCheck)
+    }
+    AdminUser::passwordHash required {
+        run(passwordCheck)
+    }
 }
