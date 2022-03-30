@@ -68,7 +68,7 @@ val nameCheck = Validation<String> {
 fun <T> Validation<T>.validateAndThrowOnFailure(value: T): T {
     val result = validate(value)
     if (result is Invalid<T>) {
-        throw BadRequestException(result.errors.toString())
+        throw IllegalArgumentException(result.errors.toString())
     }
     return value
 }

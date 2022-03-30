@@ -191,7 +191,7 @@ fun CreateUserRequest.validate(): CreateUserRequest {
             run(emailCheck)
         }
         CreateUserRequest::passwordHash {
-            minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
+           run(passwordCheck)
         }
         CreateUserRequest::phone ifPresent {
             run(phoneNumberCheck)
@@ -213,9 +213,17 @@ fun UpdateUserRequest.validate(): UpdateUserRequest {
 // Validations used by ValidationBuilders
 
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
-const val PHONE_NUMBER_REGEX = "^\\+?-?\\d+\$"
+const val PHONE_NUMBER_REGEX = "^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*\$"
+const val PHONE_NUMBER_REGEX_HINT = "Only characters +, -, 0..9 are supported."
 const val HRN_PREFIX_REGEX = "^hrn:[^\n]*"
 const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
+const val EMAIL_REGEX = "^\\S+@\\S+\\.\\S+\$"
+const val EMAIL_REGEX_HINT = "Email should contain `.`, `@`"
+const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@_#])[A-Za-z\\d@_#]{8,}\$"
+const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase letter, " +
+                                "one lowercase letter, one number and one special character[@ _ #]"
+
+
 val nameCheck = Validation<String> {
     minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
     maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
@@ -224,9 +232,10 @@ val nameCheck = Validation<String> {
 }
 
 val phoneNumberCheck = Validation<String> {
-    minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
-    pattern(PHONE_NUMBER_REGEX)
+    minLength(Constants.MINIMUM_PHONE_NUMBER_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PHONE_NUMBER_LENGTH}"
+    pattern(PHONE_NUMBER_REGEX) hint PHONE_NUMBER_REGEX_HINT
 }
+
 val userNameCheck = Validation<String> {
     minLength(Constants.MIN_USERNAME_LENGTH) hint "Minimum length expected is ${Constants.MIN_USERNAME_LENGTH}"
     maxLength(Constants.MAX_USERNAME_LENGTH) hint "Maximum length supported for" +
@@ -236,7 +245,7 @@ val userNameCheck = Validation<String> {
 
 val emailCheck = Validation<String> {
     minLength(Constants.MIN_EMAIL_LENGTH) hint "Minimum length expected is ${Constants.MIN_EMAIL_LENGTH}"
-    // TODO: Add email pattern check
+    pattern(EMAIL_REGEX) hint EMAIL_REGEX_HINT
 }
 
 val descriptionCheck = Validation<String> {
@@ -264,4 +273,9 @@ val validationRequestValidation = Validation<ValidationRequest> {
 val resourceActionValidation = Validation<ResourceAction> {
     ResourceAction::resource required { hrn() }
     ResourceAction::action required { hrn() }
+}
+
+val passwordCheck = Validation<String> {
+    minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PASSWORD_LENGTH}"
+    pattern(PASSWORD_REGEX) hint PASSWORD_REGEX_HINT
 }
