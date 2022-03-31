@@ -15,6 +15,8 @@ class Constants private constructor() {
         const val MIN_POLICY_STATEMENTS = 1
         const val MAX_POLICY_STATEMENTS = 50
         const val MAX_POLICY_ASSOCIATIONS_PER_REQUEST = 20
+        const val MINIMUM_PHONE_NUMBER_LENGTH = 8
+        const val MINIMUM_PASSWORD_LENGTH = 8
 
         const val PAGINATION_MAX_PAGE_SIZE = 50
         const val PAGINATION_DEFAULT_PAGE_SIZE = 50

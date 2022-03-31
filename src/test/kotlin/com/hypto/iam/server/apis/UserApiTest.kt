@@ -35,7 +35,7 @@ class UserApiTest : AbstractContainerBaseTest() {
     fun `create user success case`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest = CreateUserRequest(username = "testUserName",
-                                                    passwordHash = "testPasswordHash",
+                                                    passwordHash = "testPassword@Hash1",
                                                     email = testEmail,
                                                     status = CreateUserRequest.Status.active,
                                                     phone = "+919626012778")
@@ -265,6 +265,33 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
             }
 
+            DataSetupHelper.deleteOrganization(organization.id, this)
+        }
+    }
+
+    @Test
+    fun `create user with validation error case`() {
+        val testEmail = "test-user-email" + IdGenerator.randomId() + "hypto.in"
+        val createUserRequest = CreateUserRequest(username = "testUserName",
+            passwordHash = "testPassword@ash",
+            email = testEmail,
+            status = CreateUserRequest.Status.active,
+            phone = "+919626")
+        withTestApplication(Application::handleRequest) {
+            val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            val organization = organizationResponse.organization!!
+            val createdCredentials = organizationResponse.adminUserCredential!!
+            DataSetupHelper.createResource(organization.id, createdCredentials, this)
+
+            with(
+                handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    setBody(gson.toJson(createUserRequest))
+                }
+            ) {
+                assertEquals(HttpStatusCode.BadRequest, response.status())
+            }
             DataSetupHelper.deleteOrganization(organization.id, this)
         }
     }
