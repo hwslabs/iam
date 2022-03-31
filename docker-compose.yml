@@ -6,6 +6,7 @@ services:
       dockerfile: ./docker/iam-web/Dockerfile
     volumes:
       - .:/iam
+      - ./docker/iam-web/gradle:/home/gradle/.gradle
     ports:
       - "8080:8080"
     links:

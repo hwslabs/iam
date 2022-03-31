@@ -3,5 +3,6 @@ build/
 gradle*
 .idea
 docker/iam-pg/data/*
+docker/iam-web/gradle/*
 **/.DS_Store
 
