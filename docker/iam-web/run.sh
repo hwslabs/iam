@@ -2,6 +2,6 @@
 
 set -vx
 
+gradle --stop # Stop running daemons if any
 gradle wrapper
-./gradlew build
-java -cp ./build/libs/hypto-iam-server-1.0.0-all.jar com.hypto.iam.server.ApplicationKt
+./gradlew run dockerDistJar

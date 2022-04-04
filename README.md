@@ -243,7 +243,7 @@ requested resource based on the response.
 4. Follow the steps mentioned in [Usage section](https://github.com/hwslabs/iam#usage) and setup your AWS iam user credentials
 5. Create gradle wrapper script to build - ```gradle wrapper```
 6. Run ```./gradlew installGitHooks``` to install git hooks
-7. Run ```docker-compose up``` to initialize postgres db
+7. Run ```docker-compose up pg``` to initialize postgres db
 8. Run ```./gradlew build```
 
 ### Run local server
