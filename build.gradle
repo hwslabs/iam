@@ -241,6 +241,7 @@ task generateAndMoveOpenAPIModels(dependsOn: [generateOpenAPIModels], type: Copy
 }
 
 task dockerDistJar {
+    description "Quickly build application using Docker without running tests and other lint checks"
     dependsOn tasks.named('compileKotlin')
     dependsOn tasks.named('compileJava')
 }
