@@ -1,5 +1,6 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.db.Tables
 import com.hypto.iam.server.db.tables.Credentials.CREDENTIALS
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
@@ -99,6 +100,11 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
             .setUserHrn(ResourceHrn(organizationId, "", IamResources.USER, userId).toString())
         record.attach(configuration())
         val count = record.delete()
+        return count > 0
+    }
+
+    fun deleteByUserHRN(userHrn : String) : Boolean {
+        val count = ctx().deleteFrom(table).where(Tables.CREDENTIALS.USER_HRN.eq(userHrn)).execute()
         return count > 0
     }
 }

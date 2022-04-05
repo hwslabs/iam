@@ -90,6 +90,11 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         return BaseSuccessResponse(true)
     }
 
+    override suspend fun deleteCredentialByHrn(hrn: Hrn): BaseSuccessResponse {
+        val recordDeleted = repo.deleteByUserHRN(hrn.toString())
+        return BaseSuccessResponse(success = recordDeleted)
+    }
+
     private fun fetchCredential(userHrn: Hrn, id: UUID): CredentialsRecord {
         return repo.fetchByIdAndUserHrn(id, userHrn.toString())
             ?: throw EntityNotFoundException("Credential not found")
@@ -108,4 +113,5 @@ interface CredentialService {
     ): CredentialWithoutSecret
 
     suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse
+    suspend fun deleteCredentialByHrn(hrn: Hrn): BaseSuccessResponse
 }

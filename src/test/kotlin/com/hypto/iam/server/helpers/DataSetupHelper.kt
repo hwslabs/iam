@@ -2,17 +2,10 @@ package com.hypto.iam.server.helpers
 
 import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
-import com.hypto.iam.server.db.Tables.ACTIONS
 import com.hypto.iam.server.db.Tables.CREDENTIALS
-import com.hypto.iam.server.db.Tables.RESOURCES
 import com.hypto.iam.server.db.Tables.USERS
-import com.hypto.iam.server.db.Tables.USER_POLICIES
-import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
-import com.hypto.iam.server.db.repositories.PoliciesRepo
-import com.hypto.iam.server.db.repositories.ResourceRepo
-import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.AdminUser
@@ -41,11 +34,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
 
     private val organizationRepo: OrganizationRepo by inject()
     private val userRepo: UserRepo by inject()
-    private val policyRepo: PoliciesRepo by inject()
-    private val userPolicyRepo: UserPoliciesRepo by inject()
-    private val resourceRepo: ResourceRepo by inject()
     private val credentialRepo: CredentialsRepo by inject()
-    private val actionRepo: ActionRepo by inject()
 
     fun createOrganization(
         engine: TestApplicationEngine
@@ -143,28 +132,18 @@ object DataSetupHelper : AutoCloseKoinTest() {
 
     // This function is used for cleaning up all the data created during the test for the organization
     fun deleteOrganization(orgId: String, engine: TestApplicationEngine) {
-
         with(engine) {
-            // TODO: Optimize the queries to do it one query (CASCADE DELETE)
-            policyRepo.fetchByOrganizationId(orgId).forEach { policies ->
-                userPolicyRepo.fetch(USER_POLICIES.POLICY_HRN, policies.hrn).forEach {
-                    userPolicyRepo.delete(it)
+            val organization = organizationRepo.findById(orgId)
+            organization?.let {
+                userRepo.fetch(USERS.ORGANIZATION_ID, orgId).filterNotNull().forEach { users ->
+                    credentialRepo.fetch(CREDENTIALS.USER_HRN, users.hrn).forEach { credentials ->
+                        credentialRepo.delete(credentials)
+                    }
                 }
-                policyRepo.delete(policies)
+                // if no users created, directly delete credentials for admin user
+                credentialRepo.deleteByUserHRN(it.adminUserHrn)
+                organizationRepo.deleteById(orgId)
             }
-            resourceRepo.fetch(RESOURCES.ORGANIZATION_ID, orgId).forEach { resource ->
-                actionRepo.fetch(ACTIONS.RESOURCE_HRN, resource.hrn).forEach {
-                    actionRepo.delete(it)
-                }
-                resourceRepo.delete(resource)
-            }
-            userRepo.fetch(USERS.ORGANIZATION_ID, orgId).forEach { users ->
-                credentialRepo.fetch(CREDENTIALS.USER_HRN, users.hrn).forEach {
-                    credentialRepo.delete(it)
-                }
-                userRepo.delete(users)
-            }
-            organizationRepo.deleteById(orgId)
         }
     }
 }

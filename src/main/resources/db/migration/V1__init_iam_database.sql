@@ -23,7 +23,7 @@ CREATE TABLE users (
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  FOREIGN KEY (organization_id) REFERENCES organizations (id)
+  FOREIGN KEY (organization_id) REFERENCES organizations (id) ON DELETE CASCADE
 );
 
 CREATE INDEX users_idx_organization_id_name ON users(organization_id);
@@ -45,7 +45,7 @@ CREATE TABLE users_auth_providers (
   updated_at timestamp NOT NULL,
 
   -- PRIMARY KEY (user_id, auth_provider, protocol),
-  FOREIGN KEY (user_hrn) REFERENCES users (hrn)
+  FOREIGN KEY (user_hrn) REFERENCES users (hrn) ON DELETE CASCADE
 );
 
 CREATE TABLE credentials (
@@ -69,7 +69,7 @@ CREATE TABLE resources (
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  FOREIGN KEY (organization_id) REFERENCES organizations (id)
+  FOREIGN KEY (organization_id) REFERENCES organizations (id) ON DELETE CASCADE
 );
 CREATE INDEX resources_idx_org_id ON resources(organization_id);
 
@@ -82,7 +82,7 @@ CREATE TABLE actions (
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  FOREIGN KEY (resource_hrn) REFERENCES resources (hrn)
+  FOREIGN KEY (resource_hrn) REFERENCES resources (hrn) ON DELETE CASCADE
 );
 CREATE INDEX actions_idx_org_id_resource_hrn ON actions(organization_id, resource_hrn);
 
@@ -95,7 +95,7 @@ CREATE TABLE policies (
   created_at timestamp NOT NULL,
   updated_at timestamp NOT NULL,
 
-  FOREIGN KEY (organization_id) REFERENCES organizations (id)
+  FOREIGN KEY (organization_id) REFERENCES organizations (id) ON DELETE CASCADE
 );
 CREATE INDEX policies_idx_org_id ON policies(organization_id);
 
@@ -107,7 +107,7 @@ CREATE TABLE user_policies (
 
   created_at timestamp NOT NULL,
 
-  FOREIGN KEY (policy_hrn) REFERENCES policies (hrn)
+  FOREIGN KEY (policy_hrn) REFERENCES policies (hrn) ON DELETE CASCADE
 );
 CREATE UNIQUE INDEX user_policies_idx_principal_policy ON user_policies(principal_hrn, policy_hrn);
 
