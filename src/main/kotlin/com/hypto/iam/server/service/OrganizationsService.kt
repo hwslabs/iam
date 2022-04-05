@@ -128,7 +128,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 organizationRepo.deleteById(orgId)
             }
             identityProvider.deleteIdentityGroup(identityGroup)
-        } catch (ex : Exception) {
+        } catch (ex: Exception) {
             logger.debug { "Error while rolling back organisation changes with message - ${ex.message}" }
         }
     }
