@@ -7,6 +7,7 @@ import com.hypto.iam.server.db.Tables.USERS
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.UserRepo
+import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateActionRequest
@@ -135,15 +136,19 @@ object DataSetupHelper : AutoCloseKoinTest() {
         with(engine) {
             val organization = organizationRepo.findById(orgId)
             organization?.let {
-                userRepo.fetch(USERS.ORGANIZATION_ID, orgId).filterNotNull().forEach { users ->
-                    credentialRepo.fetch(CREDENTIALS.USER_HRN, users.hrn).forEach { credentials ->
-                        credentialRepo.delete(credentials)
-                    }
+                userRepo.fetch(USERS.ORGANIZATION_ID, orgId).filterNotNull().forEach { user ->
+                    cleanupCredentials(user, it.adminUserHrn)
+                    organizationRepo.deleteById(orgId)
                 }
-                // if no users created, directly delete credentials for admin user
-                credentialRepo.deleteByUserHRN(it.adminUserHrn)
-                organizationRepo.deleteById(orgId)
             }
         }
+    }
+
+    private fun cleanupCredentials(user: Users, adminUserHrn : String) {
+        credentialRepo.fetch(CREDENTIALS.USER_HRN, user.hrn).forEach { credentials ->
+            credentialRepo.delete(credentials)
+        }
+        // if no users created, directly delete credentials for admin user
+        credentialRepo.deleteByUserHRN(adminUserHrn)
     }
 }

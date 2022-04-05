@@ -85,7 +85,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
             val credential = credentialService.createCredential(organizationId, adminUser.username)
             return Pair(organization, credential)
-        }catch (ex : Exception) {
+        } catch (ex: Exception) {
             logger.error { "Error occurred while creating an organisation with message = ${ex.message}" }
             rollbackOrganizationSilently(organizationId, identityGroup)
             throw ex
@@ -128,7 +128,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 organizationRepo.deleteById(orgId)
             }
             identityProvider.deleteIdentityGroup(identityGroup)
-        }catch (ex : Exception) {
+        } catch (ex : Exception) {
             logger.debug { "Error while rolling back organisation changes with message - ${ex.message}" }
         }
     }
