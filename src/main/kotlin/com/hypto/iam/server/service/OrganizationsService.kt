@@ -63,28 +63,28 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             )
 
             // Create admin user for the organization
-            val user = usersService.createUser(
-                organizationId = organizationId,
-                credentials = PasswordCredentials(
-                    userName = adminUser.username,
-                    email = adminUser.email,
-                    phoneNumber = adminUser.phone, password = adminUser.passwordHash
-                ),
-                createdBy = "iam-system"
-            )
+        val user = usersService.createUser(
+            organizationId = organizationId,
+            credentials = PasswordCredentials(
+                userName = adminUser.username,
+                email = adminUser.email,
+                phoneNumber = adminUser.phone, password = adminUser.passwordHash
+            ),
+            createdBy = "iam-system"
+        )
 
-            // Add policies for the admin user
-            val organization = getOrganization(organizationId)
-            val policyStatements = listOf(
-                // TODO: Change organization admin's policy string to hrn:::iam-organization/$orgId
-                PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
-                PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
-            )
-            val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
-            userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.hrn), listOf(hrnFactory.getHrn(policy.hrn)))
+        // Add policies for the admin user
+        val organization = getOrganization(organizationId)
+        val policyStatements = listOf(
+            // TODO: Change organization admin's policy string to hrn:::iam-organization/$orgId
+            PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
+            PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
+        )
+        val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
+        userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.hrn), listOf(hrnFactory.getHrn(policy.hrn)))
 
-            val credential = credentialService.createCredential(organizationId, adminUser.username)
-            return Pair(organization, credential)
+        val credential = credentialService.createCredential(organizationId, adminUser.username)
+        return Pair(organization, credential)
         } catch (ex: Exception) {
             logger.error { "Error occurred while creating an organisation with message = ${ex.message}" }
             rollbackOrganizationSilently(organizationId, identityGroup)
