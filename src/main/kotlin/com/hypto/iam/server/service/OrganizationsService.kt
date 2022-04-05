@@ -62,7 +62,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 )
             )
 
-            // Create admin user for the organization
+        // Create admin user for the organization
         val user = usersService.createUser(
             organizationId = organizationId,
             credentials = PasswordCredentials(
