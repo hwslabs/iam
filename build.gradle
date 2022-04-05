@@ -54,7 +54,7 @@ apply plugin: 'application'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
-mainClassName = "com.hypto.iam.server.Application"
+mainClassName = "com.hypto.iam.server.ApplicationKt"
 sourceCompatibility = 11
 
 sourceSets {
@@ -200,7 +200,6 @@ task installGitHooks(type: Exec) {
     }
 }
 
-
 task deleteOpenAPIDocs {
 //    delete fileTree(dir: "$rootDir/docs/api_reference")
 }
@@ -239,6 +238,12 @@ task generateAndMoveOpenAPIModels(dependsOn: [generateOpenAPIModels], type: Copy
 //    destinationDir(new File("$rootDir/src/main/kotlin/com/hypto/iam/server/models"))
     into "$rootDir/src/main/kotlin/com/hypto/iam/server/models"
     finalizedBy(ktlintFormat)
+}
+
+task dockerDistJar {
+    description "Quickly build application using Docker without running tests and other lint checks"
+    dependsOn tasks.named('compileKotlin')
+    dependsOn tasks.named('compileJava')
 }
 
 jacocoTestCoverageVerification {
