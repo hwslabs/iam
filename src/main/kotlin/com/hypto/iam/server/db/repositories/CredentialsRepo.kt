@@ -103,7 +103,7 @@ object CredentialsRepo : DAOImpl<CredentialsRecord, Credentials, UUID>(
         return count > 0
     }
 
-    fun deleteByUserHRN(userHrn : String) : Boolean {
+    fun deleteByUserHRN(userHrn: String): Boolean {
         val count = ctx().deleteFrom(table).where(Tables.CREDENTIALS.USER_HRN.eq(userHrn)).execute()
         return count > 0
     }

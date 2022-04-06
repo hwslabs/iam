@@ -144,7 +144,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
         }
     }
 
-    private fun cleanupCredentials(user: Users, adminUserHrn : String) {
+    private fun cleanupCredentials(user: Users, adminUserHrn: String) {
         credentialRepo.fetch(CREDENTIALS.USER_HRN, user.hrn).forEach { credentials ->
             credentialRepo.delete(credentials)
         }
