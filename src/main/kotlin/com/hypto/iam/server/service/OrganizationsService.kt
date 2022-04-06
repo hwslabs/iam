@@ -38,6 +38,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val gson: Gson by inject()
     private val logger = KotlinLogging.logger {}
 
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun createOrganization(
         name: String,
         description: String,
@@ -120,6 +121,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         return BaseSuccessResponse(true)
     }
 
+    @Suppress("TooGenericExceptionCaught")
     private suspend fun rollbackOrganizationSilently(orgId: String, identityGroup: IdentityGroup) {
         try {
             organizationRepo.findById(orgId)?.let {
