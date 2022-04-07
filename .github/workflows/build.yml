@@ -79,6 +79,7 @@ jobs:
           popd
       - name: Push badge commit
         uses: ad-m/github-push-action@master
+        if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: badges
