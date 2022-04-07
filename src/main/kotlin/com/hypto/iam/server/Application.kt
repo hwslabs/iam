@@ -48,6 +48,7 @@ import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import java.security.Security
+import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
@@ -120,7 +121,9 @@ fun Application.handleRequest() {
 
     // Create a signing Master key pair in case one doesn't exist
     val masterKeysRepo: MasterKeysRepo by inject()
-    masterKeysRepo.rotateKey(skipIfPresent = true)
+    runBlocking {
+        masterKeysRepo.rotateKey(skipIfPresent = true)
+    }
 
     install(Authorization) {
     }

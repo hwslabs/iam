@@ -90,7 +90,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         return BaseSuccessResponse(true)
     }
 
-    private fun fetchCredential(userHrn: Hrn, id: UUID): CredentialsRecord {
+    private suspend fun fetchCredential(userHrn: Hrn, id: UUID): CredentialsRecord {
         return repo.fetchByIdAndUserHrn(id, userHrn.toString())
             ?: throw EntityNotFoundException("Credential not found")
     }

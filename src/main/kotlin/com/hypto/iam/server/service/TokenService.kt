@@ -29,6 +29,7 @@ import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -130,7 +131,9 @@ class TokenServiceImpl : KoinComponent, TokenService {
         private val masterKeyCache: MasterKeyCache by inject()
         override fun resolveSigningKey(jwsHeader: JwsHeader<*>, claims: Claims): PublicKey {
             val keyId = jwsHeader.keyId
-            return masterKeyCache.getKey(keyId).publicKey
+            return runBlocking {
+                masterKeyCache.getKey(keyId).publicKey
+            }
         }
     }
 }
@@ -146,7 +149,7 @@ object MasterKeyCache : KoinComponent {
         return signKeyFetchTime.plusSeconds(appConfig.app.signKeyFetchInterval) > Instant.now()
     }
 
-    fun forSigning(): MasterKey {
+    suspend fun forSigning(): MasterKey {
         if (!::signKey.isInitialized || shouldRefreshSignKey()) {
             val signKeyFromDb = MasterKey.forSigning()
             signKeyFetchTime = Instant.now()
@@ -162,7 +165,7 @@ object MasterKeyCache : KoinComponent {
         return signKey
     }
 
-    fun getKey(id: String): MasterKey {
+    suspend fun getKey(id: String): MasterKey {
         if (cache.containsKey(id)) {
             return cache[id]!!
         }
@@ -192,13 +195,13 @@ class MasterKey(
     companion object : KoinComponent {
         private val masterKeysRepo: MasterKeysRepo by inject()
         val keyFactory: KeyFactory = KeyFactory.getInstance("EC")
-        fun forSigning(): MasterKey {
+        suspend fun forSigning(): MasterKey {
             return masterKeysRepo.fetchForSigning()?.let {
                 MasterKey(it.privateKey, it.publicKey, it.id.toString())
             } ?: throw InternalException("Signing key not found")
         }
 
-        fun of(keyId: String): MasterKey {
+        suspend fun of(keyId: String): MasterKey {
             val key = masterKeysRepo.fetchById(keyId) ?: throw InternalException("Key [$keyId] not found")
             return of(key)
         }

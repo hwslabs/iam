@@ -11,20 +11,22 @@ import java.time.LocalDateTime
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
-object ActionRepo : DAOImpl<ActionsRecord, Actions, String>(
-    com.hypto.iam.server.db.tables.Actions.ACTIONS,
-    Actions::class.java,
-    com.hypto.iam.server.service.DatabaseFactory.getConfiguration()
-) {
-    override fun getId(action: Actions): String {
+object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
+
+    private val idFun = fun (action: Actions): String {
         return action.hrn
     }
 
-    fun fetchByHrn(hrn: ActionHrn): ActionsRecord? {
-        return ctx().selectFrom(table).where(ACTIONS.HRN.eq(hrn.toString())).fetchOne()
+    override suspend fun dao(): DAOImpl<ActionsRecord, Actions, String> {
+        return txMan.getDao(com.hypto.iam.server.db.tables.Actions.ACTIONS, Actions::class.java, idFun)
     }
 
-    fun create(orgId: String, resourceHrn: ResourceHrn, hrn: ActionHrn, description: String?): ActionsRecord {
+    suspend fun fetchByHrn(hrn: ActionHrn): ActionsRecord? {
+        val dao = dao()
+        return dao.ctx().selectFrom(dao.table).where(ACTIONS.HRN.eq(hrn.toString())).fetchOne()
+    }
+
+    suspend fun create(orgId: String, resourceHrn: ResourceHrn, hrn: ActionHrn, description: String?): ActionsRecord {
         val record = ActionsRecord()
             .setHrn(hrn.toString())
             .setOrganizationId(orgId)
@@ -33,14 +35,15 @@ object ActionRepo : DAOImpl<ActionsRecord, Actions, String>(
             .setCreatedAt(LocalDateTime.now())
             .setUpdatedAt(LocalDateTime.now())
 
-        record.attach(CredentialsRepo.configuration())
+        record.attach(dao().configuration())
         record.store()
         return record
     }
 
-    fun update(hrn: ActionHrn, description: String): ActionsRecord? {
+    suspend fun update(hrn: ActionHrn, description: String): ActionsRecord? {
         val condition = ACTIONS.HRN.eq(hrn.toString())
-        return ctx().update(table)
+        val dao = dao()
+        return dao.ctx().update(dao.table)
             .set(ACTIONS.DESCRIPTION, description)
             .set(ACTIONS.UPDATED_AT, LocalDateTime.now())
             .where(condition)
@@ -48,40 +51,21 @@ object ActionRepo : DAOImpl<ActionsRecord, Actions, String>(
             .fetchOne()
     }
 
-    fun fetchActionsPaginated(
+    suspend fun fetchActionsPaginated(
         organizationId: String,
         resourceHrn: ResourceHrn,
         paginationContext: PaginationContext
     ): Result<ActionsRecord> {
-        return ctx().selectFrom(table)
+        val dao = dao()
+        return dao.ctx().selectFrom(dao.table)
             .where(ACTIONS.ORGANIZATION_ID.eq(organizationId).and(ACTIONS.RESOURCE_HRN.eq(resourceHrn.toString())))
             .paginate(ACTIONS.HRN, paginationContext)
             .fetch()
     }
 
-    fun delete(hrn: ActionHrn): Boolean {
+    suspend fun delete(hrn: ActionHrn): Boolean {
         val record = ActionsRecord().setHrn(hrn.toString())
-        record.attach(configuration())
+        record.attach(dao().configuration())
         return record.delete() > 0
-    }
-
-    /**
-     * Fetch records that have `organization_id = value`
-     */
-    fun fetchByOrganizationId(orgId: String): List<Actions> {
-        return fetch(com.hypto.iam.server.db.tables.Actions.ACTIONS.ORGANIZATION_ID, orgId)
-    }
-
-    /**
-     * Fetch records that have `organization_id = value AND resource = value`
-     */
-    fun fetchByHrn(orgId: String, resourceHrn: String): List<Actions> {
-        return ctx()
-            .selectFrom(table)
-            .where(
-                com.hypto.iam.server.db.tables.Actions.ACTIONS.ORGANIZATION_ID.equal(orgId),
-                com.hypto.iam.server.db.tables.Actions.ACTIONS.RESOURCE_HRN.equal(resourceHrn)
-            )
-            .fetch(mapper())
     }
 }

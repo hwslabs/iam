@@ -15,44 +15,48 @@ import org.jooq.Result
 import org.jooq.TableField
 import org.jooq.impl.DAOImpl
 
-object UserPoliciesRepo : DAOImpl<UserPoliciesRecord, UserPolicies, UUID>(
-    com.hypto.iam.server.db.tables.UserPolicies.USER_POLICIES,
-    UserPolicies::class.java,
-    com.hypto.iam.server.service.DatabaseFactory.getConfiguration()
-) {
-    override fun getId(userPolicies: UserPolicies): UUID {
+object UserPoliciesRepo : BaseRepo<UserPoliciesRecord, UserPolicies, UUID>() {
+
+    private val idFun = fun (userPolicies: UserPolicies): UUID {
         return userPolicies.id
+    }
+
+    override suspend fun dao(): DAOImpl<UserPoliciesRecord, UserPolicies, UUID> {
+        return txMan.getDao(USER_POLICIES, UserPolicies::class.java, idFun)
     }
 
     /**
      * Fetch records that have `principal_hrn = value`
      */
-    fun fetchByPrincipalHrn(value: String): Result<UserPoliciesRecord> {
-        return ctx()
-            .selectFrom(table)
+    suspend fun fetchByPrincipalHrn(value: String): Result<UserPoliciesRecord> {
+        val dao = dao()
+        return dao.ctx()
+            .selectFrom(dao.table)
             .where(USER_POLICIES.PRINCIPAL_HRN.equal(value))
             .fetch()
     }
 
-    fun fetchByUserHrnPaginated(
+    suspend fun fetchByUserHrnPaginated(
         userHrn: String,
         paginationContext: PaginationContext
     ): Result<UserPoliciesRecord> {
-        return ctx().selectFrom(table)
+        val dao = dao()
+        return dao.ctx().selectFrom(dao.table)
             .where(USER_POLICIES.PRINCIPAL_HRN.eq(userHrn))
             .paginate(USER_POLICIES.POLICY_HRN, paginationContext)
             .fetch()
     }
 
-    fun fetchPoliciesByUserHrnPaginated(
+    suspend fun fetchPoliciesByUserHrnPaginated(
         userHrn: String,
         paginationContext: PaginationContext
     ): Result<PoliciesRecord> {
+        val dao = dao()
         return customPaginate<Record, String>(
-            ctx()
+            dao.ctx()
                 .select(POLICIES.fields().asList())
                 .from(
-                    table.join(POLICIES).on(
+                    dao.table.join(POLICIES).on(
                         com.hypto.iam.server.db.Tables.POLICIES.HRN.eq(USER_POLICIES.POLICY_HRN)
                     )
                 )
@@ -62,12 +66,13 @@ object UserPoliciesRepo : DAOImpl<UserPoliciesRecord, UserPolicies, UUID>(
         ).fetchInto(POLICIES)
     }
 
-    fun insert(records: List<UserPoliciesRecord>): Result<UserPoliciesRecord> {
+    suspend fun insert(records: List<UserPoliciesRecord>): Result<UserPoliciesRecord> {
         // No way to return generated values
         // https://github.com/jooq/jooq/issues/3327
         // return ctx().batchInsert(records).execute()
 
-        var insertStep = ctx().insertInto(table)
+        val dao = dao()
+        var insertStep = dao.ctx().insertInto(dao.table)
         for (i in 0 until records.size - 1) {
             insertStep = insertStep.set(records[i]).newRecord()
         }
@@ -76,8 +81,9 @@ object UserPoliciesRepo : DAOImpl<UserPoliciesRecord, UserPolicies, UUID>(
         return insertStep.set(lastRecord).returning().fetch()
     }
 
-    fun delete(userHrn: Hrn, policies: List<String>): Boolean {
-        val count = ctx().deleteFrom(table).where(
+    suspend fun delete(userHrn: Hrn, policies: List<String>): Boolean {
+        val dao = dao()
+        val count = dao.ctx().deleteFrom(dao.table).where(
             USER_POLICIES.PRINCIPAL_HRN.eq(userHrn.toString()).and(USER_POLICIES.POLICY_HRN.`in`(policies))
         ).execute()
 

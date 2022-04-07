@@ -16,6 +16,7 @@ import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import com.txman.TxMan
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
 import org.jooq.JSONB
@@ -34,6 +35,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val idGenerator: ApplicationIdUtil.Generator by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
+    private val txMan: TxMan by inject()
 
     override suspend fun createOrganization(
         name: String,
@@ -43,43 +45,49 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         val organizationId = idGenerator.organizationId()
 
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
-        // Create Organization
-        organizationRepo.insert(
-            Organizations(
-                organizationId,
-                name,
-                description,
-                ResourceHrn(
-                    organization = organizationId, resource = IamResources.USER, resourceInstance = adminUser.username
-                ).toString(),
-                JSONB.jsonb(gson.toJson(identityGroup)),
-                LocalDateTime.now(), LocalDateTime.now()
+
+        return txMan.wrap {
+            // Create Organization
+            organizationRepo.insert(
+                Organizations(
+                    organizationId,
+                    name,
+                    description,
+                    ResourceHrn(
+                        organization = organizationId,
+                        resource = IamResources.USER,
+                        resourceInstance = adminUser.username
+                    ).toString(),
+                    JSONB.jsonb(gson.toJson(identityGroup)),
+                    LocalDateTime.now(), LocalDateTime.now()
+                )
             )
-        )
 
-        // Create admin user for the organization
-        val user = usersService.createUser(
-            organizationId = organizationId,
-            credentials = PasswordCredentials(
-                userName = adminUser.username,
-                email = adminUser.email,
-                phoneNumber = adminUser.phone, password = adminUser.passwordHash
-            ),
-            createdBy = "iam-system"
-        )
+            // Create admin user for the organization
+            val user = usersService.createUser(
+                organizationId = organizationId,
+                credentials = PasswordCredentials(
+                    userName = adminUser.username,
+                    email = adminUser.email,
+                    phoneNumber = adminUser.phone, password = adminUser.passwordHash
+                ),
+                createdBy = "iam-system"
+            )
 
-        // Add policies for the admin user
-        val organization = getOrganization(organizationId)
-        val policyStatements = listOf(
-            // TODO: Change organization admin's policy string to hrn:::iam-organization/$orgId
-            PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
-            PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
-        )
-        val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
-        userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.hrn), listOf(hrnFactory.getHrn(policy.hrn)))
+            // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
+            val organization = getOrganization(organizationId)
+            // Add policies for the admin user
+            val policyStatements = listOf(
+                // TODO: Change organization admin's policy string to hrn:::iam-organization/$orgId
+                PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
+                PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
+            )
+            val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
+            userPolicyService.attachPoliciesToUser(hrnFactory.getHrn(user.hrn), listOf(hrnFactory.getHrn(policy.hrn)))
 
-        val credential = credentialService.createCredential(organizationId, adminUser.username)
-        return Pair(organization, credential)
+            val credential = credentialService.createCredential(organizationId, adminUser.username)
+            return@wrap Pair(organization, credential)
+        }
     }
 
     @Timed("organization.get") // TODO: Make this work

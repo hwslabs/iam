@@ -33,7 +33,8 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import java.time.Instant
-import java.util.*
+import java.util.Date
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -50,12 +51,13 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
             with(
                 handleRequest(
-                HttpMethod.Post,
-                "/organizations/${createdOrganization.organization?.id}/token"
+                    HttpMethod.Post,
+                    "/organizations/${createdOrganization.organization?.id}/token"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential?.secret}")
+                }
             ) {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential?.secret}")
-            }) {
                 Assertions.assertEquals(HttpStatusCode.OK, response.status())
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
@@ -110,7 +112,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
     @Test
     fun `generate token with basic credentials`() {
         withTestApplication(Application::handleRequest) {
-            val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+            val (createdOrganization, _) = DataSetupHelper.createOrganization(this)
 
             with(
                 handleRequest(
@@ -119,7 +121,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 ) {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, "Basic bmFtZTEwOlBhc3N3b3JkQDEyMw==")
-                }) {
+                }
+            ) {
                 Assertions.assertEquals(HttpStatusCode.OK, response.status())
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
@@ -153,7 +156,9 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // TODO: Expose key rotation as an API and invoke it
                 val masterKeysRepo by inject<MasterKeysRepo>()
-                masterKeysRepo.rotateKey()
+                runBlocking {
+                    masterKeysRepo.rotateKey()
+                }
 
                 with(
                     handleRequest(
@@ -218,7 +223,9 @@ class TokenApiTest : AbstractContainerBaseTest() {
             expiration: Date = Date.from(Instant.now().plusSeconds(100)),
             version: String? = TokenServiceImpl.VERSION_NUM
         ): String {
-            val signingKey = masterKeyCache.forSigning()
+            val signingKey = runBlocking {
+                masterKeyCache.forSigning()
+            }
             return Jwts.builder()
                 .setHeaderParam(TokenServiceImpl.KEY_ID, signingKey.id)
                 .setIssuedAt(issuedAt)
@@ -241,7 +248,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val jwt = generateToken(
                     createdOrganizationResponse = createOrganizationResponse,
                     createdUser = createdUser,
-                    expiration = expiry)
+                    expiration = expiry
+                )
 
                 // Act
                 with(
@@ -275,7 +283,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val jwt = generateToken(
                     createdOrganizationResponse = createOrganizationResponse,
                     createdUser = createdUser,
-                    issuer = "Invalid_Issuer")
+                    issuer = "Invalid_Issuer"
+                )
 
                 // Act
                 with(
@@ -309,7 +318,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val jwt = generateToken(
                     createdOrganizationResponse = createOrganizationResponse,
                     createdUser = createdUser,
-                    userHrn = "InvalidHrnFormat")
+                    userHrn = "InvalidHrnFormat"
+                )
 
                 // Act
                 with(
@@ -342,7 +352,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val jwt = generateToken(
                     createdOrganizationResponse = createOrganizationResponse,
                     createdUser = createdUser,
-                    organization = null)
+                    organization = null
+                )
 
                 // Act
                 with(
@@ -376,7 +387,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val jwt = generateToken(
                     createdOrganizationResponse = createOrganizationResponse,
                     createdUser = createdUser,
-                    version = null)
+                    version = null
+                )
 
                 // Act
                 with(
@@ -411,7 +423,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val jwt = generateToken(
                     createdOrganizationResponse = createOrganizationResponse,
                     createdUser = createdUser,
-                    issuedAt = issuedAt)
+                    issuedAt = issuedAt
+                )
 
                 // Act
                 with(

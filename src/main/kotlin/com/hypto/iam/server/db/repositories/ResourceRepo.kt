@@ -5,37 +5,37 @@ import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
-import com.hypto.iam.server.service.DatabaseFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import java.time.LocalDateTime
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
-object ResourceRepo : DAOImpl<ResourcesRecord, Resources, String>(
-    RESOURCES,
-    Resources::class.java,
-    DatabaseFactory.getConfiguration()
-) {
+object ResourceRepo : BaseRepo<ResourcesRecord, Resources, String>() {
 
-    override fun getId(resource: Resources): String {
+    private val idFun = fun (resource: Resources): String {
         return resource.hrn
+    }
+
+    override suspend fun dao(): DAOImpl<ResourcesRecord, Resources, String> {
+        return txMan.getDao(RESOURCES, Resources::class.java, idFun)
     }
 
     /**
      * Fetch records that have `organization_id = value`
      */
-    fun fetchByOrganizationId(value: String): List<Resources?> {
+    suspend fun fetchByOrganizationId(value: String): List<Resources> {
         return fetch(RESOURCES.ORGANIZATION_ID, value)
     }
 
     /**
      * Fetch a unique record that has `hrn = value`
      */
-    fun fetchByHrn(hrn: ResourceHrn): ResourcesRecord? {
-        return ctx().selectFrom(table).where(RESOURCES.HRN.equal(hrn.toString())).fetchOne()
+    suspend fun fetchByHrn(hrn: ResourceHrn): ResourcesRecord? {
+        val dao = dao()
+        return dao.ctx().selectFrom(dao.table).where(RESOURCES.HRN.equal(hrn.toString())).fetchOne()
     }
 
-    fun create(hrn: ResourceHrn, description: String): ResourcesRecord {
+    suspend fun create(hrn: ResourceHrn, description: String): ResourcesRecord {
         val record = ResourcesRecord()
             .setHrn(hrn.toString())
             .setOrganizationId(hrn.organization)
@@ -43,14 +43,15 @@ object ResourceRepo : DAOImpl<ResourcesRecord, Resources, String>(
             .setUpdatedAt(LocalDateTime.now())
             .setDescription(description)
 
-        record.attach(CredentialsRepo.configuration())
+        record.attach(dao().configuration())
         record.store()
         return record
     }
 
-    fun update(hrn: ResourceHrn, description: String): ResourcesRecord? {
+    suspend fun update(hrn: ResourceHrn, description: String): ResourcesRecord? {
         val condition = RESOURCES.HRN.equal(hrn.toString())
-        return ctx().update(table)
+        val dao = dao()
+        return dao.ctx().update(dao.table)
             .set(RESOURCES.DESCRIPTION, description)
             .set(RESOURCES.UPDATED_AT, LocalDateTime.now())
             .where(condition)
@@ -58,17 +59,18 @@ object ResourceRepo : DAOImpl<ResourcesRecord, Resources, String>(
             .fetchOne()
     }
 
-    fun delete(hrn: ResourceHrn): Boolean {
+    suspend fun delete(hrn: ResourceHrn): Boolean {
         val record = ResourcesRecord().setHrn(hrn.toString())
-        record.attach(configuration())
+        record.attach(dao().configuration())
         return record.delete() > 0
     }
 
-    fun fetchByOrganizationIdPaginated(
+    suspend fun fetchByOrganizationIdPaginated(
         organizationId: String,
         paginationContext: PaginationContext
     ): Result<ResourcesRecord> {
-        return ctx().selectFrom(table)
+        val dao = dao()
+        return dao.ctx().selectFrom(dao.table)
             .where(RESOURCES.ORGANIZATION_ID.eq(organizationId))
             .paginate(RESOURCES.HRN, paginationContext)
             .fetch()
