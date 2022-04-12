@@ -28,8 +28,8 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolCli
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 
-fun KoinTest.mockCognitoClient() {
-    declareMock<CognitoIdentityProviderClient> {
+fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
+    return declareMock {
         coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
             val result = CreateUserPoolResponse.builder()
                 .userPool(UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build())
