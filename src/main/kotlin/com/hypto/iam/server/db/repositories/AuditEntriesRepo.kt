@@ -3,7 +3,6 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.tables.AuditEntries.AUDIT_ENTRIES
 import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.db.tables.records.AuditEntriesRecord
-import com.hypto.iam.server.service.DatabaseFactory.getConfiguration
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
@@ -12,29 +11,30 @@ import java.util.UUID
 import mu.KotlinLogging
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
-import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-object AuditEntriesRepo : KoinComponent, DAOImpl<AuditEntriesRecord, AuditEntries, UUID>(
-    AUDIT_ENTRIES,
-    AuditEntries::class.java,
-    getConfiguration()
-) {
+object AuditEntriesRepo : BaseRepo<AuditEntriesRecord, AuditEntries, UUID>() {
+
     private val logger = KotlinLogging.logger { }
     private val hrnFactory by inject<HrnFactory>()
 
-    override fun getId(action: AuditEntries): UUID {
-        return action.id
+    private val idFun = fun (auditEntry: AuditEntries): UUID {
+        return auditEntry.id
     }
 
-    fun fetchByPrincipalAndTime(
+    override suspend fun dao(): DAOImpl<AuditEntriesRecord, AuditEntries, UUID> {
+        return txMan.getDao(AUDIT_ENTRIES, AuditEntries::class.java, idFun)
+    }
+
+    suspend fun fetchByPrincipalAndTime(
         principalOrg: String,
         principal: Hrn,
         eventTimeStart: LocalDateTime,
         eventTimeEnd: LocalDateTime
     ): Result<AuditEntriesRecord> {
-        return ctx()
-            .selectFrom(table)
+        val dao = dao()
+        return dao.ctx()
+            .selectFrom(dao.table)
             .where(AUDIT_ENTRIES.PRINCIPAL_ORGANIZATION.eq(principalOrg))
             .and(AUDIT_ENTRIES.PRINCIPAL.eq(principal.toString()))
             .and(AUDIT_ENTRIES.EVENT_TIME.ge(eventTimeStart))
@@ -42,14 +42,15 @@ object AuditEntriesRepo : KoinComponent, DAOImpl<AuditEntriesRecord, AuditEntrie
             .fetch()
     }
 
-    fun fetchByResourceAndTime(
+    suspend fun fetchByResourceAndTime(
         resource: Hrn,
         eventTimeStart: LocalDateTime,
         eventTimeEnd: LocalDateTime,
         operations: List<Hrn>?
     ): Result<AuditEntriesRecord> {
-        var query = ctx()
-            .selectFrom(table)
+        val dao = dao()
+        var query = dao.ctx()
+            .selectFrom(dao.table)
             .where(AUDIT_ENTRIES.RESOURCE.eq(resource.toString()))
             .and(AUDIT_ENTRIES.EVENT_TIME.ge(eventTimeStart))
             .and(AUDIT_ENTRIES.EVENT_TIME.ge(eventTimeEnd))
@@ -60,9 +61,10 @@ object AuditEntriesRepo : KoinComponent, DAOImpl<AuditEntriesRecord, AuditEntrie
         return query.fetch()
     }
 
-    fun batchInsert(auditEntries: List<AuditEntries>): Boolean {
-        val batchBindStep = ctx().batch(
-            ctx()
+    suspend fun batchInsert(auditEntries: List<AuditEntries>): Boolean {
+        val dao = dao()
+        val batchBindStep = dao.ctx().batch(
+            dao.ctx()
                 .insertInto(
                     AUDIT_ENTRIES,
                     AUDIT_ENTRIES.REQUEST_ID,

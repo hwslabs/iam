@@ -10,7 +10,6 @@ import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
-import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.idp.CognitoIdentityProviderImpl
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.service.ActionService
@@ -38,6 +37,7 @@ import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.policy.PolicyValidator
+import com.txman.TxMan
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.dsl.bind
@@ -58,7 +58,6 @@ val repositoryModule = module {
     single { ActionRepo }
     single { UserAuthProvidersRepo }
     single { UserPoliciesRepo }
-    single { UserRepo }
 }
 
 val controllerModule = module {
@@ -87,6 +86,7 @@ val applicationModule = module {
     single { getCredentialsProvider(get<AppConfig.Config>().aws.accessKey,
         get<AppConfig.Config>().aws.secretKey) } bind AwsCredentialsProvider::class
     single { getCognitoIdentityProviderClient(get<AppConfig.Config>().aws.region, get()) }
+    single { TxMan(com.hypto.iam.server.service.DatabaseFactory.getConfiguration()) }
 }
 
 fun getCognitoIdentityProviderClient(

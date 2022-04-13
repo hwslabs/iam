@@ -11,9 +11,11 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.junit5.AutoCloseKoinTest
 import org.koin.test.junit5.KoinTestExtension
 import org.koin.test.junit5.mock.MockProviderExtension
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
 
 abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
     protected var rootToken: String = ""
+    protected lateinit var cognitoClient: CognitoIdentityProviderClient
 
     @JvmField
     @RegisterExtension
@@ -28,7 +30,7 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
     @BeforeEach
     fun setup() {
         rootToken = getKoinInstance<AppConfig.Config>().app.secretKey
-        mockCognitoClient()
+        cognitoClient = mockCognitoClient()
     }
 
     init {

@@ -2,36 +2,19 @@ package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.db.tables.pojos.UsersAuthProviders
 import com.hypto.iam.server.db.tables.records.UsersAuthProvidersRecord
-import java.util.Optional
 import org.jooq.impl.DAOImpl
 
-object UserAuthProvidersRepo : DAOImpl<UsersAuthProvidersRecord, UsersAuthProviders, Int>(
-    com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS,
-    UsersAuthProviders::class.java,
-    com.hypto.iam.server.service.DatabaseFactory.getConfiguration()
-) {
-    override fun getId(usersAuthProviders: UsersAuthProviders): Int {
+object UserAuthProvidersRepo : BaseRepo<UsersAuthProvidersRecord, UsersAuthProviders, Int>() {
+
+    private val idFun = fun (usersAuthProviders: UsersAuthProviders): Int {
         return usersAuthProviders.id
     }
 
-    /**
-     * Fetch a unique record that has `id = value`
-     */
-    fun fetchOneById(value: Int): UsersAuthProviders? {
-        return fetchOne(com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS.ID, value)
-    }
-
-    /**
-     * Fetch a unique record that has `id = value`
-     */
-    fun fetchOptionalById(value: Int): Optional<UsersAuthProviders> {
-        return fetchOptional(com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS.ID, value)
-    }
-
-    /**
-     * Fetch records that have `user_id = value`
-     */
-    fun fetchByUserHrn(value: String): List<UsersAuthProviders> {
-        return fetch(com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS.USER_HRN, value)
+    override suspend fun dao(): DAOImpl<UsersAuthProvidersRecord, UsersAuthProviders, Int> {
+        return txMan.getDao(
+            com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS,
+            UsersAuthProviders::class.java,
+            idFun
+        )
     }
 }

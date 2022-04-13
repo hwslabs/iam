@@ -1,6 +1,8 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
@@ -19,11 +21,15 @@ import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
+import io.mockk.coEvery
+import io.mockk.verify
 import kotlin.test.assertFalse
 import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.koin.test.mock.declareMock
 import org.testcontainers.junit.jupiter.Testcontainers
+import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolRequest
 
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
@@ -88,6 +94,42 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
                 assertFalse(response.headers.contains(HttpHeaders.ContentType))
                 assertEquals(null, response.content)
+            }
+        }
+    }
+
+    @Test
+    fun `create organization - rollback on error`() {
+
+        @Suppress("TooGenericExceptionThrown")
+        declareMock<OrganizationRepo> {
+            coEvery { this@declareMock.insert(any<Organizations>()) } coAnswers {
+                throw Exception("Random DB error occurred")
+            }
+        }
+
+        withTestApplication(Application::handleRequest) {
+            val orgName = "test-org" + IdGenerator.randomId()
+            val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
+
+            val requestBody = CreateOrganizationRequest(
+                orgName,
+                AdminUser(userName, testPassword, testEmail, testPhone)
+            )
+            with(
+                handleRequest(HttpMethod.Post, "/organizations") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader("X-Api-Key", rootToken)
+                    setBody(gson.toJson(requestBody))
+                }
+            ) {
+                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
+                verify {
+                    cognitoClient.deleteUserPool(any<DeleteUserPoolRequest>())
+                }
             }
         }
     }
