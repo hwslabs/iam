@@ -4,20 +4,23 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**getToken**](UserAuthorizationApi.md#getToken) | **POST** /token | Generate a token
+[**getToken**](UserAuthorizationApi.md#getToken) | **POST** /organizations/{organization_id}/token | Generate a token
 [**validate**](UserAuthorizationApi.md#validate) | **POST** /validate | Validate an auth request
 
 
 <a name="getToken"></a>
 # **getToken**
-> TokenResponse getToken()
+> TokenResponse getToken(organization\_id)
 
 Generate a token
 
     Generate a token for the given user credential
 
 ### Parameters
-This endpoint does not need any parameter.
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **organization\_id** | **String**|  | [default to null]
 
 ### Return type
 

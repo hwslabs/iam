@@ -30,42 +30,47 @@ tags:
     description: "APIs for managing an Organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/OrganizationManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/OrganizationManagementApi.md"
   - name: "User Management"
     description: "APIs for managing users inside Organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserManagementApi.md"
   - name: "Policy Management"
     description: "APIs for managing policies"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/PolicyManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/PolicyManagementApi.md"
   - name: "User Policy Management"
     description: "APIs for managing user policies"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserPolicyManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserPolicyManagementApi.md"
   - name: "User Credential Management"
     description: "APIs for managing the credentials of user"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserCredentialManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserCredentialManagementApi.md"
   - name: "Resource Management"
     description: "APIs for managing the resources inside an organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/ResourceManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/ResourceManagementApi.md"
   - name: "Resource Action Management"
     description: "APIs for managing the actions for a resource inside an organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/ResourceActionManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/ResourceActionManagementApi.md"
   - name: "User Authorization"
     description: "APIs used at runtime for validation"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserAuthorizationApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserAuthorizationApi.md"
+  - name: "Key Management"
+    description: "APIs for fetching keys"
+    externalDocs:
+      description: "docs"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/KeyManagementApi.md"
   - name: "User Sign-In"
     description: "APIs used by the front-end for authentication"
     externalDocs:
@@ -175,7 +180,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       security:
-        - apiKeyAuth: [hypto-internal-secret-key]
+        - apiKeyAuth: [ hypto-internal-secret-key ]
 
   # user
   /organizations/{organization_id}/users:
@@ -948,8 +953,32 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /public_keys/{kid}:
+    get:
+      tags:
+        - Key Management
+      summary: Get public key
+      description: Get public key from Key-id
+      operationId: getPublicKey
+      parameters:
+        - $ref: '#/components/parameters/kid'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/PublicKeyResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security: [ ]
+
+
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]
 
 components:
   securitySchemes:
@@ -1026,6 +1055,17 @@ components:
     credential_id:
       in: path
       name: credential_id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            example: "1f44ada7-7196-4f2d-8380-4c76f8bddec2"
+
+    kid:
+      in: path
+      name: kid
       required: true
       content:
         application/json:
@@ -1417,6 +1457,15 @@ components:
             ActionPaginatedResponse:
               $ref: '#/components/examples/ActionPaginatedResponse'
 
+    PublicKeyResponse:
+      description: Response for public key request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PublicKeyResponse'
+          examples:
+            PublicKeyResponse:
+              $ref: '#/components/examples/PublicKeyResponse'
 
   examples:
     # Request examples
@@ -1624,6 +1673,12 @@ components:
         context:
           pageSize: 10
           sortOrder: asc
+
+    PublicKeyResponse:
+      value:
+        kid: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
+        public_key: >
+          Sun EC public key, 256 bits public x coord: 112370242397656234847606102881034315403769584716568666667287260653276166627728 public y coord: 93111745029035978020327402419705488324645059895497234060066079400405334038073 parameters: secp256r1 [NIST P-256, X9.62 prime256v1] (1.2.840.10045.3.1.7)
 
     PaginationOptions:
       value:
@@ -2094,6 +2149,20 @@ components:
           type: string
         context:
           $ref: '#/components/schemas/PaginationOptions'
+
+    PublicKeyResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - kid
+        - public_key
+      properties:
+        kid:
+          type: string
+          example: true
+        public_key:
+          type: string
+          example: true
 
     # Entities:
     Organization:

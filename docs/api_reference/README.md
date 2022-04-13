@@ -7,6 +7,7 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*KeyManagementApi* | [**getPublicKey**](Apis/KeyManagementApi.md#getpublickey) | **GET** /public_keys/{kid} | Get public key
 *OrganizationManagementApi* | [**createOrganization**](Apis/OrganizationManagementApi.md#createorganization) | **POST** /organizations | Creates an organization.
 *OrganizationManagementApi* | [**deleteOrganization**](Apis/OrganizationManagementApi.md#deleteorganization) | **DELETE** /organizations/{organization_id} | Delete an organization
 *OrganizationManagementApi* | [**getOrganization**](Apis/OrganizationManagementApi.md#getorganization) | **GET** /organizations/{organization_id} | Get an organization
@@ -26,7 +27,7 @@ Class | Method | HTTP request | Description
 *ResourceManagementApi* | [**getResource**](Apis/ResourceManagementApi.md#getresource) | **GET** /organizations/{organization_id}/resources/{resource_name} | Get the resource details
 *ResourceManagementApi* | [**listResources**](Apis/ResourceManagementApi.md#listresources) | **GET** /organizations/{organization_id}/resources | List Resources
 *ResourceManagementApi* | [**updateResource**](Apis/ResourceManagementApi.md#updateresource) | **PATCH** /organizations/{organization_id}/resources/{resource_name} | Update a resource
-*UserAuthorizationApi* | [**getToken**](Apis/UserAuthorizationApi.md#gettoken) | **POST** /token | Generate a token
+*UserAuthorizationApi* | [**getToken**](Apis/UserAuthorizationApi.md#gettoken) | **POST** /organizations/{organization_id}/token | Generate a token
 *UserAuthorizationApi* | [**validate**](Apis/UserAuthorizationApi.md#validate) | **POST** /validate | Validate an auth request
 *UserCredentialManagementApi* | [**createCredential**](Apis/UserCredentialManagementApi.md#createcredential) | **POST** /organizations/{organization_id}/users/{user_name}/credentials | Create a new credential for a user
 *UserCredentialManagementApi* | [**deleteCredential**](Apis/UserCredentialManagementApi.md#deletecredential) | **DELETE** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Delete a credential
@@ -66,6 +67,7 @@ Class | Method | HTTP request | Description
  - [PolicyAssociationRequest](./Models/PolicyAssociationRequest.md)
  - [PolicyPaginatedResponse](./Models/PolicyPaginatedResponse.md)
  - [PolicyStatement](./Models/PolicyStatement.md)
+ - [PublicKeyResponse](./Models/PublicKeyResponse.md)
  - [Resource](./Models/Resource.md)
  - [ResourceAction](./Models/ResourceAction.md)
  - [ResourceActionEffect](./Models/ResourceActionEffect.md)

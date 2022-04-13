@@ -6,6 +6,7 @@ import com.hypto.iam.server.apis.actionApi
 import com.hypto.iam.server.apis.createAndDeleteOrganizationApi
 import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
+import com.hypto.iam.server.apis.keyApi
 import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
@@ -146,6 +147,8 @@ fun Application.handleRequest() {
         authenticate("basic-auth", "bearer-auth") {
             tokenApi()
         }
+
+        keyApi()
     }
 }
 

@@ -177,18 +177,20 @@ object MasterKeyCache : KoinComponent {
 }
 
 class MasterKey(
-    private val privateKeyByteArray: ByteArray,
-    private val publicKeyByteArray: ByteArray,
+    private val privateKeyDer: ByteArray,
+    val publicKeyDer: ByteArray,
+    private val privateKeyPem: ByteArray,
+    val publicKeyPem: ByteArray,
     val id: String
 ) {
     val publicKey: PublicKey
         get() {
-            val keySpec = X509EncodedKeySpec(publicKeyByteArray)
+            val keySpec = X509EncodedKeySpec(publicKeyDer)
             return keyFactory.generatePublic(keySpec)
         }
     val privateKey: PrivateKey
         get() {
-            val keySpec = PKCS8EncodedKeySpec(privateKeyByteArray)
+            val keySpec = PKCS8EncodedKeySpec(privateKeyDer)
             return keyFactory.generatePrivate(keySpec)
         }
 
@@ -197,7 +199,7 @@ class MasterKey(
         val keyFactory: KeyFactory = KeyFactory.getInstance("EC")
         suspend fun forSigning(): MasterKey {
             return masterKeysRepo.fetchForSigning()?.let {
-                MasterKey(it.privateKey, it.publicKey, it.id.toString())
+                MasterKey(it.privateKeyDer, it.publicKeyDer, it.privateKeyPem, it.publicKeyPem, it.id.toString())
             } ?: throw InternalException("Signing key not found")
         }
 
@@ -207,7 +209,13 @@ class MasterKey(
         }
 
         fun of(key: MasterKeys): MasterKey {
-            return MasterKey(key.privateKey, key.publicKey, key.id.toString())
+            return MasterKey(
+                key.privateKeyDer,
+                key.publicKeyDer,
+                key.privateKeyPem,
+                key.publicKeyPem,
+                key.id.toString()
+            )
         }
     }
 }
