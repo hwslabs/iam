@@ -1,17 +1,17 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 buildscript {
-    ext.kotlin_version = '1.6.10'
-    ext.ktor_version = '1.6.8'
-    ext.koin_version = '3.1.5'
+    ext.kotlin_version = '1.6.20'
+    ext.ktor_version = '2.0.0'
+    ext.koin_version = '3.1.6'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
     ext.jooq_version = '3.16.5'
 //    ext.h2Version = "2.1.210"
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = "5.8.2"
-    ext.flyway_version = '8.5.4'
-    ext.casbin_version = '1.22.2'
+    ext.flyway_version = '8.5.7'
+    ext.casbin_version = '1.22.5'
     ext.postgres_jdbc_driver = '42.3.3'
 
     repositories {
@@ -300,12 +300,29 @@ detekt {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("io.ktor:ktor-metrics:$ktor_version")
-    implementation("io.ktor:ktor-locations:$ktor_version")
-    implementation("io.ktor:ktor-gson:$ktor_version")
+    implementation("io.ktor:ktor-server-metrics:$ktor_version")
+    implementation("io.ktor:ktor-server-locations:$ktor_version")
+//    implementation("io.ktor:ktor-gson:$ktor_version")
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-apache:$ktor_version")
-    implementation("io.ktor:ktor-auth:$ktor_version")
+    // Ktor features
+    implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-serialization-gson:$ktor_version")
+    implementation("io.ktor:ktor-server-auto-head-response:$ktor_version")
+    implementation("io.ktor:ktor-server-status-pages:$ktor_version")
+    implementation("io.ktor:ktor-server-call-id:$ktor_version")
+    implementation("io.ktor:ktor-server-auth:$ktor_version")
+    implementation("io.ktor:ktor-server-auth-jwt:$ktor_version")
+    implementation("io.ktor:ktor-server-default-headers:$ktor_version")
+    implementation("io.ktor:ktor-server-compression:$ktor_version")
+    implementation("io.ktor:ktor-server-caching-headers:$ktor_version")
+    implementation("io.ktor:ktor-server-hsts:$ktor_version")
+    implementation("io.ktor:ktor-server-call-logging:$ktor_version")
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktor_version")
+
+    implementation("io.ktor:ktor-server-auth:$ktor_version")
+
+
     implementation("ch.qos.logback:logback-classic:1.2.11")
     implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
     implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
@@ -330,7 +347,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-simple:1.7.36'
 
     // Metrics
-    implementation "io.ktor:ktor-metrics-micrometer:$ktor_version"
+    implementation "io.ktor:ktor-server-metrics-micrometer:$ktor_version"
 
     // APM
     implementation 'com.newrelic.telemetry:micrometer-registry-new-relic:0.8.0'
@@ -350,7 +367,7 @@ dependencies {
     implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
 
     // Hoplite
-    implementation("com.sksamuel.hoplite:hoplite-json:1.4.16")
+    implementation('com.sksamuel.hoplite:hoplite-json:2.1.0')
 
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.17.143')
