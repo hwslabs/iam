@@ -4,12 +4,12 @@ import com.sksamuel.hoplite.ConfigLoader
 
 class AppConfig {
     /**
-     Environment variables should be in Snake case.
-     E.g. env, token_validity
+    Environment variables should be in Snake case.
+    E.g. env, token_validity
 
-     Nested variables should be defined with the data class name followed by 2 underscores and then the variable name
-     {data_class_name}__{variable_name}
-     E.g. For Database - database__host, database__port, database__username, database__password
+    Nested variables should be defined with the data class name followed by 2 underscores and then the variable name
+    {data_class_name}__{variable_name}
+    E.g. For Database - database__host, database__port, database__username, database__password
      */
 
     data class Database(
@@ -35,13 +35,16 @@ class AppConfig {
      * @param secretKey Internal key to create & delete organizations
      * @param signKeyFetchInterval Represents how frequently the private key
      *                                  for signing JWT tokens must be fetched from DB
+     * @param cacheRefreshInterval Represents how frequently the local Key cache for
+     *                                  verifying tokens must be refreshed
      */
     data class App(
         val env: Environment,
         val jwtTokenValidity: Long,
         val oldKeyTtl: Long,
         val secretKey: String,
-        val signKeyFetchInterval: Long
+        val signKeyFetchInterval: Long,
+        val cacheRefreshInterval: Long
     ) {
         val isDevelopment: Boolean
             get() = env == Environment.Development
@@ -52,5 +55,6 @@ class AppConfig {
 
     data class Aws(val region: String, val accessKey: String, val secretKey: String)
     data class Config(val app: App, val database: Database, val newrelic: Newrelic, val aws: Aws)
+
     val configuration: Config = ConfigLoader().loadConfigOrThrow("/default_config.json")
 }

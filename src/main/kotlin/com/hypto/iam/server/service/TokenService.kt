@@ -7,9 +7,11 @@ import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_USER_HRN
 import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_VERSION_NUMBER
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
+import com.hypto.iam.server.db.repositories.MasterKeysRepo.Status
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.exceptions.JwtExpiredException
+import com.hypto.iam.server.exceptions.PublicKeyExpiredException
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
@@ -131,8 +133,13 @@ class TokenServiceImpl : KoinComponent, TokenService {
         private val masterKeyCache: MasterKeyCache by inject()
         override fun resolveSigningKey(jwsHeader: JwsHeader<*>, claims: Claims): PublicKey {
             val keyId = jwsHeader.keyId
-            return runBlocking {
-                masterKeyCache.getKey(keyId).publicKey
+            val publicKey = runBlocking {
+                masterKeyCache.getKey(keyId)
+            }
+            if (publicKey.status == Status.SIGNING || publicKey.status == Status.VERIFYING) {
+                return publicKey.publicKey
+            } else {
+                throw PublicKeyExpiredException("Public Key of kid: $keyId is expired")
             }
         }
     }
@@ -142,11 +149,16 @@ object MasterKeyCache : KoinComponent {
     private val cache = ConcurrentHashMap<String, MasterKey>()
 
     private lateinit var signKeyFetchTime: Instant
+    private lateinit var cacheRefreshTime: Instant
     private lateinit var signKey: MasterKey
     private val appConfig: AppConfig.Config by inject()
 
     private fun shouldRefreshSignKey(): Boolean {
         return signKeyFetchTime.plusSeconds(appConfig.app.signKeyFetchInterval) > Instant.now()
+    }
+
+    private fun shouldRefreshCache(): Boolean {
+        return cacheRefreshTime.plusSeconds(appConfig.app.cacheRefreshInterval) > Instant.now()
     }
 
     suspend fun forSigning(): MasterKey {
@@ -158,6 +170,7 @@ object MasterKeyCache : KoinComponent {
                 // This happens in case of a recent master key rotation.
                 // We invalidate cache to clear stale sign and verification key cache entries.
                 cache.clear()
+                cacheRefreshTime = Instant.now()
                 cache[signKey.id] = signKey
             }
             signKey = signKeyFromDb
@@ -166,6 +179,10 @@ object MasterKeyCache : KoinComponent {
     }
 
     suspend fun getKey(id: String): MasterKey {
+        if (!::cacheRefreshTime.isInitialized || shouldRefreshCache()) {
+            cache.clear()
+            cacheRefreshTime = Instant.now()
+        }
         if (cache.containsKey(id)) {
             return cache[id]!!
         }
@@ -181,6 +198,7 @@ class MasterKey(
     val publicKeyDer: ByteArray,
     private val privateKeyPem: ByteArray,
     val publicKeyPem: ByteArray,
+    val status: Status,
     val id: String
 ) {
     val publicKey: PublicKey
@@ -199,7 +217,14 @@ class MasterKey(
         val keyFactory: KeyFactory = KeyFactory.getInstance("EC")
         suspend fun forSigning(): MasterKey {
             return masterKeysRepo.fetchForSigning()?.let {
-                MasterKey(it.privateKeyDer, it.publicKeyDer, it.privateKeyPem, it.publicKeyPem, it.id.toString())
+                MasterKey(
+                    it.privateKeyDer,
+                    it.publicKeyDer,
+                    it.privateKeyPem,
+                    it.publicKeyPem,
+                    Status.valueOf(it.status),
+                    it.id.toString()
+                )
             } ?: throw InternalException("Signing key not found")
         }
 
@@ -214,6 +239,7 @@ class MasterKey(
                 key.publicKeyDer,
                 key.privateKeyPem,
                 key.publicKeyPem,
+                Status.valueOf(key.status),
                 key.id.toString()
             )
         }

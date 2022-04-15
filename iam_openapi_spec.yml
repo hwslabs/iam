@@ -1473,7 +1473,7 @@ components:
               $ref: '#/components/examples/ActionPaginatedResponse'
 
     KeyResponse:
-      description: Response for public key request
+      description: Response for key request
       content:
         application/json:
           schema:
