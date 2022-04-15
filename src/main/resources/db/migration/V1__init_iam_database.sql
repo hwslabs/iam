@@ -118,10 +118,8 @@ CREATE UNIQUE INDEX user_policies_idx_principal_policy ON user_policies(principa
 
 CREATE TABLE master_keys (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  private_key_pem BYTEA NOT NULL,
-  private_key_der BYTEA NOT NULL,
-  public_key_pem BYTEA NOT NULL,
-  public_key_der BYTEA NOT NULL,
+  private_key BYTEA NOT NULL,
+  public_key BYTEA NOT NULL,
   status VARCHAR(10) NOT NULL, -- SIGNING, VERIFYING, EXPIRED
 
   created_at timestamp NOT NULL,

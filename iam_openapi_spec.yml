@@ -953,24 +953,21 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /public_keys/{kid}:
+  /keys/{kid}:
     get:
       tags:
         - Key Management
-      summary: Get public key
-      description: Get public key from Key-id
-      operationId: getPublicKey
+      summary: Get keys
+      description: Get public/private keys from Key-id in der/pem format
+      operationId: getKey
       parameters:
         - $ref: '#/components/parameters/kid'
         - $ref: '#/components/parameters/format'
+        - $ref: '#/components/parameters/type'
       responses:
         '200':
-          $ref: '#/components/responses/PublicKeyResponse'
-        '401':
-          $ref: '#/components/responses/ErrorResponse'
-        '403':
-          $ref: '#/components/responses/ErrorResponse'
-        '429':
+          $ref: '#/components/responses/KeyResponse'
+        '404':
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
@@ -1073,6 +1070,24 @@ components:
             type: string
             maxLength: 50
             example: "1f44ada7-7196-4f2d-8380-4c76f8bddec2"
+
+    format:
+      in: query
+      name: format
+      required: false
+      schema:
+        type: string
+        pattern: ^(pem|der)$
+        example: "der"
+
+    type:
+      in: query
+      name: type
+      required: false
+      schema:
+        type: string
+        pattern: ^(public|private)$
+        example: "public"
 
     next_token:
       in: query
@@ -1457,15 +1472,15 @@ components:
             ActionPaginatedResponse:
               $ref: '#/components/examples/ActionPaginatedResponse'
 
-    PublicKeyResponse:
+    KeyResponse:
       description: Response for public key request
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/PublicKeyResponse'
+            $ref: '#/components/schemas/KeyResponse'
           examples:
-            PublicKeyResponse:
-              $ref: '#/components/examples/PublicKeyResponse'
+            KeyResponse:
+              $ref: '#/components/examples/KeyResponse'
 
   examples:
     # Request examples
@@ -1674,11 +1689,10 @@ components:
           pageSize: 10
           sortOrder: asc
 
-    PublicKeyResponse:
+    KeyResponse:
       value:
         kid: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
-        public_key: >
-          Sun EC public key, 256 bits public x coord: 112370242397656234847606102881034315403769584716568666667287260653276166627728 public y coord: 93111745029035978020327402419705488324645059895497234060066079400405334038073 parameters: secp256r1 [NIST P-256, X9.62 prime256v1] (1.2.840.10045.3.1.7)
+        key: asdhjlsdhfjkfhdlsajfnsbfljsdhfuewlbfjdsklfhajhfjkdsbfjksdhjfkhfjklhasjfkdbjkhjkhfjkbdjfkla
 
     PaginationOptions:
       value:
@@ -2150,17 +2164,17 @@ components:
         context:
           $ref: '#/components/schemas/PaginationOptions'
 
-    PublicKeyResponse:
+    KeyResponse:
       type: object
       additionalProperties: false
       required:
         - kid
-        - public_key
+        - key
       properties:
         kid:
           type: string
           example: true
-        public_key:
+        key:
           type: string
           example: true
 

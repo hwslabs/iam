@@ -4,7 +4,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.models.PublicKeyResponse
+import com.hypto.iam.server.models.KeyResponse
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.service.TokenServiceImpl
 import io.jsonwebtoken.Jwts
@@ -53,7 +53,7 @@ class KeyApiTest : AbstractContainerBaseTest() {
             with(
                 handleRequest(
                     HttpMethod.Get,
-                    "/public_keys/$kid"
+                    "/keys/$kid"
                 )
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -61,9 +61,9 @@ class KeyApiTest : AbstractContainerBaseTest() {
                     Json.withCharset(Charsets.UTF_8),
                     response.contentType()
                 )
-                val publicKeyResponse = gson.fromJson(response.content, PublicKeyResponse::class.java)
+                val publicKeyResponse = gson.fromJson(response.content, KeyResponse::class.java)
 
-                val encodedPublicKey = Base64.getDecoder().decode(publicKeyResponse.publicKey)
+                val encodedPublicKey = Base64.getDecoder().decode(publicKeyResponse.key)
                 val keyFactory = KeyFactory.getInstance("EC")
                 val keySpec = X509EncodedKeySpec(encodedPublicKey)
                 val publicKey = keyFactory.generatePublic(keySpec) as PublicKey

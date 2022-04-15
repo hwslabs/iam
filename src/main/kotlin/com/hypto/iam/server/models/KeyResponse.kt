@@ -15,11 +15,11 @@ import java.io.Serializable
 /**
  *
  * @param kid
- * @param publicKey
+ * @param key
  */
-data class PublicKeyResponse(
+data class KeyResponse(
     val kid: kotlin.String,
-    val publicKey: kotlin.String
+    val key: kotlin.String
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

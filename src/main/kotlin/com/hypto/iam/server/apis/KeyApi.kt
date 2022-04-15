@@ -1,7 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.models.PublicKeyResponse
+import com.hypto.iam.server.models.KeyResponse
 import com.hypto.iam.server.service.MasterKey
 import io.ktor.application.call
 import io.ktor.http.ContentType
@@ -15,12 +15,17 @@ import org.koin.ktor.ext.inject
 fun Route.keyApi() {
     val gson: Gson by inject()
 
-    get("/public_keys/{kid}") {
+    get("/keys/{kid}") {
         val kid = call.parameters["kid"]
         val format = call.request.queryParameters["format"] ?: "der"
+        val type = call.request.queryParameters["type"] ?: "public"
+
+        if (type != "public") {
+            throw IllegalArgumentException("Only public key is supported")
+        }
 
         val masterKey = MasterKey.of(kid!!)
-        val publicKey = when (format) {
+        val key = when (format) {
             "der" -> masterKey.publicKeyDer
             "pem" -> masterKey.publicKeyPem
             else -> {
@@ -28,7 +33,7 @@ fun Route.keyApi() {
             }
         }
 
-        val response = PublicKeyResponse(kid, Base64.getEncoder().encodeToString(publicKey))
+        val response = KeyResponse(kid, Base64.getEncoder().encodeToString(key))
 
         call.respondText(
             text = gson.toJson(response),

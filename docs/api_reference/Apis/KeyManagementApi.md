@@ -4,27 +4,28 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**getPublicKey**](KeyManagementApi.md#getPublicKey) | **GET** /public_keys/{kid} | Get public key
+[**getKey**](KeyManagementApi.md#getKey) | **GET** /keys/{kid} | Get keys
 
 
-<a name="getPublicKey"></a>
-# **getPublicKey**
-> PublicKeyResponse getPublicKey(kid, UNKNOWN_PARAMETER_NAME)
+<a name="getKey"></a>
+# **getKey**
+> KeyResponse getKey(kid, format, type)
 
-Get public key
+Get keys
 
-    Get public key from Key-id
+    Get public/private keys from Key-id in der/pem format
 
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **kid** | **String**|  | [default to null]
- **UNKNOWN_PARAMETER_NAME** | [****](../Models/.md)|  | [optional]
+ **format** | **String**|  | [optional] [default to null]
+ **type** | **String**|  | [optional] [default to null]
 
 ### Return type
 
-[**PublicKeyResponse**](../Models/PublicKeyResponse.md)
+[**KeyResponse**](../Models/KeyResponse.md)
 
 ### Authorization
 

@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 Apis/KeyManagementApi.md
 Apis/OrganizationManagementApi.md
 Apis/PolicyManagementApi.md
@@ -22,13 +23,13 @@ Models/Credential.md
 Models/CredentialWithoutSecret.md
 Models/ErrorResponse.md
 Models/GetUserPoliciesResponse.md
+Models/KeyResponse.md
 Models/Organization.md
 Models/PaginationOptions.md
 Models/Policy.md
 Models/PolicyAssociationRequest.md
 Models/PolicyPaginatedResponse.md
 Models/PolicyStatement.md
-Models/PublicKeyResponse.md
 Models/Resource.md
 Models/ResourceAction.md
 Models/ResourceActionEffect.md
