@@ -15,10 +15,12 @@ import java.io.Serializable
 /**
  *
  * @param kid
+ * @param status
  * @param key
  */
 data class KeyResponse(
     val kid: kotlin.String,
+    val status: kotlin.String,
     val key: kotlin.String
 ) : Serializable {
     companion object {

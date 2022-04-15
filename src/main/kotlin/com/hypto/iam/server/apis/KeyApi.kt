@@ -33,7 +33,7 @@ fun Route.keyApi() {
             }
         }
 
-        val response = KeyResponse(kid, Base64.getEncoder().encodeToString(key))
+        val response = KeyResponse(kid, masterKey.status.toString(), Base64.getEncoder().encodeToString(key))
 
         call.respondText(
             text = gson.toJson(response),

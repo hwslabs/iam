@@ -1692,6 +1692,7 @@ components:
     KeyResponse:
       value:
         kid: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
+        status: SIGNING
         key: asdhjlsdhfjkfhdlsajfnsbfljsdhfuewlbfjdsklfhajhfjkdsbfjksdhjfkhfjklhasjfkdbjkhjkhfjkbdjfkla
 
     PaginationOptions:
@@ -2169,14 +2170,15 @@ components:
       additionalProperties: false
       required:
         - kid
+        - status
         - key
       properties:
         kid:
           type: string
-          example: true
+        status:
+          type: string
         key:
           type: string
-          example: true
 
     # Entities:
     Organization:

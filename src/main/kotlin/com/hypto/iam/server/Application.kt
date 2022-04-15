@@ -146,9 +146,8 @@ fun Application.handleRequest() {
 
         authenticate("basic-auth", "bearer-auth") {
             tokenApi()
+            keyApi()
         }
-
-        keyApi()
     }
 }
 

@@ -54,7 +54,9 @@ class KeyApiTest : AbstractContainerBaseTest() {
                 handleRequest(
                     HttpMethod.Get,
                     "/keys/$kid"
-                )
+                ) {
+                    addHeader(HttpHeaders.Authorization, "Bearer ${organizationResponse.adminUserCredential?.secret}")
+                }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals(
