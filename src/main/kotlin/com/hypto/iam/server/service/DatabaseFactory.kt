@@ -13,7 +13,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 object DatabaseFactory : KoinComponent {
-    private val appConfig: AppConfig.Config by inject()
+    private val appConfig: AppConfig by inject()
 
     private val pool: HikariDataSource = HikariDataSource(
         HikariConfig().apply {

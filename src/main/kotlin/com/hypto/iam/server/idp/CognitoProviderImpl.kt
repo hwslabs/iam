@@ -3,6 +3,7 @@
 package com.hypto.iam.server.idp
 
 import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.idp.CognitoConstants.ACTION_SUPPRESS
 import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_ID
 import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_NAME
@@ -100,7 +101,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             )
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to create user pool with message = ${e.message}" }
-            throw UnknownError("Unknown error while trying to create identity group")
+            throw UnknownException("Unknown error while trying to create identity group")
         }
     }
 
@@ -110,7 +111,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             cognitoClient.deleteUserPool(deletePoolRequest)
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to delete user pool with message = ${e.message}" }
-            throw UnknownError("Unknown error while trying to delete identity group")
+            throw UnknownException("Unknown error while trying to delete identity group")
         }
     }
 
@@ -131,7 +132,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             throw UserAlreadyExistException("Username: ${userCredentials.userName} already present in the organization")
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to create user = ${e.message}" }
-            throw UnknownError("Unknown error while trying to create user")
+            throw UnknownException("Unknown error while trying to create user")
         }
     }
 
@@ -161,10 +162,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             )
         } catch (e: UserNotFoundException) {
             logger.info(e) { "Unable to find the user $userName in the organization" }
-            throw com.hypto.iam.server.idp.UserNotFoundException("Unable to find the user $userName in the given org")
+            throw UserNotFoundException("Unable to find the user $userName in the given org")
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to get user information for $userName" + e.message }
-            throw UnknownError("Unknown error while trying to get the user information")
+            throw UnknownException("Unknown error while trying to get the user information")
         }
     }
 
@@ -292,7 +293,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 "Error while trying to list users" +
                     " from the identity pool ${identityGroup.id}" + e.message
             }
-            throw UnknownError("Unknown error while trying to list users")
+            throw UnknownException("Unknown error while trying to list users")
         }
     }
 
@@ -307,7 +308,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 "Error while trying to delete user $userName" +
                     " from the identity pool ${identityGroup.id}" + e.message
             }
-            throw UnknownError("Unknown error while trying to delete user: $userName")
+            throw UnknownException("Unknown error while trying to delete user: $userName")
         }
     }
 

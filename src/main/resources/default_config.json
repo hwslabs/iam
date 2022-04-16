@@ -4,14 +4,26 @@
     "port": "5435",
     "username": "root",
     "password": "password",
-    "maximum_pool_size": 3,
-    "minimum_idle": 3,
+    "maximum_pool_size": 32,
+    "minimum_idle": 5,
     "is_auto_commit": true,
     "transaction_isolation": "TRANSACTION_REPEATABLE_READ"
   },
   "newrelic": {
     "api_key": "test_key",
     "publish_interval": 10
+  },
+  "server": {
+    "port": 8080,
+    "connectionGroupSize": 32,
+    "workerGroupSize": 64,
+    "callGroupSize": 256,
+    "requestQueueLimit": 16,
+    "runningLimit": 10,
+    "shareWorkGroup": false,
+    "responseWriteTimeoutSeconds": 10,
+    "requestReadTimeoutSeconds": 10,
+    "tcpKeepAlive": false
   },
   "app": {
     "env": "Development",

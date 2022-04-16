@@ -48,7 +48,7 @@ interface TokenService {
 
 class TokenServiceImpl : KoinComponent, TokenService {
     private val userPolicyService: UserPolicyService by inject()
-    private val appConfig: AppConfig.Config by inject()
+    private val appConfig: AppConfig by inject()
     private val masterKeyCache: MasterKeyCache by inject()
 
     companion object {
@@ -151,7 +151,7 @@ object MasterKeyCache : KoinComponent {
     private lateinit var signKeyFetchTime: Instant
     private lateinit var cacheRefreshTime: Instant
     private lateinit var signKey: MasterKey
-    private val appConfig: AppConfig.Config by inject()
+    private val appConfig: AppConfig by inject()
 
     private fun shouldRefreshSignKey(): Boolean {
         return signKeyFetchTime.plusSeconds(appConfig.app.signKeyFetchInterval) > Instant.now()

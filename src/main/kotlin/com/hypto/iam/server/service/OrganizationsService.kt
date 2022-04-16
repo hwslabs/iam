@@ -5,6 +5,7 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.models.AdminUser
@@ -127,8 +128,12 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     }
 
     override suspend fun deleteOrganization(id: String): BaseSuccessResponse {
-        organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
+        val org = organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
         organizationRepo.deleteById(id)
+
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        identityProvider.deleteIdentityGroup(identityGroup)
+
         return BaseSuccessResponse(true)
     }
 }

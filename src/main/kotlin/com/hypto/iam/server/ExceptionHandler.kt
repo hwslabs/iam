@@ -5,6 +5,7 @@ import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.exceptions.PolicyFormatException
+import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
 import com.hypto.iam.server.idp.UserAlreadyExistException
 import com.hypto.iam.server.idp.UserNotFoundException
@@ -69,6 +70,6 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<IllegalStateException>(HttpStatusCode.InternalServerError, true)
     sendStatus<IllegalArgumentException>(HttpStatusCode.BadRequest)
     sendStatus<DataAccessException>(HttpStatusCode.Unauthorized)
-    sendStatus<UnknownError>(HttpStatusCode.InternalServerError, true, "Unknown Error Occurred")
+    sendStatus<UnknownException>(HttpStatusCode.InternalServerError)
     sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
 }

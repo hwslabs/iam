@@ -1494,9 +1494,11 @@ components:
       value:
         name: ACME Enterprise
         description: Brief description about ACME
-        adminUserEmail: admin@acme.com
-        userConfiguration: null
-        # TODO: Fill userConfiguration
+        adminUser:
+          username: username
+          passwordHash: <Hash of password>
+          email: admin@example.com
+          phone: +1234567890
 
     UpdateOrganizationRequest:
       summary: A sample UpdateOrganizationRequest
