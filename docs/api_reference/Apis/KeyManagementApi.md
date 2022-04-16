@@ -20,8 +20,8 @@ Get keys
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **kid** | **String**|  | [default to null]
- **format** | **String**|  | [optional] [default to null]
- **type** | **String**|  | [optional] [default to null]
+ **format** | **String**|  | [optional] [default to null] [enum: der, pem]
+ **type** | **String**|  | [optional] [default to null] [enum: public]
 
 ### Return type
 

@@ -1077,7 +1077,9 @@ components:
       required: false
       schema:
         type: string
-        pattern: ^(pem|der)$
+        enum:
+          - der
+          - pem
         example: "der"
 
     type:
@@ -1086,7 +1088,8 @@ components:
       required: false
       schema:
         type: string
-        pattern: ^(public|private)$
+        enum:
+          - public
         example: "public"
 
     next_token:
@@ -1693,7 +1696,7 @@ components:
       value:
         kid: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
         status: SIGNING
-        key: asdhjlsdhfjkfhdlsajfnsbfljsdhfuewlbfjdsklfhajhfjkdsbfjksdhjfkhfjklhasjfkdbjkhjkhfjkbdjfkla
+        key: MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKv36cup5G6xfHOtllBjsymgQ6CHQUxCRieycapq8UZL3oCpbatU7lg8Tv+eGAhFsF/JYoDWcHOhAHhMm8Ae+lA==
 
     PaginationOptions:
       value:
