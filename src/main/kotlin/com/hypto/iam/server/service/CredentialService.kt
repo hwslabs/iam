@@ -21,6 +21,7 @@ import org.koin.core.component.inject
 
 class CredentialServiceImpl : KoinComponent, CredentialService {
     private val repo: CredentialsRepo by inject()
+    private val usersService: UsersService by inject()
     private val idGenerator: ApplicationIdUtil.Generator by inject()
 
     override suspend fun createCredential(
@@ -28,7 +29,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         userId: String,
         validUntil: String?
     ): Credential {
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
+        val userHrn = ResourceHrn(usersService.getUser(organizationId, userId).hrn)
         // TODO: Limit number of active credentials for a single user
         val credentialsRecord = repo.create(
             userHrn = userHrn,
