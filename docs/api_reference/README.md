@@ -26,7 +26,7 @@ Class | Method | HTTP request | Description
 *ResourceManagementApi* | [**getResource**](Apis/ResourceManagementApi.md#getresource) | **GET** /organizations/{organization_id}/resources/{resource_name} | Get the resource details
 *ResourceManagementApi* | [**listResources**](Apis/ResourceManagementApi.md#listresources) | **GET** /organizations/{organization_id}/resources | List Resources
 *ResourceManagementApi* | [**updateResource**](Apis/ResourceManagementApi.md#updateresource) | **PATCH** /organizations/{organization_id}/resources/{resource_name} | Update a resource
-*UserAuthorizationApi* | [**getToken**](Apis/UserAuthorizationApi.md#gettoken) | **POST** /token | Generate a token
+*UserAuthorizationApi* | [**getToken**](Apis/UserAuthorizationApi.md#gettoken) | **POST** /organizations/{organization_id}/token | Generate a token
 *UserAuthorizationApi* | [**validate**](Apis/UserAuthorizationApi.md#validate) | **POST** /validate | Validate an auth request
 *UserCredentialManagementApi* | [**createCredential**](Apis/UserCredentialManagementApi.md#createcredential) | **POST** /organizations/{organization_id}/users/{user_name}/credentials | Create a new credential for a user
 *UserCredentialManagementApi* | [**deleteCredential**](Apis/UserCredentialManagementApi.md#deletecredential) | **DELETE** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Delete a credential
