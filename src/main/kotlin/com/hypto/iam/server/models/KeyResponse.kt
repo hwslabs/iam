@@ -15,15 +15,26 @@ import java.io.Serializable
 /**
  *
  * @param kid
- * @param status
+ * @param status The status of the key. Valid values are SIGNING, VERIFYING and EXPIRED
+ * @param format
  * @param key
  */
 data class KeyResponse(
     val kid: kotlin.String,
+    /* The status of the key. Valid values are SIGNING, VERIFYING and EXPIRED */
     val status: kotlin.String,
+    val format: KeyResponse.Format,
     val key: kotlin.String
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
+    }
+    /**
+    *
+    * Values: der,pem
+    */
+    enum class Format(val value: kotlin.String) {
+        der("der"),
+        pem("pem");
     }
 }

@@ -53,7 +53,7 @@ class KeyApiTest : AbstractContainerBaseTest() {
             with(
                 handleRequest(
                     HttpMethod.Get,
-                    "/keys/$kid"
+                    "/keys/$kid?format=der"
                 ) {
                     addHeader(HttpHeaders.Authorization, "Bearer ${organizationResponse.adminUserCredential?.secret}")
                 }
@@ -64,6 +64,8 @@ class KeyApiTest : AbstractContainerBaseTest() {
                     response.contentType()
                 )
                 val publicKeyResponse = gson.fromJson(response.content, KeyResponse::class.java)
+
+                assertEquals(KeyResponse.Format.der, publicKeyResponse.format)
 
                 val encodedPublicKey = Base64.getDecoder().decode(publicKeyResponse.key)
                 val keyFactory = KeyFactory.getInstance("EC")

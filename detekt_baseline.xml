@@ -6,17 +6,14 @@
     <ID>ConstructorParameterNaming:PolicyPaginatedResponse.kt$PolicyPaginatedResponse$val `data`: kotlin.collections.List&lt;Policy&gt;? = null</ID>
     <ID>ConstructorParameterNaming:ResourcePaginatedResponse.kt$ResourcePaginatedResponse$val `data`: kotlin.collections.List&lt;Resource&gt;? = null</ID>
     <ID>ConstructorParameterNaming:UserPaginatedResponse.kt$UserPaginatedResponse$val `data`: kotlin.collections.List&lt;User&gt;? = null</ID>
-    <ID>EmptyFunctionBlock:OrganizationsServiceImplTest.kt$OrganizationsServiceImplTest${ }</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.active$active</ID>
     <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.inactive$inactive</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.admin$admin</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.apiOnly$apiOnly</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.normal$normal</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.UserType.system$system</ID>
     <ID>EnumNaming:Credential.kt$Credential.Status.active$active</ID>
     <ID>EnumNaming:Credential.kt$Credential.Status.inactive$inactive</ID>
     <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.active$active</ID>
     <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.inactive$inactive</ID>
+    <ID>EnumNaming:KeyResponse.kt$KeyResponse.Format.der$der</ID>
+    <ID>EnumNaming:KeyResponse.kt$KeyResponse.Format.pem$pem</ID>
     <ID>EnumNaming:PaginationOptions.kt$PaginationOptions.SortOrder.asc$asc</ID>
     <ID>EnumNaming:PaginationOptions.kt$PaginationOptions.SortOrder.desc$desc</ID>
     <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.allow$allow</ID>
@@ -29,16 +26,11 @@
     <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.enabled$enabled</ID>
     <ID>EnumNaming:User.kt$User.Status.disabled$disabled</ID>
     <ID>EnumNaming:User.kt$User.Status.enabled$enabled</ID>
-    <ID>EnumNaming:User.kt$User.UserType.admin$admin</ID>
-    <ID>EnumNaming:User.kt$User.UserType.apiOnly$apiOnly</ID>
-    <ID>EnumNaming:User.kt$User.UserType.normal$normal</ID>
-    <ID>EnumNaming:User.kt$User.UserType.system$system</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
     <ID>MagicNumber:Configuration.kt$365</ID>
     <ID>MagicNumber:Configuration.kt$4</ID>
     <ID>MagicNumber:Configuration.kt$60</ID>
-    <ID>MagicNumber:DatabaseFactory.kt$DatabaseFactory$3</ID>
     <ID>MaxLineLength:Configuration.kt$MicrometerConfigs$/* * TODO: Configure "LoggingMeterRegistry" with a logging sink to direct metrics logs to a separate "iam_metrics.log" logback appender * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer) */</ID>
     <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 5. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt; - hrn:hypto:&lt;accountId&gt;:iam-resource/12345 - updateResource</ID>
@@ -56,6 +48,5 @@
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$identityGroup: IdentityGroup</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$userCredentials: AccessTokenCredentials</ID>
     <ID>UnusedPrivateMember:Configuration.kt$MicrometerConfigs$private fun getNewRelicMeterRegistry(): NewRelicRegistry</ID>
-    <ID>UnusedPrivateMember:DataSetupHelper.kt$DataSetupHelper$mockStore: MockStore</ID>
   </CurrentIssues>
 </SmellBaseline>

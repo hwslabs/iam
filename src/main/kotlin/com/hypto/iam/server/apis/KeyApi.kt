@@ -17,7 +17,7 @@ fun Route.keyApi() {
 
     get("/keys/{kid}") {
         val kid = call.parameters["kid"]
-        val format = call.request.queryParameters["format"] ?: "der"
+        val format = call.request.queryParameters["format"] ?: "pem"
         val type = call.request.queryParameters["type"] ?: "public"
 
         if (type != "public") {
@@ -33,7 +33,13 @@ fun Route.keyApi() {
             }
         }
 
-        val response = KeyResponse(kid, masterKey.status.toString(), Base64.getEncoder().encodeToString(key))
+        val response =
+            KeyResponse(
+                kid,
+                masterKey.status.toString(),
+                KeyResponse.Format.valueOf(format),
+                Base64.getEncoder().encodeToString(key)
+            )
 
         call.respondText(
             text = gson.toJson(response),

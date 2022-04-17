@@ -1080,7 +1080,8 @@ components:
         enum:
           - der
           - pem
-        example: "der"
+        default: pem
+        example: "pem"
 
     type:
       in: query
@@ -1090,6 +1091,7 @@ components:
         type: string
         enum:
           - public
+        default: public
         example: "public"
 
     next_token:
@@ -1696,6 +1698,7 @@ components:
       value:
         kid: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
         status: SIGNING
+        format: der
         key: MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKv36cup5G6xfHOtllBjsymgQ6CHQUxCRieycapq8UZL3oCpbatU7lg8Tv+eGAhFsF/JYoDWcHOhAHhMm8Ae+lA==
 
     PaginationOptions:
@@ -2174,12 +2177,19 @@ components:
       required:
         - kid
         - status
+        - format
         - key
       properties:
         kid:
           type: string
         status:
           type: string
+          description: "The status of the key. Valid values are SIGNING, VERIFYING and EXPIRED"
+        format:
+          type: string
+          enum:
+            - der
+            - pem
         key:
           type: string
 
