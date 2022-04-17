@@ -81,11 +81,19 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
                     .insertInto(dao.table)
                     .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.SIGNING.value)
                     .set(
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PRIVATE_KEY,
+                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PRIVATE_KEY_PEM,
+                        MasterKeyUtil.loadPrivateKeyPem()
+                    )
+                    .set(
+                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PRIVATE_KEY_DER,
                         MasterKeyUtil.loadPrivateKeyDer()
                     )
                     .set(
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PUBLIC_KEY,
+                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PUBLIC_KEY_PEM,
+                        MasterKeyUtil.loadPublicKeyPem()
+                    )
+                    .set(
+                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PUBLIC_KEY_DER,
                         MasterKeyUtil.loadPublicKeyDer()
                     )
                     .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.CREATED_AT, LocalDateTime.now())
@@ -104,7 +112,9 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
         return if (skipIfPresent) {
             // TODO: Convert to exists query rather than a fetchOne query
             fetchForSigning() == null
-        } else { true }
+        } else {
+            true
+        }
     }
 
     private fun getMasterKeyOperationLock(c: Configuration): Boolean {
@@ -115,6 +125,7 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
                 ?: false
             ) as Boolean
     }
+
     private const val MASTER_KEY_OPERATION_LOCK_KEY = 10
 
     enum class Status(val value: String) {

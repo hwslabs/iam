@@ -7,6 +7,7 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*KeyManagementApi* | [**getKey**](Apis/KeyManagementApi.md#getkey) | **GET** /keys/{kid} | Get keys
 *OrganizationManagementApi* | [**createOrganization**](Apis/OrganizationManagementApi.md#createorganization) | **POST** /organizations | Creates an organization.
 *OrganizationManagementApi* | [**deleteOrganization**](Apis/OrganizationManagementApi.md#deleteorganization) | **DELETE** /organizations/{organization_id} | Delete an organization
 *OrganizationManagementApi* | [**getOrganization**](Apis/OrganizationManagementApi.md#getorganization) | **GET** /organizations/{organization_id} | Get an organization
@@ -60,6 +61,7 @@ Class | Method | HTTP request | Description
  - [CredentialWithoutSecret](./Models/CredentialWithoutSecret.md)
  - [ErrorResponse](./Models/ErrorResponse.md)
  - [GetUserPoliciesResponse](./Models/GetUserPoliciesResponse.md)
+ - [KeyResponse](./Models/KeyResponse.md)
  - [Organization](./Models/Organization.md)
  - [PaginationOptions](./Models/PaginationOptions.md)
  - [Policy](./Models/Policy.md)

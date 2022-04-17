@@ -30,42 +30,47 @@ tags:
     description: "APIs for managing an Organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/OrganizationManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/OrganizationManagementApi.md"
   - name: "User Management"
     description: "APIs for managing users inside Organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserManagementApi.md"
   - name: "Policy Management"
     description: "APIs for managing policies"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/PolicyManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/PolicyManagementApi.md"
   - name: "User Policy Management"
     description: "APIs for managing user policies"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserPolicyManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserPolicyManagementApi.md"
   - name: "User Credential Management"
     description: "APIs for managing the credentials of user"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserCredentialManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserCredentialManagementApi.md"
   - name: "Resource Management"
     description: "APIs for managing the resources inside an organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/ResourceManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/ResourceManagementApi.md"
   - name: "Resource Action Management"
     description: "APIs for managing the actions for a resource inside an organization"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/ResourceActionManagementApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/ResourceActionManagementApi.md"
   - name: "User Authorization"
     description: "APIs used at runtime for validation"
     externalDocs:
       description: "docs"
-      url: "https://github.com/hwslabs/iam/blob/development/docs/api_reference/Apis/UserAuthorizationApi.md"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/UserAuthorizationApi.md"
+  - name: "Key Management"
+    description: "APIs for fetching keys"
+    externalDocs:
+      description: "docs"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/KeyManagementApi.md"
   - name: "User Sign-In"
     description: "APIs used by the front-end for authentication"
     externalDocs:
@@ -175,7 +180,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       security:
-        - apiKeyAuth: [hypto-internal-secret-key]
+        - apiKeyAuth: [ hypto-internal-secret-key ]
 
   # user
   /organizations/{organization_id}/users:
@@ -948,8 +953,29 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /keys/{kid}:
+    get:
+      tags:
+        - Key Management
+      summary: Get keys
+      description: Get public/private keys from Key-id in der/pem format
+      operationId: getKey
+      parameters:
+        - $ref: '#/components/parameters/kid'
+        - $ref: '#/components/parameters/format'
+        - $ref: '#/components/parameters/type'
+      responses:
+        '200':
+          $ref: '#/components/responses/KeyResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security: [ ]
+
+
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]
 
 components:
   securitySchemes:
@@ -1033,6 +1059,40 @@ components:
             type: string
             maxLength: 50
             example: "1f44ada7-7196-4f2d-8380-4c76f8bddec2"
+
+    kid:
+      in: path
+      name: kid
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 50
+            example: "1f44ada7-7196-4f2d-8380-4c76f8bddec2"
+
+    format:
+      in: query
+      name: format
+      required: false
+      schema:
+        type: string
+        enum:
+          - der
+          - pem
+        default: pem
+        example: "pem"
+
+    type:
+      in: query
+      name: type
+      required: false
+      schema:
+        type: string
+        enum:
+          - public
+        default: public
+        example: "public"
 
     next_token:
       in: query
@@ -1417,6 +1477,15 @@ components:
             ActionPaginatedResponse:
               $ref: '#/components/examples/ActionPaginatedResponse'
 
+    KeyResponse:
+      description: Response for key request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/KeyResponse'
+          examples:
+            KeyResponse:
+              $ref: '#/components/examples/KeyResponse'
 
   examples:
     # Request examples
@@ -1624,6 +1693,13 @@ components:
         context:
           pageSize: 10
           sortOrder: asc
+
+    KeyResponse:
+      value:
+        kid: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
+        status: SIGNING
+        format: der
+        key: MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKv36cup5G6xfHOtllBjsymgQ6CHQUxCRieycapq8UZL3oCpbatU7lg8Tv+eGAhFsF/JYoDWcHOhAHhMm8Ae+lA==
 
     PaginationOptions:
       value:
@@ -2094,6 +2170,28 @@ components:
           type: string
         context:
           $ref: '#/components/schemas/PaginationOptions'
+
+    KeyResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - kid
+        - status
+        - format
+        - key
+      properties:
+        kid:
+          type: string
+        status:
+          type: string
+          description: "The status of the key. Valid values are SIGNING, VERIFYING and EXPIRED"
+        format:
+          type: string
+          enum:
+            - der
+            - pem
+        key:
+          type: string
 
     # Entities:
     Organization:
