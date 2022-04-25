@@ -1496,7 +1496,7 @@ components:
         description: Brief description about ACME
         adminUser:
           username: username
-          passwordHash: <Hash of password>
+          password: <password>
           email: admin@example.com
           phone: +1234567890
 

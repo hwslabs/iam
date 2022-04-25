@@ -1,3 +1,4 @@
+.openapi-generator-ignore
 Apis/KeyManagementApi.md
 Apis/OrganizationManagementApi.md
 Apis/PolicyManagementApi.md

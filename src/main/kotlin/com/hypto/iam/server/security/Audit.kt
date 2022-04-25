@@ -96,6 +96,7 @@ class Audit(config: Configuration) : KoinComponent {
 
 @Suppress("FunctionOnlyReturningConstant")
 suspend fun auditLog(): AuditContext? {
+    // TODO: Fix this when getting audit logging to work.
     return null
 //    return callData().call.attributes.getOrNull(Audit.AuditContextKey)
 }
