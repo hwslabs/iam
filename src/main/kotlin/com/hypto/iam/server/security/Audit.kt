@@ -7,7 +7,6 @@ import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.features.globalcalldata.GlobalCallData.Feature.globalCallDataCleanupPhase
 import com.hypto.iam.server.features.globalcalldata.GlobalCallData.Feature.globalCallDataPhase
-import com.hypto.iam.server.features.globalcalldata.callData
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.application.ApplicationCall
 import io.ktor.application.ApplicationCallPipeline
@@ -95,8 +94,11 @@ class Audit(config: Configuration) : KoinComponent {
     }
 }
 
+@Suppress("FunctionOnlyReturningConstant")
 suspend fun auditLog(): AuditContext? {
-    return callData().call.attributes.getOrNull(Audit.AuditContextKey)
+    // TODO: Fix this when getting audit logging to work.
+    return null
+//    return callData().call.attributes.getOrNull(Audit.AuditContextKey)
 }
 
 class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {

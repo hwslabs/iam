@@ -119,7 +119,7 @@ object MicrometerConfigs {
 
     private fun getNewRelicRegistryConfig(): NewRelicRegistryConfig {
         return object : NewRelicRegistryConfig {
-            val appConfig = getKoinInstance<AppConfig.Config>()
+            val appConfig = getKoinInstance<AppConfig>()
 
             override fun apiKey(): String {
                 return appConfig.newrelic.apiKey
@@ -139,7 +139,7 @@ object MicrometerConfigs {
 
     init {
         registry.config().commonTags(
-            listOf(Tag.of("environment", getKoinInstance<AppConfig.Config>().app.env.toString()))
+            listOf(Tag.of("environment", getKoinInstance<AppConfig>().app.env.toString()))
         )
     }
 

@@ -49,9 +49,10 @@
     <logger name="org.eclipse.jetty" level="INFO"/>
     <logger name="io.netty" level="INFO"/>
 
-    <!-- TODO: [IMPORTANT] Make these "INFO" before prod deployment or make these evn level configs-->
+    <!-- TODO: [IMPORTANT] Make these "INFO" before prod deployment or make these env level configs-->
     <logger name="com.zaxxer.hikari" level="DEBUG"/>
     <logger name="org.jooq" level="TRACE"/>
+    <logger name="org.casbin.jcasbin" level="WARN"/>
 
     <logger name="audit-logger" level="info" additivity="false">
         <appender-ref ref="FILE-AUDIT" />

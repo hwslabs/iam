@@ -215,6 +215,8 @@ task generateAPIDocs(dependsOn: [cleanAPIDocs], type: GenerateTask) {
     generateModelDocumentation = true
     generateApiTests = false
     generateApiDocumentation = true
+
+    finalizedBy(ktlintFormat)
 }
 
 task cleanAPIModels(type: Delete) {

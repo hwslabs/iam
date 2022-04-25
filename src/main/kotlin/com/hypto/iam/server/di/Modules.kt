@@ -80,12 +80,12 @@ val applicationModule = module {
     single { ApplicationIdUtil.Generator }
     single { ApplicationIdUtil.Validator }
     single { PolicyValidator }
-    single { AppConfig().configuration }
+    single { AppConfig.configuration }
     single { MasterKeyCache }
     single { CognitoIdentityProviderImpl() } bind IdentityProvider::class
-    single { getCredentialsProvider(get<AppConfig.Config>().aws.accessKey,
-        get<AppConfig.Config>().aws.secretKey) } bind AwsCredentialsProvider::class
-    single { getCognitoIdentityProviderClient(get<AppConfig.Config>().aws.region, get()) }
+    single { getCredentialsProvider(get<AppConfig>().aws.accessKey,
+        get<AppConfig>().aws.secretKey) } bind AwsCredentialsProvider::class
+    single { getCognitoIdentityProviderClient(get<AppConfig>().aws.region, get()) }
     single { TxMan(com.hypto.iam.server.service.DatabaseFactory.getConfiguration()) }
 }
 

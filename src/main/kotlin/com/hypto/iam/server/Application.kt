@@ -48,18 +48,16 @@ import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.Routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import java.security.Security
 import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.Koin
 import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-ID"
-private const val PORT_NUMBER = 8080
 
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
-    val appConfig: AppConfig.Config by inject()
+    val appConfig: AppConfig by inject()
     val userPrincipalService: UserPrincipalService by inject()
 
     install(DefaultHeaders)
@@ -162,7 +160,24 @@ fun Application.module() {
 @KtorExperimentalLocationsAPI
 fun main(args: Array<String>) {
     // https://www.baeldung.com/java-bouncy-castle#setup-unlimited-strength-jurisdiction-policy-files
-    Security.setProperty("crypto.policy", "unlimited")
+//    Security.setProperty("crypto.policy", "unlimited")
 
-    embeddedServer(Netty, PORT_NUMBER, module = Application::module).start(wait = true)
+    val appConfig: AppConfig = AppConfig.configuration
+
+    embeddedServer(Netty, appConfig.server.port, module = Application::module,
+        configure = {
+            // Refer io.ktor.server.engine.ApplicationEngine.Configuration
+            connectionGroupSize = appConfig.server.connectionGroupSize
+            workerGroupSize = appConfig.server.workerGroupSize
+            callGroupSize = appConfig.server.callGroupSize
+
+            // Refer io.ktor.server.netty.NettyApplicationEngine.Configuration
+            requestQueueLimit = appConfig.server.requestQueueLimit
+            runningLimit = appConfig.server.runningLimit
+            shareWorkGroup = appConfig.server.shareWorkGroup
+            responseWriteTimeoutSeconds = appConfig.server.responseWriteTimeoutSeconds
+            requestReadTimeoutSeconds = appConfig.server.requestReadTimeoutSeconds
+            tcpKeepAlive = appConfig.server.tcpKeepAlive
+        }
+    ).start(wait = true)
 }

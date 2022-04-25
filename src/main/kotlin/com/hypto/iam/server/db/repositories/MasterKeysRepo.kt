@@ -14,7 +14,7 @@ import org.koin.core.component.inject
 
 object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
 
-    private val appConfig: AppConfig.Config by inject()
+    private val appConfig: AppConfig by inject()
 
     private val idFun = fun (masterKey: MasterKeys): UUID {
         return masterKey.id

@@ -29,7 +29,7 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
 
     @BeforeEach
     fun setup() {
-        rootToken = getKoinInstance<AppConfig.Config>().app.secretKey
+        rootToken = getKoinInstance<AppConfig>().app.secretKey
         cognitoClient = mockCognitoClient()
     }
 
