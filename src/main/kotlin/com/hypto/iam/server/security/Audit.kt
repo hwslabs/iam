@@ -5,8 +5,8 @@ package com.hypto.iam.server.security
 import com.google.gson.Gson
 import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.di.getKoinInstance
-import com.hypto.iam.server.features.globalcalldata.GlobalCallData.Feature.globalCallDataCleanupPhase
-import com.hypto.iam.server.features.globalcalldata.GlobalCallData.Feature.globalCallDataPhase
+import com.hypto.iam.server.plugins.globalcalldata.GlobalCallData.Feature.globalCallDataCleanupPhase
+import com.hypto.iam.server.plugins.globalcalldata.GlobalCallData.Feature.globalCallDataPhase
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.content.TextContent
 import io.ktor.http.HttpStatusCode

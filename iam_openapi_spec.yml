@@ -932,6 +932,27 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /token:
+    post:
+      tags:
+        - User Authorization
+      summary: Generate a token
+      description: Generate a token for the given user credential
+      operationId: getToken
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /validate:
     post:
       tags:
@@ -1420,6 +1441,9 @@ components:
     TokenResponse:
       description: Response for generate token request
       content:
+        text/plain:
+          schema:
+            type: string
         application/json:
           schema:
             $ref: '#/components/schemas/TokenResponse'
