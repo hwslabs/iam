@@ -6,12 +6,14 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.di.getKoinInstance
 import com.newrelic.telemetry.micrometer.NewRelicRegistry
 import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
-import io.ktor.auth.OAuthServerSettings
-import io.ktor.features.Compression
-import io.ktor.features.HSTS
-import io.ktor.features.deflate
-import io.ktor.features.gzip
-import io.ktor.features.minimumSize
+import io.ktor.server.auth.OAuthServerSettings
+import io.ktor.server.plugins.compression.Compression
+import io.ktor.server.plugins.compression.CompressionConfig
+import io.ktor.server.plugins.compression.deflate
+import io.ktor.server.plugins.compression.gzip
+import io.ktor.server.plugins.compression.minimumSize
+import io.ktor.server.plugins.hsts.HSTS
+import io.ktor.server.plugins.hsts.HSTSConfig
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.binder.MeterBinder
@@ -33,7 +35,7 @@ import java.util.concurrent.Executors
  *
  * See http://ktor.io/features/hsts.html
  */
-internal fun applicationHstsConfiguration(): HSTS.Configuration.() -> Unit {
+internal fun applicationHstsConfiguration(): HSTSConfig.() -> Unit {
     return {
         maxAgeInSeconds = Duration.ofDays(365).toMinutes() * 60
         includeSubDomains = true
@@ -52,7 +54,7 @@ internal fun applicationHstsConfiguration(): HSTS.Configuration.() -> Unit {
  *
  * See http://ktor.io/features/compression.html
  */
-internal fun applicationCompressionConfiguration(): Compression.Configuration.() -> Unit {
+internal fun applicationCompressionConfiguration(): CompressionConfig.() -> Unit {
     return {
         gzip {
             priority = 1.0

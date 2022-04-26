@@ -4,18 +4,17 @@ import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
 import com.hypto.iam.server.utils.policy.PolicyValidator
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.ApplicationFeature
-import io.ktor.application.call
-import io.ktor.application.feature
-import io.ktor.auth.Authentication
-import io.ktor.auth.authentication
-import io.ktor.request.path
-import io.ktor.routing.Route
-import io.ktor.routing.RouteSelector
-import io.ktor.routing.RouteSelectorEvaluation
-import io.ktor.routing.RoutingResolveContext
-import io.ktor.routing.application
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.BaseApplicationPlugin
+import io.ktor.server.application.call
+import io.ktor.server.application.plugin
+import io.ktor.server.auth.authentication
+import io.ktor.server.request.path
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.RouteSelector
+import io.ktor.server.routing.RouteSelectorEvaluation
+import io.ktor.server.routing.RoutingResolveContext
+import io.ktor.server.routing.application
 import io.ktor.util.AttributeKey
 import io.ktor.util.pipeline.PipelinePhase
 import mu.KotlinLogging
@@ -33,6 +32,7 @@ class AuthorizationException(override val message: String) : Exception(message)
 /**
  * This class is used in api request flow. This performs user authorization checks before allowing any action
  */
+
 @Suppress("UnusedPrivateMember")
 class Authorization(config: Configuration) : KoinComponent {
     private val policyValidator: PolicyValidator by inject()
@@ -45,8 +45,7 @@ class Authorization(config: Configuration) : KoinComponent {
         all: Set<Action>? = null,
         none: Set<Action>? = null
     ) {
-        pipeline.insertPhaseAfter(ApplicationCallPipeline.Features, Authentication.ChallengePhase)
-        pipeline.insertPhaseAfter(Authentication.ChallengePhase, authorizationPhase)
+        pipeline.insertPhaseBefore(ApplicationCallPipeline.Call, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
 
             val principal =
@@ -96,7 +95,7 @@ class Authorization(config: Configuration) : KoinComponent {
         }
     }
 
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, Authorization> {
+    companion object Plugin : BaseApplicationPlugin<ApplicationCallPipeline, Configuration, Authorization> {
         override val key = AttributeKey<Authorization>("Authorization")
         val authorizationPhase = PipelinePhase("Authorization")
 
@@ -127,7 +126,7 @@ private fun Route.authorizedRoute(
         none?.let { "noneOf (${none.joinToString(" ")})" }
     ).joinToString(",")
     val authorizedRoute = createChild(AuthorizedRouteSelector(description))
-    application.feature(Authorization).interceptPipeline(authorizedRoute, any, all, none)
+    application.plugin(Authorization).interceptPipeline(authorizedRoute, any, all, none)
     authorizedRoute.build()
     return authorizedRoute
 }

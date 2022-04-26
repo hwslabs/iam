@@ -9,12 +9,12 @@ import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourcePaginatedResponse
 import com.hypto.iam.server.models.UpdateResourceRequest
-import io.ktor.application.Application
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
+import io.ktor.server.application.Application
 import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody

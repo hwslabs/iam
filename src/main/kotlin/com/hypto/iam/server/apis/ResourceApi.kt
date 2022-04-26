@@ -5,19 +5,20 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateResourceRequest
+import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.ResourceService
 import com.hypto.iam.server.validators.validate
-import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.receive
-import io.ktor.response.respondText
-import io.ktor.routing.Route
-import io.ktor.routing.delete
-import io.ktor.routing.get
-import io.ktor.routing.patch
-import io.ktor.routing.post
+import io.ktor.server.application.call
+import io.ktor.server.request.receive
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
+import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
 fun Route.resourceApi() {

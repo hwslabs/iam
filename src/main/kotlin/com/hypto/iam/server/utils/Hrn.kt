@@ -4,8 +4,8 @@ package com.hypto.iam.server.utils
 
 import com.hypto.iam.server.utils.ActionHrn.Companion.ACTION_HRN_REGEX
 import com.hypto.iam.server.utils.ResourceHrn.Companion.RESOURCE_HRN_REGEX
-import io.ktor.request.ApplicationRequest
-import io.ktor.request.path
+import io.ktor.server.request.ApplicationRequest
+import io.ktor.server.request.path
 
 /**
  * Hrn - Hypto Resource Name. It is a unique representation of an entity managed by iam service.

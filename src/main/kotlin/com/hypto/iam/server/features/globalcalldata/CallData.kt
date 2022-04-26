@@ -1,6 +1,6 @@
 package com.hypto.iam.server.features.globalcalldata
 
-import io.ktor.application.ApplicationCall
+import io.ktor.server.application.ApplicationCall
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 

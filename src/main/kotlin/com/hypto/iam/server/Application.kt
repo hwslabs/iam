@@ -18,9 +18,9 @@ import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.exceptions.InternalException
-import com.hypto.iam.server.features.globalcalldata.GlobalCallData
+import com.hypto.iam.server.plugins.Koin
+import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.ApiPrincipal
-import com.hypto.iam.server.security.Audit
 import com.hypto.iam.server.security.Authorization
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
@@ -28,37 +28,29 @@ import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.ApplicationIdUtil
+import io.ktor.serialization.gson.gson
+import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.basic
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.callid.CallId
+import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.serialization.gson.gson
-import io.ktor.server.locations.KtorExperimentalLocationsAPI
-import io.ktor.server.locations.Locations
-import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.routing.Routing
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.locations.*
-import io.ktor.server.metrics.micrometer.*
-import io.ktor.server.netty.Netty
-import io.ktor.server.routing.*
-import java.security.Security
 import kotlinx.coroutines.runBlocking
-import org.koin.ktor.ext.Koin
-import org.koin.ktor.ext.inject
 import org.koin.logger.SLF4JLogger
 
-private const val REQUEST_ID_HEADER = "X-Request-ID"
+private const val REQUEST_ID_HEADER = "X-Request-Id"
 
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
@@ -66,13 +58,15 @@ fun Application.handleRequest() {
     val userPrincipalService: UserPrincipalService by inject()
 
     install(DefaultHeaders)
-    install(CallLogging)
+    install(CallLogging) {
+        callIdMdc("call-id")
+    }
     install(CallId) {
+        retrieveFromHeader(REQUEST_ID_HEADER)
         generate { idGenerator.requestId() }
         verify { it.isNotEmpty() }
         replyToHeader(headerName = REQUEST_ID_HEADER)
     }
-    install(GlobalCallData)
     install(MicrometerMetrics) {
         registry = MicrometerConfigs.getRegistry()
         meterBinders = MicrometerConfigs.getBinders()
@@ -87,10 +81,6 @@ fun Application.handleRequest() {
     install(AutoHeadResponse) // see http://ktor.io/features/autoheadresponse.html
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
     install(Compression, applicationCompressionConfiguration()) // see http://ktor.io/features/compression.html
-    install(Locations) // see http://ktor.io/features/locations.html
-    install(Audit) {
-        enabled = false
-    }
     install(Authentication) {
         apiKeyAuth("hypto-iam-root-auth") {
             validate { tokenCredential: TokenCredential ->
@@ -157,19 +147,16 @@ fun Application.handleRequest() {
 fun Application.module() {
     install(Koin) {
         SLF4JLogger()
-        modules(repositoryModule, controllerModule, applicationModule)
+        modules = arrayListOf(repositoryModule, controllerModule, applicationModule)
     }
     handleRequest()
 }
 
-@KtorExperimentalLocationsAPI
 fun main(args: Array<String>) {
-    // https://www.baeldung.com/java-bouncy-castle#setup-unlimited-strength-jurisdiction-policy-files
-//    Security.setProperty("crypto.policy", "unlimited")
-
     val appConfig: AppConfig = AppConfig.configuration
 
-    embeddedServer(Netty, appConfig.server.port, module = Application::module,
+    embeddedServer(
+        Netty, appConfig.server.port, module = Application::module,
         configure = {
             // Refer io.ktor.server.engine.ApplicationEngine.Configuration
             connectionGroupSize = appConfig.server.connectionGroupSize
