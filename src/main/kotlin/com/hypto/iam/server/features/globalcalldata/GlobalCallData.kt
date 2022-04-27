@@ -1,10 +1,10 @@
 package com.hypto.iam.server.features.globalcalldata
 
-import io.ktor.application.ApplicationCall
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.ApplicationFeature
-import io.ktor.application.call
-import io.ktor.response.ApplicationSendPipeline
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.BaseApplicationPlugin
+import io.ktor.server.application.call
+import io.ktor.server.response.ApplicationSendPipeline
 import io.ktor.util.AttributeKey
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelinePhase
@@ -25,7 +25,7 @@ class GlobalCallData(configuration: Configuration) {
     /**
      * Installable feature for [GlobalCallData].
      */
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, GlobalCallData> {
+    companion object Feature : BaseApplicationPlugin<ApplicationCallPipeline, Configuration, GlobalCallData> {
         override val key = AttributeKey<GlobalCallData>("GlobalCallData")
         val callCache = CallCache()
         var enabled = false

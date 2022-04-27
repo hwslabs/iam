@@ -8,17 +8,17 @@ import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.features.globalcalldata.GlobalCallData.Feature.globalCallDataCleanupPhase
 import com.hypto.iam.server.features.globalcalldata.GlobalCallData.Feature.globalCallDataPhase
 import com.hypto.iam.server.utils.ResourceHrn
-import io.ktor.application.ApplicationCall
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.ApplicationFeature
-import io.ktor.application.call
-import io.ktor.auth.principal
 import io.ktor.content.TextContent
-import io.ktor.features.callId
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.httpMethod
-import io.ktor.request.path
-import io.ktor.request.userAgent
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.BaseApplicationPlugin
+import io.ktor.server.application.call
+import io.ktor.server.auth.principal
+import io.ktor.server.plugins.callid.callId
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.path
+import io.ktor.server.request.userAgent
 import io.ktor.util.AttributeKey
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelinePhase
@@ -48,7 +48,7 @@ class Audit(config: Configuration) : KoinComponent {
         internal var enabled: Boolean = true
     }
 
-    companion object Feature : ApplicationFeature<ApplicationCallPipeline, Configuration, Audit> {
+    companion object Plugin : BaseApplicationPlugin<ApplicationCallPipeline, Configuration, Audit> {
         override val key = AttributeKey<Audit>("AuditFeature")
         val AuditContextKey = AttributeKey<AuditContext>("AuditContext")
 

@@ -2,15 +2,15 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.models.KeyResponse
+import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.service.MasterKey
-import io.ktor.application.call
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.respondText
-import io.ktor.routing.Route
-import io.ktor.routing.get
+import io.ktor.server.application.call
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import java.util.Base64
-import org.koin.ktor.ext.inject
 
 fun Route.keyApi() {
     val gson: Gson by inject()

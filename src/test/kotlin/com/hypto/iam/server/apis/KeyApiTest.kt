@@ -8,13 +8,13 @@ import com.hypto.iam.server.models.KeyResponse
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.service.TokenServiceImpl
 import io.jsonwebtoken.Jwts
-import io.ktor.application.Application
 import io.ktor.http.ContentType
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
+import io.ktor.server.application.Application
 import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.withTestApplication

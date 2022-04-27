@@ -8,6 +8,7 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.UserPaginatedResponse
+import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.UserPolicyService
@@ -16,18 +17,17 @@ import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
-import io.ktor.application.call
-import io.ktor.auth.principal
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.receive
-import io.ktor.response.respondText
-import io.ktor.routing.Route
-import io.ktor.routing.delete
-import io.ktor.routing.get
-import io.ktor.routing.patch
-import io.ktor.routing.post
-import org.koin.ktor.ext.inject
+import io.ktor.server.application.call
+import io.ktor.server.auth.principal
+import io.ktor.server.request.receive
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
+import io.ktor.server.routing.post
 
 fun Route.usersApi() {
     val userPolicyService: UserPolicyService by inject()

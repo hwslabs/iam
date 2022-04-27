@@ -8,20 +8,19 @@ import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.policy.PolicyBuilder
-import io.ktor.application.ApplicationCall
-import io.ktor.application.call
-import io.ktor.auth.Authentication
-import io.ktor.auth.AuthenticationContext
-import io.ktor.auth.AuthenticationFailedCause
-import io.ktor.auth.AuthenticationPipeline
-import io.ktor.auth.AuthenticationProvider
-import io.ktor.auth.Credential
-import io.ktor.auth.Principal
-import io.ktor.auth.UnauthorizedResponse
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
-import io.ktor.request.ApplicationRequest
-import io.ktor.response.respond
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.AuthenticationConfig
+import io.ktor.server.auth.AuthenticationContext
+import io.ktor.server.auth.AuthenticationFailedCause
+import io.ktor.server.auth.AuthenticationFunction
+import io.ktor.server.auth.AuthenticationProvider
+import io.ktor.server.auth.Credential
+import io.ktor.server.auth.Principal
+import io.ktor.server.auth.UnauthorizedResponse
+import io.ktor.server.request.ApplicationRequest
+import io.ktor.server.response.respond
 import java.util.Base64
 
 data class AuthenticationException(override val message: String) : Exception(message)
@@ -55,62 +54,63 @@ data class UserPrincipal(
     val hrn: Hrn = HrnFactory.getHrn(hrnStr)
 }
 
-class TokenAuthenticationProvider(config: Configuration) : AuthenticationProvider(config) {
-    internal var authenticationFunction: suspend ApplicationCall.(TokenCredential) -> Principal? = { null }
+class TokenAuthenticationProvider internal constructor(
+    config: Config
+) : AuthenticationProvider(config) {
+    internal var authenticationFunction = config.authenticationFunction
+    private val tokenKeyName = config.keyName
+    private val tokenKeyLocation = config.keyLocation
+    private val authSchemeExists = config.authSchemeExists
 
-    var tokenKeyName: String = "X-Api-Key" // Default api key
-
-    var tokenKeyLocation: TokenLocation = TokenLocation.HEADER
-
-    /**
-     * Sets a validation function that will check given [ApiKeyCredential] instance and return [Principal],
-     * or null if credential does not correspond to an authenticated principal
-     */
-    fun validate(body: suspend ApplicationCall.(TokenCredential) -> Principal?) {
-        authenticationFunction = body
-    }
-}
-
-/**
- * Represents an Api Key authentication provider
- * @param name is the name of the provider, or `null` for a default provider
- */
-class ApiKeyConfiguration(name: String?) : AuthenticationProvider.Configuration(name)
-
-fun Authentication.Configuration.apiKeyAuth(name: String? = null, configure: TokenAuthenticationProvider.() -> Unit) {
-    val provider = TokenAuthenticationProvider(ApiKeyConfiguration(name)).apply(configure)
-    val apiKeyName = provider.tokenKeyName
-    val apiKeyLocation = provider.tokenKeyLocation
-    val authenticate = provider.authenticationFunction
-
-    provider.pipeline.intercept(AuthenticationPipeline.RequestAuthentication) { context ->
-        val credentials = call.request.tokenAuthenticationCredentials(apiKeyName, apiKeyLocation)
-        val principal = credentials?.let { authenticate(call, it) }
-        validateResponse(credentials, principal, context, apiKeyName)
-    }
-    register(provider)
-}
-
-fun Authentication.Configuration.bearer(name: String? = null, configure: TokenAuthenticationProvider.() -> Unit) {
-    val provider = TokenAuthenticationProvider(ApiKeyConfiguration(name))
-        .apply(configure) // Apply the validation configuration given by the caller
-
-    val apiKeyName = "Authorization"
-    val apiKeyLocation = TokenLocation.HEADER
-    val authenticate = provider.authenticationFunction
-
-    provider.pipeline.intercept(AuthenticationPipeline.RequestAuthentication) { context ->
-        val credentials = call.request.tokenAuthenticationCredentials(apiKeyName, apiKeyLocation) {
+    override suspend fun onAuthenticate(context: AuthenticationContext) {
+        val call = context.call
+        val credentials = call.request.tokenAuthenticationCredentials(tokenKeyName, tokenKeyLocation) {
+            if (!authSchemeExists) { return@tokenAuthenticationCredentials it }
             val result = when (val header = parseAuthorizationHeader(it)) {
                 is HttpAuthHeader.Single -> header.blob
                 else -> null
             }
             return@tokenAuthenticationCredentials result
         }
-        val principal = credentials?.let { authenticate(call, it) }
+        val principal = credentials?.let { authenticationFunction(call, it) }
 
-        validateResponse(credentials, principal, context, apiKeyName)
+        validateResponse(credentials, principal, context, tokenKeyName)
     }
+
+    /**
+     * A configuration for the [tokenAuthentication] authentication provider.
+     */
+    open class Config internal constructor(
+        name: String?,
+        val keyName: String,
+        val keyLocation: TokenLocation = TokenLocation.HEADER,
+        val authSchemeExists: Boolean = false
+    ) : AuthenticationProvider.Config(name) {
+        internal var authenticationFunction: AuthenticationFunction<TokenCredential> = {
+            throw NotImplementedError("Token auth validate function is not specified.")
+        }
+
+        /**
+         * Sets a validation function that checks a specified [TokenCredential] instance and
+         * returns [Principal] in a case of successful authentication or null if authentication fails.
+         */
+        fun validate(body: suspend ApplicationCall.(TokenCredential) -> Principal?) {
+            authenticationFunction = body
+        }
+    }
+}
+
+fun AuthenticationConfig.apiKeyAuth(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
+    val provider = TokenAuthenticationProvider(
+        TokenAuthenticationProvider.Config(name, "X-Api-Key").apply(configure)
+    )
+    register(provider)
+}
+
+fun AuthenticationConfig.bearer(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
+    val provider = TokenAuthenticationProvider(
+        TokenAuthenticationProvider.Config(name, "Authorization", authSchemeExists = true).apply(configure)
+    )
     register(provider)
 }
 
@@ -127,9 +127,9 @@ private fun validateResponse(
     }
 
     if (cause != null) {
-        context.challenge(apiKeyName, cause) {
+        context.challenge(apiKeyName, cause) { challenge, call ->
             call.respond(UnauthorizedResponse())
-            it.complete()
+            challenge.complete()
         }
     }
 

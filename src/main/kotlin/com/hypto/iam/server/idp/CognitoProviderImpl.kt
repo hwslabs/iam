@@ -12,7 +12,7 @@ import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
-import io.ktor.features.BadRequestException
+import io.ktor.server.plugins.BadRequestException
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

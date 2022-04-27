@@ -17,21 +17,20 @@ import com.hypto.iam.server.utils.HrnParseException
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
-import io.ktor.application.call
-import io.ktor.features.BadRequestException
-import io.ktor.features.StatusPages
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.respondText
+import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.statuspages.StatusPagesConfig
+import io.ktor.server.response.respondText
 import java.security.SignatureException
 import org.jooq.exception.DataAccessException
 
-inline fun <reified T : Throwable> StatusPages.Configuration.sendStatus(
+inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
     statusCode: HttpStatusCode,
     shouldThrowException: Boolean = false,
     message: String? = null
 ) {
-    exception<T> { cause ->
+    exception<T> { call, cause ->
         val response = ErrorResponse(
             message
                 ?: if (statusCode.value < HttpStatusCode.InternalServerError.value && cause.message != null) {
@@ -49,7 +48,7 @@ inline fun <reified T : Throwable> StatusPages.Configuration.sendStatus(
     }
 }
 
-fun StatusPages.Configuration.statusPages() {
+fun StatusPagesConfig.statusPages() {
     sendStatus<AuthenticationException>(HttpStatusCode.Unauthorized)
     sendStatus<AuthorizationException>(HttpStatusCode.Forbidden)
     sendStatus<EntityAlreadyExistsException>(HttpStatusCode.BadRequest)
@@ -71,5 +70,6 @@ fun StatusPages.Configuration.statusPages() {
     sendStatus<IllegalArgumentException>(HttpStatusCode.BadRequest)
     sendStatus<DataAccessException>(HttpStatusCode.Unauthorized)
     sendStatus<UnknownException>(HttpStatusCode.InternalServerError)
-    sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
+    // TODO: Uncomment this once https://youtrack.jetbrains.com/issue/KTOR-4187 is fixed
+//    sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
 }
