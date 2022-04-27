@@ -1,6 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Constants
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
@@ -57,6 +58,10 @@ class UserApiTest : AbstractContainerBaseTest() {
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
                     response.contentType()
+                )
+                assertEquals(
+                    organization.id,
+                    response.headers[Constants.X_ORGANIZATION_HEADER]
                 )
 
                 assertEquals(createUserRequest.username, responseBody.username)

@@ -1,6 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Constants
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
@@ -56,6 +57,10 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 ) {
                     Assertions.assertEquals(HttpStatusCode.Created, response.status())
                     Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                    Assertions.assertEquals(
+                        createdOrganization.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
 
                     val responseBody = gson.fromJson(response.content, Credential::class.java)
                     Assertions.assertNull(responseBody.validUntil)

@@ -22,5 +22,8 @@ class Constants private constructor() {
         const val PAGINATION_DEFAULT_PAGE_SIZE = 50
         val PAGINATION_DEFAULT_SORT_ORDER = PaginationOptions.SortOrder.asc
         const val NEWRELIC_METRICS_PUBLISH_INTERVAL = 30L // seconds
+        const val X_ORGANIZATION_HEADER = "X-Iam-User-Organization"
+        const val X_API_KEY_HEADER = "X-Api-Key"
+        const val AUTHORIZATION_HEADER = "Authorization"
     }
 }

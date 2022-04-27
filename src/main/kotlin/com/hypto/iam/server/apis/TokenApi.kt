@@ -20,7 +20,7 @@ fun Route.tokenApi() {
 
     suspend fun generateToken(principal: UserPrincipal, call: ApplicationCall, responseContentType: String?) {
         val response = tokenService.generateJwtToken(principal.hrn)
-        when(responseContentType) {
+        when (responseContentType) {
             ContentType.Text.Plain.toString() -> call.respondText(
                 text = response.token,
                 contentType = ContentType.Text.Plain,

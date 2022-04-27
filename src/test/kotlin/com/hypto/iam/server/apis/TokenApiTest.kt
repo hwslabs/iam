@@ -1,6 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Constants
 import com.hypto.iam.server.ErrorMessageStrings
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.handleRequest
@@ -69,6 +70,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
                         response.contentType()
                     )
+                    Assertions.assertEquals(
+                        createdOrganization.organization?.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
                     val responseBody = gson.fromJson(response.content, TokenResponse::class.java)
                     Assertions.assertNotNull(responseBody.token)
 
@@ -106,6 +111,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             response.contentType()
                         )
+                        Assertions.assertEquals(
+                            createdOrganization.organization?.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
                         val validationResponseBody = gson.fromJson(response.content, ValidationResponse::class.java)
                         validationResponseBody.results.forEach {
                             Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
@@ -136,6 +145,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     Assertions.assertEquals(
                         ContentType.Text.Plain.withCharset(Charsets.UTF_8),
                         response.contentType()
+                    )
+                    Assertions.assertEquals(
+                        createdOrganization.organization!!.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
                     val responseBody = response.content
                     Assertions.assertNotNull(responseBody)
@@ -174,6 +187,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             response.contentType()
                         )
+                        Assertions.assertEquals(
+                            createdOrganization.organization!!.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
                         val validationResponseBody = gson.fromJson(response.content, ValidationResponse::class.java)
                         validationResponseBody.results.forEach {
                             Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
@@ -208,6 +225,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
                         response.contentType()
+                    )
+                    Assertions.assertEquals(
+                        createdOrganization.organization?.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
                     val responseBody = gson.fromJson(response.content, TokenResponse::class.java)
                     Assertions.assertNotNull(responseBody.token)
@@ -246,6 +267,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             response.contentType()
                         )
+                        Assertions.assertEquals(
+                            createdOrganization.organization?.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
                         val validationResponseBody = gson.fromJson(response.content, ValidationResponse::class.java)
                         validationResponseBody.results.forEach {
                             Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
@@ -274,6 +299,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
                         response.contentType()
                     )
+                    Assertions.assertEquals(
+                        createdOrganization.organization?.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
                 }
             }
         }
@@ -299,6 +328,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
                         response.contentType()
+                    )
+                    Assertions.assertEquals(
+                        createdOrganization.organization?.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
                     val responseBody = gson.fromJson(response.content, TokenResponse::class.java)
                     Assertions.assertNotNull(responseBody.token)
@@ -342,6 +375,10 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         Assertions.assertEquals(
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             response.contentType()
+                        )
+                        Assertions.assertEquals(
+                            createdOrganization.organization!!.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
                         )
                         val validationResponseBody = gson.fromJson(response.content, ValidationResponse::class.java)
                         validationResponseBody.results.forEach {
