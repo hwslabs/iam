@@ -7,13 +7,13 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DEST}/iam_application.log</file>
+        <file>${LOG_DEST:-build/output/logs}/iam_application.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>${LOG_DEST}/iam_application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_DEST:-build/output/logs}/iam_application.%d{yyyy-MM-dd}.log</fileNamePattern>
 
             <!-- keep 90 days' worth of history capped at 3GB total size -->
-            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <maxHistory>${LOG_MAX_HISTORY:-90}</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
 
         </rollingPolicy>
@@ -24,13 +24,13 @@
     </appender>
 
     <appender name="FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DEST}/iam_audit.log</file>
+        <file>${LOG_DEST:-build/output/logs}/iam_audit.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>${LOG_DEST}/iam_audit.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_DEST:-build/output/logs}/iam_audit.%d{yyyy-MM-dd}.log</fileNamePattern>
 
             <!-- keep 90 days' worth of history capped at 3GB total size -->
-            <maxHistory>${LOG_MAX_HISTORY}</maxHistory>
+            <maxHistory>${LOG_MAX_HISTORY:-90}</maxHistory>
             <totalSizeCap>3GB</totalSizeCap>
 
         </rollingPolicy>
