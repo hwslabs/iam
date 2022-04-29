@@ -4,17 +4,42 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**getToken**](UserAuthorizationApi.md#getToken) | **POST** /organizations/{organization_id}/token | Generate a token
+[**getToken**](UserAuthorizationApi.md#getToken) | **POST** /token | Generate a token
+[**getTokenForOrg**](UserAuthorizationApi.md#getTokenForOrg) | **POST** /organizations/{organization_id}/token | Generate a organization_id scoped token
 [**validate**](UserAuthorizationApi.md#validate) | **POST** /validate | Validate an auth request
 
 
 <a name="getToken"></a>
 # **getToken**
-> TokenResponse getToken(organization\_id)
+> TokenResponse getToken()
 
 Generate a token
 
-    Generate a token for the given user credential
+    Generate a token for the given user credential (same as /organizations/{organization_id}/token at the moment. Might change in future)
+
+### Parameters
+This endpoint does not need any parameter.
+
+### Return type
+
+[**TokenResponse**](../Models/TokenResponse.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json, text/plain
+
+<a name="getTokenForOrg"></a>
+# **getTokenForOrg**
+> TokenResponse getTokenForOrg(organization\_id)
+
+Generate a organization_id scoped token
+
+    Generate a token for the given user credential scoped by the provided organization_id
 
 ### Parameters
 
@@ -33,7 +58,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
 - **Content-Type**: Not defined
-- **Accept**: application/json
+- **Accept**: application/json, text/plain
 
 <a name="validate"></a>
 # **validate**

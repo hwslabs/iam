@@ -93,10 +93,14 @@ fun Application.handleRequest() {
         basic("basic-auth") {
             validate { credentials ->
                 val organizationId = this.parameters["organization_id"]!!
-                return@validate userPrincipalService.getUserPrincipalByCredentials(
+                val principal = userPrincipalService.getUserPrincipalByCredentials(
                     organizationId, credentials.name,
                     credentials.password
                 )
+                if (principal != null) {
+                    response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
+                }
+                return@validate principal
             }
         }
         bearer("bearer-auth") {

@@ -3,6 +3,9 @@ package com.hypto.iam.server.security
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
+import com.hypto.iam.server.Constants
+import com.hypto.iam.server.Constants.Companion.AUTHORIZATION_HEADER
+import com.hypto.iam.server.Constants.Companion.X_API_KEY_HEADER
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.utils.Hrn
@@ -14,7 +17,6 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.AuthenticationContext
 import io.ktor.server.auth.AuthenticationFailedCause
-import io.ktor.server.auth.AuthenticationFunction
 import io.ktor.server.auth.AuthenticationProvider
 import io.ktor.server.auth.Credential
 import io.ktor.server.auth.Principal
@@ -38,20 +40,24 @@ enum class TokenType(val type: String) {
 
 /** Class which stores the token credentials sent by the client */
 data class TokenCredential(val value: String?, val type: TokenType?) : Credential
+abstract class IamPrincipal : Principal {
+    abstract val organization: String
+}
 
 /** Class to store the Principal authenticated using ApiKey auth **/
 data class ApiPrincipal(
     val tokenCredential: TokenCredential,
-    val organization: String
-) : Principal
+    override val organization: String
+) : IamPrincipal()
 
 /** Class to store the Principal authenticated using Bearer auth **/
 data class UserPrincipal(
     val tokenCredential: TokenCredential,
     val hrnStr: String,
     val policies: PolicyBuilder
-) : Principal {
+) : IamPrincipal() {
     val hrn: Hrn = HrnFactory.getHrn(hrnStr)
+    override val organization: String = hrn.organization
 }
 
 class TokenAuthenticationProvider internal constructor(
@@ -78,7 +84,7 @@ class TokenAuthenticationProvider internal constructor(
     }
 
     /**
-     * A configuration for the [tokenAuthentication] authentication provider.
+     * A configuration for the [TokenAuthenticationProvider].
      */
     open class Config internal constructor(
         name: String?,
@@ -86,7 +92,7 @@ class TokenAuthenticationProvider internal constructor(
         val keyLocation: TokenLocation = TokenLocation.HEADER,
         val authSchemeExists: Boolean = false
     ) : AuthenticationProvider.Config(name) {
-        internal var authenticationFunction: AuthenticationFunction<TokenCredential> = {
+        internal var authenticationFunction: suspend ApplicationCall.(TokenCredential) -> IamPrincipal? = {
             throw NotImplementedError("Token auth validate function is not specified.")
         }
 
@@ -94,7 +100,7 @@ class TokenAuthenticationProvider internal constructor(
          * Sets a validation function that checks a specified [TokenCredential] instance and
          * returns [Principal] in a case of successful authentication or null if authentication fails.
          */
-        fun validate(body: suspend ApplicationCall.(TokenCredential) -> Principal?) {
+        fun validate(body: suspend ApplicationCall.(TokenCredential) -> IamPrincipal?) {
             authenticationFunction = body
         }
     }
@@ -102,21 +108,21 @@ class TokenAuthenticationProvider internal constructor(
 
 fun AuthenticationConfig.apiKeyAuth(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
     val provider = TokenAuthenticationProvider(
-        TokenAuthenticationProvider.Config(name, "X-Api-Key").apply(configure)
+        TokenAuthenticationProvider.Config(name, X_API_KEY_HEADER).apply(configure)
     )
     register(provider)
 }
 
 fun AuthenticationConfig.bearer(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
     val provider = TokenAuthenticationProvider(
-        TokenAuthenticationProvider.Config(name, "Authorization", authSchemeExists = true).apply(configure)
+        TokenAuthenticationProvider.Config(name, AUTHORIZATION_HEADER, authSchemeExists = true).apply(configure)
     )
     register(provider)
 }
 
 private fun validateResponse(
     credentials: TokenCredential?,
-    principal: Principal?,
+    principal: IamPrincipal?,
     context: AuthenticationContext,
     apiKeyName: String
 ) {
@@ -135,6 +141,7 @@ private fun validateResponse(
 
     if (principal != null) {
         context.principal(principal)
+        context.call.response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
     }
 }
 

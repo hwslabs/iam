@@ -1,4 +1,4 @@
-package com.hypto.iam.server.features.globalcalldata
+package com.hypto.iam.server.plugins.globalcalldata
 
 import io.ktor.server.application.ApplicationCall
 import kotlin.coroutines.CoroutineContext

@@ -913,11 +913,32 @@ paths:
     post:
       tags:
         - User Authorization
-      summary: Generate a token
-      description: Generate a token for the given user credential
-      operationId: getToken
+      summary: Generate a organization_id scoped token
+      description: Generate a token for the given user credential scoped by the provided organization_id
+      operationId: getTokenForOrg
       parameters:
         - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /token:
+    post:
+      tags:
+        - User Authorization
+      summary: Generate a token
+      description: Generate a token for the given user credential (same as /organizations/{organization_id}/token at the moment. Might change in future)
+      operationId: getToken
       responses:
         '200':
           $ref: '#/components/responses/TokenResponse'
@@ -1280,6 +1301,12 @@ components:
   responses:
     BaseSuccessResponse:
       description: OK
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1287,6 +1314,12 @@ components:
 
     ErrorResponse:
       description: Error response
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1299,6 +1332,12 @@ components:
 
     CreateOrganizationResponse:
       description: Response for Create Organization request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1309,6 +1348,12 @@ components:
 
     OrganizationResponse:
       description: Response for Get and Update Organization requests
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1319,6 +1364,12 @@ components:
 
     CreateUserResponse:
       description: Response for CreateUserRequest
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1329,6 +1380,12 @@ components:
 
     UpdateUserResponse:
       description: Response for UpdateUserRequest
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1339,6 +1396,12 @@ components:
 
     GetUserResponse:
       description: Response for GetUserRequest
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1349,6 +1412,12 @@ components:
 
     CreateCredentialResponse:
       description: Response for CreateCredentialRequest
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1359,6 +1428,12 @@ components:
 
     GetCredentialResponse:
       description: Response for GetCredentialRequest
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1369,6 +1444,12 @@ components:
 
     UpdateCredentialResponse:
       description: Response for UpdateCredentialRequest
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1379,6 +1460,12 @@ components:
 
     ResourceResponse:
       description: Response for resource requests returning a resource entity
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1389,6 +1476,12 @@ components:
 
     ActionResponse:
       description: Response for action requests returning an action entity
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1399,6 +1492,12 @@ components:
 
     PolicyResponse:
       description: Response for policy requests returning an policy entity
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1409,6 +1508,12 @@ components:
 
     GetUserPoliciesResponse:
       description: Response for list user policy API
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1419,6 +1524,12 @@ components:
 
     TokenResponse:
       description: Response for generate token request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1426,9 +1537,19 @@ components:
           examples:
             TokenResponse:
               $ref: '#/components/examples/TokenResponse'
+        text/plain:
+          schema:
+            type: string
+          example: XlK5h64gNDBfMXAPKKGRmWjaxmXJJzDKIJNWqSWj
 
     ValidationResponse:
       description: Response for validation request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1439,6 +1560,12 @@ components:
 
     UserPaginatedResponse:
       description: Response for list users request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1449,6 +1576,12 @@ components:
 
     PolicyPaginatedResponse:
       description: Response for list policies request and list policies for user request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1459,6 +1592,12 @@ components:
 
     ResourcePaginatedResponse:
       description: Response for list resources request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1469,6 +1608,12 @@ components:
 
     ActionPaginatedResponse:
       description: Response for list actions request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:
@@ -1479,6 +1624,12 @@ components:
 
     KeyResponse:
       description: Response for key request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
       content:
         application/json:
           schema:

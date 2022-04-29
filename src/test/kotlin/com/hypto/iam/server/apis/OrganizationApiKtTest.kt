@@ -1,6 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Constants
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.handleRequest
@@ -24,6 +25,7 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.coEvery
 import io.mockk.verify
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -165,6 +167,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             ) {
                 assertEquals(HttpStatusCode.Unauthorized, response.status())
                 assertFalse(response.headers.contains(HttpHeaders.ContentType))
+                assertNull(response.headers[Constants.X_ORGANIZATION_HEADER])
                 assertEquals(null, response.content)
             }
 

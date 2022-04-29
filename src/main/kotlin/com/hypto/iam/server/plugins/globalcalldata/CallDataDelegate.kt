@@ -1,4 +1,4 @@
-package com.hypto.iam.server.features.globalcalldata
+package com.hypto.iam.server.plugins.globalcalldata
 
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KProperty
