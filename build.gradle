@@ -407,4 +407,4 @@ tasks.named('generateJooq').configure {
     allInputsDeclared = true
 }
 
-compileKotlin.dependsOn clean, generateJooq, installGitHooks
+compileKotlin.dependsOn clean, generateJooq
