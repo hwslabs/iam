@@ -25,15 +25,21 @@ import io.ktor.server.response.respondText
 import java.security.SignatureException
 import org.jooq.exception.DataAccessException
 
+val set = mutableSetOf<Any>()
 inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
     statusCode: HttpStatusCode,
     shouldThrowException: Boolean = false,
     message: String? = null
 ) {
+    set.add(T::class)
     exception<T> { call, cause ->
+        val exceptionKnown: Boolean = set.contains(cause::class)
         val response = ErrorResponse(
             message
-                ?: if (statusCode.value < HttpStatusCode.InternalServerError.value && cause.message != null) {
+                ?: if (
+                    statusCode.value < HttpStatusCode.InternalServerError.value &&
+                    cause.message != null &&
+                    exceptionKnown) {
                     cause.message!!
                 } else {
                     "Unknown Error Occurred"
@@ -42,7 +48,7 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = statusCode
+            status = if (exceptionKnown) { statusCode } else { HttpStatusCode.InternalServerError }
         )
         shouldThrowException && throw cause
     }
