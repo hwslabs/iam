@@ -1,6 +1,6 @@
 package com.hypto.iam.server.configs
 
-import com.sksamuel.hoplite.ConfigLoader
+import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.sources.EnvironmentVariablesPropertySource
 
 data class AppConfig(val app: App, val server: Server, val database: Database, val newrelic: Newrelic, val aws: Aws) {
@@ -95,10 +95,9 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
     data class Aws(val region: String, val accessKey: String, val secretKey: String)
 
     companion object {
-        private val configLoader = ConfigLoader.builder().addPropertySource(EnvironmentVariablesPropertySource(
-            useUnderscoresAsSeparator = true,
-            allowUppercaseNames = true
-        )).build()
-        val configuration: AppConfig = configLoader.loadConfigOrThrow("/default_config.json")
+        val configuration: AppConfig = ConfigLoaderBuilder.default()
+            .addPropertySource(
+                EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true)
+            ).report().build().loadConfigOrThrow("/default_config.json")
     }
 }
