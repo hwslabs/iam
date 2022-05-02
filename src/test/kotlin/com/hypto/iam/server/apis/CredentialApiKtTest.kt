@@ -17,6 +17,9 @@ import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
+import io.mockk.coEvery
+import io.mockk.mockk
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -25,6 +28,26 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.koin.test.mock.declareMock
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AddCustomAttributesRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolClientType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 
 internal class CredentialApiKtTest : AbstractContainerBaseTest() {
     private val gson = Gson()
@@ -141,8 +164,86 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 ) {
                     Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
                     Assertions.assertEquals(
-                        Json.withCharset(UTF_8),
-                        response.contentType()
+                        Json.withCharset(UTF_8), response.contentType()
+                    )
+                }
+
+                DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+            }
+        }
+
+        @Test
+        fun `create credential of invalid user - failure`() {
+            val userName = "invalidUserName"
+
+            // Override the cognito mock to throw error for invalid username
+            declareMock<CognitoIdentityProviderClient> {
+                coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
+                    val result = CreateUserPoolResponse.builder()
+                        .userPool(UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build()).build()
+                    result
+                }
+                coEvery { this@declareMock.adminCreateUser(any<AdminCreateUserRequest>()) } coAnswers {
+                    AdminCreateUserResponse.builder()
+                        .user(
+                            UserType.builder().attributes(listOf())
+                                .username(firstArg<AdminCreateUserRequest>().username())
+                                .userCreateDate(Instant.now())
+                                .attributes(firstArg<AdminCreateUserRequest>().userAttributes())
+                                .build()
+                        )
+                        .build()
+                }
+                coEvery { this@declareMock.adminInitiateAuth(any<AdminInitiateAuthRequest>()) } coAnswers {
+                    AdminInitiateAuthResponse.builder()
+                        .session("").build()
+                }
+                coEvery { this@declareMock.createUserPoolClient(any<CreateUserPoolClientRequest>()) } coAnswers {
+                    CreateUserPoolClientResponse.builder()
+                        .userPoolClient(UserPoolClientType.builder().clientId("12345").build()).build()
+                }
+                coEvery {
+                    this@declareMock.adminRespondToAuthChallenge(
+                        any<AdminRespondToAuthChallengeRequest>()
+                    )
+                } returns mockk()
+                coEvery {
+                    this@declareMock.adminGetUser(match<AdminGetUserRequest>
+                    { it.username() == userName })
+                } throws UserNotFoundException.builder().message("User does not exist.").build()
+                coEvery {
+                    this@declareMock.adminGetUser(match<AdminGetUserRequest>
+                    { it.username() != userName })
+                } coAnswers {
+                    AdminGetUserResponse.builder()
+                        .enabled(true)
+                        .userAttributes(listOf())
+                        .username(firstArg<AdminGetUserRequest>().username())
+                        .userCreateDate(Instant.now())
+                        .build()
+                }
+                coEvery { this@declareMock.addCustomAttributes(any<AddCustomAttributesRequest>()) } returns mockk()
+                coEvery { this@declareMock.deleteUserPool(any<DeleteUserPoolRequest>()) } returns DeleteUserPoolResponse
+                    .builder().build()
+            }
+
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val createdOrganization = createdOrganizationResponse.organization!!
+                val createdCredentials = createdOrganizationResponse.adminUserCredential!!
+
+                val expiry = LocalDateTime.now().plusDays(1)
+                val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                with(handleRequest(
+                    HttpMethod.Post, "/organizations/${createdOrganization.id}/users/$userName/credentials"
+                ) {
+                    addHeader(HttpHeaders.ContentType, Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    setBody(gson.toJson(requestBody))
+                }) {
+                    Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
+                    Assertions.assertEquals(
+                        Json.withCharset(UTF_8), response.contentType()
                     )
                 }
 
