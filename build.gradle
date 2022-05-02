@@ -125,7 +125,7 @@ configurations {
 
 flyway {
     configurations = ['flywayMigration']
-    user = System.getenv("database__user") ?: "root"
+    user = System.getenv("database__username") ?: "root"
     password = System.getenv("database__password") ?: "password"
     url = "jdbc:postgresql://${System.getenv("database__host") ?: "localhost"}:${System.getenv("database__port") ?: "5435"}/iam"
 }
