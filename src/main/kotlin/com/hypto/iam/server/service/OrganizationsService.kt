@@ -102,7 +102,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             logger.error(e) { "Exception when creating organization. Rolling back..." }
 
             identityProvider.deleteIdentityGroup(identityGroup)
-            throw e
+            throw e.cause ?: e
         }
     }
 
