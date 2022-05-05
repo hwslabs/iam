@@ -77,7 +77,7 @@ class UserApiTest : AbstractContainerBaseTest() {
     fun `get user request success case`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash1",
             email = testEmail,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
@@ -147,7 +147,7 @@ class UserApiTest : AbstractContainerBaseTest() {
     fun `delete user success case`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash1",
             email = testEmail,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
@@ -184,12 +184,12 @@ class UserApiTest : AbstractContainerBaseTest() {
     fun `list users`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest1 = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash1",
             email = testEmail,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
         val createUserRequest2 = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash2",
             email = testEmail,
             status = CreateUserRequest.Status.active,
             phone = "+919626012778")
@@ -241,7 +241,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
 
             val createUserRequest = CreateUserRequest(username = "testUserName",
-                passwordHash = "testPasswordHash",
+                passwordHash = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.active,
                 phone = "+919626012778")

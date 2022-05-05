@@ -25,7 +25,8 @@ data class User(
     val username: String,
     val organizationId: String,
     val email: String,
-    val status: Status
+    val status: Status,
+    val verified: Boolean
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

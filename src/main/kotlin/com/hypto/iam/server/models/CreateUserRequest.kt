@@ -21,11 +21,12 @@ import java.io.Serializable
  * @param phone
  */
 data class CreateUserRequest(
-    val username: kotlin.String,
-    val passwordHash: kotlin.String,
-    val email: kotlin.String,
-    val status: CreateUserRequest.Status,
-    val phone: kotlin.String? = null
+    val username: String,
+    val passwordHash: String,
+    val email: String,
+    val status: Status,
+    val phone: String? = null,
+    val verified: Boolean? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
@@ -34,7 +35,7 @@ data class CreateUserRequest(
     *
     * Values: active,inactive
     */
-    enum class Status(val value: kotlin.String) {
+    enum class Status(val value: String) {
         active("active"),
         inactive("inactive");
     }

@@ -47,7 +47,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, credentials.userName)
         val user = identityProvider.createUser(
-            RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user"),
+            RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user", verified),
             identityGroup, credentials
         )
         userRepo.insert(
@@ -96,15 +96,16 @@ class UsersServiceImpl : KoinComponent, UsersService {
         username = user.username,
         organizationId = userHrn.organization,
         email = user.email,
-        status = if (user.isEnabled) User.Status.enabled else User.Status.disabled
+        status = if (user.isEnabled) User.Status.enabled else User.Status.disabled,
+        verified = user.verified
     )
 
     override suspend fun updateUser(
         organizationId: String,
         userName: String,
-        email: String,
         phone: String,
-        status: UpdateUserRequest.Status?
+        status: UpdateUserRequest.Status?,
+        verified: Boolean?
     ): User {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
@@ -113,8 +114,14 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userStatus = status?.toUserStatus()
         val user = identityProvider.updateUser(
             identityGroup = identityGroup,
-            userName = userName, email = email, phone = phone, status = userStatus
+            userName = userName, phone = phone,
+            status = userStatus, verified = verified
         )
+
+        val repoUser = userRepo.findByHrn(userHrn.toString(), organizationId)
+            ?: throw EntityNotFoundException("User not found")
+        userRepo.update(repoUser.hrn, userStatus, verified)
+
         return getUser(userHrn, user)
     }
 
@@ -123,6 +130,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.deleteUser(identityGroup, userName)
+
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
+        val repoUser = userRepo.findByHrn(userHrn.toString(), organizationId)
+            ?: throw EntityNotFoundException("User not found")
+        userRepo.delete(repoUser.hrn)
+
         return BaseSuccessResponse(true)
     }
 
@@ -154,9 +167,9 @@ interface UsersService {
     suspend fun updateUser(
         organizationId: String,
         userName: String,
-        email: String,
         phone: String,
-        status: UpdateUserRequest.Status? = null
+        status: UpdateUserRequest.Status? = null,
+        verified: Boolean?
     ): User
 
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse

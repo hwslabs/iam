@@ -11,6 +11,7 @@ import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_CREATED_BY
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
 import io.ktor.server.plugins.BadRequestException
 import mu.KotlinLogging
@@ -21,6 +22,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AddCustomAt
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisableUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
@@ -47,6 +49,7 @@ object CognitoConstants {
     const val ATTRIBUTE_EMAIL = "email"
     const val ATTRIBUTE_PHONE = "phone_number"
     const val ATTRIBUTE_CREATED_BY = "createdBy"
+    const val ATTRIBUTE_VERIFIED = "verified"
     const val ATTRIBUTE_PREFIX_CUSTOM = "custom:"
     const val ACTION_SUPPRESS = "SUPPRESS"
     const val APP_CLIENT_NAME = "iam-client"
@@ -84,6 +87,9 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                             .maxLength("100")
                             .minLength("3").build()
                     )
+                    .build(),
+                SchemaAttributeType.builder().name(ATTRIBUTE_VERIFIED)
+                    .attributeDataType(AttributeDataType.BOOLEAN)
                     .build()
             )
                 .build()
@@ -158,6 +164,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 loginAccess = true,
                 isEnabled = response.enabled(),
                 createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
+                verified = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED).toBoolean(),
                 createdAt = response.userCreateDate().toString()
             )
         } catch (e: UserNotFoundException) {
@@ -172,27 +179,35 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     override suspend fun updateUser(
         identityGroup: IdentityGroup,
         userName: String,
-        email: String,
         phone: String,
-        status: com.hypto.iam.server.models.User.Status?
+        status: com.hypto.iam.server.models.User.Status?,
+        verified: Boolean?
     ): User {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
-        if (status == com.hypto.iam.server.models.User.Status.disabled) {
-            val request = AdminDisableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
-            cognitoClient.adminDisableUser(request)
+
+        when (status) {
+            com.hypto.iam.server.models.User.Status.disabled -> {
+                val request = AdminDisableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
+                cognitoClient.adminDisableUser(request)
+            }
+            com.hypto.iam.server.models.User.Status.enabled -> {
+                val request = AdminEnableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
+                cognitoClient.adminEnableUser(request)
+            }
+            else -> {}
         }
         val attrs = mutableListOf<AttributeType>()
-        if (email.isNotEmpty())
-            attrs.add(
-                AttributeType.builder()
-                    .name(ATTRIBUTE_EMAIL)
-                    .value(email).build()
-            )
         if (phone.isNotEmpty())
             attrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_PHONE)
                     .value(phone).build()
+            )
+        if (verified != null)
+            attrs.add(
+                AttributeType.builder()
+                    .name(ATTRIBUTE_VERIFIED)
+                    .value(verified.toString()).build()
             )
         val response = AdminUpdateUserAttributesRequest.builder().userAttributes(attrs)
         return getUser(identityGroup, userName)
@@ -212,13 +227,16 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         val createdBy = AttributeType.builder()
             .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY)
             .value(context.requestedPrincipal).build()
+        val verified = AttributeType.builder()
+            .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED)
+            .value(context.verified.toString()).build()
 
         // Creates user in cognito
         val userRequest = AdminCreateUserRequest.builder()
             .userPoolId(identityGroup.id)
             .username(credentials.userName)
             .temporaryPassword(credentials.password)
-            .userAttributes(emailAttr, phoneNumberAttr, createdBy)
+            .userAttributes(emailAttr, phoneNumberAttr, createdBy, verified)
             .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
             .build()
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
@@ -235,6 +253,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             loginAccess = true,
             isEnabled = true,
             createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
+            verified = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED).toBoolean(),
             createdAt = adminCreateUserResponse.user().userCreateDate().toString()
         )
     }
@@ -284,6 +303,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                     loginAccess = true,
                     isEnabled = user.userStatus() != UserStatusType.ARCHIVED,
                     createdBy = getAttribute(user.attributes(), ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
+                    verified = getAttribute(user.attributes(),
+                        ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED).toBoolean(),
                     createdAt = user.userCreateDate().toString()
                 )
             }.toList()
