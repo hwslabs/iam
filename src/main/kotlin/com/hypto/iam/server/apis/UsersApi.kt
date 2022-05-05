@@ -49,7 +49,8 @@ fun Route.usersApi() {
             val user = usersService.createUser(
                 organizationId = organizationId,
                 credentials = passwordCredentials,
-                createdBy = call.principal<UserPrincipal>()?.hrnStr
+                createdBy = call.principal<UserPrincipal>()?.hrnStr,
+                verified = false
             )
             call.respondText(
                 text = gson.toJson(user),

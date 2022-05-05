@@ -77,7 +77,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                         email = adminUser.email,
                         phoneNumber = adminUser.phone, password = adminUser.passwordHash
                     ),
-                    createdBy = "iam-system"
+                    createdBy = "iam-system",
+                    verified = true
                 )
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`

@@ -18,20 +18,14 @@ import java.io.Serializable
  * @param username
  * @param organizationId
  * @param email
- * @param phone
  * @param status
- * @param loginAccess
- * @param createdBy
  */
 data class User(
-    val hrn: kotlin.String,
-    val username: kotlin.String,
-    val organizationId: kotlin.String,
-    val email: kotlin.String,
-    val phone: kotlin.String,
-    val status: User.Status,
-    val loginAccess: kotlin.Boolean? = null,
-    val createdBy: kotlin.String? = null
+    val hrn: String,
+    val username: String,
+    val organizationId: String,
+    val email: String,
+    val status: Status
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
@@ -40,7 +34,7 @@ data class User(
     *
     * Values: enabled,disabled
     */
-    enum class Status(val value: kotlin.String) {
+    enum class Status(val value: String) {
         enabled("enabled"),
         disabled("disabled");
     }

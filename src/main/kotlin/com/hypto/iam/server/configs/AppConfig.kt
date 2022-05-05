@@ -45,7 +45,8 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val oldKeyTtl: Long,
         val secretKey: String,
         val signKeyFetchInterval: Long,
-        val cacheRefreshInterval: Long
+        val cacheRefreshInterval: Long,
+        val uniqueUsersAcrossOrg: Boolean
     ) {
         val isDevelopment: Boolean
             get() = env == Environment.Development
