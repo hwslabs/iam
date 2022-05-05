@@ -76,6 +76,11 @@ tags:
     externalDocs:
       description: "docs"
       url: "http://hypto.com/docs/iam/SignInApi"
+  - name: "Passcode Management"
+    description: "APIs for verifying emails and forgot passwords"
+    externalDocs:
+      description: "docs"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/PasscodeManagement.md"
 
 paths:
   # organization
@@ -994,6 +999,21 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       security: [ ]
 
+  /verifyEmail:
+    post:
+      tags:
+        - Passcode Management
+      summary: Verify email
+      description: Verify email during account opening
+      operationId: verifyEmail
+      requestBody:
+        $ref: '#/components/requestBodies/VerifyEmailRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 
 security:
   - bearerAuth: [ ]
@@ -1297,6 +1317,17 @@ components:
           examples:
             ValidationRequest:
               $ref: '#/components/examples/ValidationRequest'
+
+    VerifyEmailRequest:
+      description: Payload to send verification link to email
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VerifyEmailRequest'
+          examples:
+            VerifyEmailRequest:
+              $ref: '#/components/examples/VerifyEmailRequest'
 
   responses:
     BaseSuccessResponse:
@@ -1645,6 +1676,7 @@ components:
       value:
         name: ACME Enterprise
         description: Brief description about ACME
+        passcode: YjhhMWRlN2UtOGI4OC00ZmUxLTk2M2MtNDg2YzU1N2Q2NmE0
         adminUser:
           username: username
           password: <password>
@@ -1750,9 +1782,7 @@ components:
         salterPassword: wnr1782qbt52igbiuwbcgeuyiy==egryg123iuoh1109877t2i313489rge
     VerifyEmailRequest:
       value:
-        username: Bob
-        # TODO: correct capthaToken example value
-        captchaToken: asdfg
+        email: abcd@abcd.in
 
     # Response examples
 
@@ -1982,6 +2012,7 @@ components:
       additionalProperties: false
       required:
         - name
+        - passcode
         - adminUser
       properties:
         name:
@@ -1991,6 +2022,9 @@ components:
         description:
           type: string
           maxLength: 500
+        passcode:
+          type: string
+          maxLength: 50
         adminUser:
           $ref: '#/components/schemas/AdminUser'
 
@@ -2206,6 +2240,16 @@ components:
           maxItems: 50
           items:
             $ref: "#/components/schemas/ResourceAction"
+
+    VerifyEmailRequest:
+      description: Payload to send verification link to email
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
 
 
     # Responses:

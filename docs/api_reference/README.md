@@ -12,6 +12,7 @@ Class | Method | HTTP request | Description
 *OrganizationManagementApi* | [**deleteOrganization**](Apis/OrganizationManagementApi.md#deleteorganization) | **DELETE** /organizations/{organization_id} | Delete an organization
 *OrganizationManagementApi* | [**getOrganization**](Apis/OrganizationManagementApi.md#getorganization) | **GET** /organizations/{organization_id} | Get an organization
 *OrganizationManagementApi* | [**updateOrganization**](Apis/OrganizationManagementApi.md#updateorganization) | **PATCH** /organizations/{organization_id} | Update an organization
+*PasscodeManagementApi* | [**verifyEmail**](Apis/PasscodeManagementApi.md#verifyemail) | **POST** /verifyEmail | Verify email
 *PolicyManagementApi* | [**createPolicy**](Apis/PolicyManagementApi.md#createpolicy) | **POST** /organizations/{organization_id}/policies | Create a policy
 *PolicyManagementApi* | [**deletePolicy**](Apis/PolicyManagementApi.md#deletepolicy) | **DELETE** /organizations/{organization_id}/policies/{policy_name} | Delete a policy
 *PolicyManagementApi* | [**getPolicy**](Apis/PolicyManagementApi.md#getpolicy) | **GET** /organizations/{organization_id}/policies/{policy_name} | Get a policy
@@ -85,6 +86,7 @@ Class | Method | HTTP request | Description
  - [UserPolicy](./Models/UserPolicy.md)
  - [ValidationRequest](./Models/ValidationRequest.md)
  - [ValidationResponse](./Models/ValidationResponse.md)
+ - [VerifyEmailRequest](./Models/VerifyEmailRequest.md)
 
 
 <a name="documentation-for-authorization"></a>

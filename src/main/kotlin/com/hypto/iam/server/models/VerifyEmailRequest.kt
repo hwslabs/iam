@@ -13,17 +13,11 @@ package com.hypto.iam.server.models
 
 import java.io.Serializable
 /**
- * Payload to create organization
- * @param name
- * @param passcode
- * @param adminUser
- * @param description
+ * Payload to send verification link to email
+ * @param email
  */
-data class CreateOrganizationRequest(
-    val name: kotlin.String,
-    val passcode: kotlin.String,
-    val adminUser: AdminUser,
-    val description: kotlin.String? = null
+data class VerifyEmailRequest(
+    val email: kotlin.String
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

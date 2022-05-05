@@ -27,6 +27,7 @@ import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.models.UpdateResourceRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.ValidationRequest
+import com.hypto.iam.server.models.VerifyEmailRequest
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxItems
 import io.konform.validation.jsonschema.maxLength
@@ -44,6 +45,9 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
         // Name is mandatory parameter and max length should be 50
         CreateOrganizationRequest::name required {
             run(nameCheck)
+        }
+        CreateOrganizationRequest::passcode required {
+            run(passcodeCheck)
         }
         CreateOrganizationRequest::adminUser required {
             run(adminUserRequestValidation)
@@ -214,6 +218,14 @@ fun UpdateUserRequest.validate(): UpdateUserRequest {
     }.validateAndThrowOnFailure(this)
 }
 
+fun VerifyEmailRequest.validate(): VerifyEmailRequest {
+    return Validation<VerifyEmailRequest> {
+        VerifyEmailRequest::email required {
+            run(emailCheck)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
 // Validations used by ValidationBuilders
 
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
@@ -225,7 +237,9 @@ const val EMAIL_REGEX = "^\\S+@\\S+\\.\\S+\$"
 const val EMAIL_REGEX_HINT = "Email should contain `.`, `@`"
 const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@_#])[A-Za-z\\d@_#]{8,}\$"
 const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase letter, " +
-                                "one lowercase letter, one number and one special character[@ _ #]"
+    "one lowercase letter, one number and one special character[@ _ #]"
+const val PASSCODE_REGEX = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\$"
+const val PASSCODE_REGEX_HINT = "Passcode should be a valid UUID"
 
 val nameCheck = Validation<String> {
     minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
@@ -235,7 +249,7 @@ val nameCheck = Validation<String> {
 }
 
 val phoneNumberCheck = Validation<String> {
-    minLength(Constants.MINIMUM_PHONE_NUMBER_LENGTH)hint "Minimum length expected " +
+    minLength(Constants.MINIMUM_PHONE_NUMBER_LENGTH) hint "Minimum length expected " +
         "is ${Constants.MINIMUM_PHONE_NUMBER_LENGTH}"
     pattern(PHONE_NUMBER_REGEX) hint PHONE_NUMBER_REGEX_HINT
 }
@@ -258,6 +272,10 @@ val descriptionCheck = Validation<String> {
 
 val hrnCheck = Validation<String> {
     pattern(HRN_PREFIX_REGEX) hint "HRN must start with a valid organization Id"
+}
+
+val passcodeCheck = Validation<String> {
+    pattern(PASSCODE_REGEX) hint PASSCODE_REGEX_HINT
 }
 
 val policyStatementValidation = Validation<PolicyStatement> {

@@ -20,10 +20,11 @@ import org.koin.test.mock.declareMock
 
 class ExceptionHandlerTest : AbstractContainerBaseTest() {
     private val gson = Gson()
+
     @Test
     fun `StatusPage - Respond to unhandled exceptions with statusCode_500 and custom error message`() {
         declareMock<OrganizationsService> {
-            coEvery { this@declareMock.createOrganization(any(), any(), any()) } coAnswers {
+            coEvery { this@declareMock.createOrganization(any(), any(), any(), any()) } coAnswers {
                 // Some exception which is not handled by Status Pages
                 throw NumberFormatException()
             }
@@ -35,9 +36,11 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val passcode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
+                passcode,
                 AdminUser(userName, testPassword, testEmail, testPhone)
             )
             with(

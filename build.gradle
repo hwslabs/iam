@@ -371,8 +371,9 @@ dependencies {
 
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.17.143')
-    implementation ("software.amazon.awssdk:cognitoidentity")
-    implementation ("software.amazon.awssdk:cognitoidentityprovider")
+    implementation("software.amazon.awssdk:cognitoidentity")
+    implementation("software.amazon.awssdk:cognitoidentityprovider")
+    implementation("software.amazon.awssdk:ses")
 
     // TxMan
     implementation("com.github.hwslabs:txman:0.1.0")

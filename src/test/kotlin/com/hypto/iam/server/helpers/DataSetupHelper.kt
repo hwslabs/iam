@@ -52,6 +52,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
             val testEmail = "test-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val testPasscode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
 
             val adminUser = AdminUser(
                 username = userName,
@@ -67,6 +68,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
+                            testPasscode,
                             adminUser
                         )
                     )

@@ -46,9 +46,11 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val testPasscode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
             lateinit var orgId: String
             val requestBody = CreateOrganizationRequest(
                 orgName,
+                testPasscode,
                 AdminUser(userName, testPassword, testEmail, testPhone)
             )
             with(
@@ -79,6 +81,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val testPasscode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -87,6 +90,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         gson.toJson(
                             CreateOrganizationRequest(
                                 orgName,
+                                testPasscode,
                                 AdminUser(userName, testPassword, testEmail, testPhone)
                             )
                         )
@@ -116,9 +120,11 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val testPasscode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
+                testPasscode,
                 AdminUser(userName, testPassword, testEmail, testPhone)
             )
             with(
@@ -144,6 +150,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val testPasscode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
@@ -151,6 +158,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
+                            testPasscode,
                             AdminUser(userName, testPassword, testEmail, testPhone)
                         )
                     )
@@ -183,6 +191,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val testPasscode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 addHeader("X-Api-Key", rootToken)
@@ -190,6 +199,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
+                            testPasscode,
                             AdminUser(userName, testPassword, testEmail, testPhone)
                         )
                     )
@@ -224,6 +234,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val testPasscode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
             // Create organization
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -232,6 +243,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
+                            testPasscode,
                             AdminUser(userName, testPassword, testEmail, testPhone)
                         )
                     )

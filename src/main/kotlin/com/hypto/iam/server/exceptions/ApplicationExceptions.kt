@@ -15,3 +15,5 @@ class InvalidJwtException(s: String, ex: Exception? = null) : Exception(s, ex)
 class PolicyFormatException(s: String, ex: Exception? = null) : Exception(s, ex)
 
 class PublicKeyExpiredException(s: String, ex: Exception? = null) : Exception(s, ex)
+
+class PasscodeExpiredException(s: String, ex: Exception? = null) : Exception(s, ex)

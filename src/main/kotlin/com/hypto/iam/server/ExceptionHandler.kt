@@ -4,6 +4,7 @@ import com.hypto.iam.server.db.listeners.DeleteOrUpdateWithoutWhereException
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.exceptions.PasscodeExpiredException
 import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
@@ -39,7 +40,8 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
                 ?: if (
                     statusCode.value < HttpStatusCode.InternalServerError.value &&
                     cause.message != null &&
-                    exceptionKnown) {
+                    exceptionKnown
+                ) {
                     cause.message!!
                 } else {
                     "Unknown Error Occurred"
@@ -48,7 +50,11 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = if (exceptionKnown) { statusCode } else { HttpStatusCode.InternalServerError }
+            status = if (exceptionKnown) {
+                statusCode
+            } else {
+                HttpStatusCode.InternalServerError
+            }
         )
         shouldThrowException && throw cause
     }
@@ -63,6 +69,7 @@ fun StatusPagesConfig.statusPages() {
     sendStatus<OrganizationAlreadyExistException>(HttpStatusCode.BadRequest)
     sendStatus<EntityNotFoundException>(HttpStatusCode.NotFound)
     sendStatus<UserNotFoundException>(HttpStatusCode.NotFound)
+    sendStatus<PasscodeExpiredException>(HttpStatusCode.NotFound)
     sendStatus<UnsupportedJwtException>(HttpStatusCode.BadRequest)
     sendStatus<MalformedJwtException>(HttpStatusCode.BadRequest)
     sendStatus<SignatureException>(HttpStatusCode.BadRequest)

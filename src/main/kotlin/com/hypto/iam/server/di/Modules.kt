@@ -6,6 +6,7 @@ import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
@@ -19,6 +20,8 @@ import com.hypto.iam.server.service.CredentialServiceImpl
 import com.hypto.iam.server.service.MasterKeyCache
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.service.OrganizationsServiceImpl
+import com.hypto.iam.server.service.PasscodeService
+import com.hypto.iam.server.service.PasscodeServiceImpl
 import com.hypto.iam.server.service.PolicyService
 import com.hypto.iam.server.service.PolicyServiceImpl
 import com.hypto.iam.server.service.ResourceService
@@ -47,6 +50,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import software.amazon.awssdk.services.ses.SesClient
 
 // DI module to get repositories
 val repositoryModule = module {
@@ -58,6 +62,7 @@ val repositoryModule = module {
     single { ActionRepo }
     single { UserAuthProvidersRepo }
     single { UserPoliciesRepo }
+    single { PasscodeRepo }
 }
 
 val controllerModule = module {
@@ -71,6 +76,7 @@ val controllerModule = module {
     single { ActionServiceImpl() } bind ActionService::class
     single { UsersServiceImpl() } bind UsersService::class
     single { UserPrincipalServiceImpl() } bind UserPrincipalService::class
+    single { PasscodeServiceImpl() } bind PasscodeService::class
 }
 
 val applicationModule = module {
@@ -83,9 +89,14 @@ val applicationModule = module {
     single { AppConfig.configuration }
     single { MasterKeyCache }
     single { CognitoIdentityProviderImpl() } bind IdentityProvider::class
-    single { getCredentialsProvider(get<AppConfig>().aws.accessKey,
-        get<AppConfig>().aws.secretKey) } bind AwsCredentialsProvider::class
+    single {
+        getCredentialsProvider(
+            get<AppConfig>().aws.accessKey,
+            get<AppConfig>().aws.secretKey
+        )
+    } bind AwsCredentialsProvider::class
     single { getCognitoIdentityProviderClient(get<AppConfig>().aws.region, get()) }
+    single { getSesClient(get<AppConfig>().aws.region, get()) }
     single { TxMan(com.hypto.iam.server.service.DatabaseFactory.getConfiguration()) }
 }
 
@@ -94,6 +105,11 @@ fun getCognitoIdentityProviderClient(
     credentialsProvider: AwsCredentialsProvider
 ): CognitoIdentityProviderClient =
     CognitoIdentityProviderClient.builder().region(Region.of(region)).credentialsProvider(credentialsProvider).build()
+
+fun getSesClient(
+    region: String,
+    credentialsProvider: AwsCredentialsProvider
+): SesClient = SesClient.builder().region(Region.of(region)).credentialsProvider(credentialsProvider).build()
 
 fun getCredentialsProvider(accessKey: String, secretKey: String): StaticCredentialsProvider =
     StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey))

@@ -12,10 +12,12 @@ import org.koin.test.junit5.AutoCloseKoinTest
 import org.koin.test.junit5.KoinTestExtension
 import org.koin.test.junit5.mock.MockProviderExtension
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import software.amazon.awssdk.services.ses.SesClient
 
 abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
     protected var rootToken: String = ""
     protected lateinit var cognitoClient: CognitoIdentityProviderClient
+    protected lateinit var sesClient: SesClient
 
     @JvmField
     @RegisterExtension
@@ -30,7 +32,9 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
     @BeforeEach
     fun setup() {
         rootToken = getKoinInstance<AppConfig>().app.secretKey
+        mockPasscodeRepo()
         cognitoClient = mockCognitoClient()
+        sesClient = mockSesClient()
     }
 
     init {
