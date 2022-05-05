@@ -7,13 +7,13 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.exceptions.EntityNotFoundException
-import com.hypto.iam.server.exceptions.UserExistsException
 import com.hypto.iam.server.extensions.toUserStatus
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.NextToken
 import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.idp.RequestContext
+import com.hypto.iam.server.idp.UserAlreadyExistException
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateUserRequest
@@ -40,10 +40,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
 
-        if ((appConfig.app.uniqueUsersAcrossOrg && userRepo.existsByEmail(credentials.email)) ||
-            userRepo.existsByEmailInOrg(credentials.email, organizationId)
-        ) {
-            throw UserExistsException("Email - ${credentials.email} already registered. Unable to create user")
+        if (userRepo.exists(credentials.email, organizationId, appConfig.app.uniqueUsersAcrossOrganizations)) {
+            throw UserAlreadyExistException("Email - ${credentials.email} already registered. Unable to create user")
         }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)

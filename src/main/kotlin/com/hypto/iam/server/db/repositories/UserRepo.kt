@@ -19,7 +19,11 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         dao().insert(user)
     }
 
-    suspend fun existsByEmail(email: String): Boolean {
+    suspend fun exists(email: String, organizationId: String, uniqueAcrossOrg: Boolean = false): Boolean {
+        return (uniqueAcrossOrg && existsByEmailAcrossOrg(email)) || existsByEmailInOrg(email, organizationId)
+    }
+
+    suspend fun existsByEmailAcrossOrg(email: String): Boolean {
         val dao = dao()
         return dao.ctx().fetchExists(
             dao.ctx().selectFrom(dao.table)
