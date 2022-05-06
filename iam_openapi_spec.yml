@@ -1013,6 +1013,7 @@ paths:
           $ref: '#/components/responses/BaseSuccessResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
+      security: [ ]
 
 
 security:
