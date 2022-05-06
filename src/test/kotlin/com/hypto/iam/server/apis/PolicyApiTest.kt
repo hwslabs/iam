@@ -42,7 +42,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     .createOrganization(this)
 
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.adminUserCredential!!
+                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
 
                 val policyName = "test-policy"
 
@@ -121,7 +121,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(
                         HttpHeaders.Authorization,
-                        "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                     )
                     setBody(gson.toJson(requestBody))
                 }
@@ -135,7 +135,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                         setBody(gson.toJson(requestBody))
                     }
@@ -166,7 +166,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                         setBody(gson.toJson(requestBody))
                     }
@@ -203,7 +203,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                         setBody(gson.toJson(requestBody))
                     }
@@ -224,7 +224,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     .createOrganization(this)
 
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.adminUserCredential!!
+                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
 
                 val policyName = "testPolicy"
 
@@ -288,7 +288,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(
                         HttpHeaders.Authorization,
-                        "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                     )
                     setBody(gson.toJson(requestBody))
                 }
@@ -304,7 +304,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -348,7 +348,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -393,7 +393,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                         setBody(gson.toJson(requestBody))
                     }
@@ -408,7 +408,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -436,7 +436,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
                                 HttpHeaders.Authorization,
-                                "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                                "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                             )
                         }
                     ) {
@@ -464,7 +464,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(
                                     HttpHeaders.Authorization,
-                                    "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                                    "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                                 )
                             }
                         ) {
@@ -501,7 +501,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -529,7 +529,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
                                 HttpHeaders.Authorization,
-                                "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                                "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                             )
                         }
                     ) {
@@ -584,7 +584,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                         )
                         setBody(gson.toJson(requestBody))
                     }
@@ -609,7 +609,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                         )
 
                         setBody(gson.toJson(updatePolicyRequest))
@@ -659,7 +659,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                         )
 
                         setBody(gson.toJson(updatePolicyRequest))
@@ -706,7 +706,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(
                         HttpHeaders.Authorization,
-                        "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                        "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                     )
                     setBody(gson.toJson(requestBody))
                 }
@@ -722,7 +722,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -751,7 +751,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -798,7 +798,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
                                 HttpHeaders.Authorization,
-                                "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                                "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                             )
                             setBody(gson.toJson(requestBody))
                         }
@@ -817,7 +817,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                                 addHeader(
                                     HttpHeaders.Authorization,
-                                    "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                                    "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                                 )
                                 setBody(gson.toJson(createAssociationRequest))
                             }
@@ -841,7 +841,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -869,7 +869,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -897,7 +897,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganizationResponse.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganizationResponse.rootUserCredential?.secret}"
                         )
                     }
                 ) {

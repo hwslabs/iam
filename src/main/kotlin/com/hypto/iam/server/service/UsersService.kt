@@ -6,6 +6,7 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.pojos.Users
+import com.hypto.iam.server.exceptions.ActionNotPermittedException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.toUserStatus
 import com.hypto.iam.server.idp.IdentityGroup
@@ -128,10 +129,13 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
+        org.rootUserHrn != userHrn.toString() ||
+            throw ActionNotPermittedException("Cannot delete Root User")
+
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.deleteUser(identityGroup, userName)
 
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         val repoUser = userRepo.findByHrn(userHrn.toString(), organizationId)
             ?: throw EntityNotFoundException("User not found")
         userRepo.delete(repoUser.hrn)

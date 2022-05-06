@@ -10,7 +10,7 @@ Apis/UserManagementApi.md
 Apis/UserPolicyManagementApi.md
 Models/Action.md
 Models/ActionPaginatedResponse.md
-Models/AdminUser.md
+Models/RootUser.md
 Models/BaseSuccessResponse.md
 Models/CreateActionRequest.md
 Models/CreateCredentialRequest.md

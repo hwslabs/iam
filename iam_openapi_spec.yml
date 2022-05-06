@@ -1645,10 +1645,10 @@ components:
       value:
         name: ACME Enterprise
         description: Brief description about ACME
-        adminUser:
+        rootUser:
           username: username
           password: <password>
-          email: admin@example.com
+          email: root@example.com
           phone: +1234567890
 
     UpdateOrganizationRequest:
@@ -1762,7 +1762,7 @@ components:
           id: XlK5h64gND
           name: ACME Enterprise
           description: Brief description about ACME
-        adminUserCredential:
+        rootUserCredential:
           id: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
           valid_until: 2023-01-01T00:00:00
           status: active
@@ -1866,7 +1866,7 @@ components:
         id: XlK5h64gND
         name: ACME Enterprise
         description: Brief description about ACME
-        adminUserHrn: "hrn:XlK5h64gND::iam-user/admin-user-name"
+        rootUserHrn: "hrn:XlK5h64gND::iam-user/root-user-name"
     User:
       summary: A sample user
       value:
@@ -1982,7 +1982,7 @@ components:
       additionalProperties: false
       required:
         - name
-        - adminUser
+        - rootUser
       properties:
         name:
           type: string
@@ -1991,8 +1991,8 @@ components:
         description:
           type: string
           maxLength: 500
-        adminUser:
-          $ref: '#/components/schemas/AdminUser'
+        rootUser:
+          $ref: '#/components/schemas/RootUser'
 
     UpdateOrganizationRequest:
       description: Payload to update organization
@@ -2007,9 +2007,9 @@ components:
           type: string
           maxLength: 500
 
-    AdminUser:
+    RootUser:
       type: object
-      description: Administrator user details for the organization
+      description: Root user details for the organization
       additionalProperties: false
       required:
         - username
@@ -2269,7 +2269,7 @@ components:
       properties:
         organization:
           $ref: "#/components/schemas/Organization"
-        adminUserCredential:
+        rootUserCredential:
           $ref: "#/components/schemas/Credential"
 
     UserPaginatedResponse:
@@ -2353,7 +2353,7 @@ components:
       required:
         - id
         - name
-        - adminUser
+        - rootUser
       properties:
         id:
           type: string
@@ -2364,7 +2364,7 @@ components:
         description:
           type: string
           maxLength: 500
-        adminUserHrn:
+        rootUserHrn:
           type: string
 
     User:

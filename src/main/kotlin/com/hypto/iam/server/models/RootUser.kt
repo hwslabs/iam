@@ -13,13 +13,13 @@ package com.hypto.iam.server.models
 
 import java.io.Serializable
 /**
- * Administrator user details for the organization
+ * Root user details for the organization
  * @param username
  * @param passwordHash
  * @param email
  * @param phone
  */
-data class AdminUser(
+data class RootUser(
     val username: String,
     val passwordHash: String,
     val email: String,

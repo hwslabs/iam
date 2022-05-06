@@ -33,7 +33,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val resourceName = "resource-name"
 
@@ -62,7 +62,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val resourceName = "resource-name"
             DataSetupHelper.createResource(organization.id, createdCredentials, this, resourceName)
@@ -88,11 +88,11 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse1, _) = DataSetupHelper.createOrganization(this)
             val organization1 = organizationResponse1.organization!!
-            val createdCredentials1 = organizationResponse1.adminUserCredential!!
+            val createdCredentials1 = organizationResponse1.rootUserCredential!!
 
             val (organizationResponse2, _) = DataSetupHelper.createOrganization(this)
             val organization2 = organizationResponse2.organization!!
-            val createdCredentials2 = organizationResponse2.adminUserCredential!!
+            val createdCredentials2 = organizationResponse2.rootUserCredential!!
 
             val resource = DataSetupHelper.createResource(organization1.id, createdCredentials1, this)
 
@@ -115,7 +115,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val resource = DataSetupHelper.createResource(organization.id, createdCredentials, this)
 
@@ -148,7 +148,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val resource1 = DataSetupHelper.createResource(organization.id, createdCredentials, this)
             val resource2 = DataSetupHelper.createResource(organization.id, createdCredentials, this)
@@ -176,7 +176,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val resource = DataSetupHelper.createResource(organization.id, createdCredentials, this)
             val newDescription = "new description"

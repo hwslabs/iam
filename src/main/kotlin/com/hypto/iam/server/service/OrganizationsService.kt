@@ -8,11 +8,11 @@ import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.PasswordCredentials
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
@@ -44,7 +44,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOrganization(
         name: String,
         description: String,
-        adminUser: AdminUser
+        rootUser: RootUser
     ): Pair<Organization, Credential> {
         val organizationId = idGenerator.organizationId()
 
@@ -62,30 +62,30 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                         ResourceHrn(
                             organization = organizationId,
                             resource = IamResources.USER,
-                            resourceInstance = adminUser.username
+                            resourceInstance = rootUser.username
                         ).toString(),
                         JSONB.jsonb(gson.toJson(identityGroup)),
                         LocalDateTime.now(), LocalDateTime.now()
                     )
                 )
 
-                // Create admin user for the organization
+                // Create root user for the organization
                 val user = usersService.createUser(
                     organizationId = organizationId,
                     credentials = PasswordCredentials(
-                        userName = adminUser.username,
-                        email = adminUser.email,
-                        phoneNumber = adminUser.phone, password = adminUser.passwordHash
+                        userName = rootUser.username,
+                        email = rootUser.email,
+                        phoneNumber = rootUser.phone, password = rootUser.passwordHash
                     ),
                     createdBy = "iam-system",
-                    verified = adminUser.verified ?: false
+                    verified = rootUser.verified ?: false
                 )
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
-                // Add policies for the admin user
+                // Add policies for the root user
                 val policyStatements = listOf(
-                    // TODO: Change organization admin's policy string to hrn:::iam-organization/$orgId
+                    // TODO: Change organization root user's policy string to hrn:::iam-organization/$orgId
                     PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
                     PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
                 )
@@ -95,7 +95,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     listOf(hrnFactory.getHrn(policy.hrn))
                 )
 
-                val credential = credentialService.createCredential(organizationId, adminUser.username)
+                val credential = credentialService.createCredential(organizationId, rootUser.username)
                 return@wrap Pair(organization, credential)
             }
         } catch (e: Exception) {
@@ -113,7 +113,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             id = response.id,
             name = response.name,
             description = response.description,
-            adminUserHrn = response.adminUserHrn
+            rootUserHrn = response.rootUserHrn
         )
     }
 
@@ -143,7 +143,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
  * Service which holds logic related to Organization operations
  */
 interface OrganizationsService {
-    suspend fun createOrganization(name: String, description: String, adminUser: AdminUser):
+    suspend fun createOrganization(name: String, description: String, rootUser: RootUser):
         Pair<Organization, Credential>
     suspend fun getOrganization(id: String): Organization
     suspend fun updateOrganization(id: String, name: String?, description: String?): Organization

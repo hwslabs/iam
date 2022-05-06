@@ -31,7 +31,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
             val resource = DataSetupHelper.createResource(organization.id, createdCredentials, this)
 
             with(
@@ -65,7 +65,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val (action, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
 
@@ -98,11 +98,11 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse1, _) = DataSetupHelper.createOrganization(this)
             val organization1 = organizationResponse1.organization!!
-            val createdCredentials1 = organizationResponse1.adminUserCredential!!
+            val createdCredentials1 = organizationResponse1.rootUserCredential!!
 
             val (organizationResponse2, _) = DataSetupHelper.createOrganization(this)
             val organization2 = organizationResponse2.organization!!
-            val createdCredentials2 = organizationResponse2.adminUserCredential!!
+            val createdCredentials2 = organizationResponse2.rootUserCredential!!
 
             val (action, resource) = DataSetupHelper.createAction(organization1.id, null, createdCredentials1, this)
 
@@ -131,7 +131,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val (action, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
 
@@ -170,7 +170,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val (action1, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
             val (action2, _) = DataSetupHelper.createAction(organization.id, resource, createdCredentials, this)
@@ -204,7 +204,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             val (action, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
             val newDescription = "new description"

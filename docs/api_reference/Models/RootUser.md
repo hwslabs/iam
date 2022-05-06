@@ -1,4 +1,4 @@
-# AdminUser
+# RootUser
 ## Properties
 
 Name | Type | Description | Notes

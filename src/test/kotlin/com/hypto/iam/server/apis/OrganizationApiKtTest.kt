@@ -7,10 +7,10 @@ import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -49,7 +49,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             lateinit var orgId: String
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                AdminUser(userName, testPassword, testEmail, testPhone, true)
+                RootUser(userName, testPassword, testEmail, testPhone, true)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -87,7 +87,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         gson.toJson(
                             CreateOrganizationRequest(
                                 orgName,
-                                AdminUser(userName, testPassword, testEmail, testPhone, true)
+                                RootUser(userName, testPassword, testEmail, testPhone, true)
                             )
                         )
                     )
@@ -119,7 +119,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                AdminUser(userName, testPassword, testEmail, testPhone, true)
+                RootUser(userName, testPassword, testEmail, testPhone, true)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -151,7 +151,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, testPassword, testEmail, testPhone, true)
+                            RootUser(userName, testPassword, testEmail, testPhone, true)
                         )
                     )
                 )
@@ -190,7 +190,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, testPassword, testEmail, testPhone, true)
+                            RootUser(userName, testPassword, testEmail, testPhone, true)
                         )
                     )
                 )
@@ -201,7 +201,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             with(
                 handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.adminUserCredential!!.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserCredential!!.secret}")
                 }
 
             ) {
@@ -232,7 +232,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, testPassword, testEmail, testPhone, true)
+                            RootUser(userName, testPassword, testEmail, testPhone, true)
                         )
                     )
                 )
@@ -245,7 +245,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(
                         HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.adminUserCredential!!.secret}"
+                        "Bearer ${createdOrganization.rootUserCredential!!.secret}"
                     )
                 }
 
