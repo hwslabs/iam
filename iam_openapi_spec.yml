@@ -2375,7 +2375,6 @@ components:
         - username
         - organization_id
         - email
-        - phone
         - status
       properties:
         hrn:
@@ -2389,19 +2388,11 @@ components:
         email:
           type: string
           maxLength: 50
-        phone:
-          type: string
-          maxLength: 20
-        login_access:
-          type: boolean
         status:
           type: string
           enum:
             - enabled
             - disabled
-        created_by:
-          type: string
-          maxLength: 50
 
     Credential:
       type: object
