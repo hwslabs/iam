@@ -10,6 +10,7 @@ object ApplicationIdUtil : KoinComponent {
     private const val ORGANIZATION_ID_LENGTH = 10L
     private const val REFRESH_TOKEN_RANDOM_LENGTH = 30L
     private const val REQUEST_ID_LENGTH = 15L
+    private const val PASSCODE_ID_LENGTH = 10L
 
     object Generator {
         private val idGenerator: IdGenerator by inject()
@@ -27,6 +28,10 @@ object ApplicationIdUtil : KoinComponent {
         fun requestId(): String {
             return idGenerator.timeBasedRandomId(REQUEST_ID_LENGTH, Charset.ALPHANUMERIC)
         }
+
+        fun passcodeId(): String {
+            return idGenerator.timeBasedRandomId(PASSCODE_ID_LENGTH, Charset.ALPHANUMERIC)
+        }
     }
 
     object Validator {
@@ -34,6 +39,8 @@ object ApplicationIdUtil : KoinComponent {
             return (orgId.length == ORGANIZATION_ID_LENGTH.toInt() && orgId.all { it.isUpperCase() })
         }
 
-        fun name(name: String): Boolean { return nameCheck(name) is Valid }
+        fun name(name: String): Boolean {
+            return nameCheck(name) is Valid
+        }
     }
 }

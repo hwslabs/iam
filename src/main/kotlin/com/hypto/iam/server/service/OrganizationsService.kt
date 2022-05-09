@@ -15,6 +15,7 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
@@ -22,7 +23,6 @@ import com.hypto.iam.server.utils.ResourceHrn
 import com.txman.TxMan
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
-import java.util.UUID
 import mu.KotlinLogging
 import org.jooq.JSONB
 import org.koin.core.component.KoinComponent
@@ -48,12 +48,16 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOrganization(
         name: String,
         description: String,
-        passcode: String,
-        adminUser: AdminUser
+        adminUser: AdminUser,
+        passcodeStr: String?
     ): Pair<Organization, Credential> {
-        val passcode =
-            passcodeRepo.getValidPasscode(UUID.fromString(passcode), PasscodeRepo.Type.VERIFY, adminUser.email)
-                ?: throw PasscodeExpiredException("Invalid or expired passcode")
+        val passcode = passcodeStr?.let {
+            passcodeRepo.getValidPasscode(
+                it,
+                VerifyEmailRequest.Purpose.verify,
+                adminUser.email
+            ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
+        }
 
         val organizationId = idGenerator.organizationId()
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
@@ -61,7 +65,9 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         @Suppress("TooGenericExceptionCaught")
         try {
             return txMan.wrap {
-                passcodeRepo.deleteById(passcode.id)
+                if (passcode != null) {
+                    passcodeRepo.deleteById(passcode.id)
+                }
                 // Create Organization
                 organizationRepo.insert(
                     Organizations(
@@ -151,7 +157,12 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
  * Service which holds logic related to Organization operations
  */
 interface OrganizationsService {
-    suspend fun createOrganization(name: String, description: String, passcode: String, adminUser: AdminUser):
+    suspend fun createOrganization(
+        name: String,
+        description: String,
+        adminUser: AdminUser,
+        passcodeStr: String? = null
+    ):
         Pair<Organization, Credential>
 
     suspend fun getOrganization(id: String): Organization

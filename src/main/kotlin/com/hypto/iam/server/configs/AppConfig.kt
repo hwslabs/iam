@@ -46,9 +46,9 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val secretKey: String,
         val signKeyFetchInterval: Long,
         val cacheRefreshInterval: Long,
-        val passcodeValidity: Long,
+        val passcodeValiditySeconds: Long,
         val baseUrl: String,
-        val sourceEmail: String,
+        val senderEmailAddress: String,
         val verifyUserTemplate: String
     ) {
         val isDevelopment: Boolean

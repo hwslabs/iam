@@ -37,8 +37,8 @@ fun Route.createAndDeleteOrganizationApi() {
             val (organization, credential) = service.createOrganization(
                 request.name,
                 description = "",
-                passcode = request.passcode,
-                adminUser = request.adminUser
+                adminUser = request.adminUser,
+                passcodeStr = request.passcode
             )
             call.respondText(
                 text = gson.toJson(CreateOrganizationResponse(organization, credential)),

@@ -12,7 +12,6 @@ Class | Method | HTTP request | Description
 *OrganizationManagementApi* | [**deleteOrganization**](Apis/OrganizationManagementApi.md#deleteorganization) | **DELETE** /organizations/{organization_id} | Delete an organization
 *OrganizationManagementApi* | [**getOrganization**](Apis/OrganizationManagementApi.md#getorganization) | **GET** /organizations/{organization_id} | Get an organization
 *OrganizationManagementApi* | [**updateOrganization**](Apis/OrganizationManagementApi.md#updateorganization) | **PATCH** /organizations/{organization_id} | Update an organization
-*PasscodeManagementApi* | [**verifyEmail**](Apis/PasscodeManagementApi.md#verifyemail) | **POST** /verifyEmail | Verify email
 *PolicyManagementApi* | [**createPolicy**](Apis/PolicyManagementApi.md#createpolicy) | **POST** /organizations/{organization_id}/policies | Create a policy
 *PolicyManagementApi* | [**deletePolicy**](Apis/PolicyManagementApi.md#deletepolicy) | **DELETE** /organizations/{organization_id}/policies/{policy_name} | Delete a policy
 *PolicyManagementApi* | [**getPolicy**](Apis/PolicyManagementApi.md#getpolicy) | **GET** /organizations/{organization_id}/policies/{policy_name} | Get a policy
@@ -43,6 +42,7 @@ Class | Method | HTTP request | Description
 *UserPolicyManagementApi* | [**attachPolicies**](Apis/UserPolicyManagementApi.md#attachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/attach_policies | Attach policies to user
 *UserPolicyManagementApi* | [**detachPolicies**](Apis/UserPolicyManagementApi.md#detachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/detach_policies | Detach policies from user
 *UserPolicyManagementApi* | [**getUserPolicies**](Apis/UserPolicyManagementApi.md#getuserpolicies) | **GET** /organizations/{organization_id}/users/{user_name}/policies | List all policies associated with user
+*UserVerificationApi* | [**verifyEmail**](Apis/UserVerificationApi.md#verifyemail) | **POST** /verifyEmail | Verify email
 
 
 <a name="documentation-for-models"></a>

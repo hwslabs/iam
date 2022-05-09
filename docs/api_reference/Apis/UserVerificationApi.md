@@ -1,10 +1,10 @@
-# PasscodeManagementApi
+# UserVerificationApi
 
 All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**verifyEmail**](PasscodeManagementApi.md#verifyEmail) | **POST** /verifyEmail | Verify email
+[**verifyEmail**](UserVerificationApi.md#verifyEmail) | **POST** /verifyEmail | Verify email
 
 
 <a name="verifyEmail"></a>
@@ -13,7 +13,7 @@ Method | HTTP request | Description
 
 Verify email
 
-    Verify email during account opening
+    Verify email during account opening and resetting password
 
 ### Parameters
 
@@ -27,7 +27,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[bearerAuth](../README.md#bearerAuth)
+No authorization required
 
 ### HTTP request headers
 

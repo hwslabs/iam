@@ -46,7 +46,7 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
         CreateOrganizationRequest::name required {
             run(nameCheck)
         }
-        CreateOrganizationRequest::passcode required {
+        CreateOrganizationRequest::passcode ifPresent {
             run(passcodeCheck)
         }
         CreateOrganizationRequest::adminUser required {
@@ -223,6 +223,10 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
         VerifyEmailRequest::email required {
             run(emailCheck)
         }
+        VerifyEmailRequest::organizationId ifPresent {
+            run(organizationIdCheck)
+        }
+        VerifyEmailRequest::purpose required {}
     }.validateAndThrowOnFailure(this)
 }
 
@@ -238,8 +242,10 @@ const val EMAIL_REGEX_HINT = "Email should contain `.`, `@`"
 const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@_#])[A-Za-z\\d@_#]{8,}\$"
 const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase letter, " +
     "one lowercase letter, one number and one special character[@ _ #]"
-const val PASSCODE_REGEX = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\$"
-const val PASSCODE_REGEX_HINT = "Passcode should be a valid UUID"
+const val PASSCODE_REGEX = "^[0-9a-zA-Z]*\$"
+const val PASSCODE_REGEX_HINT = "Passcode should be a valid alphanumeric string"
+const val ORGANIZATION_ID_REGEX = "^[a-zA-Z0-9]*\$"
+const val ORGANIZATION_ID_REGEX_HINT = "Organization ID should be a valid alphanumeric string"
 
 val nameCheck = Validation<String> {
     minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
@@ -276,6 +282,10 @@ val hrnCheck = Validation<String> {
 
 val passcodeCheck = Validation<String> {
     pattern(PASSCODE_REGEX) hint PASSCODE_REGEX_HINT
+}
+
+val organizationIdCheck = Validation<String> {
+    pattern(ORGANIZATION_ID_REGEX) hint ORGANIZATION_ID_REGEX_HINT
 }
 
 val policyStatementValidation = Validation<PolicyStatement> {

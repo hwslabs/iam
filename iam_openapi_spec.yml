@@ -76,7 +76,7 @@ tags:
     externalDocs:
       description: "docs"
       url: "http://hypto.com/docs/iam/SignInApi"
-  - name: "Passcode Management"
+  - name: "User Verification"
     description: "APIs for verifying emails and forgot passwords"
     externalDocs:
       description: "docs"
@@ -1002,15 +1002,21 @@ paths:
   /verifyEmail:
     post:
       tags:
-        - Passcode Management
+        - User Verification
       summary: Verify email
-      description: Verify email during account opening
+      description: Verify email during account opening and resetting password
       operationId: verifyEmail
       requestBody:
         $ref: '#/components/requestBodies/VerifyEmailRequest'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
       security: [ ]
@@ -1677,7 +1683,7 @@ components:
       value:
         name: ACME Enterprise
         description: Brief description about ACME
-        passcode: YjhhMWRlN2UtOGI4OC00ZmUxLTk2M2MtNDg2YzU1N2Q2NmE0
+        passcode: YjhhMWRlN2
         adminUser:
           username: username
           password: <password>
@@ -1784,6 +1790,8 @@ components:
     VerifyEmailRequest:
       value:
         email: abcd@abcd.in
+        organization_id: XlK5h64gND
+        purpose: reset
 
     # Response examples
 
@@ -2013,7 +2021,6 @@ components:
       additionalProperties: false
       required:
         - name
-        - passcode
         - adminUser
       properties:
         name:
@@ -2025,7 +2032,7 @@ components:
           maxLength: 500
         passcode:
           type: string
-          maxLength: 50
+          maxLength: 10
         adminUser:
           $ref: '#/components/schemas/AdminUser'
 
@@ -2248,10 +2255,17 @@ components:
       additionalProperties: false
       required:
         - email
+        - purpose
       properties:
         email:
           type: string
-
+        organization_id:
+          type: string
+        purpose:
+          type: string
+          enum:
+            - reset
+            - verify
 
     # Responses:
     BaseSuccessResponse:

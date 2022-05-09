@@ -36,11 +36,9 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
-            val passcode = "140e098d-3cb3-4dcc-8ff0-21164de287de"
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                passcode,
                 AdminUser(userName, testPassword, testEmail, testPhone)
             )
             with(

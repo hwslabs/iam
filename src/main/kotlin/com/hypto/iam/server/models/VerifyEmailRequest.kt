@@ -15,11 +15,23 @@ import java.io.Serializable
 /**
  * Payload to send verification link to email
  * @param email
+ * @param purpose
+ * @param organizationId
  */
 data class VerifyEmailRequest(
-    val email: kotlin.String
+    val email: kotlin.String,
+    val purpose: VerifyEmailRequest.Purpose,
+    val organizationId: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
+    }
+    /**
+    *
+    * Values: reset,verify
+    */
+    enum class Purpose(val value: kotlin.String) {
+        reset("reset"),
+        verify("verify");
     }
 }

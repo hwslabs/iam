@@ -1,9 +1,9 @@
 CREATE TABLE passcodes (
-    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-    valid_until timestamp,
+    id VARCHAR(10) PRIMARY KEY,
+    valid_until timestamp NOT NULL,
     email VARCHAR(50) NOT NULL,
     organization_id VARCHAR(10),
-    type VARCHAR(10) NOT NULL, -- RESET, VERIFY
+    purpose VARCHAR(10) NOT NULL, -- RESET, VERIFY
 
     created_at timestamp NOT NULL,
 

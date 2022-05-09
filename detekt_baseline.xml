@@ -26,6 +26,8 @@
     <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.enabled$enabled</ID>
     <ID>EnumNaming:User.kt$User.Status.disabled$disabled</ID>
     <ID>EnumNaming:User.kt$User.Status.enabled$enabled</ID>
+    <ID>EnumNaming:VerifyEmailRequest.kt$VerifyEmailRequest.Purpose.reset$reset</ID>
+    <ID>EnumNaming:VerifyEmailRequest.kt$VerifyEmailRequest.Purpose.verify$verify</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
     <ID>MagicNumber:Configuration.kt$365</ID>
