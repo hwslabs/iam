@@ -19,27 +19,18 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         dao().insert(user)
     }
 
-    suspend fun exists(email: String, organizationId: String, uniqueAcrossOrg: Boolean = false): Boolean {
-        return (uniqueAcrossOrg && existsByEmailAcrossOrg(email)) || existsByEmailInOrg(email, organizationId)
-    }
-
-    suspend fun existsByEmailAcrossOrg(email: String): Boolean {
+    suspend fun existsByEmail(email: String, organizationId: String? = null): Boolean {
         val dao = dao()
-        return dao.ctx().fetchExists(
-            dao.ctx().selectFrom(dao.table)
-                .where(USERS.EMAIL.eq(email))
-                .and(USERS.VERIFIED.eq(true))
-                .and(USERS.DELETED.eq(false))
-        )
-    }
+        var builder = dao.ctx().selectFrom(dao.table)
+            .where(USERS.EMAIL.eq(email))
+            .and(USERS.DELETED.eq(false))
 
-    suspend fun existsByEmailInOrg(email: String, organizationId: String): Boolean {
-        val dao = dao()
-        return dao.ctx().fetchExists(
-            dao.ctx().selectFrom(dao.table)
-                .where(USERS.EMAIL.eq(email))
-                .and(USERS.ORGANIZATION_ID.eq(organizationId))
-                .and(USERS.DELETED.eq(false))
-        )
+        builder = if (organizationId.isNullOrEmpty()) { // Check all verified users across organizations
+            builder.and(USERS.VERIFIED.eq(true))
+        } else { // Check all verified and unverified users within the organization
+            builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
+        }
+
+        return dao.ctx().fetchExists(builder)
     }
 }

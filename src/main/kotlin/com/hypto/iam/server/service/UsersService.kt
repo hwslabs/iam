@@ -40,7 +40,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
 
-        if (userRepo.exists(credentials.email, organizationId, appConfig.app.uniqueUsersAcrossOrganizations)) {
+        if ((appConfig.app.uniqueUsersAcrossOrganizations && UserRepo.existsByEmail(credentials.email)) ||
+                UserRepo.existsByEmail(credentials.email, organizationId)) {
             throw UserAlreadyExistException("Email - ${credentials.email} already registered. Unable to create user")
         }
 
