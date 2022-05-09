@@ -20,6 +20,7 @@ import java.io.Serializable
  * @param email
  * @param status
  * @param verified
+ * @param phone
  */
 data class User(
     val hrn: kotlin.String,
@@ -27,7 +28,8 @@ data class User(
     val organizationId: kotlin.String,
     val email: kotlin.String,
     val status: User.Status,
-    val verified: kotlin.Boolean
+    val verified: kotlin.Boolean,
+    val phone: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

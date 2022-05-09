@@ -38,7 +38,10 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
     suspend fun findByHrn(hrn: String, organizationId: String?): UsersRecord? {
         val dao = dao()
-        var builder = dao.ctx().selectFrom(dao.table).where(USERS.HRN.eq(hrn))
+        var builder = dao.ctx().selectFrom(dao.table)
+            .where(USERS.HRN.eq(hrn))
+            .and(USERS.DELETED.eq(false))
+
         if (!organizationId.isNullOrEmpty()) {
             builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
         }
@@ -54,7 +57,8 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         if (verified != null) {
             updateStep.set(USERS.VERIFIED, verified)
         }
-        return updateStep.where(USERS.HRN.eq(hrn)).returning().fetchOne()
+        return updateStep.where(USERS.HRN.eq(hrn)).and(USERS.DELETED.eq(false))
+            .returning().fetchOne()
     }
 
     suspend fun delete(hrn: String) {

@@ -98,7 +98,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         organizationId = userHrn.organization,
         email = user.email,
         status = if (user.isEnabled) User.Status.enabled else User.Status.disabled,
-        verified = user.verified
+        verified = user.verified,
+        phone = user.phoneNumber
     )
 
     override suspend fun updateUser(
@@ -119,9 +120,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
             status = userStatus, verified = verified
         )
 
-        val repoUser = userRepo.findByHrn(userHrn.toString(), organizationId)
+        val userRecord = userRepo.findByHrn(userHrn.toString(), organizationId)
             ?: throw EntityNotFoundException("User not found")
-        userRepo.update(repoUser.hrn, userStatus, verified)
+        userRepo.update(userRecord.hrn, userStatus, verified)
 
         return getUser(userHrn, user)
     }
@@ -133,9 +134,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         identityProvider.deleteUser(identityGroup, userName)
 
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
-        val repoUser = userRepo.findByHrn(userHrn.toString(), organizationId)
+        val userRecord = userRepo.findByHrn(userHrn.toString(), organizationId)
             ?: throw EntityNotFoundException("User not found")
-        userRepo.delete(repoUser.hrn)
+        userRepo.delete(userRecord.hrn)
 
         return BaseSuccessResponse(true)
     }

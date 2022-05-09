@@ -11,11 +11,13 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreate
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisableUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolRequest
@@ -52,6 +54,7 @@ fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
                 .build()
         }
         coEvery { this@declareMock.adminDisableUser(any<AdminDisableUserRequest>()) } returns mockk()
+        coEvery { this@declareMock.adminEnableUser(any<AdminEnableUserRequest>()) } returns mockk()
         coEvery { this@declareMock.adminCreateUser(any<AdminCreateUserRequest>()) } coAnswers {
             AdminCreateUserResponse.builder()
                 .user(
@@ -72,5 +75,6 @@ fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
         coEvery { this@declareMock.listUsers(any<ListUsersRequest>()) } returns listUsersResponse
         coEvery { this@declareMock.adminDeleteUser(any<AdminDeleteUserRequest>()) } returns mockk()
         coEvery { this@declareMock.addCustomAttributes(any<AddCustomAttributesRequest>()) } returns mockk()
+        coEvery { this@declareMock.adminUpdateUserAttributes(any<AdminUpdateUserAttributesRequest>()) } returns mockk()
     }
 }

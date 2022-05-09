@@ -6,8 +6,8 @@
     <ID>ConstructorParameterNaming:PolicyPaginatedResponse.kt$PolicyPaginatedResponse$val `data`: kotlin.collections.List&lt;Policy&gt;? = null</ID>
     <ID>ConstructorParameterNaming:ResourcePaginatedResponse.kt$ResourcePaginatedResponse$val `data`: kotlin.collections.List&lt;Resource&gt;? = null</ID>
     <ID>ConstructorParameterNaming:UserPaginatedResponse.kt$UserPaginatedResponse$val `data`: kotlin.collections.List&lt;User&gt;? = null</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.active$active</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.inactive$inactive</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.enabled$enabled</ID>
+    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.disabled$disabled</ID>
     <ID>EnumNaming:Credential.kt$Credential.Status.active$active</ID>
     <ID>EnumNaming:Credential.kt$Credential.Status.inactive$inactive</ID>
     <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.active$active</ID>

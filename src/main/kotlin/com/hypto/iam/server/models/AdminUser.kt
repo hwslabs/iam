@@ -18,13 +18,14 @@ import java.io.Serializable
  * @param passwordHash
  * @param email
  * @param phone
+ * @param verified
  */
 data class AdminUser(
-    val username: String,
-    val passwordHash: String,
-    val email: String,
-    val phone: String,
-    val verified: Boolean?
+    val username: kotlin.String,
+    val passwordHash: kotlin.String,
+    val email: kotlin.String,
+    val phone: kotlin.String,
+    val verified: kotlin.Boolean
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
