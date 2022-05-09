@@ -36,18 +36,6 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         return dao.ctx().fetchExists(builder)
     }
 
-    suspend fun findByHrn(hrn: String, organizationId: String?): UsersRecord? {
-        val dao = dao()
-        var builder = dao.ctx().selectFrom(dao.table)
-            .where(USERS.HRN.eq(hrn))
-            .and(USERS.DELETED.eq(false))
-
-        if (!organizationId.isNullOrEmpty()) {
-            builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
-        }
-        return builder.fetchOne()
-    }
-
     suspend fun update(hrn: String, status: User.Status?, verified: Boolean?): UsersRecord? {
         val dao = dao()
         val updateStep = dao.ctx().update(dao.table).set(USERS.UPDATED_AT, LocalDateTime.now())
@@ -61,10 +49,11 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .returning().fetchOne()
     }
 
-    suspend fun delete(hrn: String) {
+    suspend fun delete(hrn: String): UsersRecord? {
         val dao = dao()
-        dao.ctx().update(dao.table).set(USERS.UPDATED_AT, LocalDateTime.now())
+        return dao.ctx().update(dao.table).set(USERS.UPDATED_AT, LocalDateTime.now())
             .set(USERS.DELETED, true)
             .where(USERS.HRN.eq(hrn))
+            .returning().fetchOne()
     }
 }

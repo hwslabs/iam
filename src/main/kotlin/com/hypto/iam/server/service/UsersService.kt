@@ -120,9 +120,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
             status = userStatus, verified = verified
         )
 
-        val userRecord = userRepo.findByHrn(userHrn.toString(), organizationId)
+        userRepo.update(userHrn.toString(), userStatus, verified)
             ?: throw EntityNotFoundException("User not found")
-        userRepo.update(userRecord.hrn, userStatus, verified)
 
         return getUser(userHrn, user)
     }
@@ -134,9 +133,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         identityProvider.deleteUser(identityGroup, userName)
 
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
-        val userRecord = userRepo.findByHrn(userHrn.toString(), organizationId)
-            ?: throw EntityNotFoundException("User not found")
-        userRepo.delete(userRecord.hrn)
+        userRepo.delete(userHrn.toString()) ?: throw EntityNotFoundException("User not found")
 
         return BaseSuccessResponse(true)
     }
