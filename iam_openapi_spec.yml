@@ -2393,6 +2393,14 @@ components:
           enum:
             - enabled
             - disabled
+        phone:
+          type: string
+          maxLength: 20
+        login_access:
+          type: boolean
+        created_by:
+          type: string
+          maxLength: 50
 
     Credential:
       type: object
