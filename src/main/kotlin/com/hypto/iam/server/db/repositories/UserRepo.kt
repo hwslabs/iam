@@ -21,37 +21,19 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         dao().insert(user)
     }
 
-    suspend fun exists(email: String, organizationId: String, uniqueAcrossOrg: Boolean = false): Boolean {
-        return (uniqueAcrossOrg && existsByEmailAcrossOrg(email)) || existsByEmailInOrg(email, organizationId)
-    }
-
-    suspend fun existsByEmailAcrossOrg(email: String): Boolean {
+    suspend fun existsByEmail(email: String, organizationId: String? = null): Boolean {
         val dao = dao()
-        return dao.ctx().fetchExists(
-            dao.ctx().selectFrom(dao.table)
-                .where(USERS.EMAIL.eq(email))
-                .and(USERS.VERIFIED.eq(true))
-                .and(USERS.DELETED.eq(false))
-        )
-    }
+        var builder = dao.ctx().selectFrom(dao.table)
+            .where(USERS.EMAIL.eq(email))
+            .and(USERS.DELETED.eq(false))
 
-    suspend fun existsByEmailInOrg(email: String, organizationId: String): Boolean {
-        val dao = dao()
-        return dao.ctx().fetchExists(
-            dao.ctx().selectFrom(dao.table)
-                .where(USERS.EMAIL.eq(email))
-                .and(USERS.ORGANIZATION_ID.eq(organizationId))
-                .and(USERS.DELETED.eq(false))
-        )
-    }
-
-    suspend fun findByHrn(hrn: String, organizationId: String?): UsersRecord? {
-        val dao = dao()
-        var builder = dao.ctx().selectFrom(dao.table).where(USERS.HRN.eq(hrn))
-        if (!organizationId.isNullOrEmpty()) {
-            builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
+        builder = if (organizationId.isNullOrEmpty()) { // Check all verified users across organizations
+            builder.and(USERS.VERIFIED.eq(true))
+        } else { // Check all verified and unverified users within the organization
+            builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
         }
-        return builder.fetchOne()
+
+        return dao.ctx().fetchExists(builder)
     }
 
     suspend fun update(hrn: String, status: User.Status?, verified: Boolean?): UsersRecord? {
@@ -63,13 +45,15 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         if (verified != null) {
             updateStep.set(USERS.VERIFIED, verified)
         }
-        return updateStep.where(USERS.HRN.eq(hrn)).returning().fetchOne()
+        return updateStep.where(USERS.HRN.eq(hrn)).and(USERS.DELETED.eq(false))
+            .returning().fetchOne()
     }
 
-    suspend fun delete(hrn: String) {
+    suspend fun delete(hrn: String): UsersRecord? {
         val dao = dao()
-        dao.ctx().update(dao.table).set(USERS.UPDATED_AT, LocalDateTime.now())
+        return dao.ctx().update(dao.table).set(USERS.UPDATED_AT, LocalDateTime.now())
             .set(USERS.DELETED, true)
             .where(USERS.HRN.eq(hrn))
+            .returning().fetchOne()
     }
 }

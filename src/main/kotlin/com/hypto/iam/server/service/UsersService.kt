@@ -41,7 +41,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
 
-        if (userRepo.exists(credentials.email, organizationId, appConfig.app.uniqueUsersAcrossOrganizations)) {
+        if ((appConfig.app.uniqueUsersAcrossOrganizations && UserRepo.existsByEmail(credentials.email)) ||
+                UserRepo.existsByEmail(credentials.email, organizationId)) {
             throw UserAlreadyExistException("Email - ${credentials.email} already registered. Unable to create user")
         }
 
@@ -98,7 +99,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         organizationId = userHrn.organization,
         email = user.email,
         status = if (user.isEnabled) User.Status.enabled else User.Status.disabled,
-        verified = user.verified
+        verified = user.verified,
+        phone = user.phoneNumber
     )
 
     override suspend fun updateUser(
@@ -119,9 +121,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
             status = userStatus, verified = verified
         )
 
-        val repoUser = userRepo.findByHrn(userHrn.toString(), organizationId)
+        userRepo.update(userHrn.toString(), userStatus, verified)
             ?: throw EntityNotFoundException("User not found")
-        userRepo.update(repoUser.hrn, userStatus, verified)
 
         return getUser(userHrn, user)
     }
@@ -136,9 +137,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.deleteUser(identityGroup, userName)
 
-        val repoUser = userRepo.findByHrn(userHrn.toString(), organizationId)
-            ?: throw EntityNotFoundException("User not found")
-        userRepo.delete(repoUser.hrn)
+        userRepo.delete(userHrn.toString()) ?: throw EntityNotFoundException("User not found")
 
         return BaseSuccessResponse(true)
     }

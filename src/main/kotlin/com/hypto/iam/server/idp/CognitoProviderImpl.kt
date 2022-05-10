@@ -187,15 +187,18 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
 
         when (status) {
             com.hypto.iam.server.models.User.Status.disabled -> {
-                val request = AdminDisableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
+                val request =
+                    AdminDisableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
                 cognitoClient.adminDisableUser(request)
             }
             com.hypto.iam.server.models.User.Status.enabled -> {
-                val request = AdminEnableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
+                val request =
+                    AdminEnableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
                 cognitoClient.adminEnableUser(request)
             }
-            else -> {}
+            else -> {} // Do not take any action if Status is NULL
         }
+
         val attrs = mutableListOf<AttributeType>()
         if (phone.isNotEmpty())
             attrs.add(
@@ -206,10 +209,14 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         if (verified != null)
             attrs.add(
                 AttributeType.builder()
-                    .name(ATTRIBUTE_VERIFIED)
+                    .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED)
                     .value(verified.toString()).build()
             )
-        val response = AdminUpdateUserAttributesRequest.builder().userAttributes(attrs)
+        val updateRequest =
+            AdminUpdateUserAttributesRequest.builder().userPoolId(identityGroup.id).username(userName)
+                .userAttributes(attrs).build()
+        cognitoClient.adminUpdateUserAttributes(updateRequest)
+
         return getUser(identityGroup, userName)
     }
 
