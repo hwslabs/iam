@@ -15,12 +15,14 @@ import com.hypto.iam.server.idp.NextToken
 import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.idp.RequestContext
 import com.hypto.iam.server.idp.UserAlreadyExistException
+import com.hypto.iam.server.idp.UserNotFoundException
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import io.ktor.server.plugins.BadRequestException
 import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -150,6 +152,22 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         return getUser(userHrn, user)
     }
+
+    override suspend fun authenticate(userName: String, password: String): User {
+        if (!appConfig.app.uniqueUsersAcrossOrganizations)
+            throw BadRequestException("Email not unique across organizations. " +
+                "Please use Token APIs with organization ID")
+
+        val userRecord = userRepo.findByEmail(userName)
+            ?: throw UserNotFoundException("Email not found, Unable to authenticate user")
+        val org = organizationRepo.findById(userRecord.organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to authenticate user")
+
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val user = identityProvider.authenticate(identityGroup, userName, password)
+        val userHrn = ResourceHrn(userRecord.organizationId, "", IamResources.USER, user.username)
+        return getUser(userHrn, user)
+    }
 }
 
 /**
@@ -177,4 +195,5 @@ interface UsersService {
 
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
     suspend fun authenticate(organizationId: String, userName: String, password: String): User
+    suspend fun authenticate(userName: String, password: String): User
 }

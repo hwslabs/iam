@@ -6,7 +6,6 @@ import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.ktor.ext.inject
 
 class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     private val credentialsRepo: CredentialsRepo by inject()
@@ -43,6 +42,15 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
             userPoliciesService.fetchEntitlements(user.hrn)
         )
     }
+
+    override suspend fun getUserPrincipalByCredentials(userName: String, password: String): UserPrincipal? {
+        val user = usersService.authenticate(userName, password)
+        return UserPrincipal(
+            TokenCredential(userName, TokenType.BASIC),
+            user.hrn,
+            userPoliciesService.fetchEntitlements(user.hrn)
+        )
+    }
 }
 
 interface UserPrincipalService {
@@ -50,4 +58,5 @@ interface UserPrincipalService {
     suspend fun getUserPrincipalByJwtToken(tokenCredential: TokenCredential): UserPrincipal?
     suspend fun getUserPrincipalByCredentials(organizationId: String, userName: String, password: String):
         UserPrincipal?
+    suspend fun getUserPrincipalByCredentials(userName: String, password: String): UserPrincipal?
 }

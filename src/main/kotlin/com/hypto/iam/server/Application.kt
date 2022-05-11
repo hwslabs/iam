@@ -7,6 +7,7 @@ import com.hypto.iam.server.apis.createAndDeleteOrganizationApi
 import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.keyApi
+import com.hypto.iam.server.apis.loginApi
 import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
@@ -115,6 +116,18 @@ fun Application.handleRequest() {
                 }
             }
         }
+        basic("login-auth") {
+            validate { credentials ->
+                val principal = userPrincipalService.getUserPrincipalByCredentials(
+                    credentials.name,
+                    credentials.password
+                )
+                if (principal != null) {
+                    response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
+                }
+                return@validate principal
+            }
+        }
     }
 
     // Create a signing Master key pair in case one doesn't exist
@@ -143,6 +156,9 @@ fun Application.handleRequest() {
 
         authenticate("basic-auth", "bearer-auth") {
             tokenApi()
+        }
+        authenticate("login-auth") {
+            loginApi()
         }
         keyApi()
     }
