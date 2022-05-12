@@ -7,7 +7,6 @@ import com.hypto.iam.server.apis.createAndDeleteOrganizationApi
 import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.keyApi
-import com.hypto.iam.server.apis.loginApi
 import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
@@ -23,6 +22,7 @@ import com.hypto.iam.server.plugins.Koin
 import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Authorization
+import com.hypto.iam.server.security.EmailPasswordCredential
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.apiKeyAuth
@@ -116,11 +116,10 @@ fun Application.handleRequest() {
                 }
             }
         }
-        basic("login-auth") {
+        basic("unique-basic-auth") {
             validate { credentials ->
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    credentials.name,
-                    credentials.password
+                    EmailPasswordCredential(credentials.name, credentials.password)
                 )
                 if (principal != null) {
                     response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
@@ -154,12 +153,7 @@ fun Application.handleRequest() {
             validationApi()
         }
 
-        authenticate("basic-auth", "bearer-auth") {
-            tokenApi()
-        }
-        authenticate("login-auth") {
-            loginApi()
-        }
+        tokenApi() // Authentication handled along with API definitions
         keyApi()
     }
 }

@@ -27,6 +27,7 @@ import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.models.UpdateResourceRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.ValidationRequest
+import com.hypto.iam.server.security.EmailPasswordCredential
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxItems
 import io.konform.validation.jsonschema.maxLength
@@ -214,6 +215,17 @@ fun UpdateUserRequest.validate(): UpdateUserRequest {
     }.validateAndThrowOnFailure(this)
 }
 
+fun EmailPasswordCredential.validate(): EmailPasswordCredential {
+    return Validation<EmailPasswordCredential> {
+        EmailPasswordCredential::email required {
+            run(credentialEmailCheck)
+        }
+        EmailPasswordCredential::password required {
+            run(credentialPasswordCheck)
+        }
+    }.validateAndThrowOnFailure(this)
+}
+
 // Validations used by ValidationBuilders
 
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
@@ -226,6 +238,8 @@ const val EMAIL_REGEX_HINT = "Email should contain `.`, `@`"
 const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@_#])[A-Za-z\\d@_#]{8,}\$"
 const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase letter, " +
                                 "one lowercase letter, one number and one special character[@ _ #]"
+const val CREDENTIALS_EMAIL_INVALID = "Invalid Email"
+const val CREDENTIALS_PASSWORD_INVALID = "Invalid Password"
 
 val nameCheck = Validation<String> {
     minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
@@ -294,4 +308,13 @@ val rootUserRequestValidation = Validation<RootUser> {
     RootUser::passwordHash required {
         run(passwordCheck)
     }
+}
+
+val credentialEmailCheck = Validation<String> {
+    minLength(Constants.MIN_EMAIL_LENGTH) hint CREDENTIALS_EMAIL_INVALID
+    pattern(EMAIL_REGEX) hint CREDENTIALS_EMAIL_INVALID
+}
+
+val credentialPasswordCheck = Validation<String> {
+    minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint CREDENTIALS_PASSWORD_INVALID
 }

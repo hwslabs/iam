@@ -359,7 +359,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             throw BadRequestException("Invalid username and password combination")
         } catch (e: UserNotFoundException) {
             logger.info(e) { "Unable to find the user $userName" }
-            throw UserNotFoundException("Unable to find the user $userName")
+            throw BadRequestException("Invalid username and password combination")
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to authenticate from cognito" }
             throw InternalException("Internal error while trying to authenticate the identity.")
