@@ -1666,14 +1666,16 @@ components:
         password_hash: nii2du35bdtuethntv3q7416
         email: bob@acme.com
         phone: +1234071628
-        status: active
+        status: enabled
+        verified: true
 
     UpdateUserRequest:
       summary: sample update user request
       value:
         email: bob@acme.com
         phone: +1234071634
-        status: active
+        status: enabled
+        verified: true
 
     CreateCredentialRequest:
       summary: sample create credential request
@@ -2016,6 +2018,7 @@ components:
         - password_hash
         - email
         - phone
+        - verified
       properties:
         username:
           type: string
@@ -2031,6 +2034,8 @@ components:
         phone:
           type: string
           maxLength: 30
+        verified:
+          type: boolean
 
 
     CreateUserRequest:
@@ -2060,8 +2065,10 @@ components:
         status:
           type: string
           enum:
-            - active
-            - inactive
+            - enabled
+            - disabled
+        verified:
+          type: boolean
 
     UpdateUserRequest:
       description: Payload to create ledger account
@@ -2079,6 +2086,8 @@ components:
           enum:
             - enabled
             - disabled
+        verified:
+          type: boolean
 
     CreateCredentialRequest:
       description: Payload to create credential
@@ -2376,6 +2385,7 @@ components:
         - organization_id
         - email
         - status
+        - verified
       properties:
         hrn:
           type: string
@@ -2401,6 +2411,8 @@ components:
         created_by:
           type: string
           maxLength: 50
+        verified:
+          type: boolean
 
     Credential:
       type: object

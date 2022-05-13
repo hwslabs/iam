@@ -38,8 +38,9 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest = CreateUserRequest(username = "testUserName",
                                                     passwordHash = "testPassword@Hash1",
                                                     email = testEmail,
-                                                    status = CreateUserRequest.Status.active,
-                                                    phone = "+919626012778")
+                                                    status = CreateUserRequest.Status.enabled,
+                                                    phone = "+919626012778",
+                                                    verified = true)
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
@@ -67,6 +68,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 assertEquals(createUserRequest.username, responseBody.username)
                 assertEquals(createUserRequest.email, responseBody.email)
                 assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
+                assertEquals(createUserRequest.verified, responseBody.verified)
             }
 
             DataSetupHelper.deleteOrganization(organization.id, this)
@@ -77,9 +79,9 @@ class UserApiTest : AbstractContainerBaseTest() {
     fun `get user request success case`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash1",
             email = testEmail,
-            status = CreateUserRequest.Status.active,
+            status = CreateUserRequest.Status.enabled,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -106,6 +108,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
 
                 assertEquals(createUserRequest.username, responseBody.username)
+                assertEquals(false, responseBody.verified)
             }
             DataSetupHelper.deleteOrganization(organization.id, this)
         }
@@ -117,7 +120,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest = CreateUserRequest(username = "testUserName",
             passwordHash = "testPasswordHash",
             email = testEmail,
-            status = CreateUserRequest.Status.active,
+            status = CreateUserRequest.Status.enabled,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -147,9 +150,9 @@ class UserApiTest : AbstractContainerBaseTest() {
     fun `delete user success case`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash1",
             email = testEmail,
-            status = CreateUserRequest.Status.active,
+            status = CreateUserRequest.Status.enabled,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -184,14 +187,14 @@ class UserApiTest : AbstractContainerBaseTest() {
     fun `list users`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest1 = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash1",
             email = testEmail,
-            status = CreateUserRequest.Status.active,
+            status = CreateUserRequest.Status.enabled,
             phone = "+919626012778")
         val createUserRequest2 = CreateUserRequest(username = "testUserName",
-            passwordHash = "testPasswordHash",
+            passwordHash = "testPassword@Hash2",
             email = testEmail,
-            status = CreateUserRequest.Status.active,
+            status = CreateUserRequest.Status.enabled,
             phone = "+919626012778")
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -239,12 +242,16 @@ class UserApiTest : AbstractContainerBaseTest() {
             val organization = organizationResponse.organization!!
             val createdCredentials = organizationResponse.adminUserCredential!!
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val userName = "testUserName"
 
-            val createUserRequest = CreateUserRequest(username = "testUserName",
-                passwordHash = "testPasswordHash",
+            val createUserRequest = CreateUserRequest(
+                username = "testUserName",
+                passwordHash = "testPassword@Hash1",
                 email = testEmail,
-                status = CreateUserRequest.Status.active,
-                phone = "+919626012778")
+                status = CreateUserRequest.Status.enabled,
+                phone = "+919626012778",
+                verified = false
+            )
 
             // Create user1
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
@@ -253,14 +260,20 @@ class UserApiTest : AbstractContainerBaseTest() {
                 setBody(gson.toJson(createUserRequest))
             }
 
+            val updateUserRequest = UpdateUserRequest(
+                phone = "+911234567890",
+                status = UpdateUserRequest.Status.enabled,
+                verified = true
+            )
+
             with(
                 handleRequest(
                     HttpMethod.Patch,
-                    "/organizations/${organization.id}/users/${createUserRequest.username}"
+                    "/organizations/${organization.id}/users/$userName"
                 ) {
                     addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(UpdateUserRequest(email = "updatedEmail@email.com", phone = "+1234567890")))
+                    setBody(gson.toJson(updateUserRequest))
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -280,7 +293,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         val createUserRequest = CreateUserRequest(username = "testUserName",
             passwordHash = "testPassword@ash",
             email = testEmail,
-            status = CreateUserRequest.Status.active,
+            status = CreateUserRequest.Status.enabled,
             phone = "+919626")
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)

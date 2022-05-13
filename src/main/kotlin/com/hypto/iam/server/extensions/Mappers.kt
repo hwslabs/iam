@@ -163,7 +163,8 @@ fun User.Companion.from(value: UsersRecord): User {
     val hrn = hrnFactory.getHrn(value.hrn) as ResourceHrn
     return User(
         value.hrn, hrn.resourceInstance!!, value.organizationId,
-        value.email, User.Status.valueOf(value.status)
+        value.email, User.Status.valueOf(value.status),
+        value.verified
     )
 }
 

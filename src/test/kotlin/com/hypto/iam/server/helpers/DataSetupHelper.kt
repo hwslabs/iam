@@ -57,7 +57,8 @@ object DataSetupHelper : AutoCloseKoinTest() {
                 username = userName,
                 passwordHash = testPassword,
                 email = testEmail,
-                phone = testPhone
+                phone = testPhone,
+                verified = true
             )
 
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {

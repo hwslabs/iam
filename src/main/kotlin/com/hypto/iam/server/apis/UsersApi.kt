@@ -50,7 +50,7 @@ fun Route.usersApi() {
                 organizationId = organizationId,
                 credentials = passwordCredentials,
                 createdBy = call.principal<UserPrincipal>()?.hrnStr,
-                verified = false
+                verified = request.verified ?: false
             )
             call.respondText(
                 text = gson.toJson(user),
@@ -115,9 +115,9 @@ fun Route.usersApi() {
                 usersService.updateUser(
                     organizationId,
                     userId,
-                    request.email ?: "",
                     request.phone ?: "",
-                    request.status
+                    request.status,
+                    request.verified
                 )
             call.respondText(
                 text = gson.toJson(user),
