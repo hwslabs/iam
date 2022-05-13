@@ -26,7 +26,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val requestBody = VerifyEmailRequest(
                 email = "abcd@abcd.com",
-                purpose = VerifyEmailRequest.Purpose.verify
+                purpose = VerifyEmailRequest.Purpose.signup
             )
             with(
                 handleRequest(

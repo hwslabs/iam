@@ -32,9 +32,23 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
         return record
     }
 
+    suspend fun getValidPasscodeCount(email: String, purpose: VerifyEmailRequest.Purpose): Int {
+        val dao = dao()
+        return dao.ctx()
+            .selectCount()
+            .from(dao.table)
+            .where(PASSCODES.EMAIL.eq(email)).and(
+                PASSCODES.PURPOSE.eq(purpose.toString()).and(
+                    PASSCODES.VALID_UNTIL.ge(
+                        LocalDateTime.now()
+                    )
+                )
+            ).fetchOne(0, Int::class.java) ?: 0
+    }
+
     suspend fun getValidPasscode(id: String, purpose: VerifyEmailRequest.Purpose, email: String): PasscodesRecord? {
         val dao = dao()
-        return dao().ctx().selectFrom(dao.table)
+        return dao.ctx().selectFrom(dao.table)
             .where(
                 PASSCODES.ID.eq(id).and(PASSCODES.PURPOSE.eq(purpose.toString()))
                     .and(PASSCODES.VALID_UNTIL.ge(LocalDateTime.now())).and(PASSCODES.EMAIL.eq(email))

@@ -28,10 +28,10 @@ data class VerifyEmailRequest(
     }
     /**
     *
-    * Values: reset,verify
+    * Values: reset,signup
     */
     enum class Purpose(val value: kotlin.String) {
         reset("reset"),
-        verify("verify");
+        signup("signup");
     }
 }

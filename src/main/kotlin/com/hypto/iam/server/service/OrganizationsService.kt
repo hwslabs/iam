@@ -54,7 +54,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         val passcode = passcodeStr?.let {
             passcodeRepo.getValidPasscode(
                 it,
-                VerifyEmailRequest.Purpose.verify,
+                VerifyEmailRequest.Purpose.signup,
                 adminUser.email
             ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
         }

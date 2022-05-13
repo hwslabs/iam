@@ -23,6 +23,9 @@ fun mockPasscodeRepo() {
             .setOrganizationId(thirdArg()).setCreatedAt(LocalDateTime.now())
     }
     coEvery {
+        PasscodeRepo.getValidPasscodeCount(any<String>(), any<VerifyEmailRequest.Purpose>())
+    } returns 0
+    coEvery {
         PasscodeRepo.getValidPasscode(
             any<String>(),
             any<VerifyEmailRequest.Purpose>(),

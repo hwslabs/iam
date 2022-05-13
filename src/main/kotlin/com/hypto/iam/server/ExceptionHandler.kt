@@ -5,6 +5,7 @@ import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.exceptions.PasscodeExpiredException
+import com.hypto.iam.server.exceptions.PasscodeLimitExceededException
 import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.extensions.PaginationContext.Companion.gson
@@ -70,6 +71,7 @@ fun StatusPagesConfig.statusPages() {
     sendStatus<EntityNotFoundException>(HttpStatusCode.NotFound)
     sendStatus<UserNotFoundException>(HttpStatusCode.NotFound)
     sendStatus<PasscodeExpiredException>(HttpStatusCode.NotFound)
+    sendStatus<PasscodeLimitExceededException>(HttpStatusCode.TooManyRequests)
     sendStatus<UnsupportedJwtException>(HttpStatusCode.BadRequest)
     sendStatus<MalformedJwtException>(HttpStatusCode.BadRequest)
     sendStatus<SignatureException>(HttpStatusCode.BadRequest)

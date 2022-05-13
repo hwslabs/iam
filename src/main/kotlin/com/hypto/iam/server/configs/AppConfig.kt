@@ -47,6 +47,7 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val signKeyFetchInterval: Long,
         val cacheRefreshInterval: Long,
         val passcodeValiditySeconds: Long,
+        val passcodeCountLimit: Long,
         val baseUrl: String,
         val senderEmailAddress: String,
         val verifyUserTemplate: String

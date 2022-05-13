@@ -2,7 +2,6 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.models.VerifyEmailRequest.Purpose
 import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.validators.validate
@@ -20,12 +19,7 @@ fun Route.passcodeApi() {
 
     post("/verifyEmail") {
         val request = call.receive<VerifyEmailRequest>().validate()
-        val response = when (request.purpose) {
-            Purpose.verify -> passcodeService.verifyEmail(request.email)
-            Purpose.reset -> UnsupportedOperationException("Reset email is not supported yet")
-            else -> throw IllegalArgumentException("Unknown purpose: ${request.purpose}")
-        }
-
+        val response = passcodeService.verifyEmail(request.email, request.purpose, request.organizationId)
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,

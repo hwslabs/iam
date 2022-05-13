@@ -77,7 +77,7 @@ tags:
       description: "docs"
       url: "http://hypto.com/docs/iam/SignInApi"
   - name: "User Verification"
-    description: "APIs for verifying emails and forgot passwords"
+    description: "APIs for verifying emails"
     externalDocs:
       description: "docs"
       url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/PasscodeManagement.md"
@@ -2265,7 +2265,7 @@ components:
           type: string
           enum:
             - reset
-            - verify
+            - signup
 
     # Responses:
     BaseSuccessResponse:
