@@ -40,7 +40,6 @@ import io.mockk.mockk
 import java.time.Instant
 import java.util.*
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import org.junit.jupiter.api.*
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
@@ -49,7 +48,6 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.*
 
 class TokenApiTest : AbstractContainerBaseTest() {
     private val gson = Gson()
-    private val logger = KotlinLogging.logger {}
 
     @Nested
     @DisplayName("Generate JWT token test: /token")
@@ -275,9 +273,6 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             )
                         }
                     ) {
-                        logger.info("Here in Valid Creds response")
-                        logger.info(response.content)
-
                         Assertions.assertEquals(HttpStatusCode.OK, response.status())
                         Assertions.assertEquals(
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
