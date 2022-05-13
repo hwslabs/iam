@@ -21,15 +21,18 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         dao().insert(user)
     }
 
-    suspend fun existsByEmail(email: String, organizationId: String? = null): Boolean {
+    suspend fun existsByEmail(email: String, organizationId: String, uniqueCheck: Boolean = false): Boolean {
         val dao = dao()
         var builder = dao.ctx().selectFrom(dao.table)
             .where(USERS.EMAIL.eq(email))
             .and(USERS.DELETED.eq(false))
 
-        builder = if (organizationId.isNullOrEmpty()) { // Check all verified users across organizations
-            builder.and(USERS.VERIFIED.eq(true))
-        } else { // Check all verified and unverified users within the organization
+        builder = if (uniqueCheck) {
+            // Check only verified users in other organizations and all users within the organization
+            builder.and((USERS.VERIFIED.eq(true).andNot(USERS.ORGANIZATION_ID.eq(organizationId)))
+                .or(USERS.ORGANIZATION_ID.eq(organizationId)))
+        } else {
+            // Check all verified and unverified users within the organization
             builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
         }
 
