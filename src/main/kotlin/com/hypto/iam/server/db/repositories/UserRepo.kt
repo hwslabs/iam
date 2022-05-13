@@ -59,4 +59,12 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .where(USERS.HRN.eq(hrn))
             .returning().fetchOne()
     }
+    suspend fun findByEmail(email: String): UsersRecord? {
+        val dao = dao()
+        val builder = dao.ctx().selectFrom(dao.table)
+            .where(USERS.EMAIL.eq(email))
+            .and(USERS.DELETED.eq(false))
+            .and(USERS.VERIFIED.eq(true))
+        return dao.ctx().fetchOne(builder)
+    }
 }

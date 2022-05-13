@@ -7,6 +7,7 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.exceptions.EntityNotFoundException
+import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.toUserStatus
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
@@ -18,6 +19,7 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
+import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.server.plugins.BadRequestException
@@ -150,6 +152,18 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         return getUser(userHrn, user)
     }
+
+    override suspend fun authenticate(email: String, password: String): User {
+        val userRecord = userRepo.findByEmail(email)
+            ?: throw AuthenticationException("Invalid username and password combination")
+        val org = organizationRepo.findById(userRecord.organizationId)
+            ?: throw InternalException("Internal error while trying to authenticate the identity.")
+
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val user = identityProvider.authenticate(identityGroup, email, password)
+        val userHrn = ResourceHrn(userRecord.organizationId, "", IamResources.USER, user.username)
+        return getUser(userHrn, user)
+    }
 }
 
 /**
@@ -177,4 +191,5 @@ interface UsersService {
 
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
     suspend fun authenticate(organizationId: String, userName: String, password: String): User
+    suspend fun authenticate(email: String, password: String): User
 }

@@ -8,6 +8,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
 import io.ktor.server.request.accept
 import io.ktor.server.response.respondText
@@ -34,13 +35,17 @@ fun Route.tokenApi() {
         }
     }
 
-    post("/organizations/{organization_id}/token") {
-        val principal = context.principal<UserPrincipal>()!!
-        generateToken(principal, call, context.request.accept())
+    authenticate("basic-auth", "bearer-auth") {
+        post("/organizations/{organization_id}/token") {
+            val principal = context.principal<UserPrincipal>()!!
+            generateToken(principal, call, context.request.accept())
+        }
     }
 
-    post("/token") {
-        val principal = context.principal<UserPrincipal>()!!
-        generateToken(principal, call, context.request.accept())
+    authenticate("unique-basic-auth", "bearer-auth") {
+        post("/token") {
+            val principal = context.principal<UserPrincipal>()!!
+            generateToken(principal, call, context.request.accept())
+        }
     }
 }
