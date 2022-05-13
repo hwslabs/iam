@@ -12,6 +12,7 @@ import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
 import com.hypto.iam.server.security.AuthenticationException
 import mu.KotlinLogging
@@ -51,6 +52,7 @@ object CognitoConstants {
     const val ATTRIBUTE_EMAIL_VERIFIED = "email_verified"
     const val ATTRIBUTE_PHONE = "phone_number"
     const val ATTRIBUTE_CREATED_BY = "createdBy"
+    const val ATTRIBUTE_VERIFIED = "verified"
     const val ATTRIBUTE_PREFIX_CUSTOM = "custom:"
     const val ACTION_SUPPRESS = "SUPPRESS"
     const val APP_CLIENT_NAME = "iam-client"
@@ -92,6 +94,9 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                             .maxLength("100")
                             .minLength("3").build()
                     )
+                    .build(),
+                SchemaAttributeType.builder().name(ATTRIBUTE_VERIFIED)
+                    .attributeDataType(AttributeDataType.BOOLEAN)
                     .build()
             )
                 .build()
