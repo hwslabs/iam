@@ -2,8 +2,8 @@ package com.hypto.iam.server
 
 import com.google.gson.Gson
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
@@ -39,7 +39,7 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                AdminUser(userName, testPassword, testEmail, testPhone)
+                RootUser(userName, testPassword, testEmail, testPhone, true)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {

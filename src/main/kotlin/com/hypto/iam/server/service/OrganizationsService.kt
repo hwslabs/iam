@@ -10,11 +10,11 @@ import com.hypto.iam.server.exceptions.PasscodeExpiredException
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.PasswordCredentials
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
@@ -48,14 +48,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOrganization(
         name: String,
         description: String,
-        adminUser: AdminUser,
+        rootUser: RootUser,
         passcodeStr: String?
     ): Pair<Organization, Credential> {
         val passcode = passcodeStr?.let {
             passcodeRepo.getValidPasscode(
                 it,
                 VerifyEmailRequest.Purpose.signup,
-                adminUser.email
+                rootUser.email
             ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
         }
 
@@ -77,29 +77,30 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                         ResourceHrn(
                             organization = organizationId,
                             resource = IamResources.USER,
-                            resourceInstance = adminUser.username
+                            resourceInstance = rootUser.username
                         ).toString(),
                         JSONB.jsonb(gson.toJson(identityGroup)),
                         LocalDateTime.now(), LocalDateTime.now()
                     )
                 )
 
-                // Create admin user for the organization
+                // Create root user for the organization
                 val user = usersService.createUser(
                     organizationId = organizationId,
                     credentials = PasswordCredentials(
-                        userName = adminUser.username,
-                        email = adminUser.email,
-                        phoneNumber = adminUser.phone, password = adminUser.passwordHash
+                        userName = rootUser.username,
+                        email = rootUser.email,
+                        phoneNumber = rootUser.phone, password = rootUser.passwordHash
                     ),
-                    createdBy = "iam-system"
+                    createdBy = "iam-system",
+                    verified = rootUser.verified ?: false
                 )
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
-                // Add policies for the admin user
+                // Add policies for the root user
                 val policyStatements = listOf(
-                    // TODO: Change organization admin's policy string to hrn:::iam-organization/$orgId
+                    // TODO: Change organization root user's policy string to hrn:::iam-organization/$orgId
                     PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
                     PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
                 )
@@ -109,14 +110,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     listOf(hrnFactory.getHrn(policy.hrn))
                 )
 
-                val credential = credentialService.createCredential(organizationId, adminUser.username)
+                val credential = credentialService.createCredential(organizationId, rootUser.username)
                 return@wrap Pair(organization, credential)
             }
         } catch (e: Exception) {
             logger.error(e) { "Exception when creating organization. Rolling back..." }
 
             identityProvider.deleteIdentityGroup(identityGroup)
-            throw e
+            throw e.cause ?: e
         }
     }
 
@@ -127,7 +128,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             id = response.id,
             name = response.name,
             description = response.description,
-            adminUserHrn = response.adminUserHrn
+            rootUserHrn = response.rootUserHrn
         )
     }
 
@@ -160,10 +161,9 @@ interface OrganizationsService {
     suspend fun createOrganization(
         name: String,
         description: String,
-        adminUser: AdminUser,
+        rootUser: RootUser,
         passcodeStr: String? = null
-    ):
-        Pair<Organization, Credential>
+    ): Pair<Organization, Credential>
 
     suspend fun getOrganization(id: String): Organization
     suspend fun updateOrganization(id: String, name: String?, description: String?): Organization

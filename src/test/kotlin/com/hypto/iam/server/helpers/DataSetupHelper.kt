@@ -11,13 +11,13 @@ import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.models.Action
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Resource
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
@@ -43,21 +43,22 @@ object DataSetupHelper : AutoCloseKoinTest() {
     private val actionRepo: ActionRepo by inject()
 
     fun createOrganization(
-        engine: TestApplicationEngine
-    ): Pair<CreateOrganizationResponse, AdminUser> {
+        engine: TestApplicationEngine,
+        userName: String = "test-user" + IdGenerator.randomId()
+    ): Pair<CreateOrganizationResponse, RootUser> {
         with(engine) {
             // Create organization
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
             val testEmail = "test-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
-            val adminUser = AdminUser(
+            val rootUser = RootUser(
                 username = userName,
                 passwordHash = testPassword,
                 email = testEmail,
-                phone = testPhone
+                phone = testPhone,
+                verified = true
             )
 
             val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
@@ -67,7 +68,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            adminUser
+                            rootUser
                         )
                     )
                 )
@@ -76,7 +77,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
             val createdOrganizationResponse = gson
                 .fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
-            return Pair(createdOrganizationResponse, adminUser)
+            return Pair(createdOrganizationResponse, rootUser)
         }
     }
 

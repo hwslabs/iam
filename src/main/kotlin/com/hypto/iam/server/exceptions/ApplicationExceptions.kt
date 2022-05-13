@@ -19,3 +19,5 @@ class PublicKeyExpiredException(s: String, ex: Exception? = null) : Exception(s,
 class PasscodeExpiredException(s: String, ex: Exception? = null) : Exception(s, ex)
 
 class PasscodeLimitExceededException(s: String, ex: Exception? = null) : Exception(s, ex)
+
+class ActionNotPermittedException(s: String, ex: Exception? = null) : Exception(s, ex)

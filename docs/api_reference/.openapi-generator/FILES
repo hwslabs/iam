@@ -11,7 +11,6 @@ Apis/UserPolicyManagementApi.md
 Apis/UserVerificationApi.md
 Models/Action.md
 Models/ActionPaginatedResponse.md
-Models/AdminUser.md
 Models/BaseSuccessResponse.md
 Models/CreateActionRequest.md
 Models/CreateCredentialRequest.md
@@ -35,6 +34,7 @@ Models/Resource.md
 Models/ResourceAction.md
 Models/ResourceActionEffect.md
 Models/ResourcePaginatedResponse.md
+Models/RootUser.md
 Models/TokenResponse.md
 Models/UpdateActionRequest.md
 Models/UpdateCredentialRequest.md

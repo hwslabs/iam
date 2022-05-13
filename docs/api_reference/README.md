@@ -50,7 +50,6 @@ Class | Method | HTTP request | Description
 
  - [Action](./Models/Action.md)
  - [ActionPaginatedResponse](./Models/ActionPaginatedResponse.md)
- - [AdminUser](./Models/AdminUser.md)
  - [BaseSuccessResponse](./Models/BaseSuccessResponse.md)
  - [CreateActionRequest](./Models/CreateActionRequest.md)
  - [CreateCredentialRequest](./Models/CreateCredentialRequest.md)
@@ -74,6 +73,7 @@ Class | Method | HTTP request | Description
  - [ResourceAction](./Models/ResourceAction.md)
  - [ResourceActionEffect](./Models/ResourceActionEffect.md)
  - [ResourcePaginatedResponse](./Models/ResourcePaginatedResponse.md)
+ - [RootUser](./Models/RootUser.md)
  - [TokenResponse](./Models/TokenResponse.md)
  - [UpdateActionRequest](./Models/UpdateActionRequest.md)
  - [UpdateCredentialRequest](./Models/UpdateCredentialRequest.md)

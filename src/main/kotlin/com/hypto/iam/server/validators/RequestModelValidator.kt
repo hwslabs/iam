@@ -10,7 +10,6 @@ import com.hypto.iam.server.extensions.dateTime
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
@@ -20,6 +19,7 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResourceAction
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.UpdateActionRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
@@ -49,8 +49,8 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
         CreateOrganizationRequest::passcode ifPresent {
             run(passcodeCheck)
         }
-        CreateOrganizationRequest::adminUser required {
-            run(adminUserRequestValidation)
+        CreateOrganizationRequest::rootUser required {
+            run(rootUserRequestValidation)
         }
     }.validateAndThrowOnFailure(this)
 }
@@ -309,17 +309,17 @@ val passwordCheck = Validation<String> {
     minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PASSWORD_LENGTH}"
     pattern(PASSWORD_REGEX) hint PASSWORD_REGEX_HINT
 }
-val adminUserRequestValidation = Validation<AdminUser> {
-    AdminUser::username required {
+val rootUserRequestValidation = Validation<RootUser> {
+    RootUser::username required {
         run(userNameCheck)
     }
-    AdminUser::phone required {
+    RootUser::phone required {
         run(phoneNumberCheck)
     }
-    AdminUser::email required {
+    RootUser::email required {
         run(emailCheck)
     }
-    AdminUser::passwordHash required {
+    RootUser::passwordHash required {
         run(passwordCheck)
     }
 }

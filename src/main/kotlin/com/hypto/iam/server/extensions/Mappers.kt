@@ -162,16 +162,17 @@ fun Action.Companion.from(record: Actions): Action {
 fun User.Companion.from(value: UsersRecord): User {
     val hrn = hrnFactory.getHrn(value.hrn) as ResourceHrn
     return User(
-        value.hrn, hrn.resourceInstance!!, value.organizationId, value.email, value.phone,
-        User.Status.valueOf(value.status), value.loginAccess, value.createdBy.toString()
+        value.hrn, hrn.resourceInstance!!, value.organizationId,
+        value.email, User.Status.valueOf(value.status),
+        value.verified
     )
 }
 
 fun usersFrom(value: UsersRecord): Users {
     return Users(
-        value.hrn, value.passwordHash, value.email, value.phone,
-        value.loginAccess, value.status, value.createdBy,
-        value.organizationId, value.createdAt, value.updatedAt
+        value.hrn, value.email, value.status,
+        value.organizationId, value.createdAt, value.updatedAt,
+        value.verified, value.deleted
     )
 }
 

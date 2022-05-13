@@ -7,11 +7,11 @@ import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
-import com.hypto.iam.server.models.AdminUser
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.ErrorResponse
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.ValidationRequest
 import com.hypto.iam.server.models.ValidationResponse
@@ -61,7 +61,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -137,7 +137,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.Accept, ContentType.Text.Plain.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -217,7 +217,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -320,7 +320,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.adminUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
                         )
                     }
                 ) {
@@ -397,7 +397,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
         private fun generateToken(
             createdOrganizationResponse: CreateOrganizationResponse,
-            createdUser: AdminUser,
+            createdUser: RootUser,
             issuedAt: Date = Date(),
             issuer: String = TokenServiceImpl.ISSUER,
             userHrn: String = ResourceHrn(

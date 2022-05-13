@@ -15,13 +15,13 @@ import java.io.Serializable
 /**
  * Payload to create organization
  * @param name
- * @param adminUser
+ * @param rootUser
  * @param description
  * @param passcode
  */
 data class CreateOrganizationRequest(
     val name: kotlin.String,
-    val adminUser: AdminUser,
+    val rootUser: RootUser,
     val description: kotlin.String? = null,
     val passcode: kotlin.String? = null
 ) : Serializable {

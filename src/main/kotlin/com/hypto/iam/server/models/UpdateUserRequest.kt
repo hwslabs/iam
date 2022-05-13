@@ -17,11 +17,13 @@ import java.io.Serializable
  * @param email
  * @param phone
  * @param status
+ * @param verified
  */
 data class UpdateUserRequest(
     val email: kotlin.String? = null,
     val phone: kotlin.String? = null,
-    val status: UpdateUserRequest.Status? = null
+    val status: UpdateUserRequest.Status? = null,
+    val verified: kotlin.Boolean? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123
