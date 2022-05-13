@@ -35,6 +35,7 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import java.time.Instant
 import java.util.*
@@ -213,8 +214,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val authString = "${createdUser.email}:${createdUser.passwordHash}"
                 val authHeader = "Basic ${Base64.getEncoder().encode(authString.encodeToByteArray())}"
 
-                declareMock<AppConfig> {
-                    coEvery { this@declareMock.app.uniqueUsersAcrossOrganizations } returns false
+                declareMock<AppConfig.App> {
+                    every { this@declareMock.uniqueUsersAcrossOrganizations } returns false
                 }
 
                 with(
@@ -244,7 +245,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
             @BeforeEach
             fun setUniquenessFlag() {
                 declareMock<AppConfig.App> {
-                    coEvery { this@declareMock.uniqueUsersAcrossOrganizations } returns true
+                    every { this@declareMock.uniqueUsersAcrossOrganizations } returns true
                 }
             }
 
