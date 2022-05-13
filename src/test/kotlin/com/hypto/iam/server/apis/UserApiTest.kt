@@ -184,6 +184,26 @@ class UserApiTest : AbstractContainerBaseTest() {
     }
 
     @Test
+    fun `delete root user`() {
+        withTestApplication(Application::handleRequest) {
+            val rootUserName = "test-root-user"
+            val (organizationResponse, _) = DataSetupHelper.createOrganization(this, rootUserName)
+            val organization = organizationResponse.organization!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
+
+            // Delete root user
+            with(handleRequest(HttpMethod.Delete,
+                "/organizations/${organization.id}/users/$rootUserName") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+            }) {
+                assertEquals(HttpStatusCode.BadRequest, response.status())
+            }
+            DataSetupHelper.deleteOrganization(organization.id, this)
+        }
+    }
+
+    @Test
     fun `list users`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest1 = CreateUserRequest(username = "testUserName",

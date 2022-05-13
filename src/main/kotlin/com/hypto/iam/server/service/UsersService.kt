@@ -6,7 +6,6 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.pojos.Users
-import com.hypto.iam.server.exceptions.ActionNotPermittedException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.toUserStatus
 import com.hypto.iam.server.idp.IdentityGroup
@@ -21,6 +20,7 @@ import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import io.ktor.server.plugins.BadRequestException
 import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -131,8 +131,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
-        org.rootUserHrn != userHrn.toString() ||
-            throw ActionNotPermittedException("Cannot delete Root User")
+        if (org.rootUserHrn == userHrn.toString())
+            throw BadRequestException("Cannot delete Root User")
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.deleteUser(identityGroup, userName)

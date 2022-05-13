@@ -43,12 +43,12 @@ object DataSetupHelper : AutoCloseKoinTest() {
     private val actionRepo: ActionRepo by inject()
 
     fun createOrganization(
-        engine: TestApplicationEngine
+        engine: TestApplicationEngine,
+        userName: String = "test-user" + IdGenerator.randomId()
     ): Pair<CreateOrganizationResponse, RootUser> {
         with(engine) {
             // Create organization
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
             val testEmail = "test-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
