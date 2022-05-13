@@ -247,6 +247,41 @@ class TokenApiTest : AbstractContainerBaseTest() {
             }
 
             @Test
+            fun `Valid Credentials`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+                    val authString = "${createdUser.email}:${createdUser.passwordHash}"
+                    val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/token"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                authHeader
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                        Assertions.assertEquals(
+                            createdOrganization.organization?.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
+                        val responseBody = gson.fromJson(response.content, TokenResponse::class.java)
+                        Assertions.assertNotNull(responseBody.token)
+                    }
+                }
+            }
+
+            @Test
             fun `Invalid User`() {
                 withTestApplication(Application::handleRequest) {
                     val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
@@ -328,7 +363,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             )
                         }
                     ) {
-                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
                         Assertions.assertEquals(
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             response.contentType()
@@ -364,7 +399,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         it.authParameters()["PASSWORD"] == invalidPassword
                     })
                     } throws NotAuthorizedException.builder()
-                        .message("Invalid username/password combo from user").build()
+                        .message("Invalid username and password combination").build()
 
                     coEvery { this@declareMock.adminInitiateAuth(match<AdminInitiateAuthRequest> {
                         it.authParameters()["PASSWORD"] != invalidPassword
@@ -414,46 +449,11 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             )
                         }
                     ) {
-                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
                         Assertions.assertEquals(
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             response.contentType()
                         )
-                    }
-                }
-            }
-
-            @Test
-            fun `Valid Credentials`() {
-                withTestApplication(Application::handleRequest) {
-                    val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
-
-                    val authString = "${createdUser.email}:${createdUser.passwordHash}"
-                    val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
-
-                    with(
-                        handleRequest(
-                            HttpMethod.Post,
-                            "/token"
-                        ) {
-                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                            addHeader(
-                                HttpHeaders.Authorization,
-                                authHeader
-                            )
-                        }
-                    ) {
-                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
-                        Assertions.assertEquals(
-                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                            response.contentType()
-                        )
-                        Assertions.assertEquals(
-                            createdOrganization.organization?.id,
-                            response.headers[Constants.X_ORGANIZATION_HEADER]
-                        )
-                        val responseBody = gson.fromJson(response.content, TokenResponse::class.java)
-                        Assertions.assertNotNull(responseBody.token)
                     }
                 }
             }

@@ -20,9 +20,9 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
+import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
-import io.ktor.server.plugins.BadRequestException
 import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -154,12 +154,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
     }
 
     override suspend fun authenticate(email: String, password: String): User {
-        if (!appConfig.app.uniqueUsersAcrossOrganizations)
-            throw BadRequestException("Email not unique across organizations. " +
-                "Please use Token APIs with organization ID")
-
         val userRecord = userRepo.findByEmail(email)
-            ?: throw BadRequestException("Invalid username and password combination")
+            ?: throw AuthenticationException("Invalid username and password combination")
         val org = organizationRepo.findById(userRecord.organizationId)
             ?: throw InternalException("Internal error while trying to authenticate the identity.")
 

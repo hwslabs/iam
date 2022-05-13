@@ -38,6 +38,7 @@ import io.ktor.server.auth.basic
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
@@ -118,6 +119,10 @@ fun Application.handleRequest() {
         }
         basic("unique-basic-auth") {
             validate { credentials ->
+                if (!appConfig.app.uniqueUsersAcrossOrganizations)
+                    throw BadRequestException("Email not unique across organizations. " +
+                        "Please use Token APIs with organization ID")
+
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
                     EmailPasswordCredential(credentials.name, credentials.password)
                 )

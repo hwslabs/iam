@@ -13,7 +13,7 @@ import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
-import io.ktor.server.plugins.BadRequestException
+import com.hypto.iam.server.security.AuthenticationException
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -356,10 +356,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             return getUser(identityGroup, userName)
         } catch (e: NotAuthorizedException) {
             logger.info { "Invalid username/password combo from user" }
-            throw BadRequestException("Invalid username and password combination")
+            throw AuthenticationException("Invalid username and password combination")
         } catch (e: UserNotFoundException) {
             logger.info(e) { "Unable to find the user $userName" }
-            throw BadRequestException("Invalid username and password combination")
+            throw AuthenticationException("Invalid username and password combination")
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to authenticate from cognito" }
             throw InternalException("Internal error while trying to authenticate the identity.")
