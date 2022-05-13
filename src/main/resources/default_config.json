@@ -36,7 +36,7 @@
     "passcode_count_limit": 1,
     "base_url": "<placeholder for base url>",
     "sender_email_address": "<placeholder for senders email address>",
-    "verify_user_template": "<placeholder for verify user template name>",
+    "sign_up_email_template": "<placeholder for signup user template name>",
     "unique_users_across_organizations": false
   },
   "aws": {

@@ -3,8 +3,9 @@
 package com.hypto.iam.server
 
 import com.hypto.iam.server.apis.actionApi
-import com.hypto.iam.server.apis.createAndDeleteOrganizationApi
+import com.hypto.iam.server.apis.createOrganizationApi
 import com.hypto.iam.server.apis.credentialApi
+import com.hypto.iam.server.apis.deleteOrganizationApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.keyApi
 import com.hypto.iam.server.apis.passcodeApi
@@ -15,6 +16,7 @@ import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.apis.validationApi
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
@@ -56,6 +58,7 @@ private const val REQUEST_ID_HEADER = "X-Request-Id"
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val appConfig: AppConfig by inject()
+    val passcodeRepo: PasscodeRepo by inject()
     val userPrincipalService: UserPrincipalService by inject()
 
     install(DefaultHeaders)
@@ -88,6 +91,15 @@ fun Application.handleRequest() {
                 when (tokenCredential.value) {
                     appConfig.app.secretKey -> ApiPrincipal(tokenCredential, "hypto-root")
                     else -> null
+                }
+            }
+        }
+        apiKeyAuth("passcode-auth") {
+            validate { tokenCredential: TokenCredential ->
+                tokenCredential.value?.let {
+                    passcodeRepo.findById(it)?.let {
+                        ApiPrincipal(tokenCredential, "hypto-root")
+                    }
                 }
             }
         }
@@ -128,8 +140,13 @@ fun Application.handleRequest() {
     }
 
     install(Routing) {
+
+        authenticate("hypto-iam-root-auth", "passcode-auth") {
+            createOrganizationApi()
+        }
+
         authenticate("hypto-iam-root-auth") {
-            createAndDeleteOrganizationApi()
+            deleteOrganizationApi()
         }
 
         authenticate("bearer-auth") {

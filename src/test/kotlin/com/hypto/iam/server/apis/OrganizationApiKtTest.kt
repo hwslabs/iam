@@ -11,6 +11,7 @@ import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -100,6 +101,55 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertFalse(response.headers.contains(HttpHeaders.ContentType))
                 assertEquals(null, response.content)
             }
+        }
+    }
+
+    @Test
+    fun `create organization with verify email method`() {
+
+        withTestApplication(Application::handleRequest) {
+            val orgName = "test-org" + IdGenerator.randomId()
+            val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
+            val testPasscode = "testPasscode"
+            val verified = true
+
+            lateinit var orgId: String
+            val verifyRequestBody = VerifyEmailRequest(
+                email = testEmail,
+                purpose = VerifyEmailRequest.Purpose.signup
+            )
+            handleRequest(HttpMethod.Post, "/verifyEmail") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(gson.toJson(verifyRequestBody))
+            }
+            val requestBody = CreateOrganizationRequest(
+                orgName,
+                RootUser(userName, testPassword, testEmail, testPhone, verified)
+            )
+            with(
+                handleRequest(HttpMethod.Post, "/organizations") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader("X-Api-Key", testPasscode)
+                    setBody(gson.toJson(requestBody))
+                }
+            ) {
+                val responseBody =
+                    gson.fromJson(response.content, CreateOrganizationResponse::class.java)
+                assertEquals(HttpStatusCode.Created, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(UTF_8),
+                    response.contentType()
+                )
+
+                orgId = responseBody.organization!!.id
+                assertEquals(requestBody.name, responseBody.organization!!.name)
+                assertEquals(10, responseBody.organization!!.id.length)
+            }
+
+            DataSetupHelper.deleteOrganization(orgId, this)
         }
     }
 

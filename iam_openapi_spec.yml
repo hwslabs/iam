@@ -108,7 +108,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       security:
-        - apiKeyAuth: [ hypto-internal-secret-key ]
+        - apiKeyAuth: [ hypto-internal-secret-key, passcode ]
 
   /organizations/{organization_id}:
     get:
@@ -1683,7 +1683,6 @@ components:
       value:
         name: ACME Enterprise
         description: Brief description about ACME
-        passcode: YjhhMWRlN2
         rootUser:
           username: username
           password: <password>
@@ -2032,9 +2031,6 @@ components:
         description:
           type: string
           maxLength: 500
-        passcode:
-          type: string
-          maxLength: 10
         rootUser:
           $ref: '#/components/schemas/RootUser'
 

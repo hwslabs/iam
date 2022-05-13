@@ -17,13 +17,11 @@ import java.io.Serializable
  * @param name
  * @param rootUser
  * @param description
- * @param passcode
  */
 data class CreateOrganizationRequest(
     val name: kotlin.String,
     val rootUser: RootUser,
-    val description: kotlin.String? = null,
-    val passcode: kotlin.String? = null
+    val description: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

@@ -55,6 +55,13 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             ).fetchOne()
     }
 
+    suspend fun findById(id: String): Passcodes? {
+        val daoImpl = txMan.getDao(
+            PASSCODES, Passcodes::class.java, idFun
+        )
+        return daoImpl.findById(id)
+    }
+
     suspend fun deleteById(id: String): Boolean {
         val record = PasscodesRecord().setId(id)
         record.attach(dao().configuration())

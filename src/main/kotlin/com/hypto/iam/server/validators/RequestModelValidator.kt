@@ -46,9 +46,6 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
         CreateOrganizationRequest::name required {
             run(nameCheck)
         }
-        CreateOrganizationRequest::passcode ifPresent {
-            run(passcodeCheck)
-        }
         CreateOrganizationRequest::rootUser required {
             run(rootUserRequestValidation)
         }
@@ -242,8 +239,6 @@ const val EMAIL_REGEX_HINT = "Email should contain `.`, `@`"
 const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@_#])[A-Za-z\\d@_#]{8,}\$"
 const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase letter, " +
     "one lowercase letter, one number and one special character[@ _ #]"
-const val PASSCODE_REGEX = "^[0-9a-zA-Z]*\$"
-const val PASSCODE_REGEX_HINT = "Passcode should be a valid alphanumeric string"
 const val ORGANIZATION_ID_REGEX = "^[a-zA-Z0-9]*\$"
 const val ORGANIZATION_ID_REGEX_HINT = "Organization ID should be a valid alphanumeric string"
 
@@ -278,10 +273,6 @@ val descriptionCheck = Validation<String> {
 
 val hrnCheck = Validation<String> {
     pattern(HRN_PREFIX_REGEX) hint "HRN must start with a valid organization Id"
-}
-
-val passcodeCheck = Validation<String> {
-    pattern(PASSCODE_REGEX) hint PASSCODE_REGEX_HINT
 }
 
 val organizationIdCheck = Validation<String> {

@@ -50,7 +50,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             Base64.getEncoder().encodeToString(email.toByteArray())
         }"
         val emailRequest = SendTemplatedEmailRequest.builder()
-            .source(appConfig.app.senderEmailAddress).template(appConfig.app.verifyUserTemplate).templateData(
+            .source(appConfig.app.senderEmailAddress).template(appConfig.app.signUpEmailTemplate).templateData(
                 "{\"link\":\"$link\"}"
             ).destination(Destination.builder().toAddresses(email).build()).build()
         sesClient.sendTemplatedEmail(emailRequest)
