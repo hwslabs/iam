@@ -214,8 +214,11 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val authString = "${createdUser.email}:${createdUser.passwordHash}"
                 val authHeader = "Basic ${Base64.getEncoder().encode(authString.encodeToByteArray())}"
 
-                declareMock<AppConfig.App> {
-                    every { this@declareMock.uniqueUsersAcrossOrganizations } returns false
+                declareMock<AppConfig> {
+                    every { this@declareMock.app } answers {
+                        AppConfig.App(AppConfig.Environment.Development, 300, 600,
+                            "iam-secret-key", 30, 30, false)
+                    }
                 }
 
                 with(
@@ -244,8 +247,11 @@ class TokenApiTest : AbstractContainerBaseTest() {
         inner class LoginUnique {
             @BeforeEach
             fun setUniquenessFlag() {
-                declareMock<AppConfig.App> {
-                    every { this@declareMock.uniqueUsersAcrossOrganizations } returns true
+                declareMock<AppConfig> {
+                    every { this@declareMock.app } answers {
+                        AppConfig.App(AppConfig.Environment.Development, 300, 600,
+                            "iam-secret-key", 30, 30, true)
+                    }
                 }
             }
 
