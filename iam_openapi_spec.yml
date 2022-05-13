@@ -2403,11 +2403,16 @@ components:
           enum:
             - enabled
             - disabled
-        verified:
-          type: boolean
         phone:
           type: string
           maxLength: 20
+        login_access:
+          type: boolean
+        created_by:
+          type: string
+          maxLength: 50
+        verified:
+          type: boolean
 
     Credential:
       type: object
