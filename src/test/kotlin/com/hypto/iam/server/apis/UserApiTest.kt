@@ -44,7 +44,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
             DataSetupHelper.createResource(organization.id, createdCredentials, this)
 
             with(
@@ -86,7 +86,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             // Create user
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
@@ -125,7 +125,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             // Create user
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
@@ -157,7 +157,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
 
             // Create user
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
@@ -184,6 +184,26 @@ class UserApiTest : AbstractContainerBaseTest() {
     }
 
     @Test
+    fun `delete root user`() {
+        withTestApplication(Application::handleRequest) {
+            val rootUserName = "test-root-user"
+            val (organizationResponse, _) = DataSetupHelper.createOrganization(this, rootUserName)
+            val organization = organizationResponse.organization!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
+
+            // Delete root user
+            with(handleRequest(HttpMethod.Delete,
+                "/organizations/${organization.id}/users/$rootUserName") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+            }) {
+                assertEquals(HttpStatusCode.BadRequest, response.status())
+            }
+            DataSetupHelper.deleteOrganization(organization.id, this)
+        }
+    }
+
+    @Test
     fun `list users`() {
         val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
         val createUserRequest1 = CreateUserRequest(username = "testUserName",
@@ -199,7 +219,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
             DataSetupHelper.createResource(organization.id, createdCredentials, this)
 
             // Create user1
@@ -240,7 +260,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val userName = "testUserName"
 
@@ -298,7 +318,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.adminUserCredential!!
+            val createdCredentials = organizationResponse.rootUserCredential!!
             DataSetupHelper.createResource(organization.id, createdCredentials, this)
 
             with(

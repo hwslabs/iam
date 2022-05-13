@@ -15,11 +15,11 @@ import java.io.Serializable
 /**
  *
  * @param organization
- * @param adminUserCredential
+ * @param rootUserCredential
  */
 data class CreateOrganizationResponse(
     val organization: Organization? = null,
-    val adminUserCredential: Credential? = null
+    val rootUserCredential: Credential? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

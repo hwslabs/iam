@@ -49,7 +49,7 @@ Class | Method | HTTP request | Description
 
  - [Action](./Models/Action.md)
  - [ActionPaginatedResponse](./Models/ActionPaginatedResponse.md)
- - [AdminUser](./Models/AdminUser.md)
+ - [RootUser](./Models/RootUser.md)
  - [BaseSuccessResponse](./Models/BaseSuccessResponse.md)
  - [CreateActionRequest](./Models/CreateActionRequest.md)
  - [CreateCredentialRequest](./Models/CreateCredentialRequest.md)

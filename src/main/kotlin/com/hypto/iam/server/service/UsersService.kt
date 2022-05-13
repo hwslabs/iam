@@ -20,6 +20,7 @@ import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import io.ktor.server.plugins.BadRequestException
 import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -129,10 +130,13 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
+        if (org.rootUserHrn == userHrn.toString())
+            throw BadRequestException("Cannot delete Root User")
+
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.deleteUser(identityGroup, userName)
 
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         userRepo.delete(userHrn.toString()) ?: throw EntityNotFoundException("User not found")
 
         return BaseSuccessResponse(true)

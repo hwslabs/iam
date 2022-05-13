@@ -37,7 +37,7 @@ class KeyApiTest : AbstractContainerBaseTest() {
             val createTokenCall =
                 handleRequest(HttpMethod.Post, "/organizations/${organizationResponse.organization?.id}/token") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${organizationResponse.adminUserCredential?.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserCredential?.secret}")
                 }
             val token = gson
                 .fromJson(createTokenCall.response.content, TokenResponse::class.java).token
@@ -55,7 +55,7 @@ class KeyApiTest : AbstractContainerBaseTest() {
                     HttpMethod.Get,
                     "/keys/$kid?format=der"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${organizationResponse.adminUserCredential?.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserCredential?.secret}")
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())

@@ -20,7 +20,6 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
-import org.koin.ktor.ext.inject
 
 /**
  * API to create & delete organization in IAM.
@@ -37,7 +36,7 @@ fun Route.createAndDeleteOrganizationApi() {
             val (organization, credential) = service.createOrganization(
                 request.name,
                 description = "",
-                adminUser = request.adminUser
+                rootUser = request.rootUser
             )
             call.respondText(
                 text = gson.toJson(CreateOrganizationResponse(organization, credential)),
