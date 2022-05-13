@@ -23,9 +23,9 @@ interface IdentityProvider {
     suspend fun updateUser(
         identityGroup: IdentityGroup,
         userName: String,
-        email: String,
         phone: String,
-        status: com.hypto.iam.server.models.User.Status?
+        status: com.hypto.iam.server.models.User.Status?,
+        verified: Boolean?
     ): User
     suspend fun listUsers(identityGroup: IdentityGroup, pageToken: String?, limit: Int?): Pair<List<User>, NextToken?>
     suspend fun deleteUser(identityGroup: IdentityGroup, userName: String)
@@ -51,6 +51,7 @@ data class User(
     val loginAccess: Boolean,
     val isEnabled: Boolean,
     val createdBy: String,
+    val verified: Boolean,
     val createdAt: String
 )
 abstract class UserCredentials {
@@ -68,4 +69,8 @@ data class AccessTokenCredentials(
     val phoneNumber: String,
     val accessToken: String
 ) : UserCredentials()
-data class RequestContext(val organizationId: String, val requestedPrincipal: String)
+data class RequestContext(
+    val organizationId: String,
+    val requestedPrincipal: String,
+    val verified: Boolean
+)

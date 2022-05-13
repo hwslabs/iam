@@ -38,7 +38,7 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                AdminUser(userName, testPassword, testEmail, testPhone)
+                AdminUser(userName, testPassword, testEmail, testPhone, true)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {

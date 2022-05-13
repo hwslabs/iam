@@ -46,10 +46,11 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
+            val verified = true
             lateinit var orgId: String
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                AdminUser(userName, testPassword, testEmail, testPhone)
+                AdminUser(userName, testPassword, testEmail, testPhone, verified)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -87,7 +88,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         gson.toJson(
                             CreateOrganizationRequest(
                                 orgName,
-                                AdminUser(userName, testPassword, testEmail, testPhone)
+                                AdminUser(userName, testPassword, testEmail, testPhone, true)
                             )
                         )
                     )
@@ -119,7 +120,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                AdminUser(userName, testPassword, testEmail, testPhone)
+                AdminUser(userName, testPassword, testEmail, testPhone, true)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -151,7 +152,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, testPassword, testEmail, testPhone)
+                            AdminUser(userName, testPassword, testEmail, testPhone, true)
                         )
                     )
                 )
@@ -190,7 +191,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, testPassword, testEmail, testPhone)
+                            AdminUser(userName, testPassword, testEmail, testPhone, true)
                         )
                     )
                 )
@@ -232,7 +233,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            AdminUser(userName, testPassword, testEmail, testPhone)
+                            AdminUser(userName, testPassword, testEmail, testPhone, true)
                         )
                     )
                 )

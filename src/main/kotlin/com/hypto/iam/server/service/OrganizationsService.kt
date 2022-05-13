@@ -77,7 +77,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                         email = adminUser.email,
                         phoneNumber = adminUser.phone, password = adminUser.passwordHash
                     ),
-                    createdBy = "iam-system"
+                    createdBy = "iam-system",
+                    verified = adminUser.verified ?: false
                 )
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
@@ -101,7 +102,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             logger.error(e) { "Exception when creating organization. Rolling back..." }
 
             identityProvider.deleteIdentityGroup(identityGroup)
-            throw e
+            throw e.cause ?: e
         }
     }
 

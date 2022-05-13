@@ -38,6 +38,8 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
      *                                  for signing JWT tokens must be fetched from DB
      * @param cacheRefreshInterval Represents how frequently the local Key cache for
      *                                  verifying tokens must be refreshed
+     * @param uniqueUsersAcrossOrganizations Represents whether the users should be unique across all
+     *                                          organizations. Uniqueness is determined with the user emails.
      */
     data class App(
         val env: Environment,
@@ -45,7 +47,8 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val oldKeyTtl: Long,
         val secretKey: String,
         val signKeyFetchInterval: Long,
-        val cacheRefreshInterval: Long
+        val cacheRefreshInterval: Long,
+        val uniqueUsersAcrossOrganizations: Boolean
     ) {
         val isDevelopment: Boolean
             get() = env == Environment.Development

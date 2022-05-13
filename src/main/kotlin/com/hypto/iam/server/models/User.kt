@@ -18,8 +18,9 @@ import java.io.Serializable
  * @param username
  * @param organizationId
  * @param email
- * @param phone
  * @param status
+ * @param verified
+ * @param phone
  * @param loginAccess
  * @param createdBy
  */
@@ -28,8 +29,9 @@ data class User(
     val username: kotlin.String,
     val organizationId: kotlin.String,
     val email: kotlin.String,
-    val phone: kotlin.String,
     val status: User.Status,
+    val verified: kotlin.Boolean,
+    val phone: kotlin.String? = null,
     val loginAccess: kotlin.Boolean? = null,
     val createdBy: kotlin.String? = null
 ) : Serializable {

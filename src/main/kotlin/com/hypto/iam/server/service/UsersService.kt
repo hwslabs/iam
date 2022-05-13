@@ -2,7 +2,10 @@
 package com.hypto.iam.server.service
 
 import com.google.gson.Gson
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.UserRepo
+import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.toUserStatus
 import com.hypto.iam.server.idp.IdentityGroup
@@ -10,32 +13,47 @@ import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.NextToken
 import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.idp.RequestContext
+import com.hypto.iam.server.idp.UserAlreadyExistException
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class UsersServiceImpl : KoinComponent, UsersService {
+    private val userRepo: UserRepo by inject()
     private val organizationRepo: OrganizationRepo by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
+    private val appConfig: AppConfig by inject()
 
     override suspend fun createUser(
         organizationId: String,
         credentials: PasswordCredentials,
-        createdBy: String?
+        createdBy: String?,
+        verified: Boolean
     ): User {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
+
+        if (UserRepo.existsByEmail(credentials.email, organizationId, appConfig.app.uniqueUsersAcrossOrganizations))
+            throw UserAlreadyExistException("Email - ${credentials.email} already registered. Unable to create user")
+
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, credentials.userName)
         val user = identityProvider.createUser(
-            RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user"),
+            RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user", verified),
             identityGroup, credentials
+        )
+        userRepo.insert(
+            Users(
+                userHrn.toString(), credentials.email, User.Status.enabled.value,
+                organizationId, LocalDateTime.now(), LocalDateTime.now(), verified, false
+            )
         )
         return getUser(userHrn, user)
     }
@@ -57,8 +75,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        val (users, nextToken) = identityProvider.listUsers(identityGroup = identityGroup,
-            pageToken = nextToken, limit = pageSize)
+        val (users, nextToken) = identityProvider.listUsers(
+            identityGroup = identityGroup,
+            pageToken = nextToken, limit = pageSize
+        )
         val pageContext = PaginationOptions(pageSize)
         val externalUserTypeUsers = users.map { user ->
             val userHrn = ResourceHrn(organizationId, "", IamResources.USER, user.username)
@@ -75,25 +95,34 @@ class UsersServiceImpl : KoinComponent, UsersService {
         username = user.username,
         organizationId = userHrn.organization,
         email = user.email,
-        phone = user.phoneNumber,
         status = if (user.isEnabled) User.Status.enabled else User.Status.disabled,
-        loginAccess = true, createdBy = user.createdBy
+        verified = user.verified,
+        phone = user.phoneNumber,
+        createdBy = user.createdBy,
+        loginAccess = user.loginAccess
     )
 
     override suspend fun updateUser(
         organizationId: String,
         userName: String,
-        email: String,
         phone: String,
-        status: UpdateUserRequest.Status?
+        status: UpdateUserRequest.Status?,
+        verified: Boolean?
     ): User {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val userStatus = status?.toUserStatus()
-        val user = identityProvider.updateUser(identityGroup = identityGroup,
-            userName = userName, email = email, phone = phone, status = userStatus)
+        val user = identityProvider.updateUser(
+            identityGroup = identityGroup,
+            userName = userName, phone = phone,
+            status = userStatus, verified = verified
+        )
+
+        userRepo.update(userHrn.toString(), userStatus, verified)
+            ?: throw EntityNotFoundException("User not found")
+
         return getUser(userHrn, user)
     }
 
@@ -102,6 +131,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.deleteUser(identityGroup, userName)
+
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
+        userRepo.delete(userHrn.toString()) ?: throw EntityNotFoundException("User not found")
+
         return BaseSuccessResponse(true)
     }
 
@@ -119,17 +152,25 @@ class UsersServiceImpl : KoinComponent, UsersService {
  * Service which holds logic related to User operations
  */
 interface UsersService {
-    suspend fun createUser(organizationId: String, credentials: PasswordCredentials, createdBy: String?): User
+    suspend fun createUser(
+        organizationId: String,
+        credentials: PasswordCredentials,
+        createdBy: String?,
+        verified: Boolean
+    ): User
+
     suspend fun getUser(organizationId: String, userName: String): User
     suspend fun listUsers(organizationId: String, nextToken: String?, pageSize: Int?):
         Triple<List<User>, NextToken?, PaginationOptions>
+
     suspend fun updateUser(
         organizationId: String,
         userName: String,
-        email: String,
         phone: String,
-        status: UpdateUserRequest.Status? = null
+        status: UpdateUserRequest.Status? = null,
+        verified: Boolean?
     ): User
+
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
     suspend fun authenticate(organizationId: String, userName: String, password: String): User
 }
