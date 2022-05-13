@@ -22,6 +22,7 @@ import com.hypto.iam.server.plugins.Koin
 import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Authorization
+import com.hypto.iam.server.security.EmailPasswordCredential
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.apiKeyAuth
@@ -37,6 +38,7 @@ import io.ktor.server.auth.basic
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
@@ -115,6 +117,21 @@ fun Application.handleRequest() {
                 }
             }
         }
+        basic("unique-basic-auth") {
+            validate { credentials ->
+                if (!appConfig.app.uniqueUsersAcrossOrganizations)
+                    throw BadRequestException("Email not unique across organizations. " +
+                        "Please use Token APIs with organization ID")
+
+                val principal = userPrincipalService.getUserPrincipalByCredentials(
+                    EmailPasswordCredential(credentials.name, credentials.password)
+                )
+                if (principal != null) {
+                    response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
+                }
+                return@validate principal
+            }
+        }
     }
 
     // Create a signing Master key pair in case one doesn't exist
@@ -141,9 +158,7 @@ fun Application.handleRequest() {
             validationApi()
         }
 
-        authenticate("basic-auth", "bearer-auth") {
-            tokenApi()
-        }
+        tokenApi() // Authentication handled along with API definitions
         keyApi()
     }
 }

@@ -1,12 +1,13 @@
 package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.security.EmailPasswordCredential
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.validators.validate
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.ktor.ext.inject
 
 class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     private val credentialsRepo: CredentialsRepo by inject()
@@ -43,6 +44,16 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
             userPoliciesService.fetchEntitlements(user.hrn)
         )
     }
+
+    override suspend fun getUserPrincipalByCredentials(credentials: EmailPasswordCredential): UserPrincipal? {
+        val validCredentials = credentials.validate()
+        val user = usersService.authenticate(validCredentials.email, validCredentials.password)
+        return UserPrincipal(
+            TokenCredential(validCredentials.email, TokenType.BASIC),
+            user.hrn,
+            userPoliciesService.fetchEntitlements(user.hrn)
+        )
+    }
 }
 
 interface UserPrincipalService {
@@ -50,4 +61,5 @@ interface UserPrincipalService {
     suspend fun getUserPrincipalByJwtToken(tokenCredential: TokenCredential): UserPrincipal?
     suspend fun getUserPrincipalByCredentials(organizationId: String, userName: String, password: String):
         UserPrincipal?
+    suspend fun getUserPrincipalByCredentials(credentials: EmailPasswordCredential): UserPrincipal?
 }

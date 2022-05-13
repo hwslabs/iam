@@ -25,7 +25,7 @@ data class RootUser(
     val passwordHash: kotlin.String,
     val email: kotlin.String,
     val phone: kotlin.String,
-    val verified: kotlin.Boolean?
+    val verified: kotlin.Boolean
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

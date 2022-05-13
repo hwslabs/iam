@@ -9,11 +9,12 @@ import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_ID
 import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_NAME
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_CREATED_BY
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
-import io.ktor.server.plugins.BadRequestException
+import com.hypto.iam.server.security.AuthenticationException
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -27,6 +28,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AliasAttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeDataType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthFlowType
@@ -47,6 +49,7 @@ private val logger = KotlinLogging.logger {}
 
 object CognitoConstants {
     const val ATTRIBUTE_EMAIL = "email"
+    const val ATTRIBUTE_EMAIL_VERIFIED = "email_verified"
     const val ATTRIBUTE_PHONE = "phone_number"
     const val ATTRIBUTE_CREATED_BY = "createdBy"
     const val ATTRIBUTE_VERIFIED = "verified"
@@ -62,12 +65,16 @@ object CognitoConstants {
  */
 class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     private val cognitoClient: CognitoIdentityProviderClient by inject()
+    private val aliasAttributeTypes = mutableListOf(AliasAttributeType.EMAIL, AliasAttributeType.PREFERRED_USERNAME)
 
     override suspend fun createIdentityGroup(name: String, userConfiguration: Configuration): IdentityGroup {
         try {
             // Create user pool
-            val createUserPoolResponse =
-                cognitoClient.createUserPool(CreateUserPoolRequest.builder().poolName(name).build())
+            val createUserPoolResponse = cognitoClient.createUserPool(
+                    CreateUserPoolRequest.builder().poolName(name)
+                    .aliasAttributes(aliasAttributeTypes)
+                    .build()
+            )
             val createUserPoolClientRequest = CreateUserPoolClientRequest.builder()
                 .userPoolId(createUserPoolResponse.userPool().id())
                 .clientName(APP_CLIENT_NAME)
@@ -161,10 +168,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 response.username(),
                 phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
                 email = getAttribute(attrs, ATTRIBUTE_EMAIL),
+                verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
                 loginAccess = true,
                 isEnabled = response.enabled(),
                 createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
-                verified = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED).toBoolean(),
                 createdAt = response.userCreateDate().toString()
             )
         } catch (e: UserNotFoundException) {
@@ -209,7 +216,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         if (verified != null)
             attrs.add(
                 AttributeType.builder()
-                    .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED)
+                    .name(ATTRIBUTE_EMAIL_VERIFIED)
                     .value(verified.toString()).build()
             )
         val updateRequest =
@@ -228,22 +235,22 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         val emailAttr = AttributeType.builder()
             .name(ATTRIBUTE_EMAIL)
             .value(credentials.email).build()
+        val emailVerifiedAttr = AttributeType.builder()
+            .name(ATTRIBUTE_EMAIL_VERIFIED)
+            .value(context.verified.toString()).build()
         val phoneNumberAttr = AttributeType.builder()
             .name(ATTRIBUTE_PHONE)
             .value(credentials.phoneNumber).build()
         val createdBy = AttributeType.builder()
             .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY)
             .value(context.requestedPrincipal).build()
-        val verified = AttributeType.builder()
-            .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED)
-            .value(context.verified.toString()).build()
 
         // Creates user in cognito
         val userRequest = AdminCreateUserRequest.builder()
             .userPoolId(identityGroup.id)
             .username(credentials.userName)
             .temporaryPassword(credentials.password)
-            .userAttributes(emailAttr, phoneNumberAttr, createdBy, verified)
+            .userAttributes(emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
             .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
             .build()
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
@@ -257,10 +264,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             adminCreateUserResponse.user().username(),
             phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
             email = getAttribute(attrs, ATTRIBUTE_EMAIL),
+            verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
             loginAccess = true,
             isEnabled = true,
             createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
-            verified = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED).toBoolean(),
             createdAt = adminCreateUserResponse.user().userCreateDate().toString()
         )
     }
@@ -306,12 +313,11 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 User(
                     user.username(),
                     email = getAttribute(user.attributes(), ATTRIBUTE_EMAIL),
+                    verified = getAttribute(user.attributes(), ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
                     phoneNumber = getAttribute(user.attributes(), ATTRIBUTE_PHONE),
                     loginAccess = true,
                     isEnabled = user.userStatus() != UserStatusType.ARCHIVED,
                     createdBy = getAttribute(user.attributes(), ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
-                    verified = getAttribute(user.attributes(),
-                        ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_VERIFIED).toBoolean(),
                     createdAt = user.userCreateDate().toString()
                 )
             }.toList()
@@ -349,13 +355,16 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             val initiateAuthRequest = AdminInitiateAuthRequest.builder()
                 .userPoolId(identityGroup.id)
                 .clientId(identityGroup.metadata[APP_CLIENT_ID])
-                .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
+                .authFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
                 .authParameters(mapOf("USERNAME" to userName, "PASSWORD" to password)).build()
             val initiateAuthResponse = cognitoClient.adminInitiateAuth(initiateAuthRequest)
             return getUser(identityGroup, userName)
         } catch (e: NotAuthorizedException) {
             logger.info { "Invalid username/password combo from user" }
-            throw BadRequestException("Invalid username and password combination")
+            throw AuthenticationException("Invalid username and password combination")
+        } catch (e: UserNotFoundException) {
+            logger.info(e) { "Unable to find the user $userName" }
+            throw AuthenticationException("Invalid username and password combination")
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to authenticate from cognito" }
             throw InternalException("Internal error while trying to authenticate the identity.")

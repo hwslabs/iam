@@ -44,6 +44,9 @@ abstract class IamPrincipal : Principal {
     abstract val organization: String
 }
 
+/** Class which stores email and password authenticated using Unique Basic Auth */
+data class EmailPasswordCredential(val email: String, val password: String)
+
 /** Class to store the Principal authenticated using ApiKey auth **/
 data class ApiPrincipal(
     val tokenCredential: TokenCredential,
