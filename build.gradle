@@ -6,16 +6,14 @@ buildscript {
     ext.koin_version = '3.1.6'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
-    ext.jooq_version = '3.16.5'
-//    ext.h2Version = "2.1.210"
+    ext.jooq_version = '3.16.6'
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = "5.8.2"
-    ext.flyway_version = '8.5.7'
-    ext.casbin_version = '1.22.5'
-    ext.postgres_jdbc_driver = '42.3.3'
+    ext.flyway_version = '8.5.10'
+    ext.casbin_version = '1.22.6'
+    ext.postgres_jdbc_driver = '42.3.4'
 
     repositories {
-        jcenter()
         google()
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://jitpack.io' }
@@ -60,8 +58,9 @@ sourceCompatibility = 11
 
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
+    main.java.srcDirs += 'build/generated-src/openapi'
     main.kotlin.srcDirs += 'src/main/kotlin'
-    main.kotlin.srcDirs += 'build/generated-src/jooq/main'
+    main.kotlin.srcDirs += 'build/generated-src/jooq'
     test.kotlin.srcDirs += 'src/test/kotlin'
 }
 
@@ -71,12 +70,6 @@ compileKotlin {
 
 compileTestKotlin {
     kotlinOptions.jvmTarget = "11"
-}
-
-kotlin {
-    experimental {
-        coroutines "enable"
-    }
 }
 
 test {
@@ -113,10 +106,7 @@ shadowJar {
 repositories {
     mavenCentral()
     google()
-    jcenter()
     maven { url 'https://jitpack.io' }
-//    maven { url "https://dl.bintray.com/kotlin/ktor" }
-//    maven { url "https://dl.bintray.com/kotlin/kotlinx" }
 }
 
 configurations {
@@ -144,6 +134,7 @@ jooq {
                 }
                 generator {
                     name = 'org.jooq.codegen.DefaultGenerator'
+//                    name = 'org.jooq.codegen.KotlinGenerator'
                     database {
                         name = 'org.jooq.meta.postgres.PostgresDatabase'
                         inputSchema = 'public'
@@ -171,12 +162,15 @@ jooq {
                         deprecated = false
                         records = true
                         immutablePojos = true
+                        pojosAsKotlinDataClasses = false
                         fluentSetters = true
+                        relations = true
 //                        embeddablePrimaryKeys = true // Available only in paid version :(
                         daos = false
                     }
                     target {
                         packageName = 'com.hypto.iam.server.db'
+                        directory = "$buildDir/generated-src/jooq".toString()
                     }
                 }
             }
@@ -219,32 +213,33 @@ task generateAPIDocs(dependsOn: [cleanAPIDocs], type: GenerateTask) {
     finalizedBy(ktlintFormat)
 }
 
-task cleanAPIModels(type: Delete) {
-    delete "$rootDir/src/main/kotlin/com/hypto/iam/server/models/"
-}
-
-task generateAPIModels(dependsOn: [clean], type: GenerateTask) {
+task generateServer(dependsOn: [clean], type: GenerateTask, group: "openapi tools") {
     generatorName = "kotlin-server"
     inputSpec = "$rootDir/iam_openapi_spec.yml".toString()
-    outputDir = "$buildDir/openapi-generated-src".toString()
+    outputDir = "$buildDir/generated-src/openapi_server".toString()
     apiPackage = "com.hypto.iam"
     invokerPackage = "com.hypto.iam"
     modelPackage = "com.hypto.iam.server.models"
     configOptions = [
             serializableModel: "true"
+//            enumPropertyNaming: "UPPERCASE"
     ]
 }
 
-task generateAndMoveAPIModels(dependsOn: [generateAPIModels, cleanAPIModels], type: Copy) {
-    from("$buildDir/openapi-generated-src/src/main/kotlin/com/hypto/iam/server/models") {
+task deleteServer(type: Delete, group: "openapi tools") {
+    delete "$buildDir/generated-src/openapi_server"
+}
+
+task generateOpenAPIModels(dependsOn: [generateServer], type: Copy, group: "openapi tools") {
+    from("$buildDir/generated-src/openapi_server/src/main/kotlin/com/hypto/iam/server/models") {
         include '**/*'
     }
-    into "$rootDir/src/main/kotlin/com/hypto/iam/server/models"
-    finalizedBy(ktlintFormat)
+    into "$buildDir/generated-src/openapi/com/hypto/iam/server/models"
+    finalizedBy(deleteServer)
 }
 
 task generateOpenAPI {
-    dependsOn generateAndMoveAPIModels, generateAPIDocs
+    dependsOn generateOpenAPIModels, generateAPIDocs
 }
 
 task dockerDistJar {
@@ -354,11 +349,11 @@ dependencies {
     implementation 'com.newrelic.telemetry:micrometer-registry-new-relic:0.8.0'
 
     // JWT
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.2'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.2'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     // Uncomment the next line if you want to use RSASSA-PSS (PS256, PS384, PS512) algorithms:
     //    runtimeOnly 'org.bouncycastle:bcprov-jdk15on:1.60'
-    runtimeOnly 'io.jsonwebtoken:jjwt-gson:0.11.2' // or 'io.jsonwebtoken:jjwt-jackson:0.11.2' for gson
+    runtimeOnly 'io.jsonwebtoken:jjwt-gson:0.11.5' // or 'io.jsonwebtoken:jjwt-jackson:0.11.2' for gson
 
     // Validation
     implementation("io.konform:konform:0.3.0")
@@ -368,7 +363,7 @@ dependencies {
     implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
 
     // Hoplite
-    implementation('com.sksamuel.hoplite:hoplite-json:2.1.0')
+    implementation('com.sksamuel.hoplite:hoplite-json:2.1.2')
 
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.17.143')
@@ -387,9 +382,9 @@ dependencies {
     testImplementation('io.mockk:mockk:1.12.3')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    testImplementation "org.testcontainers:junit-jupiter:1.16.3"
-    testImplementation "org.testcontainers:testcontainers:1.16.3"
-    testImplementation "org.testcontainers:postgresql:1.16.3"
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.1'
+    testImplementation 'org.testcontainers:testcontainers:1.17.1'
+    testImplementation 'org.testcontainers:postgresql:1.17.1'
 }
 
 // configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources
@@ -409,4 +404,4 @@ tasks.named('generateJooq').configure {
     allInputsDeclared = true
 }
 
-compileKotlin.dependsOn clean, generateJooq
+compileKotlin.dependsOn clean, tasks.named("detekt"), ktlintFormat, generateJooq, generateOpenAPIModels

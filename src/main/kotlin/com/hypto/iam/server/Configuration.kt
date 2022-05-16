@@ -25,7 +25,6 @@ import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.util.NamedThreadFactory
 import java.net.InetAddress
 import java.time.Duration
-import java.util.concurrent.Executors
 
 /**
  * Application block for [HSTS] configuration.
@@ -81,7 +80,7 @@ val ApplicationAuthProviders: Map<String, OAuthServerSettings> = listOf<OAuthSer
 ).associateBy { it.name }
 
 // Provides an application-level fixed thread pool on which to execute coroutines (mainly)
-internal val ApplicationExecutors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
+// internal val ApplicationExecutors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4)
 
 // Provides all resources and configurations for application telemetry using micrometer
 object MicrometerConfigs {

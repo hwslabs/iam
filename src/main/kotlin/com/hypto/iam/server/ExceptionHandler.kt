@@ -25,9 +25,12 @@ import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.response.respondText
 import java.security.SignatureException
+import mu.KotlinLogging
 import org.jooq.exception.DataAccessException
 
 val set = mutableSetOf<Any>()
+
+val logger = KotlinLogging.logger { }
 inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
     statusCode: HttpStatusCode,
     shouldThrowException: Boolean = false,
@@ -57,6 +60,7 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
                 HttpStatusCode.InternalServerError
             }
         )
+        logger.error(cause) { }
         shouldThrowException && throw cause
     }
 }
