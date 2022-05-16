@@ -62,7 +62,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     .createOrganization(this)
 
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
 
                 // Actual test
@@ -74,7 +74,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         setBody(gson.toJson(requestBody))
                     }
                 ) {
@@ -102,7 +102,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
 
                 // Actual test
@@ -115,7 +115,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         setBody(gson.toJson(requestBody))
                     }
                 ) {
@@ -145,7 +145,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
 
                 // Actual test
@@ -158,7 +158,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         setBody(gson.toJson(requestBody))
                     }
                 ) {
@@ -230,7 +230,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganizationResponse, _) = DataSetupHelper.createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
 
                 val expiry = LocalDateTime.now().plusDays(1)
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
@@ -238,7 +238,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     HttpMethod.Post, "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     addHeader(HttpHeaders.ContentType, Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(requestBody))
                 }) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
@@ -261,7 +261,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
 
                 val createCredentialCall = handleRequest(
@@ -269,7 +269,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     addHeader(HttpHeaders.ContentType, Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(CreateCredentialRequest()))
                 }
 
@@ -283,7 +283,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.OK, response.status())
@@ -297,7 +297,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
@@ -326,7 +326,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
 
                 val nonExistentCredentialId = UUID.randomUUID().toString()
@@ -338,7 +338,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
@@ -358,17 +358,19 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val user1Name = user1.username
 
                 val organization1 = organizationResponse1.organization!!
-                val credentials1 = organizationResponse1.rootUserCredential!!
-                val credentials2 = organizationResponse2.rootUserCredential!!
+                val rootUserToken1 = organizationResponse1.rootUserToken!!
+                val credential1 = DataSetupHelper.createCredential(organization1.id, user1Name, rootUserToken1, this)
+
+                val rootUserToken2 = organizationResponse2.rootUserToken!!
 
                 // Delete Credential
                 with(
                     handleRequest(
                         HttpMethod.Delete,
-                        "/organizations/${organization1.id}/users/$user1Name/credentials/${credentials1.id}"
+                        "/organizations/${organization1.id}/users/$user1Name/credentials/${credential1.id}"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${credentials2.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken2")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.Forbidden, response.status())
@@ -389,8 +391,11 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
+
+                val createdCredentials = DataSetupHelper
+                    .createCredential(createdOrganization.id, userName, rootUserToken, this)
 
                 with(
                     handleRequest(
@@ -420,7 +425,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
                 val nonExistentCredentialId = UUID.randomUUID().toString()
 
@@ -430,7 +435,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
@@ -447,7 +452,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
-                val createdCredentials = createdOrganizationResponse.rootUserCredential!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdUser.username
 
                 with(
@@ -456,7 +461,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/inValid_credential_id"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())

@@ -6,14 +6,16 @@ import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.exceptions.PasscodeExpiredException
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.models.BaseSuccessResponse
-import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.TokenResponse
+import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
@@ -34,7 +36,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val organizationRepo: OrganizationRepo by inject()
     private val passcodeRepo: PasscodeRepo by inject()
     private val usersService: UsersService by inject()
-    private val credentialService: CredentialService by inject()
+    private val tokenService: TokenService by inject()
     private val policyService: PolicyService by inject()
     private val hrnFactory: HrnFactory by inject()
     private val userPolicyService: UserPolicyService by inject()
@@ -48,7 +50,15 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         description: String,
         rootUser: RootUser,
         passcodeStr: String?
-    ): Pair<Organization, Credential> {
+    ): Pair<Organization, TokenResponse> {
+        passcodeStr?.let {
+            passcodeRepo.getValidPasscode(
+                it,
+                VerifyEmailRequest.Purpose.signup,
+                rootUser.email
+            ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
+        }
+
         val organizationId = idGenerator.organizationId()
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
 
@@ -95,13 +105,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
                 )
                 val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
+                val userHrn = hrnFactory.getHrn(user.hrn)
                 userPolicyService.attachPoliciesToUser(
-                    hrnFactory.getHrn(user.hrn),
+                    userHrn,
                     listOf(hrnFactory.getHrn(policy.hrn))
                 )
 
-                val credential = credentialService.createCredential(organizationId, rootUser.username)
-                return@wrap Pair(organization, credential)
+                val token = tokenService.generateJwtToken(userHrn)
+                return@wrap Pair(organization, token)
             }
         } catch (e: Exception) {
             logger.error(e) { "Exception when creating organization. Rolling back..." }
@@ -153,7 +164,7 @@ interface OrganizationsService {
         description: String,
         rootUser: RootUser,
         passcodeStr: String? = null
-    ): Pair<Organization, Credential>
+    ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization
     suspend fun updateOrganization(id: String, name: String?, description: String?): Organization

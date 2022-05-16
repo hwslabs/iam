@@ -10,14 +10,7 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserPoliciesRepo
-import com.hypto.iam.server.models.Action
-import com.hypto.iam.server.models.CreateActionRequest
-import com.hypto.iam.server.models.CreateOrganizationRequest
-import com.hypto.iam.server.models.CreateOrganizationResponse
-import com.hypto.iam.server.models.CreateResourceRequest
-import com.hypto.iam.server.models.Credential
-import com.hypto.iam.server.models.Resource
-import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.*
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
@@ -81,9 +74,30 @@ object DataSetupHelper : AutoCloseKoinTest() {
         }
     }
 
+    fun createCredential(
+        orgId: String,
+        userName: String,
+        jwtToken: String,
+        engine: TestApplicationEngine
+    ): Credential {
+        with(engine) {
+            val createCredentialCall = handleRequest(
+                HttpMethod.Post,
+                "/organizations/$orgId/users/$userName/credentials"
+            ) {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer $jwtToken")
+                setBody(gson.toJson(CreateCredentialRequest()))
+            }
+
+            return gson
+                .fromJson(createCredentialCall.response.content, Credential::class.java)
+        }
+    }
+
     fun createResource(
         orgId: String,
-        userCredential: Credential,
+        jwtToken: String,
         engine: TestApplicationEngine,
         resourceName: String? = null
     ): Resource {
@@ -92,7 +106,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
 
             val createResourceCall = handleRequest(HttpMethod.Post, "/organizations/$orgId/resources") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${userCredential.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $jwtToken")
                 setBody(gson.toJson(CreateResourceRequest(name = name)))
             }
 
@@ -104,17 +118,17 @@ object DataSetupHelper : AutoCloseKoinTest() {
     fun createAction(
         orgId: String,
         resource: Resource? = null,
-        userCredential: Credential,
+        jwtToken: String,
         engine: TestApplicationEngine
     ): Pair<Action, Resource> {
         with(engine) {
-            val createdResource = resource ?: createResource(orgId, userCredential, engine)
+            val createdResource = resource ?: createResource(orgId, jwtToken, engine)
             val actionName = "test-action" + IdGenerator.randomId()
 
             val createActionCall =
                 handleRequest(HttpMethod.Post, "/organizations/$orgId/resources/${createdResource.name}/actions") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${userCredential.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $jwtToken")
                     setBody(gson.toJson(CreateActionRequest(name = actionName)))
                 }
 

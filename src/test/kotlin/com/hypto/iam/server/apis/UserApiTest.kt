@@ -44,13 +44,13 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
-            DataSetupHelper.createResource(organization.id, createdCredentials, this)
+            val rootUserToken = organizationResponse.rootUserToken!!
+            DataSetupHelper.createResource(organization.id, rootUserToken, this)
 
             with(
                 handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(createUserRequest))
                 }
             ) {
@@ -86,19 +86,19 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
             // Create user
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 setBody(gson.toJson(createUserRequest))
             }
 
             // Get user
             with(handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/testUserName") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
             }) {
                 val responseBody = gson.fromJson(response.content, User::class.java)
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -125,12 +125,12 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
             // Create user
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 setBody(gson.toJson(createUserRequest))
             }
 
@@ -157,19 +157,19 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
             // Create user
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 setBody(gson.toJson(createUserRequest))
             }
 
             // Delete user
             with(handleRequest(HttpMethod.Delete, "/organizations/${organization.id}/users/testUserName") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
             }) {
                 assertEquals(HttpStatusCode.OK, response.status())
 
@@ -189,13 +189,13 @@ class UserApiTest : AbstractContainerBaseTest() {
             val rootUserName = "test-root-user"
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this, rootUserName)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
             // Delete root user
             with(handleRequest(HttpMethod.Delete,
                 "/organizations/${organization.id}/users/$rootUserName") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
             }) {
                 assertEquals(HttpStatusCode.BadRequest, response.status())
             }
@@ -219,20 +219,20 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
-            DataSetupHelper.createResource(organization.id, createdCredentials, this)
+            val rootUserToken = organizationResponse.rootUserToken!!
+            DataSetupHelper.createResource(organization.id, rootUserToken, this)
 
             // Create user1
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 setBody(gson.toJson(createUserRequest1))
             }
 
             // Create user2
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 setBody(gson.toJson(createUserRequest2))
             }
 
@@ -240,7 +240,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             with(
                 handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 val slot = slot<ListUsersRequest>()
@@ -260,7 +260,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val userName = "testUserName"
 
@@ -276,7 +276,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             // Create user1
             handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 setBody(gson.toJson(createUserRequest))
             }
 
@@ -291,7 +291,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     HttpMethod.Patch,
                     "/organizations/${organization.id}/users/$userName"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(gson.toJson(updateUserRequest))
                 }
@@ -318,13 +318,13 @@ class UserApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
-            DataSetupHelper.createResource(organization.id, createdCredentials, this)
+            val rootUserToken = organizationResponse.rootUserToken!!
+            DataSetupHelper.createResource(organization.id, rootUserToken, this)
 
             with(
                 handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(createUserRequest))
                 }
             ) {

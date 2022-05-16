@@ -24,6 +24,9 @@ import io.ktor.server.auth.UnauthorizedResponse
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.response.respond
 import java.util.Base64
+import mu.KotlinLogging
+
+private val logger = KotlinLogging.logger { }
 
 data class AuthenticationException(override val message: String) : Exception(message)
 
@@ -75,11 +78,17 @@ class TokenAuthenticationProvider internal constructor(
         val call = context.call
         val credentials = call.request.tokenAuthenticationCredentials(tokenKeyName, tokenKeyLocation) {
             if (!authSchemeExists) { return@tokenAuthenticationCredentials it }
-            val result = when (val header = parseAuthorizationHeader(it)) {
-                is HttpAuthHeader.Single -> header.blob
-                else -> null
+            @Suppress("TooGenericExceptionCaught")
+            try {
+                val result = when (val header = parseAuthorizationHeader(it)) {
+                    is HttpAuthHeader.Single -> header.blob
+                    else -> null
+                }
+                return@tokenAuthenticationCredentials result
+            } catch (e: Exception) {
+                logger.error(e) { "Invalid token" }
+                throw AuthenticationException("Invalid token")
             }
-            return@tokenAuthenticationCredentials result
         }
         val principal = credentials?.let { authenticationFunction(call, it) }
 

@@ -57,6 +57,7 @@ import io.ktor.server.plugins.doublereceive.DoubleReceive
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
+import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
 import kotlinx.coroutines.runBlocking
 import org.koin.logger.SLF4JLogger
@@ -166,6 +167,8 @@ fun Application.handleRequest() {
 
     install(Authorization) {
     }
+
+    install(IgnoreTrailingSlash) {}
 
     install(Routing) {
 
