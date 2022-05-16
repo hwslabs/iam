@@ -31,13 +31,13 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
-            val resource = DataSetupHelper.createResource(organization.id, createdCredentials, this)
+            val rootUserToken = organizationResponse.rootUserToken!!
+            val resource = DataSetupHelper.createResource(organization.id, rootUserToken, this)
 
             with(
                 handleRequest(HttpMethod.Post, "/organizations/${organization.id}/resources/${resource.name}/actions") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(CreateActionRequest(name = "test-action")))
                 }
             ) {
@@ -65,16 +65,16 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
+            val (action, resource) = DataSetupHelper.createAction(organization.id, null, rootUserToken, this)
 
             with(
                 handleRequest(
                     HttpMethod.Get,
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -98,20 +98,20 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse1, _) = DataSetupHelper.createOrganization(this)
             val organization1 = organizationResponse1.organization!!
-            val createdCredentials1 = organizationResponse1.rootUserCredential!!
+            val rootUserToken1 = organizationResponse1.rootUserToken!!
 
             val (organizationResponse2, _) = DataSetupHelper.createOrganization(this)
             val organization2 = organizationResponse2.organization!!
-            val createdCredentials2 = organizationResponse2.rootUserCredential!!
+            val rootUserToken2 = organizationResponse2.rootUserToken!!
 
-            val (action, resource) = DataSetupHelper.createAction(organization1.id, null, createdCredentials1, this)
+            val (action, resource) = DataSetupHelper.createAction(organization1.id, null, rootUserToken1, this)
 
             with(
                 handleRequest(
                     HttpMethod.Get,
                     "/organizations/${organization1.id}/resources/${resource.name}/actions/${action.name}"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials2.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken2")
                 }
             ) {
                 assertEquals(HttpStatusCode.Forbidden, response.status())
@@ -131,16 +131,16 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
+            val (action, resource) = DataSetupHelper.createAction(organization.id, null, rootUserToken, this)
 
             with(
                 handleRequest(
                     HttpMethod.Delete,
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -155,7 +155,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                     HttpMethod.Get,
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.NotFound, response.status())
@@ -170,17 +170,17 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action1, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
-            val (action2, _) = DataSetupHelper.createAction(organization.id, resource, createdCredentials, this)
+            val (action1, resource) = DataSetupHelper.createAction(organization.id, null, rootUserToken, this)
+            val (action2, _) = DataSetupHelper.createAction(organization.id, resource, rootUserToken, this)
 
             with(
                 handleRequest(
                     HttpMethod.Get,
                     "/organizations/${organization.id}/resources/${resource.name}/actions"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -204,9 +204,9 @@ class ActionApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action, resource) = DataSetupHelper.createAction(organization.id, null, createdCredentials, this)
+            val (action, resource) = DataSetupHelper.createAction(organization.id, null, rootUserToken, this)
             val newDescription = "new description"
 
             with(
@@ -214,7 +214,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                     HttpMethod.Patch,
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
                 ) {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(gson.toJson(UpdateActionRequest(description = "new description")))
                 }

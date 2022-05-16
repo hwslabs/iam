@@ -15,11 +15,12 @@ import java.io.Serializable
 /**
  *
  * @param organization
- * @param rootUserCredential
+ * @param rootUserToken JWT token of the root user
  */
 data class CreateOrganizationResponse(
     val organization: Organization? = null,
-    val rootUserCredential: Credential? = null
+    /* JWT token of the root user */
+    val rootUserToken: kotlin.String? = null
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 123

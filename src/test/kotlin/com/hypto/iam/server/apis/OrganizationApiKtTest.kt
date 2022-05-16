@@ -266,7 +266,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             with(
                 handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserCredential!!.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
                 }
 
             ) {
@@ -311,7 +311,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(
                         HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserCredential!!.secret}"
+                        "Bearer ${createdOrganization.rootUserToken}"
                     )
                 }
 

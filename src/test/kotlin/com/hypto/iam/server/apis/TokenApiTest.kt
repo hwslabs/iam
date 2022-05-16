@@ -65,7 +65,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserToken}"
                         )
                     }
                 ) {
@@ -141,7 +141,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.Accept, ContentType.Text.Plain.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserToken}"
                         )
                     }
                 ) {
@@ -510,7 +510,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserToken}"
                         )
                     }
                 ) {
@@ -613,7 +613,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${createdOrganization.rootUserCredential?.secret}"
+                            "Bearer ${createdOrganization.rootUserToken}"
                         )
                     }
                 ) {

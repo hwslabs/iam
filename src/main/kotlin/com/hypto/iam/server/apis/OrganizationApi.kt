@@ -33,14 +33,14 @@ fun Route.createOrganizationApi() {
     post("/organizations") {
         val request = call.receive<CreateOrganizationRequest>().validate()
         val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value
-        val (organization, credential) = service.createOrganization(
+        val (organization, tokenResponse) = service.createOrganization(
             request.name,
             description = "",
             rootUser = request.rootUser,
             passcodeStr = passcodeStr
         )
         call.respondText(
-            text = gson.toJson(CreateOrganizationResponse(organization, credential)),
+            text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
             contentType = ContentType.Application.Json,
             status = HttpStatusCode.Created
         )

@@ -33,14 +33,14 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
             val resourceName = "resource-name"
 
             with(
                 handleRequest(HttpMethod.Post, "/organizations/${organization.id}/resources") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(CreateResourceRequest(name = resourceName)))
                 }
             ) {
@@ -62,14 +62,14 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
             val resourceName = "resource-name"
-            DataSetupHelper.createResource(organization.id, createdCredentials, this, resourceName)
+            DataSetupHelper.createResource(organization.id, rootUserToken, this, resourceName)
 
             with(
                 handleRequest(HttpMethod.Get, "/organizations/${organization.id}/resources/$resourceName") {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -88,17 +88,17 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse1, _) = DataSetupHelper.createOrganization(this)
             val organization1 = organizationResponse1.organization!!
-            val createdCredentials1 = organizationResponse1.rootUserCredential!!
+            val rootUserToken1 = organizationResponse1.rootUserToken!!
 
             val (organizationResponse2, _) = DataSetupHelper.createOrganization(this)
             val organization2 = organizationResponse2.organization!!
-            val createdCredentials2 = organizationResponse2.rootUserCredential!!
+            val rootUserToken2 = organizationResponse2.rootUserToken!!
 
-            val resource = DataSetupHelper.createResource(organization1.id, createdCredentials1, this)
+            val resource = DataSetupHelper.createResource(organization1.id, rootUserToken1, this)
 
             with(
                 handleRequest(HttpMethod.Get, "/organizations/${organization1.id}/resources/${resource.name}") {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials2.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken2")
                 }
             ) {
                 assertEquals(HttpStatusCode.Forbidden, response.status())
@@ -115,13 +115,13 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
-            val resource = DataSetupHelper.createResource(organization.id, createdCredentials, this)
+            val resource = DataSetupHelper.createResource(organization.id, rootUserToken, this)
 
             with(
                 handleRequest(HttpMethod.Delete, "/organizations/${organization.id}/resources/${resource.name}") {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -133,7 +133,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
             // Check that the resource is no longer available
             with(
                 handleRequest(HttpMethod.Get, "/organizations/${organization.id}/resources/${resource.name}") {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.NotFound, response.status())
@@ -148,14 +148,14 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
-            val resource1 = DataSetupHelper.createResource(organization.id, createdCredentials, this)
-            val resource2 = DataSetupHelper.createResource(organization.id, createdCredentials, this)
+            val resource1 = DataSetupHelper.createResource(organization.id, rootUserToken, this)
+            val resource2 = DataSetupHelper.createResource(organization.id, rootUserToken, this)
 
             with(
                 handleRequest(HttpMethod.Get, "/organizations/${organization.id}/resources") {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             ) {
                 assertEquals(HttpStatusCode.OK, response.status())
@@ -176,14 +176,14 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
             val organization = organizationResponse.organization!!
-            val createdCredentials = organizationResponse.rootUserCredential!!
+            val rootUserToken = organizationResponse.rootUserToken!!
 
-            val resource = DataSetupHelper.createResource(organization.id, createdCredentials, this)
+            val resource = DataSetupHelper.createResource(organization.id, rootUserToken, this)
             val newDescription = "new description"
 
             with(
                 handleRequest(HttpMethod.Patch, "/organizations/${organization.id}/resources/${resource.name}") {
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(gson.toJson(UpdateResourceRequest(description = "new description")))
                 }

@@ -1802,11 +1802,7 @@ components:
           id: XlK5h64gND
           name: ACME Enterprise
           description: Brief description about ACME
-        rootUserCredential:
-          id: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
-          valid_until: 2023-01-01T00:00:00
-          status: active
-          secret: Z2QGNPmgWUBfRXhCrAmArrrszMajaEbYgaQJMciL
+        rootUserToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
     GetUserPoliciesResponse:
       value:
@@ -2333,8 +2329,9 @@ components:
       properties:
         organization:
           $ref: "#/components/schemas/Organization"
-        rootUserCredential:
-          $ref: "#/components/schemas/Credential"
+        rootUserToken:
+          description: JWT token of the root user
+          type: string
 
     UserPaginatedResponse:
       type: object
