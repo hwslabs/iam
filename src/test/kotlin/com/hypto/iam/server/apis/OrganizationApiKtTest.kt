@@ -3,6 +3,7 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
@@ -76,6 +77,15 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization with invalid root credentials`() {
+        declareMock<PasscodeRepo> {
+            coEvery {
+                getValidPasscode(
+                    any<String>(),
+                    any<VerifyEmailRequest.Purpose>(),
+                    any<String>()
+                )
+            } returns null
+        }
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val userName = "test-user" + IdGenerator.randomId()

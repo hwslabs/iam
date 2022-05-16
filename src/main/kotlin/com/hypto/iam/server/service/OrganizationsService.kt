@@ -6,7 +6,6 @@ import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
-import com.hypto.iam.server.exceptions.PasscodeExpiredException
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.PasswordCredentials
@@ -15,7 +14,6 @@ import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.RootUser
-import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
@@ -51,22 +49,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         rootUser: RootUser,
         passcodeStr: String?
     ): Pair<Organization, Credential> {
-        val passcode = passcodeStr?.let {
-            passcodeRepo.getValidPasscode(
-                it,
-                VerifyEmailRequest.Purpose.signup,
-                rootUser.email
-            ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
-        }
-
         val organizationId = idGenerator.organizationId()
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
 
         @Suppress("TooGenericExceptionCaught")
         try {
             return txMan.wrap {
-                if (passcode != null) {
-                    passcodeRepo.deleteById(passcode.id)
+                if (passcodeStr != null) {
+                    passcodeRepo.deleteById(passcodeStr)
                 }
                 // Create Organization
                 organizationRepo.insert(

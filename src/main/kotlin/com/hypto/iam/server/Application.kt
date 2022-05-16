@@ -2,6 +2,7 @@
 
 package com.hypto.iam.server
 
+import com.hypto.iam.server.Constants.Companion.SECRET_PREFIX
 import com.hypto.iam.server.apis.actionApi
 import com.hypto.iam.server.apis.createOrganizationApi
 import com.hypto.iam.server.apis.credentialApi
@@ -21,6 +22,8 @@ import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.exceptions.InternalException
+import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.plugins.Koin
 import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.ApiPrincipal
@@ -32,6 +35,7 @@ import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.ApplicationIdUtil
+import com.hypto.iam.server.validators.validate
 import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -49,8 +53,10 @@ import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
+import io.ktor.server.plugins.doublereceive.DoubleReceive
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.receive
 import io.ktor.server.routing.Routing
 import kotlinx.coroutines.runBlocking
 import org.koin.logger.SLF4JLogger
@@ -84,22 +90,25 @@ fun Application.handleRequest() {
     install(StatusPages) {
         statusPages()
     }
+    install(DoubleReceive)
     install(AutoHeadResponse) // see http://ktor.io/features/autoheadresponse.html
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
     install(Compression, applicationCompressionConfiguration()) // see http://ktor.io/features/compression.html
     install(Authentication) {
         apiKeyAuth("hypto-iam-root-auth") {
+            val secretKey = SECRET_PREFIX + appConfig.app.secretKey
             validate { tokenCredential: TokenCredential ->
                 when (tokenCredential.value) {
-                    appConfig.app.secretKey -> ApiPrincipal(tokenCredential, "hypto-root")
+                    secretKey -> ApiPrincipal(tokenCredential, "hypto-root")
                     else -> null
                 }
             }
         }
-        apiKeyAuth("passcode-auth") {
+        apiKeyAuth("signup-passcode-auth") {
             validate { tokenCredential: TokenCredential ->
+                val email = this.receive<CreateOrganizationRequest>().validate().rootUser.email
                 tokenCredential.value?.let {
-                    passcodeRepo.findById(it)?.let {
+                    passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.signup, email)?.let {
                         ApiPrincipal(tokenCredential, "hypto-root")
                     }
                 }
@@ -133,8 +142,10 @@ fun Application.handleRequest() {
         basic("unique-basic-auth") {
             validate { credentials ->
                 if (!appConfig.app.uniqueUsersAcrossOrganizations)
-                    throw BadRequestException("Email not unique across organizations. " +
-                        "Please use Token APIs with organization ID")
+                    throw BadRequestException(
+                        "Email not unique across organizations. " +
+                            "Please use Token APIs with organization ID"
+                    )
 
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
                     EmailPasswordCredential(credentials.name, credentials.password)
@@ -158,7 +169,7 @@ fun Application.handleRequest() {
 
     install(Routing) {
 
-        authenticate("hypto-iam-root-auth", "passcode-auth") {
+        authenticate("hypto-iam-root-auth", "signup-passcode-auth") {
             createOrganizationApi()
         }
 
