@@ -5,7 +5,6 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateResourceRequest
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.ResourceService
 import com.hypto.iam.server.validators.validate

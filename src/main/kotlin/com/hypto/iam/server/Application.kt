@@ -24,8 +24,6 @@ import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.plugins.Koin
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Authorization
 import com.hypto.iam.server.security.EmailPasswordCredential
@@ -60,6 +58,8 @@ import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
 import kotlinx.coroutines.runBlocking
+import org.koin.ktor.ext.inject
+import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-Id"
@@ -199,7 +199,7 @@ fun Application.handleRequest() {
 fun Application.module() {
     install(Koin) {
         SLF4JLogger()
-        modules = arrayListOf(repositoryModule, controllerModule, applicationModule)
+        modules(repositoryModule, controllerModule, applicationModule)
     }
     handleRequest()
 }

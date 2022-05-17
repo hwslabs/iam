@@ -4,7 +4,6 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.validators.validate
@@ -19,6 +18,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import java.util.UUID
+import org.koin.ktor.ext.inject
 
 fun Route.credentialApi() {
     val gson: Gson by inject()

@@ -22,11 +22,11 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
     private val gson = Gson()
 
     @Test
-    fun `StatusPage - Respond to unhandled exceptions with statusCode_500 and custom error message`() {
+    fun `StatusPage - Respond to server side errors with custom error message`() {
         declareMock<OrganizationsService> {
-            coEvery { this@declareMock.createOrganization(any(), any(), any(), any()) } coAnswers {
-                // Some exception which is not handled by Status Pages
-                throw NumberFormatException()
+            coEvery { this@declareMock.createOrganization(any(), any(), any()) } coAnswers {
+                @Suppress("TooGenericExceptionThrown")
+                throw RuntimeException()
             }
         }
 
@@ -48,7 +48,7 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
                     setBody(gson.toJson(requestBody))
                 }
             ) {
-                Assertions.assertEquals("{\"message\":\"Unknown Error Occurred\"}", response.content)
+                Assertions.assertEquals("{\"message\":\"Internal Server Error Occurred\"}", response.content)
                 Assertions.assertEquals(500, response.status()?.value)
             }
         }

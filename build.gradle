@@ -1,9 +1,9 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 buildscript {
-    ext.kotlin_version = '1.6.20'
-    ext.ktor_version = '2.0.0'
-    ext.koin_version = '3.1.6'
+    ext.kotlin_version = '1.6.21'
+    ext.ktor_version = '2.0.1'
+    ext.koin_version = '3.2.0'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
     ext.jooq_version = '3.16.6'

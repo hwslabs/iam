@@ -1,7 +1,6 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
 import io.ktor.http.ContentType
@@ -14,6 +13,7 @@ import io.ktor.server.request.accept
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
+import org.koin.ktor.ext.inject
 
 fun Route.tokenApi() {
     val tokenService: TokenService by inject()

@@ -7,7 +7,6 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdatePolicyRequest
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.withPermission
@@ -24,6 +23,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
+import org.koin.ktor.ext.inject
 
 fun Route.policyApi() {
 
