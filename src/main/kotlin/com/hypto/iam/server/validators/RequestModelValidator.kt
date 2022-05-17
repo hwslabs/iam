@@ -18,6 +18,7 @@ import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.UpdateActionRequest
@@ -128,6 +129,17 @@ fun CreateUserRequest.validate(): CreateUserRequest {
 
 fun UpdateUserRequest.validate(): UpdateUserRequest {
     return updateUserRequestValidation.validateAndThrowOnFailure(this)
+}
+
+fun ResetPasswordRequest.validate(): ResetPasswordRequest {
+    return Validation<ResetPasswordRequest> {
+        ResetPasswordRequest::email required {
+            run(emailCheck)
+        }
+        ResetPasswordRequest::password required {
+            run(passwordCheck)
+        }
+    }.validateAndThrowOnFailure(this)
 }
 
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {

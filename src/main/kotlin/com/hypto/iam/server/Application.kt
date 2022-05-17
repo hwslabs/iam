@@ -11,6 +11,7 @@ import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.keyApi
 import com.hypto.iam.server.apis.passcodeApi
 import com.hypto.iam.server.apis.policyApi
+import com.hypto.iam.server.apis.resetPasswordApi
 import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.usersApi
@@ -23,6 +24,7 @@ import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Authorization
@@ -115,6 +117,16 @@ fun Application.handleRequest() {
                 }
             }
         }
+        apiKeyAuth("reset-passcode-auth") {
+            validate { tokenCredential: TokenCredential ->
+                val email = this.receive<ResetPasswordRequest>().validate().email
+                tokenCredential.value?.let {
+                    passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.reset, email)?.let {
+                        ApiPrincipal(tokenCredential, "hypto-root")
+                    }
+                }
+            }
+        }
         basic("basic-auth") {
             validate { credentials ->
                 val organizationId = this.parameters["organization_id"]!!
@@ -188,6 +200,10 @@ fun Application.handleRequest() {
             resourceApi()
             usersApi()
             validationApi()
+        }
+
+        authenticate("reset-passcode-auth") {
+            resetPasswordApi()
         }
 
         tokenApi() // Authentication handled along with API definitions

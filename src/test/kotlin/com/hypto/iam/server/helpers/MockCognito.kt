@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientResponse
@@ -80,5 +81,6 @@ fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
         coEvery { this@declareMock.adminDeleteUser(any<AdminDeleteUserRequest>()) } returns mockk()
         coEvery { this@declareMock.addCustomAttributes(any<AddCustomAttributesRequest>()) } returns mockk()
         coEvery { this@declareMock.adminUpdateUserAttributes(any<AdminUpdateUserAttributesRequest>()) } returns mockk()
+        coEvery { this@declareMock.adminSetUserPassword(any<AdminSetUserPasswordRequest>()) } returns mockk()
     }
 }

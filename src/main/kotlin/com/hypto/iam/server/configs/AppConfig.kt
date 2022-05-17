@@ -42,8 +42,9 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
      * @param passcodeCountLimit Represents the maximum number of passcodes that can be generated for a email
      * @param baseUrl Url used for sending links in emails
      * @param senderEmailAddress Email address used for sending emails
-     * @param signUpEmailTemplate Template name used for sending emails during for verification
+     * @param signUpEmailTemplate Template name used for sending emails for verification
      *                              during signup
+     * @param resetPasswordEmailTemplate Template name used for sending emails during resetting password
      * @param uniqueUsersAcrossOrganizations Represents whether the users should be unique across all
      *                                          organizations. Uniqueness is determined with the user emails.
      */
@@ -59,6 +60,7 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val baseUrl: String,
         val senderEmailAddress: String,
         val signUpEmailTemplate: String,
+        val resetPasswordEmailTemplate: String,
         val uniqueUsersAcrossOrganizations: Boolean
     ) {
         val isDevelopment: Boolean

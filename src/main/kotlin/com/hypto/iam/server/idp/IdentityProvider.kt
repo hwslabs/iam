@@ -5,10 +5,12 @@ package com.hypto.iam.server.idp
  */
 interface IdentityProvider {
     enum class IdentitySource { AWS_COGNITO }
+
     suspend fun createIdentityGroup(
         name: String,
         configuration: Configuration = Configuration(PasswordPolicy())
     ): IdentityGroup
+
     suspend fun deleteIdentityGroup(identityGroup: IdentityGroup)
     suspend fun createUser(
         context: RequestContext,
@@ -27,13 +29,17 @@ interface IdentityProvider {
         status: com.hypto.iam.server.models.User.Status?,
         verified: Boolean?
     ): User
+
     suspend fun listUsers(identityGroup: IdentityGroup, pageToken: String?, limit: Int?): Pair<List<User>, NextToken?>
     suspend fun deleteUser(identityGroup: IdentityGroup, userName: String)
     suspend fun getIdentitySource(): IdentitySource
     suspend fun authenticate(identityGroup: IdentityGroup, userName: String, password: String): User
+    suspend fun getUserByEmail(identityGroup: IdentityGroup, email: String): User
+    suspend fun setUserPassword(identityGroup: IdentityGroup, userName: String, password: String)
 }
 
 typealias NextToken = String
+
 class UnsupportedCredentialsException(message: String) : Exception(message)
 class UserNotFoundException(message: String) : Exception(message)
 class UserAlreadyExistException(message: String) : Exception(message)
@@ -44,6 +50,7 @@ data class IdentityGroup(
     val identitySource: IdentityProvider.IdentitySource,
     val metadata: Map<String, String> = mapOf()
 )
+
 data class User(
     val username: String,
     val phoneNumber: String,
@@ -54,21 +61,25 @@ data class User(
     val verified: Boolean,
     val createdAt: String
 )
+
 abstract class UserCredentials {
     abstract val userName: String
 }
+
 data class PasswordCredentials(
     override val userName: String,
     val email: String,
     val phoneNumber: String,
     val password: String
 ) : UserCredentials()
+
 data class AccessTokenCredentials(
     override val userName: String,
     val email: String,
     val phoneNumber: String,
     val accessToken: String
 ) : UserCredentials()
+
 data class RequestContext(
     val organizationId: String,
     val requestedPrincipal: String,
