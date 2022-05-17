@@ -2,6 +2,7 @@ package com.hypto.iam.server.service
 
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
@@ -31,6 +32,7 @@ private val logger = KotlinLogging.logger { }
 
 class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val organizationRepo: OrganizationRepo by inject()
+    private val passcodeRepo: PasscodeRepo by inject()
     private val usersService: UsersService by inject()
     private val credentialService: CredentialService by inject()
     private val policyService: PolicyService by inject()
@@ -44,15 +46,18 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOrganization(
         name: String,
         description: String,
-        rootUser: RootUser
+        rootUser: RootUser,
+        passcodeStr: String?
     ): Pair<Organization, Credential> {
         val organizationId = idGenerator.organizationId()
-
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
 
         @Suppress("TooGenericExceptionCaught")
         try {
             return txMan.wrap {
+                if (passcodeStr != null) {
+                    passcodeRepo.deleteById(passcodeStr)
+                }
                 // Create Organization
                 organizationRepo.insert(
                     Organizations(
@@ -143,8 +148,13 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
  * Service which holds logic related to Organization operations
  */
 interface OrganizationsService {
-    suspend fun createOrganization(name: String, description: String, rootUser: RootUser):
-        Pair<Organization, Credential>
+    suspend fun createOrganization(
+        name: String,
+        description: String,
+        rootUser: RootUser,
+        passcodeStr: String? = null
+    ): Pair<Organization, Credential>
+
     suspend fun getOrganization(id: String): Organization
     suspend fun updateOrganization(id: String, name: String?, description: String?): Organization
     suspend fun deleteOrganization(id: String): BaseSuccessResponse

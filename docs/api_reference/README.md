@@ -42,6 +42,7 @@ Class | Method | HTTP request | Description
 *UserPolicyManagementApi* | [**attachPolicies**](Apis/UserPolicyManagementApi.md#attachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/attach_policies | Attach policies to user
 *UserPolicyManagementApi* | [**detachPolicies**](Apis/UserPolicyManagementApi.md#detachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/detach_policies | Detach policies from user
 *UserPolicyManagementApi* | [**getUserPolicies**](Apis/UserPolicyManagementApi.md#getuserpolicies) | **GET** /organizations/{organization_id}/users/{user_name}/policies | List all policies associated with user
+*UserVerificationApi* | [**verifyEmail**](Apis/UserVerificationApi.md#verifyemail) | **POST** /verifyEmail | Verify email
 
 
 <a name="documentation-for-models"></a>
@@ -49,7 +50,6 @@ Class | Method | HTTP request | Description
 
  - [Action](./Models/Action.md)
  - [ActionPaginatedResponse](./Models/ActionPaginatedResponse.md)
- - [RootUser](./Models/RootUser.md)
  - [BaseSuccessResponse](./Models/BaseSuccessResponse.md)
  - [CreateActionRequest](./Models/CreateActionRequest.md)
  - [CreateCredentialRequest](./Models/CreateCredentialRequest.md)
@@ -73,6 +73,7 @@ Class | Method | HTTP request | Description
  - [ResourceAction](./Models/ResourceAction.md)
  - [ResourceActionEffect](./Models/ResourceActionEffect.md)
  - [ResourcePaginatedResponse](./Models/ResourcePaginatedResponse.md)
+ - [RootUser](./Models/RootUser.md)
  - [TokenResponse](./Models/TokenResponse.md)
  - [UpdateActionRequest](./Models/UpdateActionRequest.md)
  - [UpdateCredentialRequest](./Models/UpdateCredentialRequest.md)
@@ -85,6 +86,7 @@ Class | Method | HTTP request | Description
  - [UserPolicy](./Models/UserPolicy.md)
  - [ValidationRequest](./Models/ValidationRequest.md)
  - [ValidationResponse](./Models/ValidationResponse.md)
+ - [VerifyEmailRequest](./Models/VerifyEmailRequest.md)
 
 
 <a name="documentation-for-authorization"></a>

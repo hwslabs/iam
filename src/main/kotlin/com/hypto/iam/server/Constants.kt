@@ -25,5 +25,6 @@ class Constants private constructor() {
         const val X_ORGANIZATION_HEADER = "X-Iam-User-Organization"
         const val X_API_KEY_HEADER = "X-Api-Key"
         const val AUTHORIZATION_HEADER = "Authorization"
+        const val SECRET_PREFIX = "$"
     }
 }

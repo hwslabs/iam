@@ -76,6 +76,11 @@ tags:
     externalDocs:
       description: "docs"
       url: "http://hypto.com/docs/iam/SignInApi"
+  - name: "User Verification"
+    description: "APIs for verifying emails"
+    externalDocs:
+      description: "docs"
+      url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/PasscodeManagement.md"
 
 paths:
   # organization
@@ -103,7 +108,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       security:
-        - apiKeyAuth: [ hypto-internal-secret-key ]
+        - apiKeyAuth: [ hypto-internal-secret-key, passcode ]
 
   /organizations/{organization_id}:
     get:
@@ -994,6 +999,28 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       security: [ ]
 
+  /verifyEmail:
+    post:
+      tags:
+        - User Verification
+      summary: Verify email
+      description: Verify email during account opening and resetting password
+      operationId: verifyEmail
+      requestBody:
+        $ref: '#/components/requestBodies/VerifyEmailRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security: [ ]
+
 
 security:
   - bearerAuth: [ ]
@@ -1297,6 +1324,17 @@ components:
           examples:
             ValidationRequest:
               $ref: '#/components/examples/ValidationRequest'
+
+    VerifyEmailRequest:
+      description: Payload to send verification link to email
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VerifyEmailRequest'
+          examples:
+            VerifyEmailRequest:
+              $ref: '#/components/examples/VerifyEmailRequest'
 
   responses:
     BaseSuccessResponse:
@@ -1752,9 +1790,9 @@ components:
         salterPassword: wnr1782qbt52igbiuwbcgeuyiy==egryg123iuoh1109877t2i313489rge
     VerifyEmailRequest:
       value:
-        username: Bob
-        # TODO: correct capthaToken example value
-        captchaToken: asdfg
+        email: abcd@abcd.in
+        organization_id: XlK5h64gND
+        purpose: reset
 
     # Response examples
 
@@ -2216,6 +2254,23 @@ components:
           items:
             $ref: "#/components/schemas/ResourceAction"
 
+    VerifyEmailRequest:
+      description: Payload to send verification link to email
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - purpose
+      properties:
+        email:
+          type: string
+        organization_id:
+          type: string
+        purpose:
+          type: string
+          enum:
+            - reset
+            - signup
 
     # Responses:
     BaseSuccessResponse:

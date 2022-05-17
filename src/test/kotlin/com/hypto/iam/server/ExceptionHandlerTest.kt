@@ -20,10 +20,11 @@ import org.koin.test.mock.declareMock
 
 class ExceptionHandlerTest : AbstractContainerBaseTest() {
     private val gson = Gson()
+
     @Test
     fun `StatusPage - Respond to unhandled exceptions with statusCode_500 and custom error message`() {
         declareMock<OrganizationsService> {
-            coEvery { this@declareMock.createOrganization(any(), any(), any()) } coAnswers {
+            coEvery { this@declareMock.createOrganization(any(), any(), any(), any()) } coAnswers {
                 // Some exception which is not handled by Status Pages
                 throw NumberFormatException()
             }

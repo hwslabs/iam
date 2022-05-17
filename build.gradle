@@ -319,6 +319,7 @@ dependencies {
     implementation("io.ktor:ktor-server-hsts:$ktor_version")
     implementation("io.ktor:ktor-server-call-logging:$ktor_version")
     implementation("io.ktor:ktor-server-metrics-micrometer:$ktor_version")
+    implementation("io.ktor:ktor-server-double-receive:$ktor_version")
 
     implementation("io.ktor:ktor-server-auth:$ktor_version")
 
@@ -371,8 +372,9 @@ dependencies {
 
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.17.143')
-    implementation ("software.amazon.awssdk:cognitoidentity")
-    implementation ("software.amazon.awssdk:cognitoidentityprovider")
+    implementation("software.amazon.awssdk:cognitoidentity")
+    implementation("software.amazon.awssdk:cognitoidentityprovider")
+    implementation("software.amazon.awssdk:ses")
 
     // TxMan
     implementation("com.github.hwslabs:txman:0.1.0")

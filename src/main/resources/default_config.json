@@ -32,6 +32,11 @@
     "secret_key": "iam-secret-key",
     "sign_key_fetch_interval": 30,
     "cache_refresh_interval": 30,
+    "passcode_validity_seconds": 86400,
+    "passcode_count_limit": 1,
+    "base_url": "<placeholder for base url>",
+    "sender_email_address": "<placeholder for senders email address>",
+    "sign_up_email_template": "<placeholder for signup user template name>",
     "unique_users_across_organizations": false
   },
   "aws": {

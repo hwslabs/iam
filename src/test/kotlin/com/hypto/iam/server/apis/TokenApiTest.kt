@@ -214,8 +214,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 declareMock<AppConfig> {
                     every { this@declareMock.app } answers {
-                        AppConfig.App(AppConfig.Environment.Development, 300, 600,
-                            "iam-secret-key", 30, 30, false)
+                        AppConfig.App(
+                            AppConfig.Environment.Development,
+                            300,
+                            600,
+                            "iam-secret-key",
+                            30,
+                            30,
+                            600,
+                            5,
+                            "https://localhost",
+                            "mail@iam.com",
+                            "signupTemplateId",
+                            false
+                        )
                     }
                 }
 
@@ -247,8 +259,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
             fun setUniquenessFlag() {
                 declareMock<AppConfig> {
                     every { this@declareMock.app } answers {
-                        AppConfig.App(AppConfig.Environment.Development, 300, 600,
-                            "iam-secret-key", 30, 30, true)
+                        AppConfig.App(
+                            AppConfig.Environment.Development,
+                            300,
+                            600,
+                            "iam-secret-key",
+                            30,
+                            30,
+                            600,
+                            5,
+                            "https://localhost",
+                            "mail@iam.com",
+                            "signupTemplateId",
+                            true
+                        )
                     }
                 }
             }
@@ -402,15 +426,18 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             )
                             .build()
                     }
-                    coEvery { this@declareMock.adminInitiateAuth(match<AdminInitiateAuthRequest> {
-                        it.authParameters()["PASSWORD"] == invalidPassword
-                    })
+                    coEvery {
+                        this@declareMock.adminInitiateAuth(match<AdminInitiateAuthRequest> {
+                            it.authParameters()["PASSWORD"] == invalidPassword
+                        })
                     } throws NotAuthorizedException.builder()
                         .message("Invalid username and password combination").build()
 
-                    coEvery { this@declareMock.adminInitiateAuth(match<AdminInitiateAuthRequest> {
-                        it.authParameters()["PASSWORD"] != invalidPassword
-                    }) } coAnswers {
+                    coEvery {
+                        this@declareMock.adminInitiateAuth(match<AdminInitiateAuthRequest> {
+                            it.authParameters()["PASSWORD"] != invalidPassword
+                        })
+                    } coAnswers {
                         AdminInitiateAuthResponse.builder()
                             .session("").build()
                     }
@@ -655,6 +682,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
             }
         }
     }
+
     @Suppress("LongParameterList")
     @Nested
     @DisplayName("Validate JWT token test")
