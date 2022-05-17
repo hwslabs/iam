@@ -59,18 +59,22 @@ fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
             AdminCreateUserResponse.builder()
                 .user(
                     UserType.builder().attributes(listOf())
-                    .username(firstArg<AdminCreateUserRequest>().username())
-                    .userCreateDate(Instant.now())
-                    .attributes(firstArg<AdminCreateUserRequest>().userAttributes())
-                    .build())
+                        .username(firstArg<AdminCreateUserRequest>().username())
+                        .userCreateDate(Instant.now())
+                        .attributes(firstArg<AdminCreateUserRequest>().userAttributes())
+                        .build()
+                )
                 .build()
         }
         coEvery { this@declareMock.adminInitiateAuth(any<AdminInitiateAuthRequest>()) } coAnswers {
             AdminInitiateAuthResponse.builder()
                 .session("").build()
         }
-        coEvery { this@declareMock.adminRespondToAuthChallenge(
-            any<AdminRespondToAuthChallengeRequest>()) } returns mockk()
+        coEvery {
+            this@declareMock.adminRespondToAuthChallenge(
+                any<AdminRespondToAuthChallengeRequest>()
+            )
+        } returns mockk()
         val listUsersResponse = ListUsersResponse.builder().users(listOf()).build()
         coEvery { this@declareMock.listUsers(any<ListUsersRequest>()) } returns listUsersResponse
         coEvery { this@declareMock.adminDeleteUser(any<AdminDeleteUserRequest>()) } returns mockk()

@@ -38,13 +38,35 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import java.time.Instant
-import java.util.*
+import java.util.Base64
+import java.util.Date
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
-import software.amazon.awssdk.services.cognitoidentityprovider.model.*
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AddCustomAttributesRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolClientResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CreateUserPoolResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolClientType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 
 class TokenApiTest : AbstractContainerBaseTest() {
     private val gson = Gson()
@@ -427,16 +449,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             .build()
                     }
                     coEvery {
-                        this@declareMock.adminInitiateAuth(match<AdminInitiateAuthRequest> {
-                            it.authParameters()["PASSWORD"] == invalidPassword
-                        })
+                        this@declareMock.adminInitiateAuth(
+                            match<AdminInitiateAuthRequest> {
+                                it.authParameters()["PASSWORD"] == invalidPassword
+                            }
+                        )
                     } throws NotAuthorizedException.builder()
                         .message("Invalid username and password combination").build()
 
                     coEvery {
-                        this@declareMock.adminInitiateAuth(match<AdminInitiateAuthRequest> {
-                            it.authParameters()["PASSWORD"] != invalidPassword
-                        })
+                        this@declareMock.adminInitiateAuth(
+                            match<AdminInitiateAuthRequest> {
+                                it.authParameters()["PASSWORD"] != invalidPassword
+                            }
+                        )
                     } coAnswers {
                         AdminInitiateAuthResponse.builder()
                             .session("").build()

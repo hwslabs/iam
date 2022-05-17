@@ -208,12 +208,16 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     )
                 } returns mockk()
                 coEvery {
-                    this@declareMock.adminGetUser(match<AdminGetUserRequest>
-                    { it.username() == userName })
+                    this@declareMock.adminGetUser(
+                        match<AdminGetUserRequest>
+                        { it.username() == userName }
+                    )
                 } throws UserNotFoundException.builder().message("User does not exist.").build()
                 coEvery {
-                    this@declareMock.adminGetUser(match<AdminGetUserRequest>
-                    { it.username() != userName })
+                    this@declareMock.adminGetUser(
+                        match<AdminGetUserRequest>
+                        { it.username() != userName }
+                    )
                 } coAnswers {
                     AdminGetUserResponse.builder()
                         .enabled(true)
@@ -234,13 +238,15 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 val expiry = LocalDateTime.now().plusDays(1)
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                with(handleRequest(
-                    HttpMethod.Post, "/organizations/${createdOrganization.id}/users/$userName/credentials"
+                with(
+                    handleRequest(
+                        HttpMethod.Post, "/organizations/${createdOrganization.id}/users/$userName/credentials"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(requestBody))
+                    }
                 ) {
-                    addHeader(HttpHeaders.ContentType, Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(requestBody))
-                }) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
                     Assertions.assertEquals(
                         Json.withCharset(UTF_8), response.contentType()

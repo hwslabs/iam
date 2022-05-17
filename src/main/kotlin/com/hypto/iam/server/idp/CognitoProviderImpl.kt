@@ -71,7 +71,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         try {
             // Create user pool
             val createUserPoolResponse = cognitoClient.createUserPool(
-                    CreateUserPoolRequest.builder().poolName(name)
+                CreateUserPoolRequest.builder().poolName(name)
                     .aliasAttributes(aliasAttributeTypes)
                     .build()
             )

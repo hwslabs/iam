@@ -13,6 +13,7 @@ import io.ktor.server.request.path
  * 1. ResourceHrn - This identifies the instances of resources like users, policies, and any other service specific resources.
  * 2. ActionHrn - This identifies the resource names and operations possible with the resources.
  */
+@Suppress("UnnecessaryAbstractClass") // Required as child classes are using variables: "resource" and "organization"
 abstract class Hrn {
     companion object {
         const val HRN_DELIMITER = ":"

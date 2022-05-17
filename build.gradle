@@ -33,17 +33,18 @@ buildscript {
 plugins {
     id 'org.flywaydb.flyway' version "$flyway_version"
     id 'nu.studer.jooq' version '7.1'
-    id "io.gitlab.arturbosch.detekt" version "1.19.0"
-    id "org.jlleitschuh.gradle.ktlint" version "9.1.1"
+    id "io.gitlab.arturbosch.detekt" version "1.20.0"
+    id "org.jlleitschuh.gradle.ktlint" version "10.3.0"
     id "jacoco"
     id "org.openapi.generator" version "5.3.0"
+    id "com.osacky.doctor" version "0.8.0"
 }
 
 group 'com.hypto'
 version '1.0.0'
 
 wrapper {
-    gradleVersion = '6.9.2'
+    gradleVersion = '7.4.1'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
 
@@ -292,7 +293,42 @@ detekt {
     autoCorrect = true
 }
 
+// TODO: Make tests ready for parallel execution and uncomment this block
+//tasks.test {
+//    systemProperties["junit.jupiter.execution.parallel.enabled"] = true
+//    systemProperties["junit.jupiter.execution.parallel.mode.default"] = "concurrent"
+//    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+//}
+
+ktlint {
+    version = "0.45.1"
+    debug = false
+    verbose = false
+    android = false
+    outputToConsole = true
+    outputColorName = "RED"
+    ignoreFailures = false
+    enableExperimentalRules = false
+    additionalEditorconfigFile = file(".editorconfig")
+    disabledRules = ["import-ordering"]
+//    baseline = file("my-project-ktlint-baseline.xml")
+//    reporters {
+//        reporter "plain"
+//        reporter "checkstyle"
+//        reporter "sarif"
+//    }
+//    kotlinScriptAdditionalPaths {
+//        include fileTree("scripts/")
+//    }
+    filter {
+        exclude("**/generated/**")
+        exclude("**/generated-src/**")
+        include("**/kotlin/**")
+    }
+}
+
 dependencies {
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("io.ktor:ktor-server-metrics:$ktor_version")

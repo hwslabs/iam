@@ -39,7 +39,8 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
             message
                 ?: if (
                     statusCode.value < HttpStatusCode.InternalServerError.value &&
-                    cause.message != null) {
+                    cause.message != null
+                ) {
                     cause.message!!
                 } else {
                     "Unknown Error Occurred"
@@ -50,7 +51,6 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
             contentType = ContentType.Application.Json,
             status = statusCode
         )
-        logger.error(cause) { }
         shouldThrowException && throw cause
     }
 }
@@ -79,6 +79,5 @@ fun StatusPagesConfig.statusPages() {
     sendStatus<IllegalArgumentException>(HttpStatusCode.BadRequest)
     sendStatus<DataAccessException>(HttpStatusCode.Unauthorized)
     sendStatus<UnknownException>(HttpStatusCode.InternalServerError)
-    // TODO: Uncomment this once https://youtrack.jetbrains.com/issue/KTOR-4187 is fixed
     sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
 }

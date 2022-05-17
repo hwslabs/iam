@@ -5,13 +5,13 @@
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_DEST:-build/output/logs}/iam_application.log</file>
+        <file>${TEST_LOG_DEST:-build/output/logs}/iam_application.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- daily rollover -->
             <fileNamePattern>${TEST_LOG_DEST:-build/test/output/logs}/iam_application.%d{yyyy-MM-dd}.log</fileNamePattern>
 
             <!-- keep 90 days' worth of history capped at 3GB total size -->
-            <maxHistory>${LOG_MAX_HISTORY:-1}</maxHistory>
+            <maxHistory>${TEST_LOG_MAX_HISTORY:-1}</maxHistory>
             <totalSizeCap>100MB</totalSizeCap>
 
         </rollingPolicy>

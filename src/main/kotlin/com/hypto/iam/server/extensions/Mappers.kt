@@ -213,6 +213,6 @@ fun auditEntryFrom(
 }
 
 fun UpdateUserRequest.Status.toUserStatus() = when (this) {
-        UpdateUserRequest.Status.enabled -> User.Status.enabled
-        UpdateUserRequest.Status.disabled -> User.Status.disabled
+    UpdateUserRequest.Status.enabled -> User.Status.enabled
+    UpdateUserRequest.Status.disabled -> User.Status.disabled
 }
