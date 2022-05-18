@@ -5,12 +5,12 @@ import com.sksamuel.hoplite.sources.EnvironmentVariablesPropertySource
 
 data class AppConfig(val app: App, val server: Server, val database: Database, val newrelic: Newrelic, val aws: Aws) {
     /**
-    Environment variables should be in Snake case.
-    E.g. env, token_validity
+     Environment variables should be in Snake case.
+     E.g. env, token_validity
 
-    Nested variables should be defined with the data class name followed by 2 underscores and then the variable name
-    {data_class_name}__{variable_name}
-    E.g. For Database - database__host, database__port, database__username, database__password
+     Nested variables should be defined with the data class name followed by 2 underscores and then the variable name
+     {data_class_name}__{variable_name}
+     E.g. For Database - database__host, database__port, database__username, database__password
      */
 
     data class Database(

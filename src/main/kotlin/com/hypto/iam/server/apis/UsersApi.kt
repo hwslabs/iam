@@ -8,7 +8,6 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.UserPaginatedResponse
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.UserPolicyService
@@ -28,6 +27,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
+import org.koin.ktor.ext.inject
 
 fun Route.usersApi() {
     val userPolicyService: UserPolicyService by inject()

@@ -5,7 +5,6 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateActionRequest
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.ActionService
 import com.hypto.iam.server.validators.validate
@@ -19,6 +18,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
+import org.koin.ktor.ext.inject
 
 fun Route.actionApi() {
     val actionService: ActionService by inject()

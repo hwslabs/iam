@@ -25,23 +25,21 @@ import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.response.respondText
 import java.security.SignatureException
+import mu.KotlinLogging
 import org.jooq.exception.DataAccessException
 
-val set = mutableSetOf<Any>()
+val logger = KotlinLogging.logger { }
 inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
     statusCode: HttpStatusCode,
     shouldThrowException: Boolean = false,
     message: String? = null
 ) {
-    set.add(T::class)
     exception<T> { call, cause ->
-        val exceptionKnown: Boolean = set.contains(cause::class)
         val response = ErrorResponse(
             message
                 ?: if (
                     statusCode.value < HttpStatusCode.InternalServerError.value &&
-                    cause.message != null &&
-                    exceptionKnown
+                    cause.message != null
                 ) {
                     cause.message!!
                 } else {
@@ -51,11 +49,7 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = if (exceptionKnown) {
-                statusCode
-            } else {
-                HttpStatusCode.InternalServerError
-            }
+            status = statusCode
         )
         shouldThrowException && throw cause
     }
@@ -85,6 +79,5 @@ fun StatusPagesConfig.statusPages() {
     sendStatus<IllegalArgumentException>(HttpStatusCode.BadRequest)
     sendStatus<DataAccessException>(HttpStatusCode.Unauthorized)
     sendStatus<UnknownException>(HttpStatusCode.InternalServerError)
-    // TODO: Uncomment this once https://youtrack.jetbrains.com/issue/KTOR-4187 is fixed
-//    sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
+    sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
 }

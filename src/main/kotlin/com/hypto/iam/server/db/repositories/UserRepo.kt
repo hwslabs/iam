@@ -29,8 +29,10 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
         builder = if (uniqueCheck) {
             // Check only verified users in other organizations and all users within the organization
-            builder.and((USERS.VERIFIED.eq(true).andNot(USERS.ORGANIZATION_ID.eq(organizationId)))
-                .or(USERS.ORGANIZATION_ID.eq(organizationId)))
+            builder.and(
+                (USERS.VERIFIED.eq(true).andNot(USERS.ORGANIZATION_ID.eq(organizationId)))
+                    .or(USERS.ORGANIZATION_ID.eq(organizationId))
+            )
         } else {
             // Check all verified and unverified users within the organization
             builder.and(USERS.ORGANIZATION_ID.eq(organizationId))

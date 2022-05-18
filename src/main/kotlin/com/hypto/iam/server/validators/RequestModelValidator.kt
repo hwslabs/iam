@@ -42,37 +42,21 @@ import io.konform.validation.jsonschema.pattern
  * Extension function to validate CreateOrganizationRequest input from client
  */
 fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
-    return Validation<CreateOrganizationRequest> {
-        // Name is mandatory parameter and max length should be 50
-        CreateOrganizationRequest::name required {
-            run(nameCheck)
-        }
-        CreateOrganizationRequest::rootUser required {
-            run(rootUserRequestValidation)
-        }
-    }.validateAndThrowOnFailure(this)
+    return createOrganizationRequestValidation.validateAndThrowOnFailure(this)
 }
 
 /**
  * Extension function to validate UpdateOrganizationRequest input from client
  */
 fun UpdateOrganizationRequest.validate(): UpdateOrganizationRequest {
-    return Validation<UpdateOrganizationRequest> {
-        UpdateOrganizationRequest::description required {
-            run(descriptionCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return updateOrganizationRequestValidation.validateAndThrowOnFailure(this)
 }
 
 /**
  * Extension function to validate CreateCredentialRequest input from client
  */
 fun CreateCredentialRequest.validate(): CreateCredentialRequest {
-    return Validation<CreateCredentialRequest> {
-        CreateCredentialRequest::validUntil ifPresent {
-            dateTime(nature = TimeNature.FUTURE)
-        }
-    }.validateAndThrowOnFailure(this)
+    return createCredentialRequestValidation.validateAndThrowOnFailure(this)
 }
 
 /**
@@ -94,80 +78,36 @@ fun UpdateCredentialRequest.validate(): UpdateCredentialRequest {
  * Extension function to validate CreateResourceRequest input from client
  */
 fun CreateResourceRequest.validate(): CreateResourceRequest {
-    return Validation<CreateResourceRequest> {
-        CreateResourceRequest::name required {
-            run(nameCheck)
-        }
-        CreateResourceRequest::description ifPresent {
-            run(descriptionCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return createResourceRequestValidation.validateAndThrowOnFailure(this)
 }
 
 /**
  * Extension function to validate UpdateResourceRequest input from client
  */
 fun UpdateResourceRequest.validate(): UpdateResourceRequest {
-    return Validation<UpdateResourceRequest> {
-        UpdateResourceRequest::description ifPresent {
-            run(descriptionCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return updateResourceRequestValidation.validateAndThrowOnFailure(this)
 }
 
 /**
  * Extension function to validate CreateActionRequest input from client
  */
 fun CreateActionRequest.validate(): CreateActionRequest {
-    return Validation<CreateActionRequest> {
-        CreateActionRequest::name required {
-            run(nameCheck)
-        }
-        CreateActionRequest::description ifPresent {
-            run(descriptionCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return createActionRequestValidation.validateAndThrowOnFailure(this)
 }
 
 /**
  * Extension function to validate UpdateActionRequest input from client
  */
 fun UpdateActionRequest.validate(): UpdateActionRequest {
-    return Validation<UpdateActionRequest> {
-        UpdateActionRequest::description required {
-            run(descriptionCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return updateActionRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun CreatePolicyRequest.validate(): CreatePolicyRequest {
-    return Validation<CreatePolicyRequest> {
-        CreatePolicyRequest::name required {
-            run(nameCheck)
-        }
-        CreatePolicyRequest::statements required {
-            minItems(MIN_POLICY_STATEMENTS)
-            maxItems(MAX_POLICY_STATEMENTS)
-        }
-        // TODO: [IMPORTANT] should we do a hrn check for resource and action in a policy statement?
-        CreatePolicyRequest::statements onEach {
-            PolicyStatement::resource required { run(hrnCheck) }
-            PolicyStatement::action required { run(hrnCheck) }
-            PolicyStatement::effect required {}
-        }
-    }.validateAndThrowOnFailure(this)
+    return createPolicyRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun UpdatePolicyRequest.validate(): UpdatePolicyRequest {
-    return Validation<UpdatePolicyRequest> {
-        UpdatePolicyRequest::statements required {
-            minItems(MIN_POLICY_STATEMENTS)
-            maxItems(MAX_POLICY_STATEMENTS)
-        }
-        UpdatePolicyRequest::statements onEach {
-            policyStatementValidation
-        }
-    }.validateAndThrowOnFailure(this)
+    return updatePolicyRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun ValidationRequest.validate(): ValidationRequest {
@@ -179,64 +119,23 @@ fun ResourceAction.validate(): ResourceAction {
 }
 
 fun PolicyAssociationRequest.validate(): PolicyAssociationRequest {
-    return Validation<PolicyAssociationRequest> {
-        PolicyAssociationRequest::policies required {
-            minItems(MagicNumber.ONE)
-            maxItems(MAX_POLICY_ASSOCIATIONS_PER_REQUEST)
-        }
-        PolicyAssociationRequest::policies onEach { hrn() }
-    }.validateAndThrowOnFailure(this)
+    return policyAssociationRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun CreateUserRequest.validate(): CreateUserRequest {
-    return Validation<CreateUserRequest> {
-        CreateUserRequest::username required {
-            run(userNameCheck)
-        }
-        CreateUserRequest::email {
-            run(emailCheck)
-        }
-        CreateUserRequest::passwordHash {
-            run(passwordCheck)
-        }
-        CreateUserRequest::phone ifPresent {
-            run(phoneNumberCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return createUserRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun UpdateUserRequest.validate(): UpdateUserRequest {
-    return Validation<UpdateUserRequest> {
-        UpdateUserRequest::email ifPresent {
-            run(emailCheck)
-        }
-        UpdateUserRequest::phone ifPresent {
-            run(phoneNumberCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return updateUserRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
-    return Validation<VerifyEmailRequest> {
-        VerifyEmailRequest::email required {
-            run(emailCheck)
-        }
-        VerifyEmailRequest::organizationId ifPresent {
-            run(organizationIdCheck)
-        }
-        VerifyEmailRequest::purpose required {}
-    }.validateAndThrowOnFailure(this)
+    return verifyEmailRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun EmailPasswordCredential.validate(): EmailPasswordCredential {
-    return Validation<EmailPasswordCredential> {
-        EmailPasswordCredential::email required {
-            run(credentialEmailCheck)
-        }
-        EmailPasswordCredential::password required {
-            run(credentialPasswordCheck)
-        }
-    }.validateAndThrowOnFailure(this)
+    return emailPasswordCredentialValidation.validateAndThrowOnFailure(this)
 }
 
 // Validations used by ValidationBuilders
@@ -336,4 +235,135 @@ val credentialEmailCheck = Validation<String> {
 
 val credentialPasswordCheck = Validation<String> {
     minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint CREDENTIALS_PASSWORD_INVALID
+}
+
+// Request model validations
+
+val createOrganizationRequestValidation = Validation<CreateOrganizationRequest> {
+    // Name is mandatory parameter and max length should be 50
+    CreateOrganizationRequest::name required {
+        run(nameCheck)
+    }
+    CreateOrganizationRequest::rootUser required {
+        run(rootUserRequestValidation)
+    }
+}
+
+val updateOrganizationRequestValidation = Validation<UpdateOrganizationRequest> {
+    UpdateOrganizationRequest::description required {
+        run(descriptionCheck)
+    }
+}
+
+val createCredentialRequestValidation = Validation<CreateCredentialRequest> {
+    CreateCredentialRequest::validUntil ifPresent {
+        dateTime(nature = TimeNature.FUTURE)
+    }
+}
+
+val createResourceRequestValidation = Validation<CreateResourceRequest> {
+    CreateResourceRequest::name required {
+        run(nameCheck)
+    }
+    CreateResourceRequest::description ifPresent {
+        run(descriptionCheck)
+    }
+}
+
+val updateResourceRequestValidation = Validation<UpdateResourceRequest> {
+    UpdateResourceRequest::description ifPresent {
+        run(descriptionCheck)
+    }
+}
+
+val createActionRequestValidation = Validation<CreateActionRequest> {
+    CreateActionRequest::name required {
+        run(nameCheck)
+    }
+    CreateActionRequest::description ifPresent {
+        run(descriptionCheck)
+    }
+}
+
+val updateActionRequestValidation = Validation<UpdateActionRequest> {
+    UpdateActionRequest::description required {
+        run(descriptionCheck)
+    }
+}
+
+val createPolicyRequestValidation = Validation<CreatePolicyRequest> {
+    CreatePolicyRequest::name required {
+        run(nameCheck)
+    }
+    CreatePolicyRequest::statements required {
+        minItems(MIN_POLICY_STATEMENTS)
+        maxItems(MAX_POLICY_STATEMENTS)
+    }
+    // TODO: [IMPORTANT] should we do a hrn check for resource and action in a policy statement?
+    CreatePolicyRequest::statements onEach {
+        PolicyStatement::resource required { run(hrnCheck) }
+        PolicyStatement::action required { run(hrnCheck) }
+        PolicyStatement::effect required {}
+    }
+}
+
+val updatePolicyRequestValidation = Validation<UpdatePolicyRequest> {
+    UpdatePolicyRequest::statements required {
+        minItems(MIN_POLICY_STATEMENTS)
+        maxItems(MAX_POLICY_STATEMENTS)
+    }
+    UpdatePolicyRequest::statements onEach {
+        policyStatementValidation
+    }
+}
+
+val policyAssociationRequestValidation = Validation<PolicyAssociationRequest> {
+    PolicyAssociationRequest::policies required {
+        minItems(MagicNumber.ONE)
+        maxItems(MAX_POLICY_ASSOCIATIONS_PER_REQUEST)
+    }
+    PolicyAssociationRequest::policies onEach { hrn() }
+}
+
+val createUserRequestValidation = Validation<CreateUserRequest> {
+    CreateUserRequest::username required {
+        run(userNameCheck)
+    }
+    CreateUserRequest::email {
+        run(emailCheck)
+    }
+    CreateUserRequest::passwordHash {
+        run(passwordCheck)
+    }
+    CreateUserRequest::phone ifPresent {
+        run(phoneNumberCheck)
+    }
+}
+
+val updateUserRequestValidation = Validation<UpdateUserRequest> {
+    UpdateUserRequest::email ifPresent {
+        run(emailCheck)
+    }
+    UpdateUserRequest::phone ifPresent {
+        run(phoneNumberCheck)
+    }
+}
+
+val verifyEmailRequestValidation = Validation<VerifyEmailRequest> {
+    VerifyEmailRequest::email required {
+        run(emailCheck)
+    }
+    VerifyEmailRequest::organizationId ifPresent {
+        run(organizationIdCheck)
+    }
+    VerifyEmailRequest::purpose required {}
+}
+
+val emailPasswordCredentialValidation = Validation<EmailPasswordCredential> {
+    EmailPasswordCredential::email required {
+        run(credentialEmailCheck)
+    }
+    EmailPasswordCredential::password required {
+        run(credentialPasswordCheck)
+    }
 }

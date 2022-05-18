@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.UpdateOrganizationRequest
-import com.hypto.iam.server.plugins.inject
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.OrganizationsService
@@ -22,6 +21,7 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import org.koin.ktor.ext.inject
 
 /**
  * API to create organization in IAM.
