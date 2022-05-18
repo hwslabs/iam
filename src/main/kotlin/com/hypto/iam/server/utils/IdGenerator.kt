@@ -5,7 +5,6 @@ import java.util.concurrent.ThreadLocalRandom
 import kotlin.streams.asSequence
 
 object IdGenerator {
-    val ulid = ULID()
 
     enum class Charset(val seed: String) {
         UPPERCASE_ALPHABETS("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
@@ -65,15 +64,5 @@ object IdGenerator {
         val timeId = numberToId(Instant.now().toEpochMilli(), charset)
 
         return timeId + randomId(length - timeId.length, charset)
-    }
-
-    object Ulid {
-        fun getId(timestamp: Long = System.currentTimeMillis()): String {
-            return ulid.nextULID(timestamp)
-        }
-
-        fun timestamp(ulid: String): Long {
-            return ULID.parseULID(ulid).timestamp()
-        }
     }
 }

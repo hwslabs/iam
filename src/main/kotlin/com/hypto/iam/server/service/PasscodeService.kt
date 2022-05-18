@@ -47,7 +47,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
 
     private fun sendSignupPasscode(email: String, passcode: String): Boolean {
         val link = "${appConfig.app.baseUrl}/signup?passcode=$passcode&email=${
-            Base64.getEncoder().encodeToString(email.toByteArray())
+        Base64.getEncoder().encodeToString(email.toByteArray())
         }"
         val emailRequest = SendTemplatedEmailRequest.builder()
             .source(appConfig.app.senderEmailAddress).template(appConfig.app.signUpEmailTemplate).templateData(

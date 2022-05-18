@@ -100,10 +100,12 @@ class UserApiTest : AbstractContainerBaseTest() {
             }
 
             // Get user
-            with(handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/testUserName") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }) {
+            with(
+                handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/testUserName") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
+            ) {
                 val responseBody = gson.fromJson(response.content, User::class.java)
                 assertEquals(HttpStatusCode.OK, response.status())
                 assertEquals(
@@ -177,10 +179,12 @@ class UserApiTest : AbstractContainerBaseTest() {
             }
 
             // Delete user
-            with(handleRequest(HttpMethod.Delete, "/organizations/${organization.id}/users/testUserName") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }) {
+            with(
+                handleRequest(HttpMethod.Delete, "/organizations/${organization.id}/users/testUserName") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
+            ) {
                 assertEquals(HttpStatusCode.OK, response.status())
 
                 // Verify the value from mocks
@@ -202,11 +206,15 @@ class UserApiTest : AbstractContainerBaseTest() {
             val rootUserToken = organizationResponse.rootUserToken!!
 
             // Delete root user
-            with(handleRequest(HttpMethod.Delete,
-                "/organizations/${organization.id}/users/$rootUserName") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }) {
+            with(
+                handleRequest(
+                    HttpMethod.Delete,
+                    "/organizations/${organization.id}/users/$rootUserName"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
+            ) {
                 assertEquals(HttpStatusCode.BadRequest, response.status())
             }
             DataSetupHelper.deleteOrganization(organization.id, this)

@@ -58,11 +58,11 @@ mainClassName = "com.hypto.iam.server.ApplicationKt"
 sourceCompatibility = 11
 
 sourceSets {
-    main.java.srcDirs += 'src/main/kotlin'
-    main.java.srcDirs += 'build/generated-src/openapi'
-    main.kotlin.srcDirs += 'src/main/kotlin'
-    main.kotlin.srcDirs += 'build/generated-src/jooq'
-    test.kotlin.srcDirs += 'src/test/kotlin'
+    main.java.srcDirs += "$rootDir/main/kotlin"
+    main.java.srcDirs += "$buildDir/generated-src/openapi"
+    main.kotlin.srcDirs += "$rootDir/main/kotlin"
+    main.kotlin.srcDirs += "$buildDir/generated-src/jooq"
+    test.kotlin.srcDirs += "$rootDir/test/kotlin"
 }
 
 compileKotlin {
@@ -301,7 +301,7 @@ detekt {
 //}
 
 ktlint {
-    version = "0.45.1"
+    version = "0.45.2"
     debug = false
     verbose = false
     android = false
@@ -441,3 +441,13 @@ tasks.named('generateJooq').configure {
 }
 
 compileKotlin.dependsOn clean, tasks.named("detekt"), ktlintFormat, generateJooq, generateOpenAPIModels
+
+// TODO: Figure out how to skip generated-src for this step and then re-enable it
+ktlintMainSourceSetCheck.enabled = false
+
+gradle.taskGraph.whenReady { graph ->
+    if (!graph.hasTask(dockerDistJar)) {
+        shadowJar.enabled = false
+        distZip.enabled = false
+    }
+}
