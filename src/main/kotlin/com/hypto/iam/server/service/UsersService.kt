@@ -72,14 +72,21 @@ class UsersServiceImpl : KoinComponent, UsersService {
     }
 
     override suspend fun getUserByEmail(
-        organizationId: String,
+        organizationId: String?,
         email: String
     ): User {
-        val org = organizationRepo.findById(organizationId)
+        val orgId = if (appConfig.app.uniqueUsersAcrossOrganizations) {
+            val userRecord = userRepo.findByEmail(email)
+                ?: throw EntityNotFoundException("User with email - $email not found")
+            userRecord.organizationId
+        } else {
+            organizationId ?: throw EntityNotFoundException("Organization id is required")
+        }
+        val org = organizationRepo.findById(orgId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val user = identityProvider.getUserByEmail(identityGroup, email)
-        return getUser(ResourceHrn(organizationId, "", IamResources.USER, user.username), user)
+        return getUser(ResourceHrn(orgId, "", IamResources.USER, user.username), user)
     }
 
     override suspend fun setUserPassword(
@@ -216,6 +223,6 @@ interface UsersService {
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
     suspend fun authenticate(organizationId: String, userName: String, password: String): User
     suspend fun authenticate(email: String, password: String): User
-    suspend fun getUserByEmail(organizationId: String, email: String): User
+    suspend fun getUserByEmail(organizationId: String?, email: String): User
     suspend fun setUserPassword(organizationId: String, userName: String, password: String): BaseSuccessResponse
 }
