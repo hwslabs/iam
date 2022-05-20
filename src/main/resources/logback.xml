@@ -50,7 +50,7 @@
     <logger name="io.netty" level="INFO"/>
 
     <!-- TODO: [IMPORTANT] Make these "INFO" before prod deployment or make these env level configs-->
-    <logger name="com.zaxxer.hikari" level="DEBUG"/>
+    <logger name="com.zaxxer.hikari" level="INFO"/>
     <logger name="org.jooq" level="TRACE"/>
     <logger name="org.casbin.jcasbin" level="WARN"/>
 
