@@ -81,14 +81,8 @@ val ApplicationAuthProviders: Map<String, OAuthServerSettings> = listOf<OAuthSer
 
 // Provides all resources and configurations for application telemetry using micrometer
 object MicrometerConfigs {
+    private val appConfig = getKoinInstance<AppConfig>()
     private val registry = CompositeMeterRegistry()
-        // TODO: Uncomment this to publish metrics to new relic
-//        .add(getNewRelicMeterRegistry())
-        /*
-         * TODO: Configure "LoggingMeterRegistry" with a logging sink to direct metrics logs to a separate "iam_metrics.log" logback appender
-         * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer)
-         */
-        .add(LoggingMeterRegistry())
 
     // TODO: Retain required metric binders and remove the rest
     private val meterBinders = listOf(
@@ -117,8 +111,6 @@ object MicrometerConfigs {
 
     private fun getNewRelicRegistryConfig(): NewRelicRegistryConfig {
         return object : NewRelicRegistryConfig {
-            val appConfig = getKoinInstance<AppConfig>()
-
             override fun apiKey(): String {
                 return appConfig.newrelic.apiKey
             }
@@ -136,8 +128,17 @@ object MicrometerConfigs {
     }
 
     init {
+        /*
+         * TODO: Configure "LoggingMeterRegistry" with a logging sink to
+         *  direct metrics logs to a separate "togai_core_metrics.log" logback appender
+         * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer)
+         */
+        if (!appConfig.app.isDevelopment) registry.add(LoggingMeterRegistry())
+        // TODO: Uncomment this to publish metrics to new relic
+        // registry.add(getNewRelicMeterRegistry())
+
         registry.config().commonTags(
-            listOf(Tag.of("environment", getKoinInstance<AppConfig>().app.env.toString()))
+            listOf(Tag.of("environment", appConfig.app.env.toString()))
         )
     }
 
