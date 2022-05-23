@@ -27,6 +27,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnable
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminRespondToAuthChallengeRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AliasAttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeDataType
@@ -183,6 +184,33 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         }
     }
 
+    override suspend fun getUserByEmail(identityGroup: IdentityGroup, email: String): User {
+        require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
+        try {
+            val listRequest =
+                ListUsersRequest.builder().userPoolId(identityGroup.id).filter("email = \"$email\"").limit(1)
+            val response = cognitoClient.listUsers(listRequest.build())
+            val userType = response.users().first()
+            val attrs = userType.attributes()
+            return User(
+                userType.username(),
+                email = getAttribute(attrs, ATTRIBUTE_EMAIL),
+                phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
+                verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
+                loginAccess = true,
+                isEnabled = userType.enabled(),
+                createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
+                createdAt = userType.userCreateDate().toString()
+            )
+        } catch (e: NoSuchElementException) {
+            logger.info(e) { "Unable to find the user with email $email in the organization" }
+            throw UserNotFoundException("Unable to find the user $email in the given organization")
+        } catch (e: Exception) {
+            logger.error(e) { "Error while trying to get user information with email $email" + e.message }
+            throw UnknownException("Unknown error while trying to get the user information")
+        }
+    }
+
     override suspend fun updateUser(
         identityGroup: IdentityGroup,
         userName: String,
@@ -225,6 +253,18 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         cognitoClient.adminUpdateUserAttributes(updateRequest)
 
         return getUser(identityGroup, userName)
+    }
+
+    override suspend fun setUserPassword(
+        identityGroup: IdentityGroup,
+        userName: String,
+        password: String
+    ) {
+        require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
+        val setPasswordRequest =
+            AdminSetUserPasswordRequest.builder().password(password).userPoolId(identityGroup.id).username(userName)
+                .build()
+        cognitoClient.adminSetUserPassword(setPasswordRequest)
     }
 
     private fun createUserWithPassword(

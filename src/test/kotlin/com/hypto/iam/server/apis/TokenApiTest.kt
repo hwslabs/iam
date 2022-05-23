@@ -248,6 +248,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "https://localhost",
                             "mail@iam.com",
                             "signupTemplateId",
+                            "resetPasswordTemplateId",
                             false
                         )
                     }
@@ -293,6 +294,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "https://localhost",
                             "mail@iam.com",
                             "signupTemplateId",
+                            "resetPasswordTemplateId",
                             true
                         )
                     }

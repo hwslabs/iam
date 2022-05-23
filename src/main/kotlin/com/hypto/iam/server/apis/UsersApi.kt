@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
+import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.security.UserPrincipal
@@ -166,5 +167,23 @@ fun Route.usersApi() {
                 status = HttpStatusCode.OK
             )
         }
+    }
+}
+
+fun Route.resetPasswordApi() {
+    val gson: Gson by inject()
+    val usersService: UsersService by inject()
+
+    post("/organizations/{organization_id}/users/resetPassword") {
+        val organizationId = call.parameters["organization_id"]
+        val request = call.receive<ResetPasswordRequest>().validate()
+        val user = usersService.getUserByEmail(organizationId!!, request.email)
+        val response = usersService.setUserPassword(organizationId, user.username, request.password)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 }

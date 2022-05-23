@@ -1,4 +1,5 @@
 @file:Suppress("LongParameterList")
+
 package com.hypto.iam.server.service
 
 import com.google.gson.Gson
@@ -68,6 +69,36 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val user = identityProvider.getUser(identityGroup, userName)
         return getUser(userHrn, user)
+    }
+
+    override suspend fun getUserByEmail(
+        organizationId: String?,
+        email: String
+    ): User {
+        val orgId = if (appConfig.app.uniqueUsersAcrossOrganizations) {
+            val userRecord = userRepo.findByEmail(email)
+                ?: throw EntityNotFoundException("User with email - $email not found")
+            userRecord.organizationId
+        } else {
+            organizationId ?: throw EntityNotFoundException("Organization id is required")
+        }
+        val org = organizationRepo.findById(orgId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val user = identityProvider.getUserByEmail(identityGroup, email)
+        return getUser(ResourceHrn(orgId, "", IamResources.USER, user.username), user)
+    }
+
+    override suspend fun setUserPassword(
+        organizationId: String,
+        userName: String,
+        password: String
+    ): BaseSuccessResponse {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to set user password")
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        identityProvider.setUserPassword(identityGroup, userName, password)
+        return BaseSuccessResponse(true)
     }
 
     override suspend fun listUsers(
@@ -192,4 +223,6 @@ interface UsersService {
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
     suspend fun authenticate(organizationId: String, userName: String, password: String): User
     suspend fun authenticate(email: String, password: String): User
+    suspend fun getUserByEmail(organizationId: String?, email: String): User
+    suspend fun setUserPassword(organizationId: String, userName: String, password: String): BaseSuccessResponse
 }

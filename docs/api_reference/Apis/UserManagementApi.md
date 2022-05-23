@@ -8,6 +8,7 @@ Method | HTTP request | Description
 [**deleteUser**](UserManagementApi.md#deleteUser) | **DELETE** /organizations/{organization_id}/users/{user_name} | Delete a User
 [**getUser**](UserManagementApi.md#getUser) | **GET** /organizations/{organization_id}/users/{user_name} | Gets a user entity associated with the organization
 [**listUsers**](UserManagementApi.md#listUsers) | **GET** /organizations/{organization_id}/users | List users
+[**resetPassword**](UserManagementApi.md#resetPassword) | **POST** /organizations/{organization_id}/users/resetPassword | Reset Password
 [**updateUser**](UserManagementApi.md#updateUser) | **PATCH** /organizations/{organization_id}/users/{user_name} | Update a User
 
 
@@ -122,6 +123,34 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
 - **Content-Type**: Not defined
+- **Accept**: application/json
+
+<a name="resetPassword"></a>
+# **resetPassword**
+> BaseSuccessResponse resetPassword(organization\_id, ResetPasswordRequest)
+
+Reset Password
+
+    Reset Password
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **organization\_id** | **String**|  | [default to null]
+ **ResetPasswordRequest** | [**ResetPasswordRequest**](../Models/ResetPasswordRequest.md)| Payload to reset password |
+
+### Return type
+
+[**BaseSuccessResponse**](../Models/BaseSuccessResponse.md)
+
+### Authorization
+
+[apiKeyAuth](../README.md#apiKeyAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
 - **Accept**: application/json
 
 <a name="updateUser"></a>

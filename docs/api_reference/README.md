@@ -38,6 +38,7 @@ Class | Method | HTTP request | Description
 *UserManagementApi* | [**deleteUser**](Apis/UserManagementApi.md#deleteuser) | **DELETE** /organizations/{organization_id}/users/{user_name} | Delete a User
 *UserManagementApi* | [**getUser**](Apis/UserManagementApi.md#getuser) | **GET** /organizations/{organization_id}/users/{user_name} | Gets a user entity associated with the organization
 *UserManagementApi* | [**listUsers**](Apis/UserManagementApi.md#listusers) | **GET** /organizations/{organization_id}/users | List users
+*UserManagementApi* | [**resetPassword**](Apis/UserManagementApi.md#resetpassword) | **POST** /organizations/{organization_id}/users/resetPassword | Reset Password
 *UserManagementApi* | [**updateUser**](Apis/UserManagementApi.md#updateuser) | **PATCH** /organizations/{organization_id}/users/{user_name} | Update a User
 *UserPolicyManagementApi* | [**attachPolicies**](Apis/UserPolicyManagementApi.md#attachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/attach_policies | Attach policies to user
 *UserPolicyManagementApi* | [**detachPolicies**](Apis/UserPolicyManagementApi.md#detachpolicies) | **PATCH** /organizations/{organization_id}/users/{user_name}/detach_policies | Detach policies from user
@@ -69,6 +70,7 @@ Class | Method | HTTP request | Description
  - [PolicyAssociationRequest](./Models/PolicyAssociationRequest.md)
  - [PolicyPaginatedResponse](./Models/PolicyPaginatedResponse.md)
  - [PolicyStatement](./Models/PolicyStatement.md)
+ - [ResetPasswordRequest](./Models/ResetPasswordRequest.md)
  - [Resource](./Models/Resource.md)
  - [ResourceAction](./Models/ResourceAction.md)
  - [ResourceActionEffect](./Models/ResourceActionEffect.md)

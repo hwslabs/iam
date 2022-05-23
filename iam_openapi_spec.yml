@@ -315,6 +315,35 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/users/resetPassword:
+    post:
+      tags:
+        - User Management
+      summary: Reset Password
+      description: Reset Password
+      operationId: resetPassword
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/ResetPasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security:
+        - apiKeyAuth: [ passcode ]
+
   /organizations/{organization_id}/users/{user_name}/policies:
     get:
       tags:
@@ -1215,6 +1244,17 @@ components:
             UpdateUserRequest:
               $ref: '#/components/examples/UpdateUserRequest'
 
+    ResetPasswordRequest:
+      description: Payload to reset password
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResetPasswordRequest'
+          examples:
+            ResetPasswordRequest:
+              $ref: '#/components/examples/ResetPasswordRequest'
+
     CreateCredentialRequest:
       description: Payload to create credential
       required: true
@@ -1715,6 +1755,12 @@ components:
         status: enabled
         verified: true
 
+    ResetPasswordRequest:
+      summary: sample reset password request
+      value:
+        email: bob@acme.com
+        password: <new password>
+    
     CreateCredentialRequest:
       summary: sample create credential request
       value:
@@ -1783,11 +1829,7 @@ components:
         # TODO: Verify if this should be name or email
         username: Bob
         salterPassword: wnr1782qbt52igbiuwbcgeuyiy==egryg123iuoh1109877t2i313489rge
-    ResetPasswordRequest:
-      value:
-        # TODO: Verify if this should be name or email
-        username: Bob
-        salterPassword: wnr1782qbt52igbiuwbcgeuyiy==egryg123iuoh1109877t2i313489rge
+
     VerifyEmailRequest:
       value:
         email: abcd@abcd.in
@@ -2122,6 +2164,21 @@ components:
             - disabled
         verified:
           type: boolean
+
+    ResetPasswordRequest:
+      description: Payload to reset password
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          maxLength: 50
+        password:
+          type: string
+          maxLength: 50
 
     CreateCredentialRequest:
       description: Payload to create credential

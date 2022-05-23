@@ -30,6 +30,7 @@ Models/Policy.md
 Models/PolicyAssociationRequest.md
 Models/PolicyPaginatedResponse.md
 Models/PolicyStatement.md
+Models/ResetPasswordRequest.md
 Models/Resource.md
 Models/ResourceAction.md
 Models/ResourceActionEffect.md
