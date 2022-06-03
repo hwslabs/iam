@@ -4,7 +4,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **username** | **String** |  | [default to null]
-**password\_hash** | **String** |  | [default to null]
+**passwordHash** | **String** |  | [default to null]
 **email** | **String** |  | [default to null]
 **phone** | **String** |  | [default to null]
 **verified** | **Boolean** |  | [default to null]
