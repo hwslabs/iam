@@ -4,7 +4,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **id** | **String** |  | [default to null]
-**valid\_until** | **String** |  | [optional] [default to null]
+**validUntil** | **String** |  | [optional] [default to null]
 **status** | **String** |  | [default to null]
 **secret** | **String** |  | [default to null]
 
