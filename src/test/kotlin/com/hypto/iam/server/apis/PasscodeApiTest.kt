@@ -58,6 +58,35 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
     }
 
     @Test
+    fun `test verifyEmail api with orgId for signup purpose - success`() {
+        withTestApplication(Application::handleRequest) {
+            val requestBody = VerifyEmailRequest(
+                email = "abcd@abcd.com",
+                purpose = VerifyEmailRequest.Purpose.signup,
+                organizationId = "sampleOrg"
+            )
+            with(
+                handleRequest(
+                    HttpMethod.Post,
+                    "/verifyEmail"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(requestBody))
+                }
+            ) {
+                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                val responseBody =
+                    gson.fromJson(response.content, BaseSuccessResponse::class.java)
+                assertEquals(true, responseBody.success)
+            }
+        }
+    }
+
+    @Test
     fun `test verifyEmail api for reset purpose- success`() {
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, createdUser) = DataSetupHelper.createOrganization(this)

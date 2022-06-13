@@ -77,7 +77,7 @@ fun StatusPagesConfig.statusPages() {
     sendStatus<IllegalAccessException>(HttpStatusCode.InternalServerError, true)
     sendStatus<IllegalStateException>(HttpStatusCode.InternalServerError, true)
     sendStatus<IllegalArgumentException>(HttpStatusCode.BadRequest)
-    sendStatus<DataAccessException>(HttpStatusCode.Unauthorized)
+    sendStatus<DataAccessException>(HttpStatusCode.InternalServerError, true)
     sendStatus<UnknownException>(HttpStatusCode.InternalServerError)
     sendStatus<Throwable>(HttpStatusCode.InternalServerError, true, "Internal Server Error Occurred")
 }

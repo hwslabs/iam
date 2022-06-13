@@ -35,7 +35,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val passcode = passcodeRepo.createPasscode(
             idGenerator.passcodeId(),
             email,
-            organizationId,
+            if (purpose == Purpose.signup) null else organizationId,
             validUntil,
             purpose
         )
@@ -47,9 +47,8 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
     }
 
     private suspend fun sendSignupPasscode(email: String, passcode: String): Boolean {
-        val link = "${appConfig.app.baseUrl}/signup?passcode=$passcode&email=${
-        Base64.getEncoder().encodeToString(email.toByteArray())
-        }"
+        val link = "${appConfig.app.baseUrl}/signup?passcode=$passcode&" +
+            "email=${Base64.getEncoder().encodeToString(email.toByteArray())}"
         val emailRequest = SendTemplatedEmailRequest.builder()
             .source(appConfig.app.senderEmailAddress).template(appConfig.app.signUpEmailTemplate).templateData(
                 "{\"link\":\"$link\"}"
