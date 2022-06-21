@@ -12,6 +12,7 @@ import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
@@ -321,6 +322,56 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             }
 
             DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
+        }
+    }
+
+    @Test
+    fun `update organization name success`() {
+        withTestApplication(Application::handleRequest) {
+            val orgName = "test-org" + IdGenerator.randomId()
+            val orgDescription = "test-org-description"
+            val userName = "test-user" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919626012778"
+            val testPassword = "testPassword@Hash1"
+
+            val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader("X-Api-Key", rootToken)
+                setBody(
+                    gson.toJson(
+                        CreateOrganizationRequest(
+                            orgName,
+                            RootUser(userName, testPassword, testEmail, testPhone, true),
+                            orgDescription
+                        )
+                    )
+                )
+            }
+            val createdOrganization =
+                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
+
+            val updatedOrgName = "updated-org" + IdGenerator.randomId()
+            with(
+                handleRequest(HttpMethod.Patch, "/organizations/${createdOrganization.organization!!.id}") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
+                    setBody(
+                        gson.toJson(
+                            UpdateOrganizationRequest(
+                                updatedOrgName
+                            )
+                        )
+                    )
+                }
+            ) {
+                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+
+                val fetchedOrganization = gson.fromJson(response.content, Organization::class.java)
+                assertEquals(updatedOrgName, fetchedOrganization.name)
+                assertEquals(orgDescription, fetchedOrganization.description)
+            }
         }
     }
 }

@@ -262,7 +262,10 @@ val createOrganizationRequestValidation = Validation<CreateOrganizationRequest> 
 }
 
 val updateOrganizationRequestValidation = Validation<UpdateOrganizationRequest> {
-    UpdateOrganizationRequest::description required {
+    UpdateOrganizationRequest::name ifPresent {
+        run(nameCheck)
+    }
+    UpdateOrganizationRequest::description ifPresent {
         run(descriptionCheck)
     }
 }
