@@ -35,7 +35,7 @@ fun Route.createOrganizationApi() {
         val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value
         val (organization, tokenResponse) = service.createOrganization(
             request.name,
-            description = "",
+            description = request.description ?: "",
             rootUser = request.rootUser,
             passcodeStr = passcodeStr
         )
