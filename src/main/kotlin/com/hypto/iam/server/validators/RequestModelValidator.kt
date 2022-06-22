@@ -164,6 +164,8 @@ const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase 
     "one lowercase letter, one number and one special character[@ _ #]"
 const val ORGANIZATION_ID_REGEX = "^[a-zA-Z0-9]*\$"
 const val ORGANIZATION_ID_REGEX_HINT = "Organization ID should be a valid alphanumeric string"
+const val ORGANIZATION_NAME_REGEX = "^[_a-zA-Z0-9-\\s]*\$"
+const val ORGANIZATION_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _, - and [space] are supported"
 const val CREDENTIALS_EMAIL_INVALID = "Invalid Email"
 const val CREDENTIALS_PASSWORD_INVALID = "Invalid Password"
 
@@ -172,6 +174,13 @@ val nameCheck = Validation<String> {
     maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
         "name is ${Constants.MAX_NAME_LENGTH} characters"
     pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
+}
+
+val orgNameCheck = Validation<String> {
+    minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
+    maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+        "name is ${Constants.MAX_NAME_LENGTH} characters"
+    pattern(ORGANIZATION_NAME_REGEX) hint ORGANIZATION_NAME_REGEX_HINT
 }
 
 val phoneNumberCheck = Validation<String> {
@@ -254,7 +263,7 @@ val credentialPasswordCheck = Validation<String> {
 val createOrganizationRequestValidation = Validation<CreateOrganizationRequest> {
     // Name is mandatory parameter and max length should be 50
     CreateOrganizationRequest::name required {
-        run(nameCheck)
+        run(orgNameCheck)
     }
     CreateOrganizationRequest::rootUser required {
         run(rootUserRequestValidation)
@@ -263,7 +272,7 @@ val createOrganizationRequestValidation = Validation<CreateOrganizationRequest> 
 
 val updateOrganizationRequestValidation = Validation<UpdateOrganizationRequest> {
     UpdateOrganizationRequest::name ifPresent {
-        run(nameCheck)
+        run(orgNameCheck)
     }
     UpdateOrganizationRequest::description ifPresent {
         run(descriptionCheck)

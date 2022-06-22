@@ -2065,7 +2065,7 @@ components:
         name:
           type: string
           maxLength: 50
-          pattern: ^[A-Za-z0-9]{3,50}$
+          pattern: ^[_a-zA-Z0-9-\s]{3,50}$
         description:
           type: string
           maxLength: 500
@@ -2080,7 +2080,7 @@ components:
         name:
           type: string
           maxLength: 50
-          pattern: ^[A-Za-z0-9]{3,50}$
+          pattern: ^[_a-zA-Z0-9-\s]{3,50}$
         description:
           type: string
           maxLength: 500
