@@ -118,7 +118,7 @@ flyway {
     configurations = ['flywayMigration']
     user = System.getenv("database__username") ?: "root"
     password = System.getenv("database__password") ?: "password"
-    url = "jdbc:postgresql://${System.getenv("database__host") ?: "localhost"}:${System.getenv("database__port") ?: "5435"}/iam"
+    url = "jdbc:postgresql://${System.getenv("database__host") ?: "localhost"}:${System.getenv("database__port") ?: "4921"}/iam"
 }
 
 jooq {
@@ -445,9 +445,9 @@ compileKotlin.dependsOn clean, tasks.named("detekt"), ktlintFormat, generateJooq
 // TODO: Figure out how to skip generated-src for this step and then re-enable it
 ktlintMainSourceSetCheck.enabled = false
 
-gradle.taskGraph.whenReady { graph ->
+/*gradle.taskGraph.whenReady { graph ->
     if (!graph.hasTask(dockerDistJar)) {
         shadowJar.enabled = false
         distZip.enabled = false
     }
-}
+}*/

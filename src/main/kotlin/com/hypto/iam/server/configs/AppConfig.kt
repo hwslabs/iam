@@ -89,7 +89,7 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
     @Suppress("MagicNumber")
     data class Server(
         // Ktor
-        val port: Int = 8080,
+        val port: Int = 4101,
         val connectionGroupSize: Int = Runtime.getRuntime().availableProcessors() * 2,
         val workerGroupSize: Int = Runtime.getRuntime().availableProcessors() * 4,
         val callGroupSize: Int = Runtime.getRuntime().availableProcessors() * 16,

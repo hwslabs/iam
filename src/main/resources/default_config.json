@@ -1,7 +1,7 @@
 {
   "database": {
     "host": "localhost",
-    "port": "5435",
+    "port": "4921",
     "username": "root",
     "password": "password",
     "maximum_pool_size": 32,
@@ -14,7 +14,7 @@
     "publish_interval": 10
   },
   "server": {
-    "port": 8080,
+    "port": 4101,
     "connectionGroupSize": 32,
     "workerGroupSize": 64,
     "callGroupSize": 256,
@@ -27,7 +27,7 @@
   },
   "app": {
     "env": "Development",
-    "jwt_token_validity": 300,
+    "jwt_token_validity": 3000000,
     "old_key_ttl": 600,
     "secret_key": "iam-secret-key",
     "sign_key_fetch_interval": 30,
