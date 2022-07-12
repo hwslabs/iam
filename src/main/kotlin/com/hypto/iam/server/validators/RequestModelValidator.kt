@@ -238,7 +238,7 @@ val rootUserRequestValidation = Validation<RootUser> {
     RootUser::username required {
         run(userNameCheck)
     }
-    RootUser::phone required {
+    RootUser::phone ifPresent {
         run(phoneNumberCheck)
     }
     RootUser::email required {

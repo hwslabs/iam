@@ -2093,7 +2093,6 @@ components:
         - username
         - passwordHash
         - email
-        - phone
         - verified
       properties:
         username:
