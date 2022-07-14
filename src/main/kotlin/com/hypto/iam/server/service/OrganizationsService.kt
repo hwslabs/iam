@@ -90,7 +90,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     credentials = PasswordCredentials(
                         userName = rootUser.username,
                         email = rootUser.email,
-                        phoneNumber = rootUser.phone, password = rootUser.passwordHash
+                        phoneNumber = rootUser.phone ?: "",
+                        password = rootUser.passwordHash
                     ),
                     createdBy = "iam-system",
                     verified = rootUser.verified ?: false
