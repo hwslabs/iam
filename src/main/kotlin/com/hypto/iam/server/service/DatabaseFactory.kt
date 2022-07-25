@@ -28,6 +28,14 @@ object DatabaseFactory : KoinComponent {
         }
     )
 
+    init {
+        // eager initializing connection pools
+        pool.connection.prepareStatement("select 'HELLO_WORLD';").execute()
+    }
+
+    fun init() { /* Deliberately left empty*/
+    }
+
     private val daoConfiguration = DefaultConfiguration()
         .set(SQLDialect.POSTGRES)
         .set(pool)

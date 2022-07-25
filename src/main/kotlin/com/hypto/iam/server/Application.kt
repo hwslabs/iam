@@ -42,9 +42,11 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.basic
+import io.ktor.server.cio.CIO
+import io.ktor.server.engine.addShutdownHook
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.stop
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
-import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.callid.CallId
@@ -59,6 +61,7 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
@@ -224,20 +227,15 @@ fun main(args: Array<String>) {
     val appConfig: AppConfig = AppConfig.configuration
 
     embeddedServer(
-        Netty, appConfig.server.port, module = Application::module,
+        CIO, appConfig.server.port, module = Application::module,
         configure = {
             // Refer io.ktor.server.engine.ApplicationEngine.Configuration
             connectionGroupSize = appConfig.server.connectionGroupSize
             workerGroupSize = appConfig.server.workerGroupSize
             callGroupSize = appConfig.server.callGroupSize
-
-            // Refer io.ktor.server.netty.NettyApplicationEngine.Configuration
-            requestQueueLimit = appConfig.server.requestQueueLimit
-            runningLimit = appConfig.server.runningLimit
-            shareWorkGroup = appConfig.server.shareWorkGroup
-            responseWriteTimeoutSeconds = appConfig.server.responseWriteTimeoutSeconds
-            requestReadTimeoutSeconds = appConfig.server.requestReadTimeoutSeconds
-            tcpKeepAlive = appConfig.server.tcpKeepAlive
         }
-    ).start(wait = true)
+    ).apply {
+        @Suppress("MagicNumber")
+        addShutdownHook { stop(5, 15, TimeUnit.SECONDS) }
+    }.start(wait = true)
 }
