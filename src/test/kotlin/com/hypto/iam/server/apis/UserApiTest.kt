@@ -7,6 +7,7 @@ import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
+import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
@@ -32,6 +33,7 @@ import io.mockk.coEvery
 import io.mockk.slot
 import io.mockk.verify
 import java.time.Instant
+import java.util.Base64
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -339,6 +341,90 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
             }
 
+            DataSetupHelper.deleteOrganization(organization.id, this)
+        }
+    }
+
+    @Test
+    fun `change root user password - success`() {
+        withTestApplication(Application::handleRequest) {
+            val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+            val organization = organizationResponse.organization!!
+            val rootUserToken = organizationResponse.rootUserToken!!
+
+            val changePasswordRequest = ChangeUserPasswordRequest(
+                oldPassword = "testPassword@Hash1",
+                newPassword = "testPassword@Hash2"
+            )
+            with(
+                handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${organization.id}/users/${rootUser.username}/change_password"
+                ) {
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(changePasswordRequest))
+                }
+            ) {
+                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+            }
+            DataSetupHelper.deleteOrganization(organization.id, this)
+        }
+    }
+
+    @Test
+    fun `generate token after changing password - success`() {
+        withTestApplication(Application::handleRequest) {
+            val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+            val organization = organizationResponse.organization!!
+            val rootUserToken = organizationResponse.rootUserToken!!
+
+            val changePasswordRequest = ChangeUserPasswordRequest(
+                oldPassword = "testPassword@Hash1",
+                newPassword = "testPassword@Hash2"
+            )
+            with(
+                handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${organization.id}/users/${rootUser.username}/change_password"
+                ) {
+                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(changePasswordRequest))
+                }
+            ) {
+                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+            }
+
+            val authString = "${rootUser.email}:${changePasswordRequest.newPassword}"
+            val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+            with(
+                handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${organization.id}/token"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        authHeader
+                    )
+                }
+            ) {
+                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+            }
             DataSetupHelper.deleteOrganization(organization.id, this)
         }
     }

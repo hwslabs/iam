@@ -4,6 +4,7 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.idp.PasswordCredentials
+import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
@@ -138,6 +139,25 @@ fun Route.usersApi() {
                 )
             call.respondText(
                 text = gson.toJson(user),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
+
+    withPermission("changePassword") {
+        post("/organizations/{organization_id}/users/{user_id}/change_password") {
+            val organizationId = call.parameters["organization_id"]!!
+            val userId = call.parameters["user_id"]!!
+            val request = call.receive<ChangeUserPasswordRequest>().validate()
+            val response = usersService.changeUserPassword(
+                organizationId,
+                userId,
+                request.oldPassword,
+                request.newPassword
+            )
+            call.respondText(
+                text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
                 status = HttpStatusCode.OK
             )

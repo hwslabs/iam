@@ -89,6 +89,20 @@ class UsersServiceImpl : KoinComponent, UsersService {
         return getUser(ResourceHrn(orgId, "", IamResources.USER, user.username), user)
     }
 
+    override suspend fun changeUserPassword(
+        organizationId: String,
+        userName: String,
+        oldPassword: String,
+        newPassword: String
+    ): BaseSuccessResponse {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to authenticate user")
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        identityProvider.authenticate(identityGroup, userName, oldPassword)
+        identityProvider.setUserPassword(identityGroup, userName, newPassword)
+        return BaseSuccessResponse(true)
+    }
+
     override suspend fun setUserPassword(
         organizationId: String,
         userName: String,
@@ -225,4 +239,10 @@ interface UsersService {
     suspend fun authenticate(email: String, password: String): User
     suspend fun getUserByEmail(organizationId: String?, email: String): User
     suspend fun setUserPassword(organizationId: String, userName: String, password: String): BaseSuccessResponse
+    suspend fun changeUserPassword(
+        organizationId: String,
+        userName: String,
+        oldPassword: String,
+        newPassword: String
+    ): BaseSuccessResponse
 }
