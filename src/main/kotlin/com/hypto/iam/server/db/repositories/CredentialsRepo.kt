@@ -14,7 +14,7 @@ import org.jooq.impl.DAOImpl
 
 object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
 
-    private val idFun = fun (credentials: Credentials): UUID {
+    private val idFun = fun(credentials: Credentials): UUID {
         return credentials.id
     }
 
@@ -75,7 +75,9 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
         validUntil?.let { credentialsRecord.setValidUntil(validUntil) }
 
         // TODO: Automate this using listeners or some other means
-        if (credentialsRecord.changed()) { credentialsRecord.updatedAt = LocalDateTime.now() }
+        if (credentialsRecord.changed()) {
+            credentialsRecord.updatedAt = LocalDateTime.now()
+        }
 
         return credentialsRecord.update() > 0
     }
@@ -95,6 +97,15 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
         record.attach(dao().configuration())
         record.store()
         return record
+    }
+
+    suspend fun getAllByUserHrn(
+        userHrn: Hrn
+    ): Result<CredentialsRecord> {
+        val dao = dao()
+        return dao.ctx().selectFrom(dao.table)
+            .where(CREDENTIALS.USER_HRN.eq(userHrn.toString()))
+            .fetch()
     }
 
     suspend fun delete(organizationId: String, userId: String, id: UUID): Boolean {

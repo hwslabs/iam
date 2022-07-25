@@ -33,6 +33,7 @@ Class | Method | HTTP request | Description
 *UserCredentialManagementApi* | [**createCredential**](Apis/UserCredentialManagementApi.md#createcredential) | **POST** /organizations/{organization_id}/users/{user_name}/credentials | Create a new credential for a user
 *UserCredentialManagementApi* | [**deleteCredential**](Apis/UserCredentialManagementApi.md#deletecredential) | **DELETE** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Delete a credential
 *UserCredentialManagementApi* | [**getCredential**](Apis/UserCredentialManagementApi.md#getcredential) | **GET** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Gets credential for the user
+*UserCredentialManagementApi* | [**listCredentials**](Apis/UserCredentialManagementApi.md#listcredentials) | **GET** /organizations/{organization_id}/users/{user_name}/credentials | List all credentials for a user
 *UserCredentialManagementApi* | [**updateCredential**](Apis/UserCredentialManagementApi.md#updatecredential) | **PATCH** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Update the status of credential
 *UserManagementApi* | [**createUser**](Apis/UserManagementApi.md#createuser) | **POST** /organizations/{organization_id}/users | Create a user
 *UserManagementApi* | [**deleteUser**](Apis/UserManagementApi.md#deleteuser) | **DELETE** /organizations/{organization_id}/users/{user_name} | Delete a User
@@ -64,6 +65,7 @@ Class | Method | HTTP request | Description
  - [ErrorResponse](./Models/ErrorResponse.md)
  - [GetUserPoliciesResponse](./Models/GetUserPoliciesResponse.md)
  - [KeyResponse](./Models/KeyResponse.md)
+ - [ListCredentialResponse](./Models/ListCredentialResponse.md)
  - [Organization](./Models/Organization.md)
  - [PaginationOptions](./Models/PaginationOptions.md)
  - [Policy](./Models/Policy.md)

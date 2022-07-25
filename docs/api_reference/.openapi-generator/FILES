@@ -24,6 +24,7 @@ Models/CredentialWithoutSecret.md
 Models/ErrorResponse.md
 Models/GetUserPoliciesResponse.md
 Models/KeyResponse.md
+Models/ListCredentialResponse.md
 Models/Organization.md
 Models/PaginationOptions.md
 Models/Policy.md

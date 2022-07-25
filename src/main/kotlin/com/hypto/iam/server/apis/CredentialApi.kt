@@ -1,4 +1,5 @@
 @file:Suppress("ThrowsCount")
+
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
@@ -69,6 +70,21 @@ fun Route.credentialApi() {
 
             call.respondText(
                 text = gson.toJson(credential),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
+
+    withPermission("listCredential") {
+        get("/organizations/{organization_id}/users/{userId}/credentials") {
+            val organizationId = call.parameters["organization_id"]!!
+            val userId = call.parameters["userId"]!!
+
+            val credentials = credentialService.listCredentials(organizationId, userId)
+
+            call.respondText(
+                text = gson.toJson(credentials),
                 contentType = ContentType.Application.Json,
                 status = HttpStatusCode.OK
             )

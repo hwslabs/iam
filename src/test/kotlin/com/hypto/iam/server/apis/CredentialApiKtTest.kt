@@ -7,6 +7,7 @@ import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.Credential
+import com.hypto.iam.server.models.ListCredentialResponse
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -474,6 +475,44 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
                 }
                 DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("List credentials API tests")
+    inner class ListCredentialTest {
+        @Test
+        fun `list credentials of a user`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganizationResponse, createdUser) = DataSetupHelper
+                    .createOrganization(this)
+                val createdOrganization = createdOrganizationResponse.organization!!
+                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val userName = createdUser.username
+
+                val credential1 =
+                    DataSetupHelper.createCredential(createdOrganization.id, userName, rootUserToken, this)
+                val credential2 =
+                    DataSetupHelper.createCredential(createdOrganization.id, userName, rootUserToken, this)
+
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${createdOrganization.id}/users/$userName/credentials"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+
+                    val responseBody = gson.fromJson(response.content, ListCredentialResponse::class.java)
+                    Assertions.assertEquals(2, responseBody.credentials.size)
+                    Assertions.assertEquals(credential1, responseBody.credentials[0])
+                    Assertions.assertEquals(credential2, responseBody.credentials[1])
+                }
             }
         }
     }

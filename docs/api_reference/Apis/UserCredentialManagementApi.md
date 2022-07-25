@@ -7,6 +7,7 @@ Method | HTTP request | Description
 [**createCredential**](UserCredentialManagementApi.md#createCredential) | **POST** /organizations/{organization_id}/users/{user_name}/credentials | Create a new credential for a user
 [**deleteCredential**](UserCredentialManagementApi.md#deleteCredential) | **DELETE** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Delete a credential
 [**getCredential**](UserCredentialManagementApi.md#getCredential) | **GET** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Gets credential for the user
+[**listCredentials**](UserCredentialManagementApi.md#listCredentials) | **GET** /organizations/{organization_id}/users/{user_name}/credentials | List all credentials for a user
 [**updateCredential**](UserCredentialManagementApi.md#updateCredential) | **PATCH** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Update the status of credential
 
 
@@ -87,6 +88,34 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**CredentialWithoutSecret**](../Models/CredentialWithoutSecret.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: application/json
+
+<a name="listCredentials"></a>
+# **listCredentials**
+> ListCredentialResponse listCredentials(user\_name, organization\_id)
+
+List all credentials for a user
+
+    List all credentials for a user
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **user\_name** | **String**|  | [default to null]
+ **organization\_id** | **String**|  | [default to null]
+
+### Return type
+
+[**ListCredentialResponse**](../Models/ListCredentialResponse.md)
 
 ### Authorization
 
