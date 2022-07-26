@@ -38,6 +38,8 @@ fun Credential.Companion.from(record: CredentialsRecord): Credential {
         record.id.toString(),
         Credential.Status.valueOf(record.status),
         record.refreshToken,
+        record.createdAt.toUTCOffset(),
+        record.updatedAt.toUTCOffset(),
         record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
     )
 }
@@ -47,6 +49,8 @@ fun Credential.Companion.from(record: Credentials): Credential {
         record.id.toString(),
         Credential.Status.valueOf(record.status),
         record.refreshToken,
+        record.createdAt.toUTCOffset(),
+        record.updatedAt.toUTCOffset(),
         record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
     )
 }
@@ -55,6 +59,8 @@ fun CredentialWithoutSecret.Companion.from(record: CredentialsRecord): Credentia
     return CredentialWithoutSecret(
         record.id.toString(),
         CredentialWithoutSecret.Status.valueOf(record.status),
+        record.createdAt.toUTCOffset(),
+        record.updatedAt.toUTCOffset(),
         record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
     )
 }
@@ -63,6 +69,8 @@ fun CredentialWithoutSecret.Companion.from(record: Credentials): CredentialWitho
     return CredentialWithoutSecret(
         record.id.toString(),
         CredentialWithoutSecret.Status.valueOf(record.status),
+        record.createdAt.toUTCOffset(),
+        record.updatedAt.toUTCOffset(),
         record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
     )
 }

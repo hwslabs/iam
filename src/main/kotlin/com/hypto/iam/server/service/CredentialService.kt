@@ -56,8 +56,8 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         organizationId: String,
         userId: String
     ): ListCredentialResponse {
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
-        return ListCredentialResponse(repo.getAllByUserHrn(userHrn).map { Credential.from(it) })
+        val userHrn = ResourceHrn(usersService.getUser(organizationId, userId).hrn)
+        return ListCredentialResponse(repo.getAllByUserHrn(userHrn).map { CredentialWithoutSecret.from(it) })
     }
 
     override suspend fun updateCredentialAndGetWithoutSecret(
