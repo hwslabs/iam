@@ -7,6 +7,7 @@ import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
+import com.hypto.iam.server.models.ListCredentialResponse
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.security.auditLog
 import com.hypto.iam.server.utils.ApplicationIdUtil
@@ -49,6 +50,14 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
     ): CredentialWithoutSecret {
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
         return CredentialWithoutSecret.from(fetchCredential(userHrn, id))
+    }
+
+    override suspend fun listCredentials(
+        organizationId: String,
+        userId: String
+    ): ListCredentialResponse {
+        val userHrn = ResourceHrn(usersService.getUser(organizationId, userId).hrn)
+        return ListCredentialResponse(repo.getAllByUserHrn(userHrn).map { CredentialWithoutSecret.from(it) })
     }
 
     override suspend fun updateCredentialAndGetWithoutSecret(
@@ -109,4 +118,5 @@ interface CredentialService {
     ): CredentialWithoutSecret
 
     suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse
+    suspend fun listCredentials(organizationId: String, userId: String): ListCredentialResponse
 }

@@ -459,6 +459,30 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
+    get:
+      tags:
+        - User Credential Management
+      summary: List all credentials for a user
+      description: List all credentials for a user
+      operationId: listCredentials
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+      responses:
+        '201':
+          $ref: '#/components/responses/ListCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 
 
   /organizations/{organization_id}/users/{user_name}/credentials/{credential_id}:
@@ -1520,6 +1544,23 @@ components:
             CredentialWithoutSecret:
               $ref: '#/components/examples/CredentialWithoutSecret'
 
+    ListCredentialResponse:
+      description: Response for list credential request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListCredentialResponse'
+          examples:
+            ListCredentialResponse:
+              $ref: '#/components/examples/ListCredentialResponse'
+
+
     UpdateCredentialResponse:
       description: Response for UpdateCredentialRequest
       headers:
@@ -1760,7 +1801,7 @@ components:
       value:
         email: bob@acme.com
         password: <new password>
-    
+
     CreateCredentialRequest:
       summary: sample create credential request
       value:
@@ -1867,6 +1908,15 @@ components:
           - resource: "hrn:XlK5h64gND::invoice/2"
             action: "hrn:XlK5h64gND::invoice$view"
             effect: "deny"
+
+    ListCredentialResponse:
+      value:
+        credentials:
+          - id: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
+            validUntil: 2023-01-01T00:00:00
+            status: active
+            createdAt: 2020-01-01T00:00:00
+            updatedAt: 2020-01-01T00:00:00
 
     UserPaginatedResponse:
       value:
@@ -2003,12 +2053,17 @@ components:
         validUntil: 2023-01-01T00:00:00
         status: active
         secret: Z2QGNPmgWUBfRXhCrAmArrrszMajaEbYgaQJMciL
+        createdAt: 2020-01-01T00:00:00
+        updatedAt: 2020-01-01T00:00:00
+
     CredentialWithoutSecret:
-      summary: A sample credential
+      summary: A sample credential without secret
       value:
         id: 1f44ada7-7196-4f2d-8380-4c76f8bddec2
         validUntil: 2023-01-01T00:00:00
         status: active
+        createdAt: 2020-01-01T00:00:00
+        updatedAt: 2020-01-01T00:00:00
 
     Resource:
       summary: A sample resource
@@ -2389,6 +2444,18 @@ components:
           description: JWT token of the root user
           type: string
 
+    ListCredentialResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - credentials
+      properties:
+        credentials:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/CredentialWithoutSecret"
+
     UserPaginatedResponse:
       type: object
       additionalProperties: false
@@ -2529,6 +2596,8 @@ components:
         - id
         - status
         - secret
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -2545,6 +2614,12 @@ components:
         secret:
           type: string
           maxLength: 50
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     CredentialWithoutSecret:
       type: object
@@ -2552,6 +2627,8 @@ components:
       required:
         - id
         - status
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -2565,6 +2642,12 @@ components:
           enum:
             - active
             - inactive
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     Resource:
       type: object
