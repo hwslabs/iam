@@ -926,6 +926,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 val createUser1Request = CreateUserRequest(
                     username = "testUserName1",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -943,6 +944,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 val createUser2Request = CreateUserRequest(
                     username = "testUserName2",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -992,6 +994,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 val createUser1Request = CreateUserRequest(
                     username = "testUserName1",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -1008,6 +1011,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 )
                 val createUser2Request = CreateUserRequest(
                     username = "testUserName2",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,

@@ -188,6 +188,11 @@ val orgNameCheck = Validation<String> {
     pattern(ORGANIZATION_NAME_REGEX) hint ORGANIZATION_NAME_REGEX_HINT
 }
 
+val nameOfUserCheck = Validation<String> {
+    maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+        "name is ${Constants.MAX_NAME_LENGTH} characters"
+}
+
 val phoneNumberCheck = Validation<String> {
     minLength(Constants.MINIMUM_PHONE_NUMBER_LENGTH) hint "Minimum length expected " +
         "is ${Constants.MINIMUM_PHONE_NUMBER_LENGTH}"
@@ -242,6 +247,9 @@ val passwordCheck = Validation<String> {
 val rootUserRequestValidation = Validation<RootUser> {
     RootUser::username required {
         run(userNameCheck)
+    }
+    RootUser::name required {
+        run(nameOfUserCheck)
     }
     RootUser::phone ifPresent {
         run(phoneNumberCheck)
@@ -358,6 +366,9 @@ val createUserRequestValidation = Validation<CreateUserRequest> {
     CreateUserRequest::username required {
         run(userNameCheck)
     }
+    CreateUserRequest::name required {
+        run(nameOfUserCheck)
+    }
     CreateUserRequest::email {
         run(emailCheck)
     }
@@ -370,6 +381,9 @@ val createUserRequestValidation = Validation<CreateUserRequest> {
 }
 
 val updateUserRequestValidation = Validation<UpdateUserRequest> {
+    UpdateUserRequest::name ifPresent {
+        run(nameOfUserCheck)
+    }
     UpdateUserRequest::email ifPresent {
         run(emailCheck)
     }

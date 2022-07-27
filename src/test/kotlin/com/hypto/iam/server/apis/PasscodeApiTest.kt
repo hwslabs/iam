@@ -96,6 +96,9 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                     listOf(
                         UserType.builder().username(createdUser.username).enabled(true).attributes(
                             listOf(
+                                AttributeType.builder().name(CognitoConstants.ATTRIBUTE_NAME)
+                                    .value("test name")
+                                    .build(),
                                 AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL).value(createdUser.email)
                                     .build(),
                                 AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PHONE).value(createdUser.phone)

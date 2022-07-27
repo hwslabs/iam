@@ -56,12 +56,14 @@ object DataSetupHelper : AutoCloseKoinTest() {
         with(engine) {
             // Create organization
             val orgName = "test-org" + IdGenerator.randomId()
+            val name = "lorem ipsum"
             val testEmail = "test-email" + IdGenerator.randomId() + "@iam.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
             val rootUser = RootUser(
                 username = userName,
+                name = name,
                 passwordHash = testPassword,
                 email = testEmail,
                 phone = testPhone,

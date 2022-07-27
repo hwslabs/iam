@@ -141,6 +141,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ) = User(
         hrn = userHrn.toString(),
         username = user.username,
+        name = user.name,
         organizationId = userHrn.organization,
         email = user.email,
         status = if (user.isEnabled) User.Status.enabled else User.Status.disabled,
@@ -153,7 +154,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun updateUser(
         organizationId: String,
         userName: String,
-        phone: String,
+        name: String?,
+        phone: String?,
         status: UpdateUserRequest.Status?,
         verified: Boolean?
     ): User {
@@ -164,8 +166,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userStatus = status?.toUserStatus()
         val user = identityProvider.updateUser(
             identityGroup = identityGroup,
-            userName = userName, phone = phone,
-            status = userStatus, verified = verified
+            name = name,
+            userName = userName,
+            phone = phone,
+            status = userStatus,
+            verified = verified
         )
 
         userRepo.update(userHrn.toString(), userStatus, verified)
@@ -229,7 +234,8 @@ interface UsersService {
     suspend fun updateUser(
         organizationId: String,
         userName: String,
-        phone: String,
+        name: String?,
+        phone: String?,
         status: UpdateUserRequest.Status? = null,
         verified: Boolean?
     ): User

@@ -6,13 +6,11 @@ import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.pojos.UserPolicies
-import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.db.tables.records.ActionsRecord
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
-import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.Credential
@@ -164,23 +162,6 @@ fun Action.Companion.from(record: Actions): Action {
         hrn.action!!,
         hrn.toString(),
         record.description
-    )
-}
-
-fun User.Companion.from(value: UsersRecord): User {
-    val hrn = hrnFactory.getHrn(value.hrn) as ResourceHrn
-    return User(
-        value.hrn, hrn.resourceInstance!!, value.organizationId,
-        value.email, User.Status.valueOf(value.status),
-        value.verified
-    )
-}
-
-fun usersFrom(value: UsersRecord): Users {
-    return Users(
-        value.hrn, value.email, value.status,
-        value.organizationId, value.createdAt, value.updatedAt,
-        value.verified, value.deleted
     )
 }
 

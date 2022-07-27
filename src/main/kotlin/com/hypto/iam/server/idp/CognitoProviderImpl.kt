@@ -10,6 +10,7 @@ import com.hypto.iam.server.idp.CognitoConstants.APP_CLIENT_NAME
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_CREATED_BY
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_NAME
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_VERIFIED
@@ -49,6 +50,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.UsernameExi
 private val logger = KotlinLogging.logger {}
 
 object CognitoConstants {
+    const val ATTRIBUTE_NAME = "name"
     const val ATTRIBUTE_EMAIL = "email"
     const val ATTRIBUTE_EMAIL_VERIFIED = "email_verified"
     const val ATTRIBUTE_PHONE = "phone_number"
@@ -167,6 +169,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             val attrs = response.userAttributes()
             return User(
                 response.username(),
+                name = getAttribute(attrs, ATTRIBUTE_NAME),
                 phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
                 email = getAttribute(attrs, ATTRIBUTE_EMAIL),
                 verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
@@ -194,6 +197,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             val attrs = userType.attributes()
             return User(
                 userType.username(),
+                name = getAttribute(attrs, ATTRIBUTE_NAME),
                 email = getAttribute(attrs, ATTRIBUTE_EMAIL),
                 phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
                 verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
@@ -214,7 +218,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     override suspend fun updateUser(
         identityGroup: IdentityGroup,
         userName: String,
-        phone: String,
+        name: String?,
+        phone: String?,
         status: com.hypto.iam.server.models.User.Status?,
         verified: Boolean?
     ): User {
@@ -235,7 +240,9 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         }
 
         val attrs = mutableListOf<AttributeType>()
-        if (phone.isNotEmpty())
+        if (!name.isNullOrEmpty())
+            attrs.add(AttributeType.builder().name(ATTRIBUTE_NAME).value(name).build())
+        if (!phone.isNullOrEmpty())
             attrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_PHONE)
@@ -272,6 +279,9 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         identityGroup: IdentityGroup,
         credentials: PasswordCredentials
     ): User {
+        val nameAttr = AttributeType.builder()
+            .name(ATTRIBUTE_NAME)
+            .value(credentials.name).build()
         val emailAttr = AttributeType.builder()
             .name(ATTRIBUTE_EMAIL)
             .value(credentials.email).build()
@@ -290,7 +300,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             .userPoolId(identityGroup.id)
             .username(credentials.userName)
             .temporaryPassword(credentials.password)
-            .userAttributes(emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
+            .userAttributes(nameAttr, emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
             .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
             .build()
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
@@ -302,6 +312,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         val attrs = adminCreateUserResponse.user().attributes()
         return User(
             adminCreateUserResponse.user().username(),
+            name = getAttribute(attrs, ATTRIBUTE_NAME),
             phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
             email = getAttribute(attrs, ATTRIBUTE_EMAIL),
             verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
@@ -350,14 +361,16 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             val response = cognitoClient.listUsers(listRequest.build())
             val usersTypes = response.users()
             val users = usersTypes.map { user ->
+                val attrs = user.attributes()
                 User(
                     user.username(),
-                    email = getAttribute(user.attributes(), ATTRIBUTE_EMAIL),
-                    verified = getAttribute(user.attributes(), ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
-                    phoneNumber = getAttribute(user.attributes(), ATTRIBUTE_PHONE),
+                    name = getAttribute(attrs, ATTRIBUTE_NAME),
+                    email = getAttribute(attrs, ATTRIBUTE_EMAIL),
+                    verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
+                    phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
                     loginAccess = true,
                     isEnabled = user.userStatus() != UserStatusType.ARCHIVED,
-                    createdBy = getAttribute(user.attributes(), ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
+                    createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
                     createdAt = user.userCreateDate().toString()
                 )
             }.toList()
