@@ -12,6 +12,7 @@ Apis/UserVerificationApi.md
 Models/Action.md
 Models/ActionPaginatedResponse.md
 Models/BaseSuccessResponse.md
+Models/ChangeUserPasswordRequest.md
 Models/CreateActionRequest.md
 Models/CreateCredentialRequest.md
 Models/CreateOrganizationRequest.md

@@ -35,6 +35,7 @@ Class | Method | HTTP request | Description
 *UserCredentialManagementApi* | [**getCredential**](Apis/UserCredentialManagementApi.md#getcredential) | **GET** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Gets credential for the user
 *UserCredentialManagementApi* | [**listCredentials**](Apis/UserCredentialManagementApi.md#listcredentials) | **GET** /organizations/{organization_id}/users/{user_name}/credentials | List all credentials for a user
 *UserCredentialManagementApi* | [**updateCredential**](Apis/UserCredentialManagementApi.md#updatecredential) | **PATCH** /organizations/{organization_id}/users/{user_name}/credentials/{credential_id} | Update the status of credential
+*UserManagementApi* | [**changePassword**](Apis/UserManagementApi.md#changepassword) | **POST** /organizations/{organization_id}/users/{user_name}/change_password | Change password for a user
 *UserManagementApi* | [**createUser**](Apis/UserManagementApi.md#createuser) | **POST** /organizations/{organization_id}/users | Create a user
 *UserManagementApi* | [**deleteUser**](Apis/UserManagementApi.md#deleteuser) | **DELETE** /organizations/{organization_id}/users/{user_name} | Delete a User
 *UserManagementApi* | [**getUser**](Apis/UserManagementApi.md#getuser) | **GET** /organizations/{organization_id}/users/{user_name} | Gets a user entity associated with the organization
@@ -53,6 +54,7 @@ Class | Method | HTTP request | Description
  - [Action](./Models/Action.md)
  - [ActionPaginatedResponse](./Models/ActionPaginatedResponse.md)
  - [BaseSuccessResponse](./Models/BaseSuccessResponse.md)
+ - [ChangeUserPasswordRequest](./Models/ChangeUserPasswordRequest.md)
  - [CreateActionRequest](./Models/CreateActionRequest.md)
  - [CreateCredentialRequest](./Models/CreateCredentialRequest.md)
  - [CreateOrganizationRequest](./Models/CreateOrganizationRequest.md)

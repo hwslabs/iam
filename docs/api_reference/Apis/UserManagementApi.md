@@ -4,6 +4,7 @@ All URIs are relative to *https://sandbox-iam.us.hypto.com/v1*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**changePassword**](UserManagementApi.md#changePassword) | **POST** /organizations/{organization_id}/users/{user_name}/change_password | Change password for a user
 [**createUser**](UserManagementApi.md#createUser) | **POST** /organizations/{organization_id}/users | Create a user
 [**deleteUser**](UserManagementApi.md#deleteUser) | **DELETE** /organizations/{organization_id}/users/{user_name} | Delete a User
 [**getUser**](UserManagementApi.md#getUser) | **GET** /organizations/{organization_id}/users/{user_name} | Gets a user entity associated with the organization
@@ -11,6 +12,35 @@ Method | HTTP request | Description
 [**resetPassword**](UserManagementApi.md#resetPassword) | **POST** /organizations/{organization_id}/users/resetPassword | Reset Password
 [**updateUser**](UserManagementApi.md#updateUser) | **PATCH** /organizations/{organization_id}/users/{user_name} | Update a User
 
+
+<a name="changePassword"></a>
+# **changePassword**
+> BaseSuccessResponse changePassword(user\_name, organization\_id, ChangeUserPasswordRequest)
+
+Change password for a user
+
+    Change password for a user
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **user\_name** | **String**|  | [default to null]
+ **organization\_id** | **String**|  | [default to null]
+ **ChangeUserPasswordRequest** | [**ChangeUserPasswordRequest**](../Models/ChangeUserPasswordRequest.md)| Payload to change user password |
+
+### Return type
+
+[**BaseSuccessResponse**](../Models/BaseSuccessResponse.md)
+
+### Authorization
+
+[bearerAuth](../README.md#bearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
 
 <a name="createUser"></a>
 # **createUser**

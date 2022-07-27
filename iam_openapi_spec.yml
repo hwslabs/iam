@@ -315,6 +315,34 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/users/{user_name}/change_password:
+    post:
+      tags:
+        - User Management
+      summary: Change password for a user
+      description: Change password for a user
+      operationId: changePassword
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/ChangeUserPasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /organizations/{organization_id}/users/resetPassword:
     post:
       tags:
@@ -1268,6 +1296,17 @@ components:
             UpdateUserRequest:
               $ref: '#/components/examples/UpdateUserRequest'
 
+    ChangeUserPasswordRequest:
+      description: Payload to change user password
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChangeUserPasswordRequest'
+          examples:
+            ChangeUserPasswordRequest:
+              $ref: '#/components/examples/ChangeUserPasswordRequest'
+
     ResetPasswordRequest:
       description: Payload to reset password
       required: true
@@ -1796,6 +1835,12 @@ components:
         status: enabled
         verified: true
 
+    ChangeUserPasswordRequest:
+      summary: sample change user password request
+      value:
+        oldPassword: Old@Password123
+        newPassword: New@Password123
+
     ResetPasswordRequest:
       summary: sample reset password request
       value:
@@ -2218,6 +2263,21 @@ components:
             - disabled
         verified:
           type: boolean
+
+    ChangeUserPasswordRequest:
+      description: Payload to change user password
+      type: object
+      additionalProperties: false
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          maxLength: 100
+        newPassword:
+          type: string
+          maxLength: 100
 
     ResetPasswordRequest:
       description: Payload to reset password

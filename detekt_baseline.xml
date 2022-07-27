@@ -14,6 +14,7 @@
     <ID>TooManyFunctions:IdentityProvider.kt$IdentityProvider</ID>
     <ID>TooManyFunctions:Mappers.kt$com.hypto.iam.server.extensions.Mappers.kt</ID>
     <ID>TooManyFunctions:RequestModelValidator.kt$com.hypto.iam.server.validators.RequestModelValidator.kt</ID>
+    <ID>TooManyFunctions:UsersService.kt$UsersServiceImpl : KoinComponentUsersService</ID>
     <ID>UnnecessaryAbstractClass:IdentityProvider.kt$UserCredentials</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$context: RequestContext</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$identityGroup: IdentityGroup</ID>
