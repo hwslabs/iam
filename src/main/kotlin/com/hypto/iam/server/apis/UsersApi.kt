@@ -10,6 +10,7 @@ import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.UserPolicyService
 import com.hypto.iam.server.service.UsersService
@@ -39,7 +40,10 @@ fun Route.usersApi() {
     // **** User management apis ****//
 
     // Create user
-    withPermission("createUser") {
+    withPermission(
+        "createUser",
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+    ) {
         post("/organizations/{organization_id}/users") {
             val organizationId = call.parameters["organization_id"]!!
             val request = call.receive<CreateUserRequest>().validate()
@@ -62,7 +66,10 @@ fun Route.usersApi() {
     }
 
     // Get user
-    withPermission("getUser") {
+    withPermission(
+        "getUser",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         get("/organizations/{organization_id}/users/{id}") {
             val organizationId = call.parameters["organization_id"]!!
             val userId = call.parameters["id"]!!
@@ -76,7 +83,10 @@ fun Route.usersApi() {
     }
 
     // List user
-    withPermission("listUser") {
+    withPermission(
+        "listUser",
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+    ) {
         get("/organizations/{organization_id}/users") {
             val organizationId = call.parameters["organization_id"]!!
             val nextToken = call.request.queryParameters["next_token"]
@@ -92,7 +102,10 @@ fun Route.usersApi() {
     }
 
     // Delete user
-    withPermission("deleteUser") {
+    withPermission(
+        "deleteUser",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         delete("/organizations/{organization_id}/users/{user_id}") {
             val organizationId = call.parameters["organization_id"]!!
             val userId = call.parameters["user_id"]!!
@@ -106,7 +119,10 @@ fun Route.usersApi() {
     }
 
     // Update user
-    withPermission("updateUser") {
+    withPermission(
+        "updateUser",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         patch("/organizations/{organization_id}/users/{user_id}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to update user")
@@ -131,7 +147,10 @@ fun Route.usersApi() {
     // **** User policy management apis ****//
 
     // Detach policy
-    withPermission("detachPolicies") {
+    withPermission(
+        "detachPolicies",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         patch("/organizations/{organization_id}/users/{user_id}/detach_policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to detach policies")
@@ -151,7 +170,10 @@ fun Route.usersApi() {
     }
 
     // Attach policy
-    withPermission("attachPolicies") {
+    withPermission(
+        "attachPolicies",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         patch("/organizations/{organization_id}/users/{user_id}/attach_policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to attach policies")

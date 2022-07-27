@@ -5,6 +5,7 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
+import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.validators.validate
@@ -25,7 +26,10 @@ fun Route.credentialApi() {
     val gson: Gson by inject()
     val credentialService: CredentialService by inject()
 
-    withPermission("createCredential") {
+    withPermission(
+        "createCredential",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         post("/organizations/{organization_id}/users/{userId}/credentials") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
@@ -42,7 +46,10 @@ fun Route.credentialApi() {
         }
     }
 
-    withPermission("deleteCredential") {
+    withPermission(
+        "deleteCredential",
+        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1)
+    ) {
         delete("/organizations/{organization_id}/users/{userId}/credentials/{id}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
@@ -59,7 +66,10 @@ fun Route.credentialApi() {
         }
     }
 
-    withPermission("getCredential") {
+    withPermission(
+        "getCredential",
+        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1)
+    ) {
         get("/organizations/{organization_id}/users/{userId}/credentials/{id}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
@@ -76,7 +86,10 @@ fun Route.credentialApi() {
         }
     }
 
-    withPermission("listCredential") {
+    withPermission(
+        "listCredential",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         get("/organizations/{organization_id}/users/{userId}/credentials") {
             val organizationId = call.parameters["organization_id"]!!
             val userId = call.parameters["userId"]!!
@@ -91,7 +104,10 @@ fun Route.credentialApi() {
         }
     }
 
-    withPermission("updateCredential") {
+    withPermission(
+        "updateCredential",
+        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1)
+    ) {
         patch("/organizations/{organization_id}/users/{userId}/credentials/{id}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")

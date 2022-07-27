@@ -5,6 +5,7 @@ import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.validators.validate
@@ -77,7 +78,10 @@ fun Route.getAndUpdateOrganizationApi() {
     val gson: Gson by inject()
 
     route("/organizations/{id}") {
-        withPermission("getOrganization") {
+        withPermission(
+            "getOrganization",
+            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        ) {
             get {
                 val id = call.parameters["id"]!!
                 val response = service.getOrganization(id)
@@ -89,7 +93,10 @@ fun Route.getAndUpdateOrganizationApi() {
             }
         }
 
-        withPermission("updateOrganization") {
+        withPermission(
+            "updateOrganization",
+            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        ) {
             patch {
                 val id = call.parameters["id"]!!
                 val request = call.receive<UpdateOrganizationRequest>().validate()

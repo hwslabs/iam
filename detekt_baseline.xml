@@ -2,44 +2,12 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>ConstructorParameterNaming:ActionPaginatedResponse.kt$ActionPaginatedResponse$val `data`: kotlin.collections.List&lt;Action&gt;? = null</ID>
-    <ID>ConstructorParameterNaming:PolicyPaginatedResponse.kt$PolicyPaginatedResponse$val `data`: kotlin.collections.List&lt;Policy&gt;? = null</ID>
-    <ID>ConstructorParameterNaming:ResourcePaginatedResponse.kt$ResourcePaginatedResponse$val `data`: kotlin.collections.List&lt;Resource&gt;? = null</ID>
-    <ID>ConstructorParameterNaming:UserPaginatedResponse.kt$UserPaginatedResponse$val `data`: kotlin.collections.List&lt;User&gt;? = null</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.disabled$disabled</ID>
-    <ID>EnumNaming:CreateUserRequest.kt$CreateUserRequest.Status.enabled$enabled</ID>
-    <ID>EnumNaming:Credential.kt$Credential.Status.active$active</ID>
-    <ID>EnumNaming:Credential.kt$Credential.Status.inactive$inactive</ID>
-    <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.active$active</ID>
-    <ID>EnumNaming:CredentialWithoutSecret.kt$CredentialWithoutSecret.Status.inactive$inactive</ID>
-    <ID>EnumNaming:KeyResponse.kt$KeyResponse.Format.der$der</ID>
-    <ID>EnumNaming:KeyResponse.kt$KeyResponse.Format.pem$pem</ID>
-    <ID>EnumNaming:PaginationOptions.kt$PaginationOptions.SortOrder.asc$asc</ID>
-    <ID>EnumNaming:PaginationOptions.kt$PaginationOptions.SortOrder.desc$desc</ID>
-    <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.allow$allow</ID>
-    <ID>EnumNaming:PolicyStatement.kt$PolicyStatement.Effect.deny$deny</ID>
-    <ID>EnumNaming:ResourceActionEffect.kt$ResourceActionEffect.Effect.allow$allow</ID>
-    <ID>EnumNaming:ResourceActionEffect.kt$ResourceActionEffect.Effect.deny$deny</ID>
-    <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.active$active</ID>
-    <ID>EnumNaming:UpdateCredentialRequest.kt$UpdateCredentialRequest.Status.inactive$inactive</ID>
-    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.disabled$disabled</ID>
-    <ID>EnumNaming:UpdateUserRequest.kt$UpdateUserRequest.Status.enabled$enabled</ID>
-    <ID>EnumNaming:User.kt$User.Status.disabled$disabled</ID>
-    <ID>EnumNaming:User.kt$User.Status.enabled$enabled</ID>
-    <ID>EnumNaming:VerifyEmailRequest.kt$VerifyEmailRequest.Purpose.reset$reset</ID>
-    <ID>EnumNaming:VerifyEmailRequest.kt$VerifyEmailRequest.Purpose.signup$signup</ID>
+    <ID>LongParameterList:DataSetupHelper.kt$DataSetupHelper$( orgId: String, bearerToken: String, policyName: String, accountId: String?, resourceName: String, actionName: String, resourceInstance: String, engine: TestApplicationEngine, effect: PolicyStatement.Effect = PolicyStatement.Effect.allow )</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
     <ID>MagicNumber:Configuration.kt$365</ID>
-    <ID>MagicNumber:Configuration.kt$4</ID>
     <ID>MagicNumber:Configuration.kt$60</ID>
-    <ID>MaxLineLength:Configuration.kt$MicrometerConfigs$/* * TODO: Configure "LoggingMeterRegistry" with a logging sink to direct metrics logs to a separate "iam_metrics.log" logback appender * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer) */</ID>
     <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
-    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 5. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt; - hrn:hypto:&lt;accountId&gt;:iam-resource/12345 - updateResource</ID>
-    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 6. /organization/&lt;organizationId&gt;/user/&lt;userId&gt;/credentials/ - hrn:hypto:&lt;accountId&gt;:iam-user/12345 - addCredentials</ID>
-    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 7. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt;/action/ - hrn:hypto:&lt;accountId&gt;:iam-resource/12345 - addAction</ID>
-    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 8. /organization/&lt;organizationId&gt;/user/&lt;userId&gt;/credentials/&lt;credentialsId&gt; - hrn:hypto:&lt;accountId&gt;:iam-credential/12345 - getCredentials</ID>
-    <ID>MaxLineLength:Hrn.kt$ResourceHrn$// 9. /organization/&lt;organizationId&gt;/resource/&lt;resourceId&gt;/action/&lt;actionId&gt; - hrn:hypto:&lt;accountId&gt;:iam-action/12345 - updateAction</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn.Companion$"""^hrn:(?&lt;organization&gt;[^:\n]+):(?&lt;accountId&gt;[^:\n]*):(?&lt;resource&gt;[^:/\n]*)/{0,1}(?&lt;resourceInstance&gt;[^/\n:]*)""".toRegex()</ID>
     <ID>ThrowsCount:ResourceApi.kt$fun Route.resourceApi()</ID>
     <ID>TooGenericExceptionThrown:AuditEventHandler.kt$AuditEventHandler$throw Exception("few Batch inserts failed")</ID>
