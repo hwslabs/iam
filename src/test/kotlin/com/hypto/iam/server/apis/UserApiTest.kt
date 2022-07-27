@@ -17,10 +17,8 @@ import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.IdGenerator
-import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -44,9 +42,11 @@ import org.junit.jupiter.api.Test
 import org.koin.core.component.get
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 
 class UserApiTest : AbstractContainerBaseTest() {
@@ -440,8 +440,12 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
+                coEvery {
+                    cognitoClient.adminInitiateAuth(any<AdminInitiateAuthRequest>())
+                } throws NotAuthorizedException.builder().message("Incorrect username or password").build()
+
                 val changePasswordRequest = ChangeUserPasswordRequest(
-                    oldPassword = "testPassword",
+                    oldPassword = "testPassword@Hash3",
                     newPassword = "testPassword@Hash2"
                 )
                 with(
@@ -454,12 +458,13 @@ class UserApiTest : AbstractContainerBaseTest() {
                         setBody(gson.toJson(changePasswordRequest))
                     }
                 ) {
-                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                    assertEquals(HttpStatusCode.Unauthorized, response.status())
                     assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
                         response.contentType()
                     )
                 }
+                DataSetupHelper.deleteOrganization(organization.id, this)
             }
         }
 
@@ -479,8 +484,13 @@ class UserApiTest : AbstractContainerBaseTest() {
                     verified = true
                 )
                 val policyName = "test-user1-policy"
-                val resourceHrn = ResourceHrn(organization.id, null, IamResources.USER, createUser1Request.username)
-                val actionHrn = ActionHrn(organization.id, null, IamResources.USER, "changePassword")
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    organization.id,
+                    null,
+                    IamResources.USER,
+                    "changePassword",
+                    createUser1Request.username
+                )
                 val policyStatements =
                     listOf(PolicyStatement(resourceHrn.toString(), actionHrn.toString(), PolicyStatement.Effect.allow))
                 val user1PolicyRequest = CreatePolicyRequest(policyName, policyStatements)
@@ -514,6 +524,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         response.contentType()
                     )
                 }
+                DataSetupHelper.deleteOrganization(organization.id, this)
             }
         }
 
@@ -542,8 +553,13 @@ class UserApiTest : AbstractContainerBaseTest() {
                     verified = true
                 )
                 val policyName = "test-user2-policy"
-                val resourceHrn = ResourceHrn(organization.id, null, IamResources.USER, createUser2Request.username)
-                val actionHrn = ActionHrn(organization.id, null, IamResources.USER, "changePassword")
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    organization.id,
+                    null,
+                    IamResources.USER,
+                    "changePassword",
+                    createUser2Request.username
+                )
                 val policyStatements =
                     listOf(PolicyStatement(resourceHrn.toString(), actionHrn.toString(), PolicyStatement.Effect.allow))
                 val user2PolicyRequest = CreatePolicyRequest(policyName, policyStatements)
@@ -580,6 +596,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 ) {
                     assertEquals(HttpStatusCode.Forbidden, response.status())
                 }
+                DataSetupHelper.deleteOrganization(organization.id, this)
             }
         }
 
