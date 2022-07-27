@@ -4,8 +4,6 @@ package com.hypto.iam.server.utils
 
 import com.hypto.iam.server.utils.ActionHrn.Companion.ACTION_HRN_REGEX
 import com.hypto.iam.server.utils.ResourceHrn.Companion.RESOURCE_HRN_REGEX
-import io.ktor.server.request.ApplicationRequest
-import io.ktor.server.request.path
 
 /**
  * Hrn - Hypto Resource Name. It is a unique representation of an entity managed by iam service.
@@ -20,15 +18,6 @@ abstract class Hrn {
         const val HRN_PREFIX = "hrn$HRN_DELIMITER"
         const val HRN_ACTION_DELIMITER = "$"
         const val HRN_INSTANCE_DELIMITER = "/"
-
-        // TODO: This can be clubbed with the IamResources object
-        val resourceMap: Map<String, String> = mapOf(
-            "users" to "iam-user",
-            "resources" to "iam-resource",
-            "policies" to "iam-policy",
-            "actions" to "iam-action",
-            "credentials" to "iam-credential"
-        )
     }
 
     abstract val organization: String
@@ -47,7 +36,6 @@ class ResourceHrn : Hrn {
     companion object {
         val RESOURCE_HRN_REGEX =
             """^hrn:(?<organization>[^:\n]+):(?<accountId>[^:\n]*):(?<resource>[^:/\n]*)/{0,1}(?<resourceInstance>[^/\n:]*)""".toRegex()
-        private const val URL_SEPARATOR = '/'
     }
 
     constructor(
@@ -73,41 +61,6 @@ class ResourceHrn : Hrn {
         account = result.groups["accountId"]?.value
         resource = result.groups["resource"]?.value
         resourceInstance = result.groups["resourceInstance"]?.value
-    }
-
-    constructor(request: ApplicationRequest) {
-        // Valid application request paths
-        // 1. /organization/<organizationId>/
-        // 2. /organization/<organizationId>/user/ - hrn:hypto:<accountId>:iam-organization - createUser
-        // 3. /organization/<organizationId>/resource/ - hrn:hypto:<accountId>:iam-organization - createResource
-        // 4. /organization/<organizationId>/user/<userId> - hrn:hypto:<accountId>:iam-user/12345 - updateUser
-        // 5. /organization/<organizationId>/resource/<resourceId> - hrn:hypto:<accountId>:iam-resource/12345 - updateResource
-        // 6. /organization/<organizationId>/user/<userId>/credentials/ - hrn:hypto:<accountId>:iam-user/12345 - addCredentials
-        // 7. /organization/<organizationId>/resource/<resourceId>/action/ - hrn:hypto:<accountId>:iam-resource/12345 - addAction
-        // 8. /organization/<organizationId>/user/<userId>/credentials/<credentialsId> - hrn:hypto:<accountId>:iam-credential/12345 - getCredentials
-        // 9. /organization/<organizationId>/resource/<resourceId>/action/<actionId> - hrn:hypto:<accountId>:iam-action/12345 - updateAction
-
-        val splits = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
-        if (splits.size < 2) throw IllegalArgumentException("Invalid request path")
-        this.organization = splits[1]
-        this.account = null
-        val resourceAndInstance = getResourceAndInstance(splits)
-        this.resource = resourceAndInstance.first
-        this.resourceInstance = resourceAndInstance.second
-    }
-
-    private fun getResourceAndInstance(splits: List<String>): Pair<String, String> {
-        if (splits.size == 2) return Pair("", "")
-        val lastSplitMap = resourceMap[splits.last()]
-        return if (lastSplitMap.isNullOrEmpty()) {
-            val resource = resourceMap[splits[(splits.lastIndex - 1)]] ?: ""
-            val resourceInstance = splits.last()
-            Pair(resource, resourceInstance)
-        } else {
-            val resourceInstance = splits[(splits.lastIndex - 1)] ?: ""
-            val resource = resourceMap[splits[(splits.lastIndex - 2)]] ?: ""
-            Pair(resource, resourceInstance)
-        }
     }
 
     override fun toString(): String {

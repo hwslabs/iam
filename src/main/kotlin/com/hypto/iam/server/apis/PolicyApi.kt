@@ -9,6 +9,7 @@ import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.PolicyService
 import com.hypto.iam.server.validators.validate
@@ -30,7 +31,10 @@ fun Route.policyApi() {
     val policyService: PolicyService by inject()
     val gson: Gson by inject()
 
-    withPermission("createPolicy") {
+    withPermission(
+        "createPolicy",
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+    ) {
         post("/organizations/{organization_id}/policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
@@ -51,7 +55,10 @@ fun Route.policyApi() {
         }
     }
 
-    withPermission("listPolicy") {
+    withPermission(
+        "listPolicy",
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+    ) {
         get("/organizations/{organization_id}/policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to get user")
@@ -75,7 +82,10 @@ fun Route.policyApi() {
         }
     }
 
-    withPermission("deletePolicy") {
+    withPermission(
+        "deletePolicy",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         delete("/organizations/{organization_id}/policies/{name}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
@@ -91,7 +101,10 @@ fun Route.policyApi() {
         }
     }
 
-    withPermission("getPolicy") {
+    withPermission(
+        "getPolicy",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         get("/organizations/{organization_id}/policies/{name}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
@@ -108,7 +121,10 @@ fun Route.policyApi() {
         }
     }
 
-    withPermission("getUserPolicy") {
+    withPermission(
+        "getUserPolicy",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         get("/organizations/{organization_id}/users/{user_id}/policies") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")
@@ -135,7 +151,10 @@ fun Route.policyApi() {
         }
     }
 
-    withPermission("updatePolicy") {
+    withPermission(
+        "updatePolicy",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         patch("/organizations/{organization_id}/policies/{name}") {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("organization_id required")

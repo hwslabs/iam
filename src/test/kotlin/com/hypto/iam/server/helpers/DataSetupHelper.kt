@@ -15,10 +15,16 @@ import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
+import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.Credential
+import com.hypto.iam.server.models.Policy
+import com.hypto.iam.server.models.PolicyAssociationRequest
+import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
@@ -50,7 +56,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
         with(engine) {
             // Create organization
             val orgName = "test-org" + IdGenerator.randomId()
-            val testEmail = "test-email" + IdGenerator.randomId() + "@hypto.in"
+            val testEmail = "test-email" + IdGenerator.randomId() + "@iam.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
@@ -100,6 +106,89 @@ object DataSetupHelper : AutoCloseKoinTest() {
 
             return gson
                 .fromJson(createCredentialCall.response.content, Credential::class.java)
+        }
+    }
+
+    fun createUserWithPolicy(
+        orgId: String,
+        bearerToken: String,
+        createUserRequest: CreateUserRequest,
+        policy: CreatePolicyRequest?,
+        engine: TestApplicationEngine
+    ): Pair<User, Credential> {
+        with(engine) {
+            val createUserCall = handleRequest(HttpMethod.Post, "/organizations/$orgId/users") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer $bearerToken")
+                setBody(gson.toJson(createUserRequest))
+            }
+            val createdUser = gson
+                .fromJson(createUserCall.response.content, User::class.java)
+
+            if (policy != null) {
+                val policyRequestCall = handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/$orgId/policies"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, "Bearer $bearerToken")
+                    setBody(gson.toJson(policy))
+                }
+                val createPolicy = gson.fromJson(policyRequestCall.response.content, Policy::class.java)
+
+                handleRequest(
+                    HttpMethod.Patch,
+                    "/organizations/$orgId/users/" +
+                        "${createdUser.username}/attach_policies"
+                ) {
+                    val createAssociationRequest = PolicyAssociationRequest(listOf(createPolicy.hrn))
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer $bearerToken"
+                    )
+                    setBody(gson.toJson(createAssociationRequest))
+                }
+            }
+
+            val credential = createCredential(orgId, createdUser.username, bearerToken, engine)
+
+            return Pair(createdUser, credential)
+        }
+    }
+
+    fun createPolicy(
+        orgId: String,
+        bearerToken: String,
+        policyName: String,
+        accountId: String?,
+        resourceName: String,
+        actionName: String,
+        resourceInstance: String,
+        engine: TestApplicationEngine,
+        effect: PolicyStatement.Effect = PolicyStatement.Effect.allow
+    ): Policy {
+        with(engine) {
+            val (resourceHrn, actionHrn) = createResourceActionHrn(
+                orgId,
+                accountId,
+                resourceName,
+                actionName,
+                resourceInstance
+            )
+            val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, effect))
+            val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+            val createPolicyCall = handleRequest(
+                HttpMethod.Post,
+                "/organizations/$orgId/policies"
+            ) {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                addHeader(HttpHeaders.Authorization, "Bearer $bearerToken")
+                setBody(gson.toJson(requestBody))
+            }
+
+            return gson.fromJson(createPolicyCall.response.content, Policy::class.java)
         }
     }
 

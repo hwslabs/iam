@@ -6,6 +6,7 @@ import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.models.CreatePolicyRequest
+import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyAssociationRequest
@@ -13,6 +14,7 @@ import com.hypto.iam.server.models.PolicyPaginatedResponse
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.utils.IamResources
+import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -783,8 +785,6 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                             "/organizations/${createdOrganization.id}/policies"
                         ) {
                             val resourceName = "resource"
-//                            val resourceHrn = ResourceHrn(createdOrganization.id, null, resourceName, null).toString()
-//                            val actionHrn = ActionHrn(createdOrganization.id, null, resourceName, "action").toString()
                             val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
                                 createdOrganization.id,
                                 null,
@@ -914,6 +914,143 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     Assertions.assertEquals(0, results.data?.size)
                     Assertions.assertNull(results.nextToken)
                 }
+            }
+        }
+
+        @Test
+        fun `user to list policies of other user without permission - failure`() {
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                val createUser1Request = CreateUserRequest(
+                    username = "testUserName1",
+                    passwordHash = "testPassword@Hash1",
+                    email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919999999999",
+                    verified = true
+                )
+
+                val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                    organization.id,
+                    rootUserToken,
+                    createUser1Request,
+                    null,
+                    this
+                )
+
+                val createUser2Request = CreateUserRequest(
+                    username = "testUserName2",
+                    passwordHash = "testPassword@Hash2",
+                    email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919999999999",
+                    verified = true
+                )
+                val policyName = "test-policy"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    organization.id,
+                    null,
+                    IamResources.USER,
+                    "getUserPolicy",
+                    createUser2Request.username
+                )
+                val policyStatements =
+                    listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val policyRequest = CreatePolicyRequest(policyName, policyStatements)
+
+                val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                    organization.id,
+                    rootUserToken,
+                    createUser2Request,
+                    policyRequest,
+                    this
+                )
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${organization.id}/users/${user1.username}/policies"
+                    ) {
+                        addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.Forbidden, response.status())
+                }
+                DataSetupHelper.deleteOrganization(organization.id, this)
+            }
+        }
+
+        @Test
+        fun `user to list policy of a user with permission - success`() {
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                val createUser1Request = CreateUserRequest(
+                    username = "testUserName1",
+                    passwordHash = "testPassword@Hash1",
+                    email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919999999999",
+                    verified = true
+                )
+
+                val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                    organization.id,
+                    rootUserToken,
+                    createUser1Request,
+                    null,
+                    this
+                )
+                val createUser2Request = CreateUserRequest(
+                    username = "testUserName2",
+                    passwordHash = "testPassword@Hash2",
+                    email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919999999999",
+                    verified = true
+                )
+                val policyName = "test-policy"
+                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                    organization.id,
+                    null,
+                    IamResources.USER,
+                    "getUserPolicy",
+                    createUser1Request.username
+                )
+                val policyStatements =
+                    listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val policyRequest = CreatePolicyRequest(policyName, policyStatements)
+                val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                    organization.id,
+                    rootUserToken,
+                    createUser2Request,
+                    policyRequest,
+                    this
+                )
+                with(
+                    handleRequest(
+                        HttpMethod.Get,
+                        "/organizations/${organization.id}/users/${user1.username}/policies"
+                    ) {
+                        addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+
+                    val responseBody = gson.fromJson(response.content, PolicyPaginatedResponse::class.java)
+                    Assertions.assertEquals(0, responseBody.data!!.size)
+                }
+                DataSetupHelper.deleteOrganization(organization.id, this)
             }
         }
     }

@@ -7,12 +7,16 @@ import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
+import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.PolicyAssociationRequest
+import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -416,7 +420,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             passwordHash = "testPassword@ash",
             email = testEmail,
             status = CreateUserRequest.Status.enabled,
-            phone = "+919626"
+            phone = "+919999999999"
         )
         withTestApplication(Application::handleRequest) {
             val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -432,6 +436,167 @@ class UserApiTest : AbstractContainerBaseTest() {
                 }
             ) {
                 assertEquals(HttpStatusCode.BadRequest, response.status())
+            }
+            DataSetupHelper.deleteOrganization(organization.id, this)
+        }
+    }
+
+    @Test
+    fun `user to attach policy to a different user with permission - success`() {
+        withTestApplication(Application::handleRequest) {
+            val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            val organization = organizationResponse.organization!!
+            val rootUserToken = organizationResponse.rootUserToken!!
+
+            val createUser1Request = CreateUserRequest(
+                username = "testUserName1",
+                passwordHash = "testPassword@Hash1",
+                email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                status = CreateUserRequest.Status.enabled,
+                phone = "+919999999999",
+                verified = true
+            )
+
+            val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                organization.id,
+                rootUserToken,
+                createUser1Request,
+                null,
+                this
+            )
+            val createUser2Request = CreateUserRequest(
+                username = "testUserName2",
+                passwordHash = "testPassword@Hash2",
+                email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                status = CreateUserRequest.Status.enabled,
+                phone = "+919999999999",
+                verified = true
+            )
+            val policyName = "test-policy"
+            val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                organization.id,
+                null,
+                IamResources.USER,
+                "attachPolicies",
+                createUser1Request.username
+            )
+            val policyStatements =
+                listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+            val policyRequest = CreatePolicyRequest(policyName, policyStatements)
+            val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                organization.id,
+                rootUserToken,
+                createUser2Request,
+                policyRequest,
+                this
+            )
+
+            val samplePolicy = DataSetupHelper.createPolicy(
+                organization.id,
+                rootUserToken,
+                "sample-policy",
+                null,
+                "sample-resource",
+                "sample-action",
+                "instanceId",
+                this
+            )
+            with(
+                handleRequest(
+                    HttpMethod.Patch,
+                    "/organizations/${organization.id}/users/${user1.username}/attach_policies"
+                ) {
+                    addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
+                }
+            ) {
+                assertEquals(HttpStatusCode.OK, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+            }
+            DataSetupHelper.deleteOrganization(organization.id, this)
+        }
+    }
+
+    @Test
+    fun `user to attach policies to a different user without permission - failure`() {
+        withTestApplication(Application::handleRequest) {
+            val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            val organization = organizationResponse.organization!!
+            val rootUserToken = organizationResponse.rootUserToken!!
+
+            val createUser1Request = CreateUserRequest(
+                username = "testUserName1",
+                passwordHash = "testPassword@Hash1",
+                email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                status = CreateUserRequest.Status.enabled,
+                phone = "+919999999999",
+                verified = true
+            )
+
+            val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                organization.id,
+                rootUserToken,
+                createUser1Request,
+                null,
+                this
+            )
+            val createUser2Request = CreateUserRequest(
+                username = "testUserName2",
+                passwordHash = "testPassword@Hash2",
+                email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
+                status = CreateUserRequest.Status.enabled,
+                phone = "+919999999999",
+                verified = true
+            )
+            val policyName = "test-policy"
+            val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+                organization.id,
+                null,
+                IamResources.USER,
+                "attachPolicies",
+                createUser2Request.username
+            )
+            val policyStatements =
+                listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+            val policyRequest = CreatePolicyRequest(policyName, policyStatements)
+            val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                organization.id,
+                rootUserToken,
+                createUser2Request,
+                policyRequest,
+                this
+            )
+
+            val samplePolicy = DataSetupHelper.createPolicy(
+                organization.id,
+                rootUserToken,
+                "sample-policy",
+                null,
+                "sample-resource",
+                "sample-action",
+                "instanceId",
+                this
+            )
+
+            with(
+                handleRequest(
+                    HttpMethod.Patch,
+                    "/organizations/${organization.id}/users/${user1.username}/attach_policies"
+                ) {
+                    addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
+                }
+            ) {
+                assertEquals(HttpStatusCode.Forbidden, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
             }
             DataSetupHelper.deleteOrganization(organization.id, this)
         }
