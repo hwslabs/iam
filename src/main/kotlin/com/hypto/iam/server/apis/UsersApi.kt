@@ -145,7 +145,10 @@ fun Route.usersApi() {
         }
     }
 
-    withPermission("changePassword") {
+    withPermission(
+        "changePassword",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
         post("/organizations/{organization_id}/users/{user_id}/change_password") {
             val organizationId = call.parameters["organization_id"]!!
             val userId = call.parameters["user_id"]!!
