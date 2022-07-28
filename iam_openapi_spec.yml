@@ -1934,6 +1934,19 @@ components:
           id: XlK5h64gND
           name: ACME Enterprise
           description: Brief description about ACME
+          rootUser:
+            hrn: hrn:XlK5h64gND::iam-user/Bob
+            username: Bob
+            name: Lorem Ipsum
+            organizationId: XlK5h64gND
+            email: bob@acme.com
+            status: enabled
+            verified: true
+            phone: "+1234071628"
+            loginAccess: true
+            createdBy: ''
+          updatedAt: 2020-01-01T00:00:00.000Z
+          createdAt: 2020-01-01T00:00:00.000Z
         rootUserToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
     GetUserPoliciesResponse:
@@ -2044,7 +2057,20 @@ components:
         id: XlK5h64gND
         name: ACME Enterprise
         description: Brief description about ACME
+        rootUser:
+          hrn: hrn:XlK5h64gND::iam-user/Bob
+          username: Bob
+          name: Lorem Ipsum
+          organizationId: XlK5h64gND
+          email: bob@acme.com
+          status: enabled
+          verified: true
+          phone: "+1234071628"
+          loginAccess: true
+          createdBy: ""
         rootUserHrn: "hrn:XlK5h64gND::iam-user/root-user-name"
+        createdAt: 2020-01-01T00:00:00.000Z
+        updatedAt: 2020-01-01T00:00:00.000Z
 
     User:
       summary: A sample user
@@ -2616,6 +2642,8 @@ components:
         - id
         - name
         - rootUser
+        - createdAt
+        - updatedAt
       properties:
         id:
           type: string
@@ -2626,8 +2654,14 @@ components:
         description:
           type: string
           maxLength: 500
-        rootUserHrn:
+        rootUser:
+          $ref: '#/components/schemas/User'
+        createdAt:
           type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
     User:
       type: object
