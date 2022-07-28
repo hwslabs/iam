@@ -33,13 +33,14 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val userName = "test-user" + IdGenerator.randomId()
+            val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                RootUser(userName, testPassword, testEmail, true, testPhone)
+                RootUser(userName, name, testPassword, testEmail, true, testPhone)
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {

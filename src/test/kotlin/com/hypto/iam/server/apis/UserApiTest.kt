@@ -60,6 +60,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
                 username = "testUserName",
+                name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
@@ -105,6 +106,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "hypto.in"
             val createUserRequest = CreateUserRequest(
                 username = "testUserName",
+                name = "lorem ipsum",
                 passwordHash = "testPassword@ash",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
@@ -138,6 +140,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
                 username = "testUserName",
+                name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
@@ -181,6 +184,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
                 username = "testUserName",
+                name = "lorem ipsum",
                 passwordHash = "testPasswordHash",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
@@ -205,7 +209,6 @@ class UserApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.Authorization, "Bearer badSecret")
                     }
                 ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
                     assertEquals(HttpStatusCode.Unauthorized, response.status())
                 }
                 DataSetupHelper.deleteOrganization(organization.id, this)
@@ -221,6 +224,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
                 username = "testUserName",
+                name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
@@ -290,6 +294,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest1 = CreateUserRequest(
                 username = "testUserName",
+                name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
@@ -297,6 +302,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             )
             val createUserRequest2 = CreateUserRequest(
                 username = "testUserName",
+                name = "lorem ipsum",
                 passwordHash = "testPassword@Hash2",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
@@ -356,6 +362,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 val createUserRequest = CreateUserRequest(
                     username = "testUserName",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = testEmail,
                     status = CreateUserRequest.Status.enabled,
@@ -371,6 +378,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 }
 
                 val updateUserRequest = UpdateUserRequest(
+                    name = "name updated",
                     phone = "+911234567890",
                     status = UpdateUserRequest.Status.enabled,
                     verified = true
@@ -477,6 +485,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 val createUser1Request = CreateUserRequest(
                     username = "testUserName1",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -537,6 +546,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 val createUser1Request = CreateUserRequest(
                     username = "testUserName1",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -546,6 +556,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 val createUser2Request = CreateUserRequest(
                     username = "testUserName2",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -669,6 +680,9 @@ class UserApiTest : AbstractContainerBaseTest() {
                         listOf(
                             UserType.builder().username(createdUser.username).enabled(true).attributes(
                                 listOf(
+                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_NAME)
+                                        .value("test name")
+                                        .build(),
                                     AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
                                         .value(createdUser.email)
                                         .build(),
@@ -742,6 +756,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 val createUser1Request = CreateUserRequest(
                     username = "testUserName1",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -758,6 +773,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
                 val createUser2Request = CreateUserRequest(
                     username = "testUserName2",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -822,6 +838,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 val createUser1Request = CreateUserRequest(
                     username = "testUserName1",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
@@ -838,6 +855,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
                 val createUser2Request = CreateUserRequest(
                     username = "testUserName2",
+                    name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,

@@ -89,6 +89,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     organizationId = organizationId,
                     credentials = PasswordCredentials(
                         userName = rootUser.username,
+                        name = rootUser.name,
                         email = rootUser.email,
                         phoneNumber = rootUser.phone ?: "",
                         password = rootUser.passwordHash

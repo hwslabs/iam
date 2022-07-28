@@ -25,7 +25,8 @@ interface IdentityProvider {
     suspend fun updateUser(
         identityGroup: IdentityGroup,
         userName: String,
-        phone: String,
+        name: String?,
+        phone: String?,
         status: com.hypto.iam.server.models.User.Status?,
         verified: Boolean?
     ): User
@@ -53,6 +54,7 @@ data class IdentityGroup(
 
 data class User(
     val username: String,
+    val name: String,
     val phoneNumber: String,
     val email: String,
     val loginAccess: Boolean,
@@ -68,6 +70,7 @@ abstract class UserCredentials {
 
 data class PasswordCredentials(
     override val userName: String,
+    val name: String,
     val email: String,
     val phoneNumber: String,
     val password: String

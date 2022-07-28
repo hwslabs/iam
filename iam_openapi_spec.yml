@@ -1805,9 +1805,11 @@ components:
         description: Brief description about ACME
         rootUser:
           username: username
+          name: Lorem Ipsum
           passwordHash: <password>
           email: root@example.com
-          phone: +1234567890
+          phone: "+1234567890"
+          verified: true
 
     UpdateOrganizationRequest:
       summary: A sample UpdateOrganizationRequest
@@ -1821,17 +1823,19 @@ components:
       summary: A sample create user request
       value:
         username: Bob
+        name: Lorem Ipsum
         passwordHash: nii2du35bdtuethntv3q7416
         email: bob@acme.com
-        phone: +1234071628
+        phone: "+1234071628"
         status: enabled
         verified: true
 
     UpdateUserRequest:
       summary: sample update user request
       value:
+        name: Lorem Ipsum
         email: bob@acme.com
-        phone: +1234071634
+        phone: "+1234071634"
         status: enabled
         verified: true
 
@@ -1968,13 +1972,14 @@ components:
         data:
           - hrn: hrn:XlK5h64gND::iam-user/Bob
             username: Bob
-            passwordHash: nii2du35bdtuethntv3q7416
+            name: Lorem Ipsum
+            organizationId: XlK5h64gND
             email: bob@acme.com
-            phone: +1234071628
+            status: enabled
+            verified: true
+            phone: "+1234071628"
             loginAccess: true
-            status: active
-            createdAt: 2020-01-01T00:00:00
-            updatedAt: 2020-03-21T16:30:06
+            createdBy: hrn:Xghfdksd::iam-user/johnny314
         nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
         context:
           pageSize: 10
@@ -2040,18 +2045,20 @@ components:
         name: ACME Enterprise
         description: Brief description about ACME
         rootUserHrn: "hrn:XlK5h64gND::iam-user/root-user-name"
+
     User:
       summary: A sample user
       value:
         hrn: hrn:XlK5h64gND::iam-user/Bob
         username: Bob
-        passwordHash: nii2du35bdtuethntv3q7416
+        name: Lorem Ipsum
+        organizationId: XlK5h64gND
         email: bob@acme.com
+        status: enabled
+        verified: true
         phone: "+1234071628"
         loginAccess: true
-        status: active
-        createdAt: 2020-01-01T00:00:00
-        updatedAt: 2020-03-21T16:30:06
+        createdBy: hrn:Xghfdksd::iam-user/johnny314
 
     UserConfiguration:
       value:
@@ -2191,6 +2198,7 @@ components:
       additionalProperties: false
       required:
         - username
+        - name
         - passwordHash
         - email
         - verified
@@ -2199,13 +2207,16 @@ components:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9]{3,50}$
+        name:
+          type: string
+          maxLength: 50
         passwordHash:
           type: string
           maxLength: 100
         email:
           type: string
           maxLength: 100
-          pattern: ^[A-Za-z0-9_+]{8,100}$
+          pattern: ^\S+@\S+\.\S+$
         phone:
           type: string
           maxLength: 30
@@ -2219,6 +2230,7 @@ components:
       additionalProperties: false
       required:
         - username
+        - name
         - passwordHash
         - email
         - status
@@ -2227,13 +2239,16 @@ components:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9]{3,50}$
+        name:
+          type: string
+          maxLength: 50
         passwordHash:
           type: string
           maxLength: 100
         email:
           type: string
           maxLength: 100
-          pattern: ^[A-Za-z0-9_+]{8,100}$
+          pattern: ^\S+@\S+\.\S+$
         phone:
           type: string
           maxLength: 30
@@ -2250,6 +2265,9 @@ components:
       type: object
       additionalProperties: false
       properties:
+        name:
+          type: string
+          maxLength: 50
         email:
           type: string
           maxLength: 50
@@ -2617,6 +2635,7 @@ components:
       required:
         - hrn
         - username
+        - name
         - organizationId
         - email
         - status
@@ -2625,6 +2644,9 @@ components:
         hrn:
           type: string
         username:
+          type: string
+          maxLength: 50
+        name:
           type: string
           maxLength: 50
         organizationId:

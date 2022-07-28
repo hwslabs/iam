@@ -3,6 +3,7 @@
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>LongParameterList:DataSetupHelper.kt$DataSetupHelper$( orgId: String, bearerToken: String, policyName: String, accountId: String?, resourceName: String, actionName: String, resourceInstance: String, engine: TestApplicationEngine, effect: PolicyStatement.Effect = PolicyStatement.Effect.allow )</ID>
+    <ID>LongParameterList:IdentityProvider.kt$IdentityProvider$( identityGroup: IdentityGroup, userName: String, name: String?, phone: String?, status: com.hypto.iam.server.models.User.Status?, verified: Boolean? )</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
     <ID>MagicNumber:Configuration.kt$365</ID>

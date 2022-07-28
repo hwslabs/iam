@@ -50,7 +50,10 @@ fun Route.usersApi() {
             val request = call.receive<CreateUserRequest>().validate()
             val passwordCredentials = PasswordCredentials(
                 userName = request.username,
-                email = request.email, phoneNumber = request.phone ?: "", password = request.passwordHash
+                name = request.name,
+                email = request.email,
+                phoneNumber = request.phone ?: "",
+                password = request.passwordHash
             )
             val user = usersService.createUser(
                 organizationId = organizationId,
@@ -133,6 +136,7 @@ fun Route.usersApi() {
                 usersService.updateUser(
                     organizationId,
                     userId,
+                    request.name,
                     request.phone ?: "",
                     request.status,
                     request.verified
