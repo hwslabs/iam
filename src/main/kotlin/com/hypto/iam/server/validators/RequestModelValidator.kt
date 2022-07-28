@@ -8,6 +8,7 @@ import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.extensions.TimeNature
 import com.hypto.iam.server.extensions.dateTime
 import com.hypto.iam.server.extensions.hrn
+import com.hypto.iam.server.extensions.noEndSpaces
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
@@ -189,8 +190,10 @@ val orgNameCheck = Validation<String> {
 }
 
 val nameOfUserCheck = Validation<String> {
+    minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
     maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
         "name is ${Constants.MAX_NAME_LENGTH} characters"
+    noEndSpaces()
 }
 
 val phoneNumberCheck = Validation<String> {

@@ -35,9 +35,15 @@ fun ValidationBuilder<String>.dateTime(
     try {
         val dateTime = LocalDateTime.parse(it, format)
         when (nature) {
-            TimeNature.ANY -> { true }
-            TimeNature.PAST -> { dateTime.isBefore(LocalDateTime.now()) }
-            TimeNature.FUTURE -> { dateTime.isAfter(LocalDateTime.now()) }
+            TimeNature.ANY -> {
+                true
+            }
+            TimeNature.PAST -> {
+                dateTime.isBefore(LocalDateTime.now())
+            }
+            TimeNature.FUTURE -> {
+                dateTime.isAfter(LocalDateTime.now())
+            }
         }
     } catch (e: DateTimeParseException) {
         false
@@ -51,6 +57,10 @@ fun ValidationBuilder<String>.hrn() = addConstraint("must be a valid hrn") {
     } catch (e: HrnParseException) {
         false
     }
+}
+
+fun ValidationBuilder<String>.noEndSpaces() = addConstraint("must not have spaces at either ends") {
+    it.trim() == it
 }
 
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
