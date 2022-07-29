@@ -33,9 +33,18 @@ import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
+import com.hypto.iam.server.service.DatabaseFactory.pool
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.validators.validate
+import com.sksamuel.cohort.HealthCheckRegistry
+import com.sksamuel.cohort.db.DatabaseHealthCheck
+import com.sksamuel.cohort.hikari.HikariDataSourceManager
+import com.sksamuel.cohort.hikari.HikariPendingThreadsHealthCheck
+import com.sksamuel.cohort.ktor.Cohort
+import com.sksamuel.cohort.ktor.EngineShutdownHook
+import com.sksamuel.cohort.logback.LogbackManager
+import com.sksamuel.cohort.threads.ThreadDeadlockHealthCheck
 import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -45,7 +54,6 @@ import io.ktor.server.auth.basic
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.addShutdownHook
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.engine.stop
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.autohead.AutoHeadResponse
@@ -61,13 +69,18 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-Id"
+private val shutdownHook = EngineShutdownHook(1.seconds, 1.minutes, 5.minutes)
+private const val MAX_THREADS_WAITING_FOR_DB_CONNS = 100
 
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
@@ -213,6 +226,31 @@ fun Application.handleRequest() {
         keyApi()
         passcodeApi()
     }
+
+    install(Cohort) {
+        endpointPrefix = "admin"
+        logManager = LogbackManager
+        // show connection pool information
+        dataSources = listOf(HikariDataSourceManager(pool))
+
+        healthcheck(
+            "/status",
+            HealthCheckRegistry(Dispatchers.Default) {
+                // detects if threads are mutually blocked on each others locks
+                register("ThreadDeadlockHealthCheck", ThreadDeadlockHealthCheck(), ZERO, 1.minutes)
+                register(
+                    "HikariPendingThreadsHealthCheck",
+                    HikariPendingThreadsHealthCheck(pool, MAX_THREADS_WAITING_FOR_DB_CONNS),
+                    ZERO,
+                    1.minutes
+                )
+                register("DatabaseHealthCheck", DatabaseHealthCheck(pool), ZERO, 1.minutes)
+                // TODO: Configure the below check based on infra set-up
+                // register(DiskSpaceHealthCheck(/*FileStore for root(/) */, 1.0)), 1.minutes)
+            }
+        )
+        onShutdown(shutdownHook)
+    }
 }
 
 fun Application.module() {
@@ -223,7 +261,7 @@ fun Application.module() {
     handleRequest()
 }
 
-fun main(args: Array<String>) {
+fun main() {
     val appConfig: AppConfig = AppConfig.configuration
 
     embeddedServer(
@@ -235,7 +273,7 @@ fun main(args: Array<String>) {
             callGroupSize = appConfig.server.callGroupSize
         }
     ).apply {
-        @Suppress("MagicNumber")
-        addShutdownHook { stop(5, 15, TimeUnit.SECONDS) }
+        shutdownHook.setEngine(this)
+        addShutdownHook { runBlocking { shutdownHook.run() } }
     }.start(wait = true)
 }

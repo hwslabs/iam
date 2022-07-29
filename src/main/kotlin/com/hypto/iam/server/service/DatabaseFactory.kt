@@ -15,7 +15,7 @@ import org.koin.core.component.inject
 object DatabaseFactory : KoinComponent {
     private val appConfig: AppConfig by inject()
 
-    private val pool: HikariDataSource = HikariDataSource(
+    val pool: HikariDataSource = HikariDataSource(
         HikariConfig().apply {
             driverClassName = "org.postgresql.Driver"
             jdbcUrl = appConfig.database.jdbcUrl
@@ -27,14 +27,6 @@ object DatabaseFactory : KoinComponent {
             password = appConfig.database.password
         }
     )
-
-    init {
-        // eager initializing connection pools
-        pool.connection.prepareStatement("select 'HELLO_WORLD';").execute()
-    }
-
-    fun init() { /* Deliberately left empty*/
-    }
 
     private val daoConfiguration = DefaultConfiguration()
         .set(SQLDialect.POSTGRES)
