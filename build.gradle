@@ -1,17 +1,17 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 buildscript {
-    ext.kotlin_version = '1.6.21'
-    ext.ktor_version = '2.0.1'
+    ext.kotlin_version = '1.7.0'
+    ext.ktor_version = '2.0.2'
     ext.koin_version = '3.2.0'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
     ext.jooq_version = '3.16.6'
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = "5.8.2"
-    ext.flyway_version = '8.5.10'
+    ext.flyway_version = '8.5.12'
     ext.casbin_version = '1.24.0'
-    ext.postgres_jdbc_driver = '42.3.4'
+    ext.postgres_jdbc_driver = '42.3.6'
 
     repositories {
         google()
@@ -168,6 +168,8 @@ jooq {
                         relations = true
 //                        embeddablePrimaryKeys = true // Available only in paid version :(
                         daos = false
+                        routines = false
+                        indexes = false
                     }
                     target {
                         packageName = 'com.hypto.iam.server.db'
@@ -375,14 +377,14 @@ dependencies {
     implementation "io.insert-koin:koin-logger-slf4j:$koin_version"
 
     // Logging
-    implementation 'io.github.microutils:kotlin-logging:2.1.21'
+    implementation 'io.github.microutils:kotlin-logging:2.1.23'
     implementation 'org.slf4j:slf4j-simple:1.7.36'
 
     // Metrics
     implementation "io.ktor:ktor-server-metrics-micrometer:$ktor_version"
 
     // APM
-    implementation 'com.newrelic.telemetry:micrometer-registry-new-relic:0.8.0'
+    implementation 'com.newrelic.telemetry:micrometer-registry-new-relic:0.9.0'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -392,14 +394,14 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-gson:0.11.5' // or 'io.jsonwebtoken:jjwt-jackson:0.11.2' for gson
 
     // Validation
-    implementation("io.konform:konform:0.3.0")
+    implementation('io.konform:konform:0.4.0')
 
     // AWS Lambda
     implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
     implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
 
     // Hoplite
-    implementation('com.sksamuel.hoplite:hoplite-json:2.1.2')
+    implementation('com.sksamuel.hoplite:hoplite-json:2.1.5')
 
     // Cohort
     implementation("com.sksamuel.cohort:cohort-core:1.4.1")
@@ -421,12 +423,12 @@ dependencies {
     testImplementation("io.insert-koin:koin-test:$koin_version")
     testImplementation "io.insert-koin:koin-test-junit5:$koin_version"
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
-    testImplementation('io.mockk:mockk:1.12.3')
+    testImplementation('io.mockk:mockk:1.12.4')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    testImplementation 'org.testcontainers:junit-jupiter:1.17.1'
-    testImplementation 'org.testcontainers:testcontainers:1.17.1'
-    testImplementation 'org.testcontainers:postgresql:1.17.1'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.2'
+    testImplementation 'org.testcontainers:testcontainers:1.17.2'
+    testImplementation 'org.testcontainers:postgresql:1.17.2'
 }
 
 // configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources

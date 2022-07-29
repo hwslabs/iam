@@ -261,7 +261,7 @@ fun Application.module() {
     handleRequest()
 }
 
-fun main(args: Array<String>) {
+fun main() {
     val appConfig: AppConfig = AppConfig.configuration
 
     embeddedServer(
