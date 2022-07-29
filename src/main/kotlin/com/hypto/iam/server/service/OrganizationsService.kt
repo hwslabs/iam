@@ -7,6 +7,7 @@ import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.exceptions.PasscodeExpiredException
+import com.hypto.iam.server.extensions.toUTCOffset
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.PasswordCredentials
@@ -127,11 +128,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     @Timed("organization.get") // TODO: Make this work
     override suspend fun getOrganization(id: String): Organization {
         val response = organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
+        val rootUser = usersService.getUser(response.id, ResourceHrn(response.rootUserHrn).resourceInstance!!)
         return Organization(
             id = response.id,
             name = response.name,
             description = response.description,
-            rootUserHrn = response.rootUserHrn
+            rootUser = rootUser,
+            createdAt = response.createdAt.toUTCOffset(),
+            updatedAt = response.updatedAt.toUTCOffset()
         )
     }
 
@@ -139,10 +143,17 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
         val updatedOrgRecord =
             organizationRepo.update(id, name, description) ?: throw InternalException("Internal service failure")
+        val rootUser = usersService.getUser(
+            updatedOrgRecord.id,
+            ResourceHrn(updatedOrgRecord.rootUserHrn).resourceInstance!!
+        )
         return Organization(
             id = updatedOrgRecord.id,
             name = updatedOrgRecord.name,
-            description = updatedOrgRecord.description
+            description = updatedOrgRecord.description,
+            rootUser = rootUser,
+            createdAt = updatedOrgRecord.createdAt.toUTCOffset(),
+            updatedAt = updatedOrgRecord.updatedAt.toUTCOffset()
         )
     }
 

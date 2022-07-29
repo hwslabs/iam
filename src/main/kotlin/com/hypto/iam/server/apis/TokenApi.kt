@@ -42,7 +42,7 @@ fun Route.tokenApi() {
         }
     }
 
-    authenticate("unique-basic-auth", "bearer-auth") {
+    authenticate("unique-basic-auth", "basic-auth", "bearer-auth") {
         post("/token") {
             val principal = context.principal<UserPrincipal>()!!
             generateToken(principal, call, context.request.accept())

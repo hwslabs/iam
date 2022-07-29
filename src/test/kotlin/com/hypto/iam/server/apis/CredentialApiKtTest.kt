@@ -155,11 +155,14 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
         @Test
         fun `create credential of invalid user - failure`() {
-            val userName = "invalidUserName"
+            val invalidUserName = "invalidUserName"
 
             // Override the cognito mock to throw error for invalid username
             coEvery {
-                cognitoClient.adminGetUser(any<AdminGetUserRequest>())
+                cognitoClient.adminGetUser(
+                    match<AdminGetUserRequest>
+                    { it.username() == invalidUserName }
+                )
             } throws UserNotFoundException.builder().message("User does not exist.").build()
 
             withTestApplication(Application::handleRequest) {
@@ -171,7 +174,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                 with(
                     handleRequest(
-                        HttpMethod.Post, "/organizations/${createdOrganization.id}/users/$userName/credentials"
+                        HttpMethod.Post, "/organizations/${createdOrganization.id}/users/$invalidUserName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
