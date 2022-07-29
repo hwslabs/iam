@@ -10,7 +10,7 @@ buildscript {
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = "5.8.2"
     ext.flyway_version = '8.5.10'
-    ext.casbin_version = '1.22.6'
+    ext.casbin_version = '1.24.0'
     ext.postgres_jdbc_driver = '42.3.4'
 
     repositories {
@@ -401,6 +401,12 @@ dependencies {
     // Hoplite
     implementation('com.sksamuel.hoplite:hoplite-json:2.1.2')
 
+    // Cohort
+    implementation("com.sksamuel.cohort:cohort-core:1.4.1")
+    implementation("com.sksamuel.cohort:cohort-ktor2:1.4.1")
+    implementation("com.sksamuel.cohort:cohort-hikari:1.4.1")
+    implementation("com.sksamuel.cohort:cohort-logback:1.4.1")
+
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.17.143')
     implementation("software.amazon.awssdk:cognitoidentity")
@@ -441,9 +447,6 @@ tasks.named('generateJooq').configure {
 }
 
 compileKotlin.dependsOn clean, tasks.named("detekt"), ktlintFormat, generateJooq, generateOpenAPIModels
-
-// TODO: Figure out how to skip generated-src for this step and then re-enable it
-ktlintMainSourceSetCheck.enabled = false
 
 gradle.taskGraph.whenReady { graph ->
     if (!graph.hasTask(dockerDistJar)) {
