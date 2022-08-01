@@ -25,9 +25,10 @@ import java.util.Base64
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
+import org.koin.test.inject
 
 class KeyApiTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Test
     fun `validate token using public key`() {

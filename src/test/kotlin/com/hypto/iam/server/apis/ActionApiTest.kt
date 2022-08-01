@@ -22,9 +22,10 @@ import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.koin.test.inject
 
 class ActionApiTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Test
     fun `create action success case`() {

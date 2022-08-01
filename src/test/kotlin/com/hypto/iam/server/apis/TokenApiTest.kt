@@ -69,7 +69,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolTyp
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 
 class TokenApiTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Nested
     @DisplayName("Generate JWT token test: /token")

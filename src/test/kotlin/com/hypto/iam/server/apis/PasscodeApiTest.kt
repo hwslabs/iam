@@ -21,13 +21,14 @@ import io.mockk.coEvery
 import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.koin.test.inject
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 
 internal class PasscodeApiTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Test
     fun `test verifyEmail api for signup purpose - success`() {

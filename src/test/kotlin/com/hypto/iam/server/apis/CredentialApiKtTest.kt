@@ -27,11 +27,12 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.koin.test.inject
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException
 
 internal class CredentialApiKtTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Nested
     @DisplayName("Create credential API tests")
