@@ -39,7 +39,7 @@ import org.koin.test.inject
 import org.koin.test.junit5.AutoCloseKoinTest
 
 object DataSetupHelper : AutoCloseKoinTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
     private val appConfig: AppConfig by inject()
     private val rootToken = appConfig.app.secretKey
 

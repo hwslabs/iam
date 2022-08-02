@@ -32,13 +32,14 @@ import kotlin.test.assertNull
 import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.koin.test.inject
 import org.koin.test.mock.declareMock
 import org.testcontainers.junit.jupiter.Testcontainers
 import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolRequest
 
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Test
     fun `create organization with valid root credentials`() {

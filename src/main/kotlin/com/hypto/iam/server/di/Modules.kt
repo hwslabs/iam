@@ -1,6 +1,10 @@
 package com.hypto.iam.server.di
 
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
@@ -42,6 +46,11 @@ import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.policy.PolicyValidator
 import com.txman.TxMan
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.dsl.bind
@@ -82,7 +91,7 @@ val controllerModule = module {
 }
 
 val applicationModule = module {
-    single { Gson() }
+    single { getGsonInstance() }
     single { IdGenerator }
     single { HrnFactory }
     single { ApplicationIdUtil.Generator }
@@ -115,6 +124,36 @@ fun getSesClient(
 
 fun getCredentialsProvider(accessKey: String, secretKey: String): StaticCredentialsProvider =
     StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey))
+
+private fun getGsonInstance(): Gson {
+    val isoDateTimeFormatter = DateTimeFormatterBuilder()
+        .append(DateTimeFormatter.ISO_DATE_TIME)
+        .parseDefaulting(ChronoField.OFFSET_SECONDS, 0) // UTC if no timezone offset specified
+        .toFormatter()
+
+    val dateFormatter = DateTimeFormatterBuilder()
+        .append(DateTimeFormatter.ISO_LOCAL_DATE)
+        .toFormatter()
+
+    return GsonBuilder()
+        .registerTypeAdapter(
+            OffsetDateTime::class.java,
+            JsonDeserializer { json, _, _ -> OffsetDateTime.from(isoDateTimeFormatter.parse(json.asString)) }
+        )
+        .registerTypeAdapter(
+            OffsetDateTime::class.java,
+            JsonSerializer<OffsetDateTime> { date, _, _ -> JsonPrimitive(isoDateTimeFormatter.format(date)) }
+        )
+        .registerTypeAdapter(
+            LocalDate::class.java,
+            JsonDeserializer { json, _, _ -> LocalDate.from(dateFormatter.parse(json.asString)) }
+        )
+        .registerTypeAdapter(
+            LocalDate::class.java,
+            JsonSerializer<LocalDate> { date, _, _ -> JsonPrimitive(dateFormatter.format(date)) }
+        )
+        .create()
+}
 
 /**
  * Used to inject a KoinComponent into a class / object as an extension.

@@ -16,10 +16,11 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.coEvery
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.koin.test.inject
 import org.koin.test.mock.declareMock
 
 class ExceptionHandlerTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Test
     fun `StatusPage - Respond to server side errors with custom error message`() {

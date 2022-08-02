@@ -22,11 +22,12 @@ import io.ktor.server.testing.withTestApplication
 import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.koin.test.inject
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
 internal class ResourceApiTest : AbstractContainerBaseTest() {
-    private val gson = Gson()
+    private val gson: Gson by inject()
 
     @Test
     fun `create resource success case`() {
