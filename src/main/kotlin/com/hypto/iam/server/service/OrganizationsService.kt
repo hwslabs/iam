@@ -1,6 +1,8 @@
 package com.hypto.iam.server.service
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Constants
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
@@ -45,6 +47,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
+    private val appConfig: AppConfig by inject()
 
     override suspend fun createOrganization(
         name: String,
@@ -52,12 +55,15 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         rootUser: RootUser,
         passcodeStr: String?
     ): Pair<Organization, TokenResponse> {
-        passcodeStr?.let {
-            passcodeRepo.getValidPasscode(
-                it,
-                VerifyEmailRequest.Purpose.signup,
-                rootUser.email
-            ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
+        val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
+        if (secretKey != passcodeStr) {
+            passcodeStr?.let {
+                passcodeRepo.getValidPasscode(
+                    it,
+                    VerifyEmailRequest.Purpose.signup,
+                    rootUser.email
+                ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
+            }
         }
 
         val organizationId = idGenerator.organizationId()
