@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
+import com.hypto.iam.server.MicrometerConfigs
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
@@ -92,6 +93,8 @@ val controllerModule = module {
 
 val applicationModule = module {
     single { getGsonInstance() }
+    single { MicrometerConfigs.getRegistry() }
+    single { MicrometerConfigs.getBinders() }
     single { IdGenerator }
     single { HrnFactory }
     single { ApplicationIdUtil.Generator }

@@ -69,6 +69,8 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.binder.MeterBinder
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -87,6 +89,8 @@ fun Application.handleRequest() {
     val appConfig: AppConfig by inject()
     val passcodeRepo: PasscodeRepo by inject()
     val userPrincipalService: UserPrincipalService by inject()
+    val micrometerRegistry: MeterRegistry by inject()
+    val micrometerBindings: List<MeterBinder> by inject()
 
     install(DefaultHeaders)
     install(CallLogging) {
@@ -99,8 +103,8 @@ fun Application.handleRequest() {
         replyToHeader(headerName = REQUEST_ID_HEADER)
     }
     install(MicrometerMetrics) {
-        registry = MicrometerConfigs.getRegistry()
-        meterBinders = MicrometerConfigs.getBinders()
+        registry = micrometerRegistry
+        meterBinders = micrometerBindings
     }
     install(ContentNegotiation) {
         // TODO: Switch to kotlinx.serialization

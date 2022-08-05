@@ -96,12 +96,7 @@ object MicrometerConfigs {
     )
 
     private fun getNewRelicMeterRegistry(): NewRelicRegistry {
-        val newRelicRegistry = NewRelicRegistry.builder(getNewRelicRegistryConfig())
-            .commonAttributes(
-                com.newrelic.telemetry.Attributes()
-                    .put("host", InetAddress.getLocalHost().hostName)
-            )
-            .build()
+        val newRelicRegistry = NewRelicRegistry.builder(getNewRelicRegistryConfig()).build()
         newRelicRegistry.config() // TODO: Fix the config params as required
             .meterFilter(MeterFilter.ignoreTags("plz_ignore_me"))
             .meterFilter(MeterFilter.denyNameStartsWith("jvm.threads"))
@@ -111,35 +106,35 @@ object MicrometerConfigs {
 
     private fun getNewRelicRegistryConfig(): NewRelicRegistryConfig {
         return object : NewRelicRegistryConfig {
-            override fun apiKey(): String {
-                return appConfig.newrelic.apiKey
-            }
+            override fun apiKey() = appConfig.newrelic.apiKey
 
             override fun get(key: String): String? { return null }
             override fun step(): Duration {
                 // TODO: Needs Tweaking
                 return Duration.ofSeconds(appConfig.newrelic.publishInterval)
             }
-            // TODO: [IMPORTANT] Read service name from appConfig
-            override fun serviceName(): String { return "Hypto IAM - " + appConfig.app.env }
-            override fun enableAuditMode(): Boolean { return false }
-            override fun useLicenseKey(): Boolean { return true }
+            override fun serviceName() = "${appConfig.app.name}.${appConfig.app.env}"
+            override fun enableAuditMode() = false
+            override fun useLicenseKey() = true
         }
     }
 
     init {
+        registry.config().commonTags(
+            // TODO: Add instance_id, etc. as a common tag
+            listOf(
+                Tag.of("environment", appConfig.app.env.toString()),
+                Tag.of("service", appConfig.app.name),
+                Tag.of("host", InetAddress.getLocalHost().hostName)
+            )
+        )
         /*
          * TODO: Configure "LoggingMeterRegistry" with a logging sink to
          *  direct metrics logs to a separate "togai_core_metrics.log" logback appender
          * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer)
          */
-        if (!appConfig.app.isDevelopment) registry.add(LoggingMeterRegistry())
-        // TODO: Uncomment this to publish metrics to new relic
-        // registry.add(getNewRelicMeterRegistry())
-
-        registry.config().commonTags(
-            listOf(Tag.of("environment", appConfig.app.env.toString()))
-        )
+        if (appConfig.app.isDevelopment) registry.add(LoggingMeterRegistry())
+        else registry.add(getNewRelicMeterRegistry())
     }
 
     fun getRegistry(): MeterRegistry {

@@ -22,8 +22,7 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
     }
 
     suspend fun fetchByHrn(hrn: ActionHrn): ActionsRecord? {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table).where(ACTIONS.HRN.eq(hrn.toString())).fetchOne()
+        return ctx("action.findByHrn").selectFrom(ACTIONS).where(ACTIONS.HRN.eq(hrn.toString())).fetchOne()
     }
 
     suspend fun create(orgId: String, resourceHrn: ResourceHrn, hrn: ActionHrn, description: String?): ActionsRecord {
@@ -42,8 +41,7 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
 
     suspend fun update(hrn: ActionHrn, description: String): ActionsRecord? {
         val condition = ACTIONS.HRN.eq(hrn.toString())
-        val dao = dao()
-        return dao.ctx().update(dao.table)
+        return ctx("action.update").update(ACTIONS)
             .set(ACTIONS.DESCRIPTION, description)
             .set(ACTIONS.UPDATED_AT, LocalDateTime.now())
             .where(condition)
@@ -56,8 +54,7 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
         resourceHrn: ResourceHrn,
         paginationContext: PaginationContext
     ): Result<ActionsRecord> {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table)
+        return ctx("action.fetchPaginated").selectFrom(ACTIONS)
             .where(ACTIONS.ORGANIZATION_ID.eq(organizationId).and(ACTIONS.RESOURCE_HRN.eq(resourceHrn.toString())))
             .paginate(ACTIONS.HRN, paginationContext)
             .fetch()

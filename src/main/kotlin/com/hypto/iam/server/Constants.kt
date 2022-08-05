@@ -26,5 +26,6 @@ class Constants private constructor() {
         const val X_API_KEY_HEADER = "X-Api-Key"
         const val AUTHORIZATION_HEADER = "Authorization"
         const val SECRET_PREFIX = "$"
+        const val JOOQ_QUERY_NAME = "queryName"
     }
 }

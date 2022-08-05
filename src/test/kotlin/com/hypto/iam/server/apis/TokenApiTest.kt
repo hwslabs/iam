@@ -238,6 +238,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     every { this@declareMock.app } answers {
                         AppConfig.App(
                             AppConfig.Environment.Development,
+                            "IAM",
                             300,
                             600,
                             "iam-secret-key",
@@ -284,6 +285,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     every { this@declareMock.app } answers {
                         AppConfig.App(
                             AppConfig.Environment.Development,
+                            "IAM",
                             300,
                             600,
                             "iam-secret-key",

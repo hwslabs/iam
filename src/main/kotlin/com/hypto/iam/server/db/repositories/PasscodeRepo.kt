@@ -9,9 +9,7 @@ import org.jooq.impl.DAOImpl
 
 object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
 
-    private val idFun = fun(passcodes: Passcodes): String {
-        return passcodes.id
-    }
+    private val idFun = fun(passcodes: Passcodes) = passcodes.id
 
     override suspend fun dao(): DAOImpl<PasscodesRecord, Passcodes, String> {
         return txMan.getDao(com.hypto.iam.server.db.tables.Passcodes.PASSCODES, Passcodes::class.java, idFun)
@@ -32,11 +30,10 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
         return record
     }
 
-    suspend fun getValidPasscodeCount(email: String, purpose: VerifyEmailRequest.Purpose): Int {
-        val dao = dao()
-        return dao.ctx()
+    suspend fun getValidPasscodeCount(email: String, purpose: VerifyEmailRequest.Purpose): Int =
+        ctx("passcodes.getValidCount")
             .selectCount()
-            .from(dao.table)
+            .from(PASSCODES)
             .where(PASSCODES.EMAIL.eq(email)).and(
                 PASSCODES.PURPOSE.eq(purpose.toString()).and(
                     PASSCODES.VALID_UNTIL.ge(
@@ -44,15 +41,17 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                     )
                 )
             ).fetchOne(0, Int::class.java) ?: 0
-    }
 
     suspend fun getValidPasscode(id: String, purpose: VerifyEmailRequest.Purpose, email: String): PasscodesRecord? {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table)
+        return ctx("passcodes.getValid")
+            .selectFrom(PASSCODES)
             .where(
-                PASSCODES.ID.eq(id).and(PASSCODES.PURPOSE.eq(purpose.toString()))
-                    .and(PASSCODES.VALID_UNTIL.ge(LocalDateTime.now())).and(PASSCODES.EMAIL.eq(email))
-            ).fetchOne()
+                PASSCODES.ID.eq(id),
+                PASSCODES.PURPOSE.eq(purpose.toString()),
+                PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()),
+                PASSCODES.EMAIL.eq(email)
+            )
+            .fetchOne()
     }
 
     suspend fun deleteById(id: String): Boolean {
