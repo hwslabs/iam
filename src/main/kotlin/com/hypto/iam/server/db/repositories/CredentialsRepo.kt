@@ -33,17 +33,8 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
     /**
      * Fetch records that have `user_hrn = value`
      */
-    suspend fun fetchByUserHrn(value: String): Result<CredentialsRecord> {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table).where(CREDENTIALS.USER_HRN.eq(value)).fetch()
-    }
-
-    /**
-     * Fetch records that have `user_hrn = value`
-     */
     suspend fun fetchByIdAndUserHrn(id: UUID, value: String): CredentialsRecord? {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table)
+        return ctx("credentials.fetch_by_id").selectFrom(CREDENTIALS)
             .where(CREDENTIALS.ID.eq(id).and(CREDENTIALS.USER_HRN.eq(value)))
             .fetchOne()
     }
@@ -52,8 +43,8 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
      * Fetch a unique record that has `refresh_token = value`
      */
     suspend fun fetchByRefreshToken(refreshToken: String): CredentialsRecord? {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table).where(CREDENTIALS.REFRESH_TOKEN.eq(refreshToken)).fetchOne()
+        return ctx("credentials.fetch_by_token")
+            .selectFrom(CREDENTIALS).where(CREDENTIALS.REFRESH_TOKEN.eq(refreshToken)).fetchOne()
     }
 
     /**
@@ -61,25 +52,11 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
      * @return true on successful update. false otherwise.
      */
     suspend fun update(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): CredentialsRecord? {
-        val dao = dao()
-        var builder = dao.ctx().update(dao.table).set(CREDENTIALS.UPDATED_AT, LocalDateTime.now())
+        var builder = ctx("credentials.update").update(CREDENTIALS).set(CREDENTIALS.UPDATED_AT, LocalDateTime.now())
         status?.let { builder = builder.set(CREDENTIALS.STATUS, status.value) }
         validUntil?.let { builder = builder.set(CREDENTIALS.VALID_UNTIL, validUntil) }
 
         return builder.where(CREDENTIALS.ID.eq(id)).returning().fetchOne()
-    }
-
-    suspend fun fetchAndUpdate(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): Boolean {
-        val credentialsRecord = fetchOneById(id) ?: return false
-        status?.let { credentialsRecord.setStatus(status.value) }
-        validUntil?.let { credentialsRecord.setValidUntil(validUntil) }
-
-        // TODO: Automate this using listeners or some other means
-        if (credentialsRecord.changed()) {
-            credentialsRecord.updatedAt = LocalDateTime.now()
-        }
-
-        return credentialsRecord.update() > 0
     }
 
     /**
@@ -102,8 +79,7 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
     suspend fun getAllByUserHrn(
         userHrn: Hrn
     ): Result<CredentialsRecord> {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table)
+        return ctx().selectFrom(CREDENTIALS)
             .where(CREDENTIALS.USER_HRN.eq(userHrn.toString()))
             .fetch()
     }

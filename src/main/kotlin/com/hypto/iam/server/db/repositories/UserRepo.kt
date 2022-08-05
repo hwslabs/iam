@@ -6,24 +6,19 @@ import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.models.User
 import java.time.LocalDateTime
 import org.jooq.impl.DAOImpl
+import org.jooq.impl.DSL
 
 object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
-    private val idFun = fun(user: Users): String {
-        return user.hrn
-    }
+    private val idFun = fun(user: Users) = user.hrn
 
-    override suspend fun dao(): DAOImpl<UsersRecord, Users, String> {
-        return txMan.getDao(com.hypto.iam.server.db.tables.Users.USERS, Users::class.java, idFun)
-    }
+    override suspend fun dao(): DAOImpl<UsersRecord, Users, String> =
+        txMan.getDao(com.hypto.iam.server.db.tables.Users.USERS, Users::class.java, idFun)
 
-    suspend fun insert(user: Users) {
-        dao().insert(user)
-    }
+    suspend fun insert(user: Users) = dao().insert(user)
 
     suspend fun existsByEmail(email: String, organizationId: String, uniqueCheck: Boolean = false): Boolean {
-        val dao = dao()
-        var builder = dao.ctx().selectFrom(dao.table)
+        var builder = DSL.selectFrom(USERS)
             .where(USERS.EMAIL.eq(email))
             .and(USERS.DELETED.eq(false))
 
@@ -38,35 +33,27 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
         }
 
-        return dao.ctx().fetchExists(builder)
+        return ctx("users.existsByEmail").fetchExists(builder)
     }
 
     suspend fun update(hrn: String, status: User.Status?, verified: Boolean?): UsersRecord? {
-        val dao = dao()
-        val updateStep = dao.ctx().update(dao.table).set(USERS.UPDATED_AT, LocalDateTime.now())
-        if (status != null) {
-            updateStep.set(USERS.STATUS, status.value)
-        }
-        if (verified != null) {
-            updateStep.set(USERS.VERIFIED, verified)
-        }
+        val updateStep = ctx("users.update").update(USERS).set(USERS.UPDATED_AT, LocalDateTime.now())
+        status?.let { updateStep.set(USERS.STATUS, it.value) }
+        verified?.let { updateStep.set(USERS.VERIFIED, it) }
         return updateStep.where(USERS.HRN.eq(hrn)).and(USERS.DELETED.eq(false))
             .returning().fetchOne()
     }
 
-    suspend fun delete(hrn: String): UsersRecord? {
-        val dao = dao()
-        return dao.ctx().update(dao.table).set(USERS.UPDATED_AT, LocalDateTime.now())
-            .set(USERS.DELETED, true)
-            .where(USERS.HRN.eq(hrn))
-            .returning().fetchOne()
-    }
-    suspend fun findByEmail(email: String): UsersRecord? {
-        val dao = dao()
-        val builder = dao.ctx().selectFrom(dao.table)
-            .where(USERS.EMAIL.eq(email))
-            .and(USERS.DELETED.eq(false))
-            .and(USERS.VERIFIED.eq(true))
-        return dao.ctx().fetchOne(builder)
-    }
+    suspend fun delete(hrn: String): UsersRecord? = ctx("users.delete")
+        .update(USERS)
+        .set(USERS.UPDATED_AT, LocalDateTime.now())
+        .set(USERS.DELETED, true)
+        .where(USERS.HRN.eq(hrn))
+        .returning().fetchOne()
+    suspend fun findByEmail(email: String): UsersRecord? = ctx("users.findByEmail")
+        .selectFrom(USERS)
+        .where(USERS.EMAIL.eq(email))
+        .and(USERS.DELETED.eq(false))
+        .and(USERS.VERIFIED.eq(true))
+        .fetchOne()
 }

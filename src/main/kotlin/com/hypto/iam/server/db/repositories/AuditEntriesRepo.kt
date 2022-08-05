@@ -11,6 +11,7 @@ import java.util.UUID
 import mu.KotlinLogging
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
+import org.jooq.impl.DSL
 import org.koin.core.component.inject
 
 object AuditEntriesRepo : BaseRepo<AuditEntriesRecord, AuditEntries, UUID>() {
@@ -32,9 +33,8 @@ object AuditEntriesRepo : BaseRepo<AuditEntriesRecord, AuditEntries, UUID>() {
         eventTimeStart: LocalDateTime,
         eventTimeEnd: LocalDateTime
     ): Result<AuditEntriesRecord> {
-        val dao = dao()
-        return dao.ctx()
-            .selectFrom(dao.table)
+        return ctx()
+            .selectFrom(AUDIT_ENTRIES)
             .where(AUDIT_ENTRIES.PRINCIPAL_ORGANIZATION.eq(principalOrg))
             .and(AUDIT_ENTRIES.PRINCIPAL.eq(principal.toString()))
             .and(AUDIT_ENTRIES.EVENT_TIME.ge(eventTimeStart))
@@ -48,9 +48,8 @@ object AuditEntriesRepo : BaseRepo<AuditEntriesRecord, AuditEntries, UUID>() {
         eventTimeEnd: LocalDateTime,
         operations: List<Hrn>?
     ): Result<AuditEntriesRecord> {
-        val dao = dao()
-        var query = dao.ctx()
-            .selectFrom(dao.table)
+        var query = ctx()
+            .selectFrom(AUDIT_ENTRIES)
             .where(AUDIT_ENTRIES.RESOURCE.eq(resource.toString()))
             .and(AUDIT_ENTRIES.EVENT_TIME.ge(eventTimeStart))
             .and(AUDIT_ENTRIES.EVENT_TIME.ge(eventTimeEnd))
@@ -62,20 +61,17 @@ object AuditEntriesRepo : BaseRepo<AuditEntriesRecord, AuditEntries, UUID>() {
     }
 
     suspend fun batchInsert(auditEntries: List<AuditEntries>): Boolean {
-        val dao = dao()
-        val batchBindStep = dao.ctx().batch(
-            dao.ctx()
-                .insertInto(
-                    AUDIT_ENTRIES,
-                    AUDIT_ENTRIES.REQUEST_ID,
-                    AUDIT_ENTRIES.EVENT_TIME,
-                    AUDIT_ENTRIES.PRINCIPAL,
-                    AUDIT_ENTRIES.PRINCIPAL_ORGANIZATION,
-                    AUDIT_ENTRIES.RESOURCE,
-                    AUDIT_ENTRIES.OPERATION
-                    // No meta arguments at the moment
-                )
-                .values(null as String?, null, null, null, null, null)
+        val batchBindStep = ctx().batch(
+            DSL.insertInto(
+                AUDIT_ENTRIES,
+                AUDIT_ENTRIES.REQUEST_ID,
+                AUDIT_ENTRIES.EVENT_TIME,
+                AUDIT_ENTRIES.PRINCIPAL,
+                AUDIT_ENTRIES.PRINCIPAL_ORGANIZATION,
+                AUDIT_ENTRIES.RESOURCE,
+                AUDIT_ENTRIES.OPERATION
+                // No meta arguments at the moment
+            ).values(null as String?, null, null, null, null, null)
         )
         auditEntries.forEach {
             val principalHrn: ResourceHrn = hrnFactory.getHrn(it.principal) as ResourceHrn

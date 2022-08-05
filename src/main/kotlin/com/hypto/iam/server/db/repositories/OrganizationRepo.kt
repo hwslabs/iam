@@ -12,18 +12,16 @@ object OrganizationRepo : BaseRepo<OrganizationsRecord, Organizations, String>()
         return organization.id
     }
 
-    override suspend fun dao(): DAOImpl<OrganizationsRecord, Organizations, String> {
-        return txMan.getDao(ORGANIZATIONS, Organizations::class.java, idFun)
-    }
+    override suspend fun dao(): DAOImpl<OrganizationsRecord, Organizations, String> =
+        txMan.getDao(ORGANIZATIONS, Organizations::class.java, idFun)
 
     /**
      * Updates organization with given input values
      */
     suspend fun update(id: String, name: String?, description: String?): OrganizationsRecord? {
-
-        val dao = dao()
-
-        val updateStep = dao.ctx().update(dao.table).set(ORGANIZATIONS.UPDATED_AT, LocalDateTime.now())
+        val updateStep = ctx("organizations.update")
+            .update(ORGANIZATIONS)
+            .set(ORGANIZATIONS.UPDATED_AT, LocalDateTime.now())
         if (!name.isNullOrEmpty())
             updateStep.set(ORGANIZATIONS.NAME, name)
         if (!description.isNullOrEmpty())
@@ -31,18 +29,9 @@ object OrganizationRepo : BaseRepo<OrganizationsRecord, Organizations, String>()
         return updateStep.where(ORGANIZATIONS.ID.eq(id)).returning().fetchOne()
     }
 
-    suspend fun insert(organization: Organizations) {
-        val daoImpl = txMan.getDao(ORGANIZATIONS, Organizations::class.java, idFun)
-        daoImpl.insert(organization)
-    }
+    suspend fun insert(organization: Organizations) = dao().insert(organization)
 
-    suspend fun findById(id: String): Organizations? {
-        val daoImpl = txMan.getDao(ORGANIZATIONS, Organizations::class.java, idFun)
-        return daoImpl.findById(id)
-    }
+    suspend fun findById(id: String): Organizations? = dao().findById(id)
 
-    suspend fun deleteById(id: String) {
-        val daoImpl = txMan.getDao(ORGANIZATIONS, Organizations::class.java, idFun)
-        return daoImpl.deleteById(id)
-    }
+    suspend fun deleteById(id: String) = dao().deleteById(id)
 }

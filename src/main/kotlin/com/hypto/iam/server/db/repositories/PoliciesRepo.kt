@@ -12,39 +12,31 @@ import org.jooq.impl.DAOImpl
 
 object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
 
-    private val idFun = fun (policy: Policies): String {
-        return policy.hrn
-    }
+    private val idFun = fun (policy: Policies) = policy.hrn
 
-    override suspend fun dao(): DAOImpl<PoliciesRecord, Policies, String> {
-        return txMan.getDao(POLICIES, Policies::class.java, idFun)
-    }
+    override suspend fun dao(): DAOImpl<PoliciesRecord, Policies, String> =
+        txMan.getDao(POLICIES, Policies::class.java, idFun)
 
     /**
      * Fetch records that have `organization_id = value`
      */
-    suspend fun fetchByOrganizationId(value: String): List<Policies> {
-        return dao().fetch(POLICIES.ORGANIZATION_ID, value)
-    }
+    suspend fun fetchByOrganizationId(value: String): List<Policies> =
+        dao().fetch(POLICIES.ORGANIZATION_ID, value)
 
     suspend fun fetchByOrganizationIdPaginated(
         organizationId: String,
         paginationContext: PaginationContext
-    ): Result<PoliciesRecord> {
-        val dao = dao()
-        return dao.ctx().selectFrom(dao.table)
-            .where(POLICIES.ORGANIZATION_ID.eq(organizationId))
-            .paginate(POLICIES.HRN, paginationContext)
-            .fetch()
-    }
+    ): Result<PoliciesRecord> = ctx("policies.fetchPaginated")
+        .selectFrom(POLICIES)
+        .where(POLICIES.ORGANIZATION_ID.eq(organizationId))
+        .paginate(POLICIES.HRN, paginationContext)
+        .fetch()
 
     /**
      * Fetch records that have `hrn = value`
      */
-    suspend fun fetchByHrn(hrn: String): PoliciesRecord? {
-        val dao = dao()
-        return dao.ctx().dsl().selectFrom(dao.table).where(POLICIES.HRN.equal(hrn)).fetchOne()
-    }
+    suspend fun fetchByHrn(hrn: String): PoliciesRecord? =
+        ctx("policies.fetchByHrn").selectFrom(POLICIES).where(POLICIES.HRN.equal(hrn)).fetchOne()
 
     suspend fun create(hrn: ResourceHrn, statements: String): PoliciesRecord {
         val record = PoliciesRecord()
@@ -68,8 +60,8 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
 
     suspend fun update(hrn: String, statements: String, version: Int? = null): PoliciesRecord? {
         val condition = POLICIES.HRN.eq(hrn).also { it1 -> version?.let { it1.and(POLICIES.VERSION.eq(it)) } }
-        val dao = dao()
-        return dao.ctx().update(dao.table)
+        return ctx("policies.update")
+            .update(POLICIES)
             .set(POLICIES.STATEMENTS, statements)
             .set(POLICIES.VERSION, POLICIES.VERSION.plus(1))
             .set(POLICIES.UPDATED_AT, LocalDateTime.now())
@@ -79,10 +71,9 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
     }
 
     suspend fun existsByIds(hrns: List<String>): Boolean {
-        val dao = dao()
-        return dao.ctx()
+        return ctx("policies.countByIds")
             .selectCount()
-            .from(dao.table)
+            .from(POLICIES)
             .where(POLICIES.HRN.`in`(hrns))
             .fetchOne(0, Int::class.java) == hrns.size
     }

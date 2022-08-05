@@ -1,6 +1,7 @@
 package com.hypto.iam.server.db.repositories
 
 import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
 import com.hypto.iam.server.db.tables.records.MasterKeysRecord
 import com.hypto.iam.server.utils.MasterKeyUtil
@@ -30,13 +31,6 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
     /**
      * Fetch a unique record that has `id = value`
      */
-    suspend fun fetchById(value: UUID): MasterKeys? {
-        return fetchOne(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.ID, value)
-    }
-
-    /**
-     * Fetch a unique record that has `id = value`
-     */
     suspend fun fetchById(value: String): MasterKeys? {
         return fetchOne(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.ID, UUID.fromString(value))
     }
@@ -53,18 +47,17 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
     suspend fun rotateKey(skipIfPresent: Boolean = false): Boolean {
 
         txMan.wrap {
-            val dao = dao()
-            val c = dao.configuration()
+            val c = dao().configuration()
             if (getMasterKeyOperationLock(c) && shouldRotate(skipIfPresent)) {
 
                 println("Generating key pair")
                 MasterKeyUtil.generateKeyPair()
 
-                c.dsl().update(dao.table)
-                    .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.EXPIRED.value)
+                c.dsl().update(MASTER_KEYS)
+                    .set(MASTER_KEYS.STATUS, Status.EXPIRED.value)
                     .where(
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS.eq(Status.VERIFYING.value),
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.UPDATED_AT.lessThan(
+                        MASTER_KEYS.STATUS.eq(Status.VERIFYING.value),
+                        MASTER_KEYS.UPDATED_AT.lessThan(
                             LocalDateTime.ofInstant(
                                 Instant.now().minusSeconds(appConfig.app.oldKeyTtl),
                                 ZoneOffset.systemDefault()
@@ -72,32 +65,20 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
                         )
                     ).execute()
 
-                c.dsl().update(dao.table)
-                    .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.VERIFYING.value)
-                    .where(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS.eq(Status.SIGNING.value))
+                c.dsl().update(MASTER_KEYS)
+                    .set(MASTER_KEYS.STATUS, Status.VERIFYING.value)
+                    .where(MASTER_KEYS.STATUS.eq(Status.SIGNING.value))
                     .execute()
 
                 c.dsl()
-                    .insertInto(dao.table)
-                    .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.SIGNING.value)
-                    .set(
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PRIVATE_KEY_PEM,
-                        MasterKeyUtil.loadPrivateKeyPem()
-                    )
-                    .set(
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PRIVATE_KEY_DER,
-                        MasterKeyUtil.loadPrivateKeyDer()
-                    )
-                    .set(
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PUBLIC_KEY_PEM,
-                        MasterKeyUtil.loadPublicKeyPem()
-                    )
-                    .set(
-                        com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.PUBLIC_KEY_DER,
-                        MasterKeyUtil.loadPublicKeyDer()
-                    )
-                    .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.CREATED_AT, LocalDateTime.now())
-                    .set(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.UPDATED_AT, LocalDateTime.now())
+                    .insertInto(MASTER_KEYS)
+                    .set(MASTER_KEYS.STATUS, Status.SIGNING.value)
+                    .set(MASTER_KEYS.PRIVATE_KEY_PEM, MasterKeyUtil.loadPrivateKeyPem())
+                    .set(MASTER_KEYS.PRIVATE_KEY_DER, MasterKeyUtil.loadPrivateKeyDer())
+                    .set(MASTER_KEYS.PUBLIC_KEY_PEM, MasterKeyUtil.loadPublicKeyPem())
+                    .set(MASTER_KEYS.PUBLIC_KEY_DER, MasterKeyUtil.loadPublicKeyDer())
+                    .set(MASTER_KEYS.CREATED_AT, LocalDateTime.now())
+                    .set(MASTER_KEYS.UPDATED_AT, LocalDateTime.now())
                     .execute()
             }
         }
