@@ -2,7 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>LongParameterList:DataSetupHelper.kt$DataSetupHelper$( orgId: String, bearerToken: String, policyName: String, accountId: String?, resourceName: String, actionName: String, resourceInstance: String, engine: TestApplicationEngine, effect: PolicyStatement.Effect = PolicyStatement.Effect.allow )</ID>
+    <ID>LongParameterList:DataSetupHelper.kt$DataSetupHelper$( orgId: String, username: String?, bearerToken: String, policyName: String, accountId: String?, resourceName: String, actionName: String, resourceInstance: String, engine: TestApplicationEngine, effect: PolicyStatement.Effect = PolicyStatement.Effect.allow )</ID>
     <ID>LongParameterList:IdentityProvider.kt$IdentityProvider$( identityGroup: IdentityGroup, userName: String, name: String?, phone: String?, status: com.hypto.iam.server.models.User.Status?, verified: Boolean? )</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
@@ -10,6 +10,7 @@
     <ID>MagicNumber:Configuration.kt$60</ID>
     <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn.Companion$"""^hrn:(?&lt;organization&gt;[^:\n]+):(?&lt;accountId&gt;[^:\n]*):(?&lt;resource&gt;[^:/\n]*)/{0,1}(?&lt;resourceInstance&gt;[^/\n:]*)""".toRegex()</ID>
+    <ID>SpreadOperator:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$(emailAttr, emailVerifiedAttr, createdBy, *optionalUserAttrs.toTypedArray())</ID>
     <ID>ThrowsCount:ResourceApi.kt$fun Route.resourceApi()</ID>
     <ID>TooGenericExceptionThrown:AuditEventHandler.kt$AuditEventHandler$throw Exception("few Batch inserts failed")</ID>
     <ID>TooManyFunctions:IdentityProvider.kt$IdentityProvider</ID>
@@ -20,6 +21,6 @@
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$context: RequestContext</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$identityGroup: IdentityGroup</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$userCredentials: AccessTokenCredentials</ID>
-    <ID>UnusedPrivateMember:Configuration.kt$MicrometerConfigs$private fun getNewRelicMeterRegistry(): NewRelicRegistry</ID>
+    <ID>UnusedPrivateMember:TokenApiTest.kt$TokenApiTest.ValidateJwtToken$createdUser: RootUser</ID>
   </CurrentIssues>
 </SmellBaseline>

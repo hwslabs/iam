@@ -778,6 +778,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Arrange
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
+                val username = createdOrganizationResponse.organization.rootUser.username
 
                 (1..2).forEach {
                     with(
@@ -812,7 +813,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                             handleRequest(
                                 HttpMethod.Patch,
                                 "/organizations/${createdOrganization.id}/users/" +
-                                    "${createdUser.username}/attach_policies"
+                                    "${createdOrganizationResponse.organization.rootUser.username}/attach_policies"
                             ) {
                                 val createAssociationRequest = PolicyAssociationRequest(listOf(responseBody.hrn))
                                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -836,7 +837,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.id}/users/${createdUser.username}" +
+                        "/organizations/${createdOrganization.id}/users/$username" +
                             "/policies?pageSize=$pageSize"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -864,7 +865,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.id}/users/${createdUser.username}" +
+                        "/organizations/${createdOrganization.id}/users/$username" +
                             "/policies?pageSize=$pageSize${nextToken?.let { "&nextToken=$it" }}"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -892,7 +893,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Get,
-                        "/organizations/${createdOrganization.id}/users/${createdUser.username}" +
+                        "/organizations/${createdOrganization.id}/users/$username" +
                             "/policies?pageSize=$pageSize${nextToken?.let { "&nextToken=$it" }}"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -926,7 +927,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 val createUser1Request = CreateUserRequest(
-                    username = "testUserName1",
+                    preferredUsername = "testUserName1",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -935,16 +936,15 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     verified = true
                 )
 
-                val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                val (user1, _) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser1Request,
-                    null,
                     this
                 )
 
                 val createUser2Request = CreateUserRequest(
-                    username = "testUserName2",
+                    preferredUsername = "testUserName2",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -952,24 +952,22 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     phone = "+919999999999",
                     verified = true
                 )
-                val policyName = "test-policy"
-                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
-                    organization.id,
-                    null,
-                    IamResources.USER,
-                    "getUserPolicy",
-                    createUser2Request.username
-                )
-                val policyStatements =
-                    listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
-                val policyRequest = CreatePolicyRequest(policyName, policyStatements)
-
-                val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser2Request,
-                    policyRequest,
                     this
+                )
+                DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = user2.username,
+                    bearerToken = rootUserToken,
+                    policyName = "test-policy",
+                    accountId = null,
+                    resourceName = IamResources.USER,
+                    actionName = "getUserPolicy",
+                    resourceInstance = user2.username,
+                    engine = this
                 )
                 with(
                     handleRequest(
@@ -994,7 +992,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 val createUser1Request = CreateUserRequest(
-                    username = "testUserName1",
+                    preferredUsername = "testUserName1",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -1003,15 +1001,14 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     verified = true
                 )
 
-                val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                val (user1, _) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser1Request,
-                    null,
                     this
                 )
                 val createUser2Request = CreateUserRequest(
-                    username = "testUserName2",
+                    preferredUsername = "testUserName2",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -1019,23 +1016,22 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     phone = "+919999999999",
                     verified = true
                 )
-                val policyName = "test-policy"
-                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
-                    organization.id,
-                    null,
-                    IamResources.USER,
-                    "getUserPolicy",
-                    createUser1Request.username
-                )
-                val policyStatements =
-                    listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
-                val policyRequest = CreatePolicyRequest(policyName, policyStatements)
-                val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser2Request,
-                    policyRequest,
                     this
+                )
+                DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = user2.username,
+                    bearerToken = rootUserToken,
+                    policyName = "test-policy",
+                    accountId = null,
+                    resourceName = IamResources.USER,
+                    actionName = "getUserPolicy",
+                    resourceInstance = user1.username,
+                    engine = this
                 )
                 with(
                     handleRequest(

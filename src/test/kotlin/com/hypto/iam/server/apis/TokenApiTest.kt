@@ -78,7 +78,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
         fun `generate token - Accept Json`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
-
+                val username = createdOrganization.organization.rootUser.username
                 with(
                     handleRequest(
                         HttpMethod.Post,
@@ -118,7 +118,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                                 ResourceHrn(
                                                     organization = createdOrganization.organization!!.id,
                                                     resource = IamResources.USER,
-                                                    resourceInstance = createdUser.username
+                                                    resourceInstance = username
                                                 ).toString(),
                                                 ActionHrn(
                                                     organization = createdOrganization.organization!!.id,
@@ -154,7 +154,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
         fun `generate token - Accept Text_Plain`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
-
+                val username = createdOrganization.organization.rootUser.username
                 with(
                     handleRequest(
                         HttpMethod.Post,
@@ -194,7 +194,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                                 ResourceHrn(
                                                     organization = createdOrganization.organization!!.id,
                                                     resource = IamResources.USER,
-                                                    resourceInstance = createdUser.username
+                                                    resourceInstance = username
                                                 ).toString(),
                                                 ActionHrn(
                                                     organization = createdOrganization.organization!!.id,
@@ -531,7 +531,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
         fun `generate and validate action with token - without key rotation`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
-
+                val username = createdOrganization.organization.rootUser.username
                 with(
                     handleRequest(
                         HttpMethod.Post,
@@ -571,7 +571,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                                 ResourceHrn(
                                                     organization = createdOrganization.organization!!.id,
                                                     resource = IamResources.USER,
-                                                    resourceInstance = createdUser.username
+                                                    resourceInstance = username
                                                 ).toString(),
                                                 ActionHrn(
                                                     organization = createdOrganization.organization!!.id,
@@ -634,6 +634,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
         fun `generate token and validate action after key rotation`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+                val username = createdOrganization.organization.rootUser.username
 
                 with(
                     handleRequest(
@@ -680,7 +681,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                                 ResourceHrn(
                                                     organization = createdOrganization.organization!!.id,
                                                     resource = IamResources.USER,
-                                                    resourceInstance = createdUser.username
+                                                    resourceInstance = username
                                                 ).toString(),
                                                 ActionHrn(
                                                     organization = createdOrganization.organization!!.id,
@@ -727,7 +728,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
             userHrn: String = ResourceHrn(
                 organization = createdOrganizationResponse.organization!!.id,
                 resource = IamResources.USER,
-                resourceInstance = createdUser.username
+                resourceInstance = createdOrganizationResponse.organization.rootUser.username
             ).toString(),
             organization: String? = createdOrganizationResponse.organization!!.name,
             expiration: Date = Date.from(Instant.now().plusSeconds(100)),

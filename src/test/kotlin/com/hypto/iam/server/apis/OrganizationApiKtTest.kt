@@ -46,7 +46,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPassword = "testPassword@Hash1"
@@ -56,7 +56,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val requestBody = CreateOrganizationRequest(
                 orgName,
                 RootUser(
-                    username = userName,
+                    preferredUsername = preferredUsername,
                     name = name,
                     passwordHash = testPassword,
                     email = testEmail,
@@ -94,7 +94,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         }
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
@@ -109,7 +109,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                             CreateOrganizationRequest(
                                 orgName,
                                 RootUser(
-                                    username = userName,
+                                    preferredUsername = preferredUsername,
                                     name = name,
                                     passwordHash = testPassword,
                                     email = testEmail,
@@ -133,7 +133,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
@@ -152,7 +152,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val requestBody = CreateOrganizationRequest(
                 orgName,
                 RootUser(
-                    username = userName,
+                    preferredUsername = preferredUsername,
                     name = name,
                     passwordHash = testPassword,
                     email = testEmail,
@@ -193,7 +193,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
@@ -202,7 +202,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val requestBody = CreateOrganizationRequest(
                 orgName,
                 RootUser(
-                    username = userName,
+                    preferredUsername = preferredUsername,
                     name = name,
                     passwordHash = testPassword,
                     email = testEmail,
@@ -229,7 +229,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     fun `get organization with invalid credentials`() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
@@ -243,7 +243,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         CreateOrganizationRequest(
                             orgName,
                             RootUser(
-                                username = userName,
+                                preferredUsername = preferredUsername,
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,
@@ -277,7 +277,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     fun `get organization success`() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
@@ -291,7 +291,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         CreateOrganizationRequest(
                             orgName,
                             RootUser(
-                                username = userName,
+                                preferredUsername = preferredUsername,
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,
@@ -327,7 +327,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     fun `get organization not found`() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
@@ -342,7 +342,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         CreateOrganizationRequest(
                             orgName,
                             RootUser(
-                                username = userName,
+                                preferredUsername = preferredUsername,
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,
@@ -378,7 +378,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val orgDescription = "test-org-description"
-            val userName = "test-user" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
@@ -392,7 +392,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         CreateOrganizationRequest(
                             orgName,
                             RootUser(
-                                username = userName,
+                                preferredUsername = preferredUsername,
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,

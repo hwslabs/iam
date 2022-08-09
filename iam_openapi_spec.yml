@@ -1813,7 +1813,7 @@ components:
         name: ACME Enterprise
         description: Brief description about ACME
         rootUser:
-          username: username
+          preferredUsername: username
           name: Lorem Ipsum
           passwordHash: <password>
           email: root@example.com
@@ -1831,7 +1831,6 @@ components:
     CreateUserRequest:
       summary: A sample create user request
       value:
-        username: Bob
         name: Lorem Ipsum
         passwordHash: nii2du35bdtuethntv3q7416
         email: bob@acme.com
@@ -1945,7 +1944,7 @@ components:
           description: Brief description about ACME
           rootUser:
             hrn: hrn:XlK5h64gND::iam-user/Bob
-            username: Bob
+            username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
             name: Lorem Ipsum
             organizationId: XlK5h64gND
             email: bob@acme.com
@@ -1992,8 +1991,8 @@ components:
     UserPaginatedResponse:
       value:
         data:
-          - hrn: hrn:XlK5h64gND::iam-user/Bob
-            username: Bob
+          - hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+            username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
             name: Lorem Ipsum
             organizationId: XlK5h64gND
             email: bob@acme.com
@@ -2067,8 +2066,8 @@ components:
         name: ACME Enterprise
         description: Brief description about ACME
         rootUser:
-          hrn: hrn:XlK5h64gND::iam-user/Bob
-          username: Bob
+          hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+          username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
           name: Lorem Ipsum
           organizationId: XlK5h64gND
           email: bob@acme.com
@@ -2084,8 +2083,8 @@ components:
     User:
       summary: A sample user
       value:
-        hrn: hrn:XlK5h64gND::iam-user/Bob
-        username: Bob
+        hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+        username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
         name: Lorem Ipsum
         organizationId: XlK5h64gND
         email: bob@acme.com
@@ -2237,7 +2236,7 @@ components:
         - email
         - verified
       properties:
-        username:
+        preferredUsername:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9]{3,50}$
@@ -2263,13 +2262,12 @@ components:
       type: object
       additionalProperties: false
       required:
-        - username
         - name
         - passwordHash
         - email
         - status
       properties:
-        username:
+        preferredUsername:
           type: string
           maxLength: 50
           pattern: ^[A-Za-z0-9]{3,50}$
@@ -2549,6 +2547,9 @@ components:
     CreateOrganizationResponse:
       type: object
       additionalProperties: false
+      required:
+        - organization
+        - rootUserToken
       properties:
         organization:
           $ref: "#/components/schemas/Organization"
@@ -2686,6 +2687,9 @@ components:
         hrn:
           type: string
         username:
+          type: string
+          maxLength: 50
+        preferredUsername:
           type: string
           maxLength: 50
         name:

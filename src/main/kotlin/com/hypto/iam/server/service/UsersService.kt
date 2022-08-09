@@ -48,11 +48,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw UserAlreadyExistException("Email - ${credentials.email} already registered. Unable to create user")
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, credentials.userName)
         val user = identityProvider.createUser(
             RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user", verified),
             identityGroup, credentials
         )
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, user.username)
         userRepo.insert(
             Users(
                 userHrn.toString(), credentials.email, User.Status.enabled.value,
@@ -141,6 +141,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ) = User(
         hrn = userHrn.toString(),
         username = user.username,
+        preferredUsername = user.preferredUsername,
         name = user.name,
         organizationId = userHrn.organization,
         email = user.email,

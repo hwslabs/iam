@@ -95,22 +95,26 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             val listUsersResponse =
                 ListUsersResponse.builder().users(
                     listOf(
-                        UserType.builder().username(createdUser.username).enabled(true).attributes(
-                            listOf(
-                                AttributeType.builder().name(CognitoConstants.ATTRIBUTE_NAME)
-                                    .value("test name")
-                                    .build(),
-                                AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL).value(createdUser.email)
-                                    .build(),
-                                AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PHONE).value(createdUser.phone)
-                                    .build(),
-                                AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED).value("true")
-                                    .build(),
-                                AttributeType.builder().name(
-                                    CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM + CognitoConstants.ATTRIBUTE_CREATED_BY
-                                ).value("iam-system").build()
-                            )
-                        ).userCreateDate(Instant.now()).build()
+                        UserType.builder().username(organizationResponse.organization.rootUser.username)
+                            .enabled(true).attributes(
+                                listOf(
+                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_NAME)
+                                        .value("test name")
+                                        .build(),
+                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                                        .value(createdUser.email)
+                                        .build(),
+                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PHONE)
+                                        .value(createdUser.phone)
+                                        .build(),
+                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED)
+                                        .value("true")
+                                        .build(),
+                                    AttributeType.builder().name(
+                                        CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM + CognitoConstants.ATTRIBUTE_CREATED_BY
+                                    ).value("iam-system").build()
+                                )
+                            ).userCreateDate(Instant.now()).build()
                     )
                 ).build()
             coEvery {

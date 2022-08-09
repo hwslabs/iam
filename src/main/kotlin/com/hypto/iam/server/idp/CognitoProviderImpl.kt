@@ -12,6 +12,7 @@ import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_NAME
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
@@ -55,6 +56,7 @@ object CognitoConstants {
     const val ATTRIBUTE_EMAIL_VERIFIED = "email_verified"
     const val ATTRIBUTE_PHONE = "phone_number"
     const val ATTRIBUTE_CREATED_BY = "createdBy"
+    const val ATTRIBUTE_PREFERRED_USERNAME = "preferred_username"
     const val ATTRIBUTE_VERIFIED = "verified"
     const val ATTRIBUTE_PREFIX_CUSTOM = "custom:"
     const val ACTION_SUPPRESS = "SUPPRESS"
@@ -70,7 +72,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     private val cognitoClient: CognitoIdentityProviderClient by inject()
     private val aliasAttributeTypes = mutableListOf(AliasAttributeType.EMAIL, AliasAttributeType.PREFERRED_USERNAME)
 
-    override suspend fun createIdentityGroup(name: String, userConfiguration: Configuration): IdentityGroup {
+    override suspend fun createIdentityGroup(name: String, configuration: Configuration): IdentityGroup {
         try {
             // Create user pool
             val createUserPoolResponse = cognitoClient.createUserPool(
@@ -145,7 +147,12 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             }
         } catch (e: UsernameExistsException) {
             logger.info(e) { "Error while trying to create user = ${e.message}" }
-            throw UserAlreadyExistException("Username: ${userCredentials.userName} already present in the organization")
+            try {
+                getUser(identityGroup, userCredentials.username)
+                throw UnknownError("Unknown error while trying to create user")
+            } catch (e: com.hypto.iam.server.idp.UserNotFoundException) {
+                throw UserAlreadyExistException("Preferred username already present in the organization")
+            }
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to create user = ${e.message}" }
             throw UnknownException("Unknown error while trying to create user")
@@ -166,9 +173,16 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         val getUserRequest = AdminGetUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
         try {
             val response = cognitoClient.adminGetUser(getUserRequest)
+
+            // Adding this check as admin-get-user will succeed even with preferred_username
+            if (response.username() != userName) {
+                throw UserNotFoundException("User not found")
+            }
+
             val attrs = response.userAttributes()
             return User(
-                response.username(),
+                username = response.username(),
+                preferredUsername = getAttribute(attrs, ATTRIBUTE_PREFERRED_USERNAME),
                 name = getAttribute(attrs, ATTRIBUTE_NAME),
                 phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
                 email = getAttribute(attrs, ATTRIBUTE_EMAIL),
@@ -196,7 +210,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             val userType = response.users().first()
             val attrs = userType.attributes()
             return User(
-                userType.username(),
+                username = userType.username(),
+                preferredUsername = getAttribute(attrs, ATTRIBUTE_PREFERRED_USERNAME),
                 name = getAttribute(attrs, ATTRIBUTE_NAME),
                 email = getAttribute(attrs, ATTRIBUTE_EMAIL),
                 phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
@@ -231,11 +246,13 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                     AdminDisableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
                 cognitoClient.adminDisableUser(request)
             }
+
             com.hypto.iam.server.models.User.Status.enabled -> {
                 val request =
                     AdminEnableUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
                 cognitoClient.adminEnableUser(request)
             }
+
             else -> {} // Do not take any action if Status is NULL
         }
 
@@ -279,37 +296,48 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         identityGroup: IdentityGroup,
         credentials: PasswordCredentials
     ): User {
-        val nameAttr = credentials.name?.let {
-            AttributeType.builder()
-                .name(ATTRIBUTE_NAME)
-                .value(credentials.name).build()
-        }
         val emailAttr = AttributeType.builder()
             .name(ATTRIBUTE_EMAIL)
             .value(credentials.email).build()
         val emailVerifiedAttr = AttributeType.builder()
             .name(ATTRIBUTE_EMAIL_VERIFIED)
             .value(context.verified.toString()).build()
-        val phoneNumberAttr = AttributeType.builder()
-            .name(ATTRIBUTE_PHONE)
-            .value(credentials.phoneNumber).build()
         val createdBy = AttributeType.builder()
             .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY)
             .value(context.requestedPrincipal).build()
 
+        val optionalUserAttrs = mutableListOf<AttributeType>()
+        if (!credentials.phoneNumber.isNullOrEmpty()) {
+            optionalUserAttrs.add(
+                AttributeType.builder()
+                    .name(ATTRIBUTE_PHONE)
+                    .value(credentials.phoneNumber).build()
+            )
+        }
+        if (!credentials.preferredUsername.isNullOrEmpty()) {
+            optionalUserAttrs.add(
+                AttributeType.builder()
+                    .name(ATTRIBUTE_PREFERRED_USERNAME)
+                    .value(credentials.preferredUsername).build()
+            )
+        }
+        if (!credentials.name.isNullOrEmpty()) {
+            optionalUserAttrs.add(
+                AttributeType.builder()
+                    .name(ATTRIBUTE_NAME)
+                    .value(credentials.name).build()
+            )
+        }
+
         // Creates user in cognito
         val userRequest = AdminCreateUserRequest.builder()
             .userPoolId(identityGroup.id)
-            .username(credentials.userName)
+            .username(credentials.username)
             .temporaryPassword(credentials.password)
-            .apply {
-                if (nameAttr == null)
-                    userAttributes(emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
-                else
-                    userAttributes(nameAttr, emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
-            }
+            .userAttributes(emailAttr, emailVerifiedAttr, createdBy, *optionalUserAttrs.toTypedArray())
             .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
             .build()
+
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
 
         // Initiate auth
@@ -318,7 +346,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         // Setting the result in User object
         val attrs = adminCreateUserResponse.user().attributes()
         return User(
-            adminCreateUserResponse.user().username(),
+            username = adminCreateUserResponse.user().username(),
+            preferredUsername = getAttribute(attrs, ATTRIBUTE_PREFERRED_USERNAME),
             name = getAttribute(attrs, ATTRIBUTE_NAME),
             phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
             email = getAttribute(attrs, ATTRIBUTE_EMAIL),
@@ -341,7 +370,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             .userPoolId(identityGroup.id)
             .clientId(identityGroup.metadata[APP_CLIENT_ID])
             .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
-            .authParameters(mapOf("USERNAME" to credentials.userName, "PASSWORD" to credentials.password)).build()
+            .authParameters(mapOf("USERNAME" to credentials.username, "PASSWORD" to credentials.password)).build()
         val initiateAuthResponse = cognitoClient.adminInitiateAuth(initiateAuthRequest)
 
         // Respond to auth challenge flow.
@@ -350,7 +379,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             .clientId(identityGroup.metadata[APP_CLIENT_ID])
             .challengeName(ChallengeNameType.NEW_PASSWORD_REQUIRED)
             .session(initiateAuthResponse.session())
-            .challengeResponses(mapOf("USERNAME" to credentials.userName, "NEW_PASSWORD" to credentials.password))
+            .challengeResponses(mapOf("USERNAME" to credentials.username, "NEW_PASSWORD" to credentials.password))
             .build()
         cognitoClient.adminRespondToAuthChallenge(adminRespondToAuthRequest)
     }
@@ -370,7 +399,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             val users = usersTypes.map { user ->
                 val attrs = user.attributes()
                 User(
-                    user.username(),
+                    username = user.username(),
+                    preferredUsername = getAttribute(attrs, ATTRIBUTE_PREFERRED_USERNAME),
                     name = getAttribute(attrs, ATTRIBUTE_NAME),
                     email = getAttribute(attrs, ATTRIBUTE_EMAIL),
                     verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),

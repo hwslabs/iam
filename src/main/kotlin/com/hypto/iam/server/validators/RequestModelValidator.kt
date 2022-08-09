@@ -159,10 +159,12 @@ fun EmailPasswordCredential.validate(): EmailPasswordCredential {
 // Validations used by ValidationBuilders
 
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
+const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
+const val PREFERRED_USERNAME_REGEX = "^[a-zA-Z0-9_]*\$"
+const val PREFERRED_USERNAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ are supported."
 const val PHONE_NUMBER_REGEX = "^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*\$"
 const val PHONE_NUMBER_REGEX_HINT = "Only characters +, -, 0..9 are supported."
 const val HRN_PREFIX_REGEX = "^hrn:[^\n]*"
-const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
 const val EMAIL_REGEX = "^\\S+@\\S+\\.\\S+\$"
 const val EMAIL_REGEX_HINT = "Email should contain `.`, `@`"
 const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@_#])[A-Za-z\\d@_#]{8,}\$"
@@ -175,7 +177,7 @@ const val ORGANIZATION_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _, - 
 const val CREDENTIALS_EMAIL_INVALID = "Invalid Email"
 const val CREDENTIALS_PASSWORD_INVALID = "Invalid Password"
 
-val nameCheck = Validation<String> {
+val resourceNameCheck = Validation<String> {
     minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
     maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
         "name is ${Constants.MAX_NAME_LENGTH} characters"
@@ -201,11 +203,12 @@ val phoneNumberCheck = Validation<String> {
         "is ${Constants.MINIMUM_PHONE_NUMBER_LENGTH}"
     pattern(PHONE_NUMBER_REGEX) hint PHONE_NUMBER_REGEX_HINT
 }
-val userNameCheck = Validation<String> {
+
+val preferredUserNameCheck = Validation<String> {
     minLength(Constants.MIN_USERNAME_LENGTH) hint "Minimum length expected is ${Constants.MIN_USERNAME_LENGTH}"
     maxLength(Constants.MAX_USERNAME_LENGTH) hint "Maximum length supported for" +
         "name is ${Constants.MAX_USERNAME_LENGTH} characters"
-    pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
+    pattern(PREFERRED_USERNAME_REGEX) hint PREFERRED_USERNAME_REGEX_HINT
 }
 
 val emailCheck = Validation<String> {
@@ -247,9 +250,9 @@ val passwordCheck = Validation<String> {
     minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PASSWORD_LENGTH}"
     pattern(PASSWORD_REGEX) hint PASSWORD_REGEX_HINT
 }
-val rootUserRequestValidation = Validation {
-    RootUser::username required {
-        run(userNameCheck)
+val rootUserRequestValidation = Validation<RootUser> {
+    RootUser::preferredUsername ifPresent {
+        run(preferredUserNameCheck)
     }
     RootUser::name ifPresent {
         run(nameOfUserCheck)
@@ -303,7 +306,7 @@ val createCredentialRequestValidation = Validation<CreateCredentialRequest> {
 
 val createResourceRequestValidation = Validation<CreateResourceRequest> {
     CreateResourceRequest::name required {
-        run(nameCheck)
+        run(resourceNameCheck)
     }
     CreateResourceRequest::description ifPresent {
         run(descriptionCheck)
@@ -318,7 +321,7 @@ val updateResourceRequestValidation = Validation<UpdateResourceRequest> {
 
 val createActionRequestValidation = Validation<CreateActionRequest> {
     CreateActionRequest::name required {
-        run(nameCheck)
+        run(resourceNameCheck)
     }
     CreateActionRequest::description ifPresent {
         run(descriptionCheck)
@@ -333,7 +336,7 @@ val updateActionRequestValidation = Validation<UpdateActionRequest> {
 
 val createPolicyRequestValidation = Validation<CreatePolicyRequest> {
     CreatePolicyRequest::name required {
-        run(nameCheck)
+        run(resourceNameCheck)
     }
     CreatePolicyRequest::statements required {
         minItems(MIN_POLICY_STATEMENTS)
@@ -366,8 +369,8 @@ val policyAssociationRequestValidation = Validation<PolicyAssociationRequest> {
 }
 
 val createUserRequestValidation = Validation<CreateUserRequest> {
-    CreateUserRequest::username required {
-        run(userNameCheck)
+    CreateUserRequest::preferredUsername ifPresent {
+        run(preferredUserNameCheck)
     }
     CreateUserRequest::name required {
         run(nameOfUserCheck)
