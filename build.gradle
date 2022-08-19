@@ -323,8 +323,14 @@ ktlint {
 //        include fileTree("scripts/")
 //    }
     filter {
-        exclude("**/generated/**")
-        exclude("**/generated-src/**")
+//       Workaround to exclude directory from KtLint
+//       https://github.com/JLLeitschuh/ktlint-gradle/issues/579
+        exclude {
+            it.file.toString().contains("generated/")
+        }
+        exclude {
+            it.file.toString().contains("generated-src/")
+        }
         include("**/kotlin/**")
     }
 }
