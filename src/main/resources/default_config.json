@@ -1,7 +1,7 @@
 {
   "database": {
     "host": "localhost",
-    "port": "5435",
+    "port": "4921",
     "username": "root",
     "password": "password",
     "maximum_pool_size": 32,

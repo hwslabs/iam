@@ -118,7 +118,7 @@ flyway {
     configurations = ['flywayMigration']
     user = System.getenv("database__username") ?: "root"
     password = System.getenv("database__password") ?: "password"
-    url = "jdbc:postgresql://${System.getenv("database__host") ?: "localhost"}:${System.getenv("database__port") ?: "5435"}/iam"
+    url = "jdbc:postgresql://${System.getenv("database__host") ?: "localhost"}:${System.getenv("database__port") ?: "4921"}/iam"
 }
 
 jooq {
@@ -451,8 +451,13 @@ tasks.named('generateJooq').configure {
 compileKotlin.dependsOn clean, tasks.named("detekt"), ktlintFormat, generateJooq, generateOpenAPIModels
 
 gradle.taskGraph.whenReady { graph ->
-    if (!graph.hasTask(dockerDistJar)) {
-        shadowJar.enabled = false
-        distZip.enabled = false
-    }
+  def shadowJarEnabled = gradle.startParameter.taskRequests
+    .find {it.args.find {it.contains("shadowJar")} != null  } != null
+    println(gradle.startParameter.taskRequests)
+    println(shadowJarEnabled)
+  if (!shadowJarEnabled) {
+    gradle.startParameter.excludedTaskNames += "shadowJar"
+    shadowJar.enabled = false
+    distZip.enabled = false
+  }
 }
