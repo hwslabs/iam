@@ -4,6 +4,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
 import java.io.InputStreamReader
+import java.nio.file.Files
 
 object MasterKeyUtil {
 
@@ -15,10 +16,14 @@ object MasterKeyUtil {
      */
     fun generateKeyPair() {
         try {
-            val scriptPath = this::class.java.classLoader.getResource("generate_key_pair.sh")?.path
-            println(scriptPath)
+            val scriptStream = this::class.java.getResourceAsStream("/generate_key_pair.sh")
+            requireNotNull(scriptStream) {
+                "Script not found"
+            }
+            val file = File("/tmp/generate_key_pair.sh")
+            Files.copy(scriptStream, file.toPath())
 
-            val process = Runtime.getRuntime().exec("/bin/bash $scriptPath", null, null)
+            val process = Runtime.getRuntime().exec("/bin/bash ${file.absolutePath}", null, null)
             val output = StringBuilder()
             val reader = BufferedReader(InputStreamReader(process.inputStream))
 
