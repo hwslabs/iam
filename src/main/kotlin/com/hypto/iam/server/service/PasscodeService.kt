@@ -1,5 +1,6 @@
 package com.hypto.iam.server.service
 
+import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.exceptions.PasscodeLimitExceededException
@@ -14,12 +15,22 @@ import software.amazon.awssdk.services.ses.SesClient
 import software.amazon.awssdk.services.ses.model.Destination
 import software.amazon.awssdk.services.ses.model.SendTemplatedEmailRequest
 
+data class ResetPasswordTemplateData(
+    val link: String,
+    val name: String
+)
+
+data class SignupTemplateData(
+    val link: String
+)
+
 class PasscodeServiceImpl : KoinComponent, PasscodeService {
     private val sesClient: SesClient by inject()
     private val appConfig: AppConfig by inject()
     private val idGenerator: ApplicationIdUtil.Generator by inject()
     private val usersService: UsersService by inject()
     private val passcodeRepo: PasscodeRepo by inject()
+    private val gson: Gson by inject()
 
     override suspend fun verifyEmail(
         email: String,
@@ -46,13 +57,16 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return BaseSuccessResponse(response)
     }
 
-    private suspend fun sendSignupPasscode(email: String, passcode: String): Boolean {
+    private fun sendSignupPasscode(email: String, passcode: String): Boolean {
         val link = "${appConfig.app.baseUrl}/signup?passcode=$passcode&" +
             "email=${Base64.getEncoder().encodeToString(email.toByteArray())}"
+        val templateData = SignupTemplateData(link)
         val emailRequest = SendTemplatedEmailRequest.builder()
-            .source(appConfig.app.senderEmailAddress).template(appConfig.app.signUpEmailTemplate).templateData(
-                "{\"link\":\"$link\"}"
-            ).destination(Destination.builder().toAddresses(email).build()).build()
+            .source(appConfig.app.senderEmailAddress)
+            .template(appConfig.app.signUpEmailTemplate)
+            .templateData(gson.toJson(templateData))
+            .destination(Destination.builder().toAddresses(email).build())
+            .build()
         sesClient.sendTemplatedEmail(emailRequest)
         return true
     }
@@ -62,10 +76,13 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val link =
             "${appConfig.app.baseUrl}/organizations/${user.organizationId}/users/resetPassword?" +
                 "passcode=$passcode&email=${Base64.getEncoder().encodeToString(email.toByteArray())}"
+        val templateData = ResetPasswordTemplateData(link, user.name)
         val emailRequest = SendTemplatedEmailRequest.builder()
-            .source(appConfig.app.senderEmailAddress).template(appConfig.app.resetPasswordEmailTemplate).templateData(
-                "{\"link\":\"$link\"}"
-            ).destination(Destination.builder().toAddresses(user.email).build()).build()
+            .source(appConfig.app.senderEmailAddress)
+            .template(appConfig.app.resetPasswordEmailTemplate)
+            .templateData(gson.toJson(templateData))
+            .destination(Destination.builder().toAddresses(user.email).build())
+            .build()
         sesClient.sendTemplatedEmail(emailRequest)
         return true
     }
