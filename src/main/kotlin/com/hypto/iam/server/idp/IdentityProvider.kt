@@ -70,7 +70,7 @@ abstract class UserCredentials {
 
 data class PasswordCredentials(
     override val userName: String,
-    val name: String,
+    val name: String?,
     val email: String,
     val phoneNumber: String,
     val password: String

@@ -55,7 +55,13 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             lateinit var orgId: String
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                RootUser(userName, name, testPassword, testEmail, verified)
+                RootUser(
+                    username = userName,
+                    name = name,
+                    passwordHash = testPassword,
+                    email = testEmail,
+                    verified = verified
+                )
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -82,9 +88,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         declareMock<PasscodeRepo> {
             coEvery {
                 getValidPasscode(
-                    any<String>(),
-                    any<VerifyEmailRequest.Purpose>(),
-                    any<String>()
+                    any<String>(), any<VerifyEmailRequest.Purpose>(), any<String>()
                 )
             } returns null
         }
@@ -104,7 +108,14 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                         gson.toJson(
                             CreateOrganizationRequest(
                                 orgName,
-                                RootUser(userName, name, testPassword, testEmail, true, testPhone)
+                                RootUser(
+                                    username = userName,
+                                    name = name,
+                                    passwordHash = testPassword,
+                                    email = testEmail,
+                                    phone = testPhone,
+                                    verified = true
+                                )
                             )
                         )
                     )
@@ -132,8 +143,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             lateinit var orgId: String
             val verifyRequestBody = VerifyEmailRequest(
-                email = testEmail,
-                purpose = VerifyEmailRequest.Purpose.signup
+                email = testEmail, purpose = VerifyEmailRequest.Purpose.signup
             )
             handleRequest(HttpMethod.Post, "/verifyEmail") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -141,7 +151,14 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             }
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                RootUser(userName, name, testPassword, testEmail, verified, testPhone)
+                RootUser(
+                    username = userName,
+                    name = name,
+                    passwordHash = testPassword,
+                    email = testEmail,
+                    phone = testPhone,
+                    verified = true
+                )
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -150,12 +167,10 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     setBody(gson.toJson(requestBody))
                 }
             ) {
-                val responseBody =
-                    gson.fromJson(response.content, CreateOrganizationResponse::class.java)
+                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(
-                    ContentType.Application.Json.withCharset(UTF_8),
-                    response.contentType()
+                    ContentType.Application.Json.withCharset(UTF_8), response.contentType()
                 )
 
                 orgId = responseBody.organization!!.id
@@ -170,8 +185,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     @Test
     fun `create organization - rollback on error`() {
 
-        @Suppress("TooGenericExceptionThrown")
-        declareMock<OrganizationRepo> {
+        @Suppress("TooGenericExceptionThrown") declareMock<OrganizationRepo> {
             coEvery { this@declareMock.insert(any<Organizations>()) } coAnswers {
                 throw Exception("Random DB error occurred")
             }
@@ -187,7 +201,14 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateOrganizationRequest(
                 orgName,
-                RootUser(userName, name, testPassword, testEmail, true, testPhone)
+                RootUser(
+                    username = userName,
+                    name = name,
+                    passwordHash = testPassword,
+                    email = testEmail,
+                    phone = testPhone,
+                    verified = true
+                )
             )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
@@ -221,7 +242,14 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            RootUser(userName, name, testPassword, testEmail, true, testPhone)
+                            RootUser(
+                                username = userName,
+                                name = name,
+                                passwordHash = testPassword,
+                                email = testEmail,
+                                phone = testPhone,
+                                verified = true
+                            )
                         )
                     )
                 )
@@ -262,7 +290,14 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            RootUser(userName, name, testPassword, testEmail, true, testPhone)
+                            RootUser(
+                                username = userName,
+                                name = name,
+                                passwordHash = testPassword,
+                                email = testEmail,
+                                phone = testPhone,
+                                verified = true
+                            )
                         )
                     )
                 )
@@ -306,7 +341,14 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            RootUser(userName, name, testPassword, testEmail, true, testPhone)
+                            RootUser(
+                                username = userName,
+                                name = name,
+                                passwordHash = testPassword,
+                                email = testEmail,
+                                phone = testPhone,
+                                verified = true
+                            )
                         )
                     )
                 )
@@ -318,8 +360,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 handleRequest(HttpMethod.Get, "/organizations/inValidOrganizationId") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
+                        HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}"
                     )
                 }
 
@@ -350,7 +391,14 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     gson.toJson(
                         CreateOrganizationRequest(
                             orgName,
-                            RootUser(userName, name, testPassword, testEmail, true, testPhone),
+                            RootUser(
+                                username = userName,
+                                name = name,
+                                passwordHash = testPassword,
+                                email = testEmail,
+                                phone = testPhone,
+                                verified = true
+                            ),
                             orgDescription
                         )
                     )

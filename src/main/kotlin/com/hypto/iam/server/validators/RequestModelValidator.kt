@@ -247,11 +247,11 @@ val passwordCheck = Validation<String> {
     minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PASSWORD_LENGTH}"
     pattern(PASSWORD_REGEX) hint PASSWORD_REGEX_HINT
 }
-val rootUserRequestValidation = Validation<RootUser> {
+val rootUserRequestValidation = Validation {
     RootUser::username required {
         run(userNameCheck)
     }
-    RootUser::name required {
+    RootUser::name ifPresent {
         run(nameOfUserCheck)
     }
     RootUser::phone ifPresent {
