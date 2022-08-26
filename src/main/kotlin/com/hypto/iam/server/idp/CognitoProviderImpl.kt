@@ -279,9 +279,11 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         identityGroup: IdentityGroup,
         credentials: PasswordCredentials
     ): User {
-        val nameAttr = AttributeType.builder()
-            .name(ATTRIBUTE_NAME)
-            .value(credentials.name).build()
+        val nameAttr = credentials.name?.let {
+            AttributeType.builder()
+                .name(ATTRIBUTE_NAME)
+                .value(credentials.name).build()
+        }
         val emailAttr = AttributeType.builder()
             .name(ATTRIBUTE_EMAIL)
             .value(credentials.email).build()
@@ -300,7 +302,12 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             .userPoolId(identityGroup.id)
             .username(credentials.userName)
             .temporaryPassword(credentials.password)
-            .userAttributes(nameAttr, emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
+            .apply {
+                if (nameAttr == null)
+                    userAttributes(emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
+                else
+                    userAttributes(nameAttr, emailAttr, emailVerifiedAttr, phoneNumberAttr, createdBy)
+            }
             .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
             .build()
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
