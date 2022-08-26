@@ -1017,6 +1017,9 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
+      security:
+        - basicAuth: [ ]
+        - bearerAuth: [ ]
 
   /token:
     post:
@@ -1038,6 +1041,9 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
+      security:
+        - basicAuth: [ ]
+        - bearerAuth: [ ]
 
   /validate:
     post:
@@ -1116,6 +1122,9 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
+    basicAuth:
+      type: http
+      scheme: basic
 
   parameters:
     user_name:
