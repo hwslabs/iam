@@ -46,6 +46,9 @@ inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
                     "Unknown Error Occurred"
                 }
         )
+        if (statusCode.value == HttpStatusCode.InternalServerError.value) {
+            logger.error(cause) { "**** Attention: Internal Server Error ****" }
+        }
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,

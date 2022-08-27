@@ -141,6 +141,7 @@ jooq {
                         inputSchema = 'public'
                         recordVersionFields = 'lock_version' // fields used for optimistic locking
                         recordTimestampFields = 'lock_timestamp' // fields used for optimistic locking
+                        excludes = ["flyway_.*", "AuditEntriesY_.*"]
 //                        forcedTypes {
 //                            forcedType {
 //                                name = 'varchar'
