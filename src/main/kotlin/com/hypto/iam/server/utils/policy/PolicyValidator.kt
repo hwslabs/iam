@@ -6,8 +6,12 @@ import org.casbin.jcasbin.main.Enforcer
 import org.casbin.jcasbin.persist.file_adapter.FileAdapter
 
 object PolicyValidator {
-    private val modelPath = this::class.java.classLoader.getResource("casbin_model.conf")?.path
-    private val model = newModel(modelPath, "")
+    private val modelStream = this::class.java.getResourceAsStream("/casbin_model.conf")
+    private val model = modelStream?.let { newModel(String(it.readAllBytes(), Charsets.UTF_8)) }
+
+    init {
+        requireNotNull(modelStream) { "casbin_model.conf not found in resources" }
+    }
 
     fun validate(policyBuilder: PolicyBuilder, policyRequest: PolicyRequest): Boolean {
         return validate(policyBuilder.stream(), policyRequest)
