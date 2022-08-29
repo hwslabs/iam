@@ -147,6 +147,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             }
         } catch (e: UsernameExistsException) {
             logger.info(e) { "Error while trying to create user = ${e.message}" }
+            // We get same error for duplicate username as well as duplicate preferredUsername
+            // If we can fetch the user, with the same username,
+            //  then we throw an exception as our random generated username already exists
+            // Or else we throw a exception stating duplicate preferredUsername already exists.
             try {
                 getUser(identityGroup, userCredentials.username)
                 throw UnknownError("Unknown error while trying to create user")
@@ -174,7 +178,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         try {
             val response = cognitoClient.adminGetUser(getUserRequest)
 
-            // Adding this check as admin-get-user will succeed even with preferred_username
+            // Adding this check as admin-get-user will succeed even with preferredUsername
             if (response.username() != userName) {
                 throw UserNotFoundException("User not found")
             }
