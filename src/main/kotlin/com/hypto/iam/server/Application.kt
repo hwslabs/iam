@@ -28,9 +28,9 @@ import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Authorization
-import com.hypto.iam.server.security.EmailPasswordCredential
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
+import com.hypto.iam.server.security.UsernamePasswordCredential
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
 import com.hypto.iam.server.service.DatabaseFactory.pool
@@ -181,11 +181,9 @@ fun Application.handleRequest() {
                     )
 
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    EmailPasswordCredential(credentials.name, credentials.password)
+                    UsernamePasswordCredential(credentials.name, credentials.password)
                 )
-                if (principal != null) {
-                    response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
-                }
+                response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
                 return@validate principal
             }
         }

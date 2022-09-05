@@ -172,14 +172,15 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         TODO("Not implemented")
     }
 
-    override suspend fun getUser(identityGroup: IdentityGroup, userName: String): User {
+    override suspend fun getUser(identityGroup: IdentityGroup, userName: String, isAliasUsername: Boolean): User {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         val getUserRequest = AdminGetUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
         try {
             val response = cognitoClient.adminGetUser(getUserRequest)
 
-            // Adding this check as admin-get-user will succeed even with preferredUsername
-            if (response.username() != userName) {
+            // Adding this check as admin-get-user will succeed with alias usernames
+            // We will be supporting aliasUsernames only for authentication purposes
+            if (!isAliasUsername && response.username() != userName) {
                 throw UserNotFoundException("User not found")
             }
 
@@ -452,7 +453,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 .authFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
                 .authParameters(mapOf("USERNAME" to userName, "PASSWORD" to password)).build()
             val initiateAuthResponse = cognitoClient.adminInitiateAuth(initiateAuthRequest)
-            return getUser(identityGroup, userName)
+            return getUser(identityGroup, userName, true)
         } catch (e: NotAuthorizedException) {
             logger.info { "Invalid username/password combo from user" }
             throw AuthenticationException("Invalid username and password combination")

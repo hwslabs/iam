@@ -31,7 +31,7 @@ import com.hypto.iam.server.models.UpdateResourceRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.ValidationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.security.EmailPasswordCredential
+import com.hypto.iam.server.security.UsernamePasswordCredential
 import io.konform.validation.Validation
 import io.konform.validation.jsonschema.maxItems
 import io.konform.validation.jsonschema.maxLength
@@ -152,8 +152,8 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     return verifyEmailRequestValidation.validateAndThrowOnFailure(this)
 }
 
-fun EmailPasswordCredential.validate(): EmailPasswordCredential {
-    return emailPasswordCredentialValidation.validateAndThrowOnFailure(this)
+fun UsernamePasswordCredential.validate(): UsernamePasswordCredential {
+    return usernamePasswordCredentialValidation.validateAndThrowOnFailure(this)
 }
 
 // Validations used by ValidationBuilders
@@ -266,11 +266,6 @@ val rootUserRequestValidation = Validation<RootUser> {
     RootUser::passwordHash required {
         run(passwordCheck)
     }
-}
-
-val credentialEmailCheck = Validation<String> {
-    minLength(Constants.MIN_EMAIL_LENGTH) hint CREDENTIALS_EMAIL_INVALID
-    pattern(EMAIL_REGEX) hint CREDENTIALS_EMAIL_INVALID
 }
 
 val credentialPasswordCheck = Validation<String> {
@@ -417,11 +412,11 @@ val verifyEmailRequestValidation = Validation<VerifyEmailRequest> {
     VerifyEmailRequest::purpose required {}
 }
 
-val emailPasswordCredentialValidation = Validation<EmailPasswordCredential> {
-    EmailPasswordCredential::email required {
-        run(credentialEmailCheck)
+val usernamePasswordCredentialValidation = Validation<UsernamePasswordCredential> {
+    UsernamePasswordCredential::username required {
+        minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
     }
-    EmailPasswordCredential::password required {
+    UsernamePasswordCredential::password required {
         run(credentialPasswordCheck)
     }
 }

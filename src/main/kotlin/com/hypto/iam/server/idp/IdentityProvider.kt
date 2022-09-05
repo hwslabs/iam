@@ -21,7 +21,7 @@ interface IdentityProvider {
     /**
      * Gets user details for the given username. If no user available with the username this will throw Exception
      */
-    suspend fun getUser(identityGroup: IdentityGroup, userName: String): User
+    suspend fun getUser(identityGroup: IdentityGroup, userName: String, isAliasUsername: Boolean = false): User
     suspend fun updateUser(
         identityGroup: IdentityGroup,
         userName: String,
