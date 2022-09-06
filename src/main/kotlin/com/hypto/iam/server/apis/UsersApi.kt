@@ -15,6 +15,7 @@ import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.UserPolicyService
 import com.hypto.iam.server.service.UsersService
+import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
@@ -37,6 +38,7 @@ fun Route.usersApi() {
     val gson: Gson by inject()
     val hrnFactory: HrnFactory by inject()
     val usersService: UsersService by inject()
+    val idGenerator: ApplicationIdUtil.Generator by inject()
 
     // **** User management apis ****//
 
@@ -48,8 +50,10 @@ fun Route.usersApi() {
         post("/organizations/{organization_id}/users") {
             val organizationId = call.parameters["organization_id"]!!
             val request = call.receive<CreateUserRequest>().validate()
+            val username = idGenerator.username()
             val passwordCredentials = PasswordCredentials(
-                userName = request.username,
+                username = username,
+                preferredUsername = request.preferredUsername,
                 name = request.name,
                 email = request.email,
                 phoneNumber = request.phone ?: "",

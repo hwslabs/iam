@@ -44,19 +44,28 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
 
-        if (UserRepo.existsByEmail(credentials.email, organizationId, appConfig.app.uniqueUsersAcrossOrganizations))
-            throw UserAlreadyExistException("Email - ${credentials.email} already registered. Unable to create user")
+        if (userRepo.existsByAliasUsername(
+                credentials.preferredUsername,
+                credentials.email,
+                organizationId,
+                appConfig.app.uniqueUsersAcrossOrganizations
+            )
+        )
+            throw UserAlreadyExistException(
+                "Email - ${credentials.email}  or Username - ${credentials.preferredUsername} already registered." +
+                    "Unable to create user"
+            )
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, credentials.userName)
         val user = identityProvider.createUser(
             RequestContext(organizationId = organizationId, requestedPrincipal = createdBy ?: "unknown user", verified),
             identityGroup, credentials
         )
+        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, user.username)
         userRepo.insert(
             Users(
                 userHrn.toString(), credentials.email, User.Status.enabled.value,
-                organizationId, LocalDateTime.now(), LocalDateTime.now(), verified, false
+                organizationId, LocalDateTime.now(), LocalDateTime.now(), verified, false, credentials.preferredUsername
             )
         )
         return getUser(userHrn, user)
@@ -141,6 +150,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ) = User(
         hrn = userHrn.toString(),
         username = user.username,
+        preferredUsername = user.preferredUsername,
         name = user.name,
         organizationId = userHrn.organization,
         email = user.email,
@@ -203,14 +213,14 @@ class UsersServiceImpl : KoinComponent, UsersService {
         return getUser(userHrn, user)
     }
 
-    override suspend fun authenticate(email: String, password: String): User {
-        val userRecord = userRepo.findByEmail(email)
+    override suspend fun authenticate(username: String, password: String): User {
+        val userRecord = userRepo.findByAliasUsername(username)
             ?: throw AuthenticationException("Invalid username and password combination")
         val org = organizationRepo.findById(userRecord.organizationId)
             ?: throw InternalException("Internal error while trying to authenticate the identity.")
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        val user = identityProvider.authenticate(identityGroup, email, password)
+        val user = identityProvider.authenticate(identityGroup, username, password)
         val userHrn = ResourceHrn(userRecord.organizationId, "", IamResources.USER, user.username)
         return getUser(userHrn, user)
     }
@@ -242,7 +252,7 @@ interface UsersService {
 
     suspend fun deleteUser(organizationId: String, userName: String): BaseSuccessResponse
     suspend fun authenticate(organizationId: String, userName: String, password: String): User
-    suspend fun authenticate(email: String, password: String): User
+    suspend fun authenticate(username: String, password: String): User
     suspend fun getUserByEmail(organizationId: String?, email: String): User
     suspend fun setUserPassword(organizationId: String, userName: String, password: String): BaseSuccessResponse
     suspend fun changeUserPassword(

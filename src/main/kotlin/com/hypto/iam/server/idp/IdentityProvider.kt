@@ -21,7 +21,7 @@ interface IdentityProvider {
     /**
      * Gets user details for the given username. If no user available with the username this will throw Exception
      */
-    suspend fun getUser(identityGroup: IdentityGroup, userName: String): User
+    suspend fun getUser(identityGroup: IdentityGroup, userName: String, isAliasUsername: Boolean = false): User
     suspend fun updateUser(
         identityGroup: IdentityGroup,
         userName: String,
@@ -54,6 +54,7 @@ data class IdentityGroup(
 
 data class User(
     val username: String,
+    val preferredUsername: String?,
     val name: String,
     val phoneNumber: String,
     val email: String,
@@ -65,19 +66,20 @@ data class User(
 )
 
 abstract class UserCredentials {
-    abstract val userName: String
+    abstract val username: String
 }
 
 data class PasswordCredentials(
-    override val userName: String,
+    override val username: String,
     val name: String?,
     val email: String,
     val phoneNumber: String,
-    val password: String
+    val password: String,
+    val preferredUsername: String?
 ) : UserCredentials()
 
 data class AccessTokenCredentials(
-    override val userName: String,
+    override val username: String,
     val email: String,
     val phoneNumber: String,
     val accessToken: String

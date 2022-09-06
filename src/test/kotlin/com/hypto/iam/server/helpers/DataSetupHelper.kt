@@ -51,7 +51,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
 
     fun createOrganization(
         engine: TestApplicationEngine,
-        userName: String = "test-user" + IdGenerator.randomId()
+        preferredUsername: String = "user" + IdGenerator.randomId()
     ): Pair<CreateOrganizationResponse, RootUser> {
         with(engine) {
             // Create organization
@@ -62,7 +62,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
             val testPassword = "testPassword@Hash1"
 
             val rootUser = RootUser(
-                username = userName,
+                preferredUsername = preferredUsername,
                 name = name,
                 passwordHash = testPassword,
                 email = testEmail,
@@ -111,11 +111,10 @@ object DataSetupHelper : AutoCloseKoinTest() {
         }
     }
 
-    fun createUserWithPolicy(
+    fun createUser(
         orgId: String,
         bearerToken: String,
         createUserRequest: CreateUserRequest,
-        policy: CreatePolicyRequest?,
         engine: TestApplicationEngine
     ): Pair<User, Credential> {
         with(engine) {
@@ -126,41 +125,16 @@ object DataSetupHelper : AutoCloseKoinTest() {
             }
             val createdUser = gson
                 .fromJson(createUserCall.response.content, User::class.java)
-
-            if (policy != null) {
-                val policyRequestCall = handleRequest(
-                    HttpMethod.Post,
-                    "/organizations/$orgId/policies"
-                ) {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $bearerToken")
-                    setBody(gson.toJson(policy))
-                }
-                val createPolicy = gson.fromJson(policyRequestCall.response.content, Policy::class.java)
-
-                handleRequest(
-                    HttpMethod.Patch,
-                    "/organizations/$orgId/users/" +
-                        "${createdUser.username}/attach_policies"
-                ) {
-                    val createAssociationRequest = PolicyAssociationRequest(listOf(createPolicy.hrn))
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(
-                        HttpHeaders.Authorization,
-                        "Bearer $bearerToken"
-                    )
-                    setBody(gson.toJson(createAssociationRequest))
-                }
-            }
-
-            val credential = createCredential(orgId, createdUser.username, bearerToken, engine)
+            val credential =
+                createCredential(orgId, createdUser.username, bearerToken, engine)
 
             return Pair(createdUser, credential)
         }
     }
 
-    fun createPolicy(
+    fun createAndAttachPolicy(
         orgId: String,
+        username: String?,
         bearerToken: String,
         policyName: String,
         accountId: String?,
@@ -190,7 +164,24 @@ object DataSetupHelper : AutoCloseKoinTest() {
                 setBody(gson.toJson(requestBody))
             }
 
-            return gson.fromJson(createPolicyCall.response.content, Policy::class.java)
+            val policy = gson.fromJson(createPolicyCall.response.content, Policy::class.java)
+
+            if (username != null) {
+                handleRequest(
+                    HttpMethod.Patch,
+                    "/organizations/$orgId/users/" +
+                        "$username/attach_policies"
+                ) {
+                    val createAssociationRequest = PolicyAssociationRequest(listOf(policy.hrn))
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer $bearerToken"
+                    )
+                    setBody(gson.toJson(createAssociationRequest))
+                }
+            }
+            return policy
         }
     }
 

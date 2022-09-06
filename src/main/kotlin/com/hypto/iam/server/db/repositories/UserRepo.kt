@@ -11,15 +11,26 @@ import org.jooq.impl.DSL
 object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
     private val idFun = fun(user: Users) = user.hrn
+    private val aliasUsernames = listOf(USERS.EMAIL, USERS.PREFERRED_USERNAME)
 
     override suspend fun dao(): DAOImpl<UsersRecord, Users, String> =
         txMan.getDao(com.hypto.iam.server.db.tables.Users.USERS, Users::class.java, idFun)
 
     suspend fun insert(user: Users) = dao().insert(user)
 
-    suspend fun existsByEmail(email: String, organizationId: String, uniqueCheck: Boolean = false): Boolean {
+    suspend fun existsByAliasUsername(
+        preferredUsername: String?,
+        email: String,
+        organizationId: String,
+        uniqueCheck: Boolean = false
+    ): Boolean {
+        val conditions = mutableListOf(USERS.EMAIL.eq(email))
+        if (!preferredUsername.isNullOrEmpty()) {
+            conditions.add(USERS.PREFERRED_USERNAME.eq(preferredUsername))
+        }
+
         var builder = DSL.selectFrom(USERS)
-            .where(USERS.EMAIL.eq(email))
+            .where(DSL.or(conditions))
             .and(USERS.DELETED.eq(false))
 
         builder = if (uniqueCheck) {
@@ -33,7 +44,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
         }
 
-        return ctx("users.existsByEmail").fetchExists(builder)
+        return ctx("users.existsByAliasUsername").fetchExists(builder)
     }
 
     suspend fun update(hrn: String, status: User.Status?, verified: Boolean?): UsersRecord? {
@@ -50,10 +61,22 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         .set(USERS.DELETED, true)
         .where(USERS.HRN.eq(hrn))
         .returning().fetchOne()
+
     suspend fun findByEmail(email: String): UsersRecord? = ctx("users.findByEmail")
         .selectFrom(USERS)
         .where(USERS.EMAIL.eq(email))
         .and(USERS.DELETED.eq(false))
         .and(USERS.VERIFIED.eq(true))
         .fetchOne()
+
+    suspend fun findByAliasUsername(aliasUsername: String): UsersRecord? {
+        val conditions = DSL.or(aliasUsernames.map { it.eq(aliasUsername) })
+
+        return ctx("users.findByAliasUsername")
+            .selectFrom(USERS)
+            .where(conditions)
+            .and(USERS.DELETED.eq(false))
+            .and(USERS.VERIFIED.eq(true))
+            .fetchOne()
+    }
 }

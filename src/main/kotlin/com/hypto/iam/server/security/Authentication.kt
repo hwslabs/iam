@@ -48,7 +48,7 @@ abstract class IamPrincipal : Principal {
 }
 
 /** Class which stores email and password authenticated using Unique Basic Auth */
-data class EmailPasswordCredential(val email: String, val password: String)
+data class UsernamePasswordCredential(val username: String, val password: String)
 
 /** Class to store the Principal authenticated using ApiKey auth **/
 data class ApiPrincipal(
@@ -77,7 +77,9 @@ class TokenAuthenticationProvider internal constructor(
     override suspend fun onAuthenticate(context: AuthenticationContext) {
         val call = context.call
         val credentials = call.request.tokenAuthenticationCredentials(tokenKeyName, tokenKeyLocation) {
-            if (!authSchemeExists) { return@tokenAuthenticationCredentials it }
+            if (!authSchemeExists) {
+                return@tokenAuthenticationCredentials it
+            }
             @Suppress("TooGenericExceptionCaught")
             try {
                 val result = when (val header = parseAuthorizationHeader(it)) {
@@ -169,7 +171,11 @@ fun ApplicationRequest.tokenAuthenticationCredentials(
     val result = if (transform != null && value != null) {
         transform.invoke(value)
     } else value
-    val type = if (result != null && isIamJWT(result)) { TokenType.JWT } else { TokenType.CREDENTIAL }
+    val type = if (result != null && isIamJWT(result)) {
+        TokenType.JWT
+    } else {
+        TokenType.CREDENTIAL
+    }
     return when (result) {
         null -> null
         else -> TokenCredential(result, type)

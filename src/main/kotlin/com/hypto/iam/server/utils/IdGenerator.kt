@@ -1,6 +1,7 @@
 package com.hypto.iam.server.utils
 
 import java.time.Instant
+import java.util.UUID
 import java.util.concurrent.ThreadLocalRandom
 import kotlin.streams.asSequence
 
@@ -64,5 +65,9 @@ object IdGenerator {
         val timeId = numberToId(Instant.now().toEpochMilli(), charset)
 
         return timeId + randomId(length - timeId.length, charset)
+    }
+
+    fun randomUUID(): String {
+        return UUID.randomUUID().toString()
     }
 }

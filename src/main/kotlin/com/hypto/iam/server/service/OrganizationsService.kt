@@ -68,6 +68,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
         val organizationId = idGenerator.organizationId()
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
+        val username = idGenerator.username()
 
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -84,7 +85,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                         ResourceHrn(
                             organization = organizationId,
                             resource = IamResources.USER,
-                            resourceInstance = rootUser.username
+                            resourceInstance = username
                         ).toString(),
                         JSONB.jsonb(gson.toJson(identityGroup)),
                         LocalDateTime.now(), LocalDateTime.now()
@@ -95,14 +96,15 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 val user = usersService.createUser(
                     organizationId = organizationId,
                     credentials = PasswordCredentials(
-                        userName = rootUser.username,
+                        username = username,
+                        preferredUsername = rootUser.preferredUsername,
                         name = rootUser.name,
                         email = rootUser.email,
                         phoneNumber = rootUser.phone ?: "",
                         password = rootUser.passwordHash
                     ),
                     createdBy = "iam-system",
-                    verified = rootUser.verified ?: false
+                    verified = rootUser.verified
                 )
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`

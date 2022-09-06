@@ -1,7 +1,7 @@
 package com.hypto.iam.server.utils
 
 import com.hypto.iam.server.utils.IdGenerator.Charset
-import com.hypto.iam.server.validators.nameCheck
+import com.hypto.iam.server.validators.resourceNameCheck
 import io.konform.validation.Valid
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -32,6 +32,10 @@ object ApplicationIdUtil : KoinComponent {
         fun passcodeId(): String {
             return idGenerator.timeBasedRandomId(PASSCODE_ID_LENGTH, Charset.ALPHANUMERIC)
         }
+
+        fun username(): String {
+            return idGenerator.randomUUID()
+        }
     }
 
     object Validator {
@@ -40,7 +44,7 @@ object ApplicationIdUtil : KoinComponent {
         }
 
         fun name(name: String): Boolean {
-            return nameCheck(name) is Valid
+            return resourceNameCheck(name) is Valid
         }
     }
 }

@@ -8,10 +8,8 @@ import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
-import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
-import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
@@ -42,13 +40,18 @@ import org.junit.jupiter.api.Test
 import org.koin.core.component.get
 import org.koin.test.inject
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminInitiateAuthRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UsernameExistsException
 
 class UserApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -60,7 +63,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         fun `create user success case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
-                username = "testUserName",
+                preferredUsername = "testUserName",
                 name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
@@ -72,6 +75,23 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
+
+                coEvery {
+                    cognitoClient.adminGetUser(any<AdminGetUserRequest>())
+                } returns AdminGetUserResponse.builder()
+                    .enabled(true)
+                    .username(organization.rootUser.username)
+                    .userAttributes(
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                            .value(organization.rootUser.email).build(),
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                            .value(organization.rootUser.phone).build(),
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_VERIFIED)
+                            .value(organization.rootUser.verified.toString()).build(),
+                    )
+                    .userCreateDate(Instant.now())
+                    .build()
+
                 DataSetupHelper.createResource(organization.id, rootUserToken, this)
 
                 with(
@@ -92,7 +112,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
 
-                    assertEquals(createUserRequest.username, responseBody.username)
+                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
                     assertEquals(createUserRequest.email, responseBody.email)
                     assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
                     assertEquals(createUserRequest.verified, responseBody.verified)
@@ -103,10 +123,119 @@ class UserApiTest : AbstractContainerBaseTest() {
         }
 
         @Test
+        fun `create user without preferred username`() {
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val createUserRequest = CreateUserRequest(
+                name = "lorem ipsum",
+                passwordHash = "testPassword@Hash1",
+                email = testEmail,
+                status = CreateUserRequest.Status.enabled,
+                phone = "+919626012778",
+                verified = true
+            )
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                coEvery {
+                    cognitoClient.adminGetUser(any<AdminGetUserRequest>())
+                } returns AdminGetUserResponse.builder()
+                    .enabled(true)
+                    .username(organization.rootUser.username)
+                    .userAttributes(
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                            .value(organization.rootUser.email).build(),
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                            .value(organization.rootUser.phone).build(),
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_VERIFIED)
+                            .value(organization.rootUser.verified.toString()).build(),
+                    )
+                    .userCreateDate(Instant.now())
+                    .build()
+
+                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+
+                with(
+                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
+                ) {
+                    val responseBody = gson.fromJson(response.content, User::class.java)
+                    assertEquals(HttpStatusCode.Created, response.status())
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    assertEquals(
+                        organization.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
+
+                    assertEquals("", responseBody.preferredUsername)
+                    assertEquals(createUserRequest.email, responseBody.email)
+                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
+                    assertEquals(createUserRequest.verified, responseBody.verified)
+                }
+
+                DataSetupHelper.deleteOrganization(organization.id, this)
+            }
+        }
+
+        @Test
+        fun `create user with same preferred username - failure`() {
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val preferredUsername = "testUserName"
+            val createUserRequest = CreateUserRequest(
+                name = "lorem ipsum",
+                preferredUsername = preferredUsername,
+                passwordHash = "testPassword@Hash1",
+                email = testEmail,
+                status = CreateUserRequest.Status.enabled,
+                phone = "+919626012778",
+                verified = true
+            )
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, _) = DataSetupHelper.createOrganization(this, preferredUsername)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                coEvery {
+                    cognitoClient.adminCreateUser(any<AdminCreateUserRequest>())
+                } throws UsernameExistsException.builder()
+                    .build()
+                coEvery {
+                    cognitoClient.adminGetUser(any<AdminGetUserRequest>())
+                } throws UserNotFoundException.builder()
+                    .build()
+
+                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+
+                with(
+                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
+                ) {
+                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+
+                DataSetupHelper.deleteOrganization(organization.id, this)
+            }
+        }
+
+        @Test
         fun `create user with validation error case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "hypto.in"
             val createUserRequest = CreateUserRequest(
-                username = "testUserName",
+                preferredUsername = "testUserName",
                 name = "lorem ipsum",
                 passwordHash = "testPassword@ash",
                 email = testEmail,
@@ -140,7 +269,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         fun `get user request success case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
-                username = "testUserName",
+                preferredUsername = "testUserName",
                 name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
@@ -153,15 +282,32 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 // Create user
-                handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val (user1, _) = DataSetupHelper.createUser(
+                    orgId = organization.id,
+                    bearerToken = rootUserToken,
+                    createUserRequest = createUserRequest,
+                    this
+                )
+
+                coEvery {
+                    cognitoClient.adminGetUser(any<AdminGetUserRequest>())
+                } returns AdminGetUserResponse.builder()
+                    .enabled(true)
+                    .username(user1.username)
+                    .userAttributes(
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                            .value(user1.email).build(),
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                            .value(user1.preferredUsername).build(),
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_VERIFIED)
+                            .value(user1.verified.toString()).build(),
+                    )
+                    .userCreateDate(Instant.now())
+                    .build()
 
                 // Get user
                 with(
-                    handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/testUserName") {
+                    handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/${user1.username}") {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
@@ -173,7 +319,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         response.contentType()
                     )
 
-                    assertEquals(createUserRequest.username, responseBody.username)
+                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
                     assertEquals(false, responseBody.verified)
                 }
                 DataSetupHelper.deleteOrganization(organization.id, this)
@@ -184,9 +330,9 @@ class UserApiTest : AbstractContainerBaseTest() {
         fun `get user with unauthorized access`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
-                username = "testUserName",
+                preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPasswordHash",
+                passwordHash = "testPasswordHash@123",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778"
@@ -197,15 +343,16 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 // Create user
-                handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val (user1, _) = DataSetupHelper.createUser(
+                    orgId = organization.id,
+                    bearerToken = rootUserToken,
+                    createUserRequest = createUserRequest,
+                    this
+                )
 
                 // Get user
                 with(
-                    handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/testUserName") {
+                    handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/${user1.username}") {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer badSecret")
                     }
@@ -224,7 +371,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         fun `delete user success case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
-                username = "testUserName",
+                preferredUsername = "testUserName",
                 name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
@@ -237,15 +384,16 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 // Create user
-                handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val (user1, _) = DataSetupHelper.createUser(
+                    orgId = organization.id,
+                    bearerToken = rootUserToken,
+                    createUserRequest = createUserRequest,
+                    this
+                )
 
                 // Delete user
                 with(
-                    handleRequest(HttpMethod.Delete, "/organizations/${organization.id}/users/testUserName") {
+                    handleRequest(HttpMethod.Delete, "/organizations/${organization.id}/users/${user1.username}") {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
@@ -256,7 +404,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     val slot = slot<AdminDeleteUserRequest>()
                     verify { get<CognitoIdentityProviderClient>().adminDeleteUser(capture(slot)) }
                     val adminUserRequest = slot.captured
-                    assertEquals("testUserName", adminUserRequest.username())
+                    assertEquals(user1.username, adminUserRequest.username())
                 }
                 DataSetupHelper.deleteOrganization(organization.id, this)
             }
@@ -265,16 +413,17 @@ class UserApiTest : AbstractContainerBaseTest() {
         @Test
         fun `delete root user`() {
             withTestApplication(Application::handleRequest) {
-                val rootUserName = "test-root-user"
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this, rootUserName)
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
+
+                val username = organizationResponse.organization.rootUser.username
 
                 // Delete root user
                 with(
                     handleRequest(
                         HttpMethod.Delete,
-                        "/organizations/${organization.id}/users/$rootUserName"
+                        "/organizations/${organization.id}/users/$username"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -294,7 +443,7 @@ class UserApiTest : AbstractContainerBaseTest() {
         fun `list users`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest1 = CreateUserRequest(
-                username = "testUserName",
+                preferredUsername = "testUserName",
                 name = "lorem ipsum",
                 passwordHash = "testPassword@Hash1",
                 email = testEmail,
@@ -302,7 +451,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 phone = "+919626012778"
             )
             val createUserRequest2 = CreateUserRequest(
-                username = "testUserName",
+                preferredUsername = "testUserName",
                 name = "lorem ipsum",
                 passwordHash = "testPassword@Hash2",
                 email = testEmail,
@@ -359,10 +508,9 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
                 val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-                val userName = "testUserName"
 
                 val createUserRequest = CreateUserRequest(
-                    username = "testUserName",
+                    preferredUsername = "testUserName",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = testEmail,
@@ -372,11 +520,12 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
 
                 // Create user1
-                handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val (user1, _) = DataSetupHelper.createUser(
+                    orgId = organization.id,
+                    bearerToken = rootUserToken,
+                    createUserRequest = createUserRequest,
+                    this
+                )
 
                 val updateUserRequest = UpdateUserRequest(
                     name = "name updated",
@@ -388,7 +537,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Patch,
-                        "/organizations/${organization.id}/users/$userName"
+                        "/organizations/${organization.id}/users/${user1.username}"
                     ) {
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -417,6 +566,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
+                val username = organizationResponse.organization.rootUser.username
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
                     oldPassword = "testPassword@Hash1",
@@ -425,7 +575,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${organization.id}/users/${rootUser.username}/change_password"
+                        "/organizations/${organization.id}/users/$username/change_password"
                     ) {
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -448,6 +598,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
+                val username = organizationResponse.organization.rootUser.username
 
                 coEvery {
                     cognitoClient.adminInitiateAuth(any<AdminInitiateAuthRequest>())
@@ -460,7 +611,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${organization.id}/users/${rootUser.username}/change_password"
+                        "/organizations/${organization.id}/users/$username/change_password"
                     ) {
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -485,7 +636,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 val createUser1Request = CreateUserRequest(
-                    username = "testUserName1",
+                    preferredUsername = "testUserName1",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
@@ -493,26 +644,25 @@ class UserApiTest : AbstractContainerBaseTest() {
                     phone = "+919626012778",
                     verified = true
                 )
-                val policyName = "test-user1-policy"
-                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
-                    organization.id,
-                    null,
-                    IamResources.USER,
-                    "changePassword",
-                    createUser1Request.username
-                )
-                val policyStatements =
-                    listOf(PolicyStatement(resourceHrn.toString(), actionHrn.toString(), PolicyStatement.Effect.allow))
-                val user1PolicyRequest = CreatePolicyRequest(policyName, policyStatements)
 
-                val (user1, credential) =
-                    DataSetupHelper.createUserWithPolicy(
-                        organization.id,
-                        rootUserToken,
-                        createUser1Request,
-                        user1PolicyRequest,
-                        this
-                    )
+                val (user1, credential) = DataSetupHelper.createUser(
+                    organization.id,
+                    rootUserToken,
+                    createUser1Request,
+                    this
+                )
+
+                DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = user1.username,
+                    bearerToken = rootUserToken,
+                    policyName = "user1-policy",
+                    accountId = null,
+                    resourceName = IamResources.USER,
+                    actionName = "changePassword",
+                    resourceInstance = user1.username,
+                    engine = this
+                )
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
                     oldPassword = "testPassword@Hash1",
@@ -546,7 +696,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 val createUser1Request = CreateUserRequest(
-                    username = "testUserName1",
+                    preferredUsername = "testUserName1",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
@@ -556,7 +706,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
 
                 val createUser2Request = CreateUserRequest(
-                    username = "testUserName2",
+                    preferredUsername = "testUserName2",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -564,32 +714,30 @@ class UserApiTest : AbstractContainerBaseTest() {
                     phone = "+919626012778",
                     verified = true
                 )
-                val policyName = "test-user2-policy"
-                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
-                    organization.id,
-                    null,
-                    IamResources.USER,
-                    "changePassword",
-                    createUser2Request.username
-                )
-                val policyStatements =
-                    listOf(PolicyStatement(resourceHrn.toString(), actionHrn.toString(), PolicyStatement.Effect.allow))
-                val user2PolicyRequest = CreatePolicyRequest(policyName, policyStatements)
-
                 val (user1, _) =
-                    DataSetupHelper.createUserWithPolicy(
+                    DataSetupHelper.createUser(
                         organization.id,
                         rootUserToken,
                         createUser1Request,
-                        null,
                         this
                     )
-                val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser2Request,
-                    user2PolicyRequest,
                     this
+                )
+
+                DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = user2.username,
+                    bearerToken = rootUserToken,
+                    policyName = "user2-policy",
+                    accountId = null,
+                    resourceName = IamResources.USER,
+                    actionName = "changePassword",
+                    resourceInstance = user2.username,
+                    engine = this
                 )
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
@@ -618,6 +766,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
+                val username = organizationResponse.organization.rootUser.username
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
                     oldPassword = "testPassword@Hash1",
@@ -626,7 +775,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${organization.id}/users/${rootUser.username}/change_password"
+                        "/organizations/${organization.id}/users/$username/change_password"
                     ) {
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -679,25 +828,27 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val listUsersResponse =
                     ListUsersResponse.builder().users(
                         listOf(
-                            UserType.builder().username(createdUser.username).enabled(true).attributes(
-                                listOf(
-                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_NAME)
-                                        .value("test name")
-                                        .build(),
-                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
-                                        .value(createdUser.email)
-                                        .build(),
-                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PHONE)
-                                        .value(createdUser.phone)
-                                        .build(),
-                                    AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED)
-                                        .value("true")
-                                        .build(),
-                                    AttributeType.builder().name(
-                                        CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM + CognitoConstants.ATTRIBUTE_CREATED_BY
-                                    ).value("iam-system").build()
-                                )
-                            ).userCreateDate(Instant.now()).build()
+                            UserType.builder().username(organizationResponse.organization.rootUser.username)
+                                .enabled(true).attributes(
+                                    listOf(
+                                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_NAME)
+                                            .value("test name")
+                                            .build(),
+                                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                                            .value(createdUser.email)
+                                            .build(),
+                                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PHONE)
+                                            .value(createdUser.phone)
+                                            .build(),
+                                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED)
+                                            .value("true")
+                                            .build(),
+                                        AttributeType.builder().name(
+                                            CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM +
+                                                CognitoConstants.ATTRIBUTE_CREATED_BY
+                                        ).value("iam-system").build()
+                                    )
+                                ).userCreateDate(Instant.now()).build()
                         )
                     ).build()
                 coEvery {
@@ -756,7 +907,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 val createUser1Request = CreateUserRequest(
-                    username = "testUserName1",
+                    preferredUsername = "testUserName1",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -765,15 +916,14 @@ class UserApiTest : AbstractContainerBaseTest() {
                     verified = true
                 )
 
-                val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                val (user1, _) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser1Request,
-                    null,
                     this
                 )
                 val createUser2Request = CreateUserRequest(
-                    username = "testUserName2",
+                    preferredUsername = "testUserName2",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -781,34 +931,35 @@ class UserApiTest : AbstractContainerBaseTest() {
                     phone = "+919999999999",
                     verified = true
                 )
-                val policyName = "test-policy"
-                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
-                    organization.id,
-                    null,
-                    IamResources.USER,
-                    "attachPolicies",
-                    createUser1Request.username
-                )
-                val policyStatements =
-                    listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
-                val policyRequest = CreatePolicyRequest(policyName, policyStatements)
-                val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser2Request,
-                    policyRequest,
                     this
                 )
 
-                val samplePolicy = DataSetupHelper.createPolicy(
-                    organization.id,
-                    rootUserToken,
-                    "sample-policy",
-                    null,
-                    "sample-resource",
-                    "sample-action",
-                    "instanceId",
-                    this
+                DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = user2.username,
+                    bearerToken = rootUserToken,
+                    policyName = "test-policy",
+                    accountId = null,
+                    resourceName = IamResources.USER,
+                    actionName = "attachPolicies",
+                    resourceInstance = user1.username,
+                    engine = this
+                )
+
+                val samplePolicy = DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = null,
+                    bearerToken = rootUserToken,
+                    policyName = "sample-policy",
+                    accountId = null,
+                    resourceName = "sample-resource",
+                    actionName = "sample-action",
+                    resourceInstance = "instanceId",
+                    engine = this
                 )
                 with(
                     handleRequest(
@@ -838,7 +989,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 val createUser1Request = CreateUserRequest(
-                    username = "testUserName1",
+                    preferredUsername = "testUserName1",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -847,15 +998,14 @@ class UserApiTest : AbstractContainerBaseTest() {
                     verified = true
                 )
 
-                val (user1, _) = DataSetupHelper.createUserWithPolicy(
+                val (user1, _) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser1Request,
-                    null,
                     this
                 )
                 val createUser2Request = CreateUserRequest(
-                    username = "testUserName2",
+                    preferredUsername = "testUserName2",
                     name = "lorem ipsum",
                     passwordHash = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
@@ -863,34 +1013,34 @@ class UserApiTest : AbstractContainerBaseTest() {
                     phone = "+919999999999",
                     verified = true
                 )
-                val policyName = "test-policy"
-                val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
-                    organization.id,
-                    null,
-                    IamResources.USER,
-                    "attachPolicies",
-                    createUser2Request.username
-                )
-                val policyStatements =
-                    listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
-                val policyRequest = CreatePolicyRequest(policyName, policyStatements)
-                val (_, credential) = DataSetupHelper.createUserWithPolicy(
+                val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
                     rootUserToken,
                     createUser2Request,
-                    policyRequest,
                     this
                 )
+                DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = user2.username,
+                    bearerToken = rootUserToken,
+                    policyName = "test-policy",
+                    accountId = null,
+                    resourceName = IamResources.USER,
+                    actionName = "attachPolicies",
+                    resourceInstance = user2.username,
+                    engine = this
+                )
 
-                val samplePolicy = DataSetupHelper.createPolicy(
-                    organization.id,
-                    rootUserToken,
-                    "sample-policy",
-                    null,
-                    "sample-resource",
-                    "sample-action",
-                    "instanceId",
-                    this
+                val samplePolicy = DataSetupHelper.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = null,
+                    bearerToken = rootUserToken,
+                    policyName = "sample-policy",
+                    accountId = null,
+                    resourceName = "sample-resource",
+                    actionName = "sample-action",
+                    resourceInstance = "instanceId",
+                    engine = this
                 )
 
                 with(
