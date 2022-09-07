@@ -1,7 +1,7 @@
 package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.PoliciesRepo
-import com.hypto.iam.server.db.repositories.UserPoliciesRepo
+import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.PaginationContext
@@ -19,7 +19,7 @@ import org.koin.core.component.inject
 // https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_grammar.html
 class PolicyServiceImpl : KoinComponent, PolicyService {
     private val policyRepo: PoliciesRepo by inject()
-    private val userPolicyRepo: UserPoliciesRepo by inject()
+    private val principalPolicyRepo: PrincipalPoliciesRepo by inject()
 
     override suspend fun createPolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
         val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, name)
@@ -72,7 +72,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         userId: String,
         context: PaginationContext
     ): PolicyPaginatedResponse {
-        val policies = userPolicyRepo
+        val policies = principalPolicyRepo
             .fetchPoliciesByUserHrnPaginated(
                 ResourceHrn(organizationId, "", IamResources.USER, userId).toString(), context
             )

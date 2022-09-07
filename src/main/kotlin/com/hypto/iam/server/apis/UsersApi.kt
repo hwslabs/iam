@@ -13,7 +13,7 @@ import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
-import com.hypto.iam.server.service.UserPolicyService
+import com.hypto.iam.server.service.PrincipalPolicyService
 import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
@@ -34,7 +34,7 @@ import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
 fun Route.usersApi() {
-    val userPolicyService: UserPolicyService by inject()
+    val principalPolicyService: PrincipalPolicyService by inject()
     val gson: Gson by inject()
     val hrnFactory: HrnFactory by inject()
     val usersService: UsersService by inject()
@@ -188,7 +188,7 @@ fun Route.usersApi() {
             val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to detach policies")
             val request = call.receive<PolicyAssociationRequest>().validate()
 
-            val response = userPolicyService.detachPoliciesToUser(
+            val response = principalPolicyService.detachPoliciesToUser(
                 ResourceHrn(organizationId, "", IamResources.USER, userId),
                 request.policies.map { hrnFactory.getHrn(it) }
             )
@@ -210,7 +210,7 @@ fun Route.usersApi() {
                 ?: throw IllegalArgumentException("Required organization_id to attach policies")
             val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to attach policies")
             val request = call.receive<PolicyAssociationRequest>().validate()
-            val response = userPolicyService.attachPoliciesToUser(
+            val response = principalPolicyService.attachPoliciesToUser(
                 ResourceHrn(organizationId, "", IamResources.USER, userId),
                 request.policies.map { hrnFactory.getHrn(it) }
             )
