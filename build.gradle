@@ -10,7 +10,7 @@ buildscript {
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = "5.8.2"
     ext.flyway_version = '8.5.12'
-    ext.casbin_version = '1.24.0'
+    ext.casbin_version = '1.27.0'
     ext.postgres_jdbc_driver = '42.3.6'
 
     repositories {
