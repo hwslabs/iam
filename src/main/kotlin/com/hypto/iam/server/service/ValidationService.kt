@@ -12,14 +12,14 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class ValidationServiceImpl : ValidationService, KoinComponent {
-    private val userPoliciesService: UserPolicyService by inject()
+    private val principalPolicyService: PrincipalPolicyService by inject()
     private val policyValidator: PolicyValidator by inject()
 
     override suspend fun validateIfUserHasPermissionToActions(
         userHrn: Hrn,
         validationRequest: ValidationRequest
     ): ValidationResponse {
-        val policyBuilder = userPoliciesService.fetchEntitlements(userHrn.toString())
+        val policyBuilder = principalPolicyService.fetchEntitlements(userHrn.toString())
         val validations = validationRequest.validations
 
         val results = policyValidator.batchValidate(

@@ -1,0 +1,1 @@
+ALTER TABLE user_policies RENAME TO principal_policies;

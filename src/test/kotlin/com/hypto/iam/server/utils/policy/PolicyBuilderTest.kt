@@ -1,7 +1,7 @@
 package com.hypto.iam.server.utils.policy
 
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
-import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
+import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.models.PolicyStatement
@@ -86,7 +86,8 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
         )
 
         val userHrn = ResourceHrn(orgId, "", IamResources.USER, "user1").toString()
-        val userPoliciesRecord = UserPoliciesRecord(UUID.randomUUID(), userHrn, policy1HrnStr, LocalDateTime.now())
+        val principalPoliciesRecord =
+            PrincipalPoliciesRecord(UUID.randomUUID(), userHrn, policy1HrnStr, LocalDateTime.now())
 
         val expectedPolicyText =
             "p, $policy1Hrn, $resourceHrn1, $actionHrn1, allow\n" +
@@ -96,7 +97,7 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
 
         val builder = PolicyBuilder()
             .withPolicy(policyRecord)
-            .withUserPolicy(userPoliciesRecord)
+            .withPrincipalPolicy(principalPoliciesRecord)
 
         Assertions.assertEquals(expectedPolicyText, builder.build())
     }
