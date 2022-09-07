@@ -16,15 +16,15 @@ class ValidationServiceImpl : ValidationService, KoinComponent {
     private val policyValidator: PolicyValidator by inject()
 
     override suspend fun validateIfUserHasPermissionToActions(
-        userHrn: Hrn,
+        principalHrn: Hrn,
         validationRequest: ValidationRequest
     ): ValidationResponse {
-        val policyBuilder = principalPolicyService.fetchEntitlements(userHrn.toString())
+        val policyBuilder = principalPolicyService.fetchEntitlements(principalHrn.toString())
         val validations = validationRequest.validations
 
         val results = policyValidator.batchValidate(
             policyBuilder,
-            validations.map { PolicyRequest(userHrn.toString(), it.resource, it.action) }
+            validations.map { PolicyRequest(principalHrn.toString(), it.resource, it.action) }
         )
 
         return ValidationResponse(
@@ -37,7 +37,7 @@ class ValidationServiceImpl : ValidationService, KoinComponent {
 
 interface ValidationService {
     suspend fun validateIfUserHasPermissionToActions(
-        userHrn: Hrn,
+        principalHrn: Hrn,
         validationRequest: ValidationRequest
     ): ValidationResponse
 }
