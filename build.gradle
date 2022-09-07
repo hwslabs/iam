@@ -1,17 +1,17 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 buildscript {
-    ext.kotlin_version = '1.7.0'
-    ext.ktor_version = '2.0.2'
+    ext.kotlin_version = '1.7.10'
+    ext.ktor_version = '2.1.0'
     ext.koin_version = '3.2.0'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
     ext.jooq_version = '3.16.6'
     ext.hikari_cp_version = "5.0.1"
-    ext.junit_version = "5.8.2"
+    ext.junit_version = '5.9.0'
     ext.flyway_version = '8.5.12'
     ext.casbin_version = '1.27.0'
-    ext.postgres_jdbc_driver = '42.3.6'
+    ext.postgres_jdbc_driver = '42.5.0'
 
     repositories {
         google()
@@ -337,7 +337,7 @@ ktlint {
 }
 
 dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.20.0")
+    detektPlugins('io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0')
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     implementation("io.ktor:ktor-server-cio:$ktor_version")
     implementation("io.ktor:ktor-server-metrics:$ktor_version")
@@ -391,7 +391,7 @@ dependencies {
     implementation "io.ktor:ktor-server-metrics-micrometer:$ktor_version"
 
     // APM
-    implementation 'com.newrelic.telemetry:micrometer-registry-new-relic:0.9.0'
+    implementation 'com.newrelic.telemetry:micrometer-registry-new-relic:0.10.0'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -408,13 +408,13 @@ dependencies {
     implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
 
     // Hoplite
-    implementation('com.sksamuel.hoplite:hoplite-json:2.1.5')
+    implementation('com.sksamuel.hoplite:hoplite-json:2.6.2')
 
     // Cohort
-    implementation("com.sksamuel.cohort:cohort-core:1.4.1")
+    implementation('com.sksamuel.cohort:cohort-core:1.6.2')
     implementation("com.sksamuel.cohort:cohort-ktor2:1.4.1")
-    implementation("com.sksamuel.cohort:cohort-hikari:1.4.1")
-    implementation("com.sksamuel.cohort:cohort-logback:1.4.1")
+    implementation('com.sksamuel.cohort:cohort-hikari:1.6.2')
+    implementation('com.sksamuel.cohort:cohort-logback:1.6.2')
 
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.17.143')
@@ -430,12 +430,12 @@ dependencies {
     testImplementation("io.insert-koin:koin-test:$koin_version")
     testImplementation "io.insert-koin:koin-test-junit5:$koin_version"
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
-    testImplementation('io.mockk:mockk:1.12.4')
+    testImplementation('io.mockk:mockk:1.12.7')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    testImplementation 'org.testcontainers:junit-jupiter:1.17.2'
-    testImplementation 'org.testcontainers:testcontainers:1.17.2'
-    testImplementation 'org.testcontainers:postgresql:1.17.2'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.3'
+    testImplementation 'org.testcontainers:testcontainers:1.17.3'
+    testImplementation 'org.testcontainers:postgresql:1.17.3'
 }
 
 // configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources
