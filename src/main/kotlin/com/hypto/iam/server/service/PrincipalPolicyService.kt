@@ -1,8 +1,8 @@
 package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.PoliciesRepo
-import com.hypto.iam.server.db.repositories.UserPoliciesRepo
-import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
+import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
+import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
@@ -12,19 +12,19 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 private val logger = KotlinLogging.logger {}
-class UserPolicyServiceImpl : UserPolicyService, KoinComponent {
+class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
     private val policiesRepo: PoliciesRepo by inject()
-    private val userPoliciesRepo: UserPoliciesRepo by inject()
+    private val principalPoliciesRepo: PrincipalPoliciesRepo by inject()
 
     override suspend fun fetchEntitlements(userHrn: String): PolicyBuilder {
-        val userPolicies = userPoliciesRepo.fetchByPrincipalHrn(userHrn)
+        val principalPolicies = principalPoliciesRepo.fetchByPrincipalHrn(userHrn)
 
         val policyBuilder = PolicyBuilder()
-        userPolicies.forEach {
+        principalPolicies.forEach {
             val policy = policiesRepo.fetchByHrn(it.policyHrn)!!
             logger.info { policy.statements }
 
-            policyBuilder.withPolicy(policy).withUserPolicy(it)
+            policyBuilder.withPolicy(policy).withPrincipalPolicy(it)
         }
 
         return policyBuilder
@@ -35,9 +35,9 @@ class UserPolicyServiceImpl : UserPolicyService, KoinComponent {
             throw IllegalArgumentException("Invalid policies found")
         }
 
-        userPoliciesRepo.insert(
+        principalPoliciesRepo.insert(
             policies.map {
-                UserPoliciesRecord()
+                PrincipalPoliciesRecord()
                     .setPrincipalHrn(principal.toString())
                     .setPolicyHrn(it.toString())
                     .setCreatedAt(LocalDateTime.now())
@@ -48,12 +48,12 @@ class UserPolicyServiceImpl : UserPolicyService, KoinComponent {
     }
 
     override suspend fun detachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse {
-        userPoliciesRepo.delete(principal, policies.map { it.toString() })
+        principalPoliciesRepo.delete(principal, policies.map { it.toString() })
         return BaseSuccessResponse(true)
     }
 }
 
-interface UserPolicyService {
+interface PrincipalPolicyService {
     suspend fun fetchEntitlements(userHrn: String): PolicyBuilder
     suspend fun attachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse
     suspend fun detachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse

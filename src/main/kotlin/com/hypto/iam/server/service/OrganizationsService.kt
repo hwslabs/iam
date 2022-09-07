@@ -42,7 +42,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val tokenService: TokenService by inject()
     private val policyService: PolicyService by inject()
     private val hrnFactory: HrnFactory by inject()
-    private val userPolicyService: UserPolicyService by inject()
+    private val principalPolicyService: PrincipalPolicyService by inject()
     private val idGenerator: ApplicationIdUtil.Generator by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
@@ -117,7 +117,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 )
                 val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
                 val userHrn = hrnFactory.getHrn(user.hrn)
-                userPolicyService.attachPoliciesToUser(
+                principalPolicyService.attachPoliciesToUser(
                     userHrn,
                     listOf(hrnFactory.getHrn(policy.hrn))
                 )

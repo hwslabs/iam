@@ -4,13 +4,13 @@ import com.hypto.iam.server.db.tables.pojos.Actions
 import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.db.tables.pojos.Credentials
 import com.hypto.iam.server.db.tables.pojos.Policies
+import com.hypto.iam.server.db.tables.pojos.PrincipalPolicies
 import com.hypto.iam.server.db.tables.pojos.Resources
-import com.hypto.iam.server.db.tables.pojos.UserPolicies
 import com.hypto.iam.server.db.tables.records.ActionsRecord
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
+import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
-import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.Credential
@@ -165,7 +165,7 @@ fun Action.Companion.from(record: Actions): Action {
     )
 }
 
-fun UserPolicy.Companion.from(record: UserPoliciesRecord): UserPolicy {
+fun UserPolicy.Companion.from(record: PrincipalPoliciesRecord): UserPolicy {
     val policyHrn = hrnFactory.getHrn(record.policyHrn)
     require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(
@@ -174,7 +174,7 @@ fun UserPolicy.Companion.from(record: UserPoliciesRecord): UserPolicy {
     )
 }
 
-fun UserPolicy.Companion.from(record: UserPolicies): UserPolicy {
+fun UserPolicy.Companion.from(record: PrincipalPolicies): UserPolicy {
     val policyHrn = hrnFactory.getHrn(record.policyHrn)
     require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(

@@ -13,9 +13,9 @@ import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
+import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
-import com.hypto.iam.server.db.repositories.UserPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.idp.CognitoIdentityProviderImpl
 import com.hypto.iam.server.idp.IdentityProvider
@@ -30,12 +30,12 @@ import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.service.PasscodeServiceImpl
 import com.hypto.iam.server.service.PolicyService
 import com.hypto.iam.server.service.PolicyServiceImpl
+import com.hypto.iam.server.service.PrincipalPolicyService
+import com.hypto.iam.server.service.PrincipalPolicyServiceImpl
 import com.hypto.iam.server.service.ResourceService
 import com.hypto.iam.server.service.ResourceServiceImpl
 import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
-import com.hypto.iam.server.service.UserPolicyService
-import com.hypto.iam.server.service.UserPolicyServiceImpl
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.service.UserPrincipalServiceImpl
 import com.hypto.iam.server.service.UsersService
@@ -72,7 +72,7 @@ val repositoryModule = module {
     single { ResourceRepo }
     single { ActionRepo }
     single { UserAuthProvidersRepo }
-    single { UserPoliciesRepo }
+    single { PrincipalPoliciesRepo }
     single { PasscodeRepo }
     single { UserRepo }
 }
@@ -83,7 +83,7 @@ val controllerModule = module {
     single { CredentialServiceImpl() } bind CredentialService::class
     single { PolicyServiceImpl() } bind PolicyService::class
     single { ValidationServiceImpl() } bind ValidationService::class
-    single { UserPolicyServiceImpl() } bind UserPolicyService::class
+    single { PrincipalPolicyServiceImpl() } bind PrincipalPolicyService::class
     single { ResourceServiceImpl() } bind ResourceService::class
     single { ActionServiceImpl() } bind ActionService::class
     single { UsersServiceImpl() } bind UsersService::class

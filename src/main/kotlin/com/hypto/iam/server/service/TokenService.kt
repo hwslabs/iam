@@ -47,7 +47,7 @@ interface TokenService {
 }
 
 class TokenServiceImpl : KoinComponent, TokenService {
-    private val userPolicyService: UserPolicyService by inject()
+    private val principalPolicyService: PrincipalPolicyService by inject()
     private val appConfig: AppConfig by inject()
     private val masterKeyCache: MasterKeyCache by inject()
 
@@ -119,7 +119,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
                 .claim(VERSION_CLAIM, VERSION_NUM)
                 .claim(USER_CLAIM, userHrn.toString()) // UserId
                 .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
-                .claim(ENTITLEMENTS_CLAIM, userPolicyService.fetchEntitlements(userHrn.toString()).toString())
+                .claim(ENTITLEMENTS_CLAIM, principalPolicyService.fetchEntitlements(userHrn.toString()).toString())
                 .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
                 // TODO: [IMPORTANT] Uncomment before taking to prod
                 // Eventually move to Brotli from GZIP:
