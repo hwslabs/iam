@@ -11,7 +11,7 @@ import org.koin.core.component.inject
 
 class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     private val credentialsRepo: CredentialsRepo by inject()
-    private val userPoliciesService: UserPolicyService by inject()
+    private val principalPolicyService: PrincipalPolicyService by inject()
     private val tokenService: TokenService by inject()
     private val usersService: UsersService by inject()
 
@@ -20,7 +20,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
             UserPrincipal(
                 tokenCredential,
                 credential.userHrn,
-                userPoliciesService.fetchEntitlements(credential.userHrn)
+                principalPolicyService.fetchEntitlements(credential.userHrn)
             )
         }
     }
@@ -31,7 +31,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         return UserPrincipal(
             tokenCredential,
             userHrnStr,
-            userPoliciesService.fetchEntitlements(userHrnStr)
+            principalPolicyService.fetchEntitlements(userHrnStr)
         )
     }
 
@@ -41,7 +41,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         return UserPrincipal(
             TokenCredential(userName, TokenType.BASIC),
             user.hrn,
-            userPoliciesService.fetchEntitlements(user.hrn)
+            principalPolicyService.fetchEntitlements(user.hrn)
         )
     }
 
@@ -51,7 +51,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         return UserPrincipal(
             TokenCredential(validCredentials.username, TokenType.BASIC),
             user.hrn,
-            userPoliciesService.fetchEntitlements(user.hrn)
+            principalPolicyService.fetchEntitlements(user.hrn)
         )
     }
 }

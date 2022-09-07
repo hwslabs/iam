@@ -1,7 +1,7 @@
 package com.hypto.iam.server.utils.policy
 
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
-import com.hypto.iam.server.db.tables.records.UserPoliciesRecord
+import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
@@ -21,7 +21,7 @@ class PolicyBuilder() : KoinComponent {
     lateinit var orgId: String
     var policyStatements = ArrayList<PolicyStatement>()
     var policies = ArrayList<PoliciesRecord>()
-    var userPolicies = ArrayList<UserPoliciesRecord>()
+    var principalPolicies = ArrayList<PrincipalPoliciesRecord>()
 
     fun validateStatement(statement: com.hypto.iam.server.models.PolicyStatement) {
         val prefix = "hrn:${this.orgId}"
@@ -50,9 +50,9 @@ class PolicyBuilder() : KoinComponent {
         return this
     }
 
-    fun withUserPolicy(userPolicy: UserPoliciesRecord?): PolicyBuilder {
-        if (userPolicy != null) {
-            this.userPolicies.add(userPolicy)
+    fun withPrincipalPolicy(principalPolicy: PrincipalPoliciesRecord?): PolicyBuilder {
+        if (principalPolicy != null) {
+            this.principalPolicies.add(principalPolicy)
         }
         return this
     }
@@ -69,7 +69,7 @@ class PolicyBuilder() : KoinComponent {
         val builder = StringBuilder()
         policyStatements.forEach { builder.appendLine(it.toString()) }
         policies.forEach { builder.appendLine(it.statements) }
-        userPolicies.forEach { builder.appendLine(PolicyStatement.g(it.principalHrn, it.policyHrn)) }
+        principalPolicies.forEach { builder.appendLine(PolicyStatement.g(it.principalHrn, it.policyHrn)) }
         return builder.toString()
     }
 }
