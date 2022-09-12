@@ -1,7 +1,9 @@
 package com.hypto.iam.server.extensions
 
+import com.google.gson.Gson
 import com.hypto.iam.server.Constants.Companion.MAX_NAME_LENGTH
 import com.hypto.iam.server.Constants.Companion.MIN_LENGTH
+import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.HrnParseException
 import io.konform.validation.Invalid
@@ -15,6 +17,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import kotlin.reflect.KProperty1
 
+private val gson: Gson = getKoinInstance()
 fun <T> ValidationBuilder<T>.oneOf(instance: T, values: List<KProperty1<T, *>>) =
     addConstraint("must have only one of the provided attributes") {
         println(values)
@@ -77,7 +80,7 @@ val nameCheck = Validation<String> {
 fun <T> Validation<T>.validateAndThrowOnFailure(value: T): T {
     val result = validate(value)
     if (result is Invalid<T>) {
-        throw IllegalArgumentException(result.errors.toString())
+        throw IllegalArgumentException(gson.toJson(result.errors))
     }
     return value
 }
