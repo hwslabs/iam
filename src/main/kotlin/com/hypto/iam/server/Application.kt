@@ -71,6 +71,7 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.MeterBinder
+import java.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -105,6 +106,12 @@ fun Application.handleRequest() {
     install(MicrometerMetrics) {
         registry = micrometerRegistry
         meterBinders = micrometerBindings
+        @Suppress("MagicNumber")
+        timers { _, _ ->
+            publishPercentileHistogram(true)
+            publishPercentiles(0.9, 0.95)
+            maximumExpectedValue(Duration.ofSeconds(20)) // Upper bound to limit buckets in histograms
+        }
     }
     install(ContentNegotiation) {
         // TODO: Switch to kotlinx.serialization
