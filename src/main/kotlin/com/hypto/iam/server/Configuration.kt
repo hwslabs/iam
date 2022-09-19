@@ -113,7 +113,7 @@ object MicrometerConfigs {
                 // TODO: Needs Tweaking
                 return Duration.ofSeconds(appConfig.newrelic.publishInterval)
             }
-            override fun serviceName() = "${appConfig.app.name}.${appConfig.app.env}"
+            override fun serviceName() = "${appConfig.app.name}.${appConfig.app.env}.${appConfig.app.stack}"
             override fun enableAuditMode() = false
             override fun useLicenseKey() = true
         }
@@ -123,8 +123,10 @@ object MicrometerConfigs {
         registry.config().commonTags(
             // TODO: Add instance_id, etc. as a common tag
             listOf(
-                Tag.of("environment", appConfig.app.env.toString()),
-                Tag.of("service", appConfig.app.name),
+                // Commenting below tags as this info is available in serviceName.
+//                Tag.of("environment", appConfig.app.env.toString()),
+//                Tag.of("service", appConfig.app.name),
+//                Tag.of("stack", appConfig.app.stack)
                 Tag.of("host", InetAddress.getLocalHost().hostName)
             )
         )

@@ -28,6 +28,7 @@
   "app": {
     "env": "Development",
     "name": "iam",
+    "stack": "local",
     "jwt_token_validity": 300,
     "old_key_ttl": 600,
     "secret_key": "iam-secret-key",
