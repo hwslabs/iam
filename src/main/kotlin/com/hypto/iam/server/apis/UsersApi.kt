@@ -10,6 +10,7 @@ import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.UserPaginatedResponse
+import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
@@ -229,9 +230,10 @@ fun Route.resetPasswordApi() {
 
     post("/organizations/{organization_id}/users/resetPassword") {
         val organizationId = call.parameters["organization_id"]
+        val passcodeStr = call.principal<ApiPrincipal>()!!.tokenCredential.value!!
         val request = call.receive<ResetPasswordRequest>().validate()
         val user = usersService.getUserByEmail(organizationId!!, request.email)
-        val response = usersService.setUserPassword(organizationId, user.username, request.password)
+        val response = usersService.setUserPassword(organizationId, user.username, request.password, passcodeStr)
 
         call.respondText(
             text = gson.toJson(response),

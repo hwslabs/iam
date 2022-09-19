@@ -5,6 +5,7 @@ package com.hypto.iam.server.service
 import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.pojos.Users
 import com.hypto.iam.server.exceptions.EntityNotFoundException
@@ -34,6 +35,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val appConfig: AppConfig by inject()
+    private val passcodeRepo: PasscodeRepo by inject()
 
     override suspend fun createUser(
         organizationId: String,
@@ -115,12 +117,14 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun setUserPassword(
         organizationId: String,
         userName: String,
-        password: String
+        password: String,
+        passcodeStr: String
     ): BaseSuccessResponse {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to set user password")
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.setUserPassword(identityGroup, userName, password)
+        passcodeRepo.deleteById(passcodeStr)
         return BaseSuccessResponse(true)
     }
 
@@ -254,7 +258,13 @@ interface UsersService {
     suspend fun authenticate(organizationId: String, userName: String, password: String): User
     suspend fun authenticate(username: String, password: String): User
     suspend fun getUserByEmail(organizationId: String?, email: String): User
-    suspend fun setUserPassword(organizationId: String, userName: String, password: String): BaseSuccessResponse
+    suspend fun setUserPassword(
+        organizationId: String,
+        userName: String,
+        password: String,
+        passcodeStr: String
+    ): BaseSuccessResponse
+
     suspend fun changeUserPassword(
         organizationId: String,
         userName: String,
