@@ -239,6 +239,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         AppConfig.App(
                             AppConfig.Environment.Development,
                             "IAM",
+                            "local",
                             300,
                             600,
                             "iam-secret-key",
@@ -286,6 +287,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         AppConfig.App(
                             AppConfig.Environment.Development,
                             "IAM",
+                            "local",
                             300,
                             600,
                             "iam-secret-key",

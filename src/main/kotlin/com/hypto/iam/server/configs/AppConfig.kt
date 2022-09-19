@@ -51,6 +51,7 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
     data class App(
         val env: Environment,
         val name: String,
+        val stack: String,
         val jwtTokenValidity: Long,
         val oldKeyTtl: Long,
         val secretKey: String,
