@@ -74,7 +74,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         try {
             return txMan.wrap {
                 if (passcodeStr != null) {
-                    passcodeRepo.deleteById(passcodeStr)
+                    passcodeRepo.deleteByEmailAndPurpose(rootUser.email, VerifyEmailRequest.Purpose.signup)
                 }
                 // Create Organization
                 organizationRepo.insert(

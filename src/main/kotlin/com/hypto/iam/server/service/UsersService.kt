@@ -21,6 +21,7 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
+import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
@@ -116,15 +117,15 @@ class UsersServiceImpl : KoinComponent, UsersService {
 
     override suspend fun setUserPassword(
         organizationId: String,
-        userName: String,
+        user: User,
         password: String,
         passcodeStr: String
     ): BaseSuccessResponse {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to set user password")
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        identityProvider.setUserPassword(identityGroup, userName, password)
-        passcodeRepo.deleteById(passcodeStr)
+        identityProvider.setUserPassword(identityGroup, user.username, password)
+        passcodeRepo.deleteByEmailAndPurpose(user.email, VerifyEmailRequest.Purpose.reset)
         return BaseSuccessResponse(true)
     }
 
@@ -260,7 +261,7 @@ interface UsersService {
     suspend fun getUserByEmail(organizationId: String?, email: String): User
     suspend fun setUserPassword(
         organizationId: String,
-        userName: String,
+        user: User,
         password: String,
         passcodeStr: String
     ): BaseSuccessResponse

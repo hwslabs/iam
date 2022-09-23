@@ -35,5 +35,5 @@ fun mockPasscodeRepo() {
         PasscodesRecord().setId(firstArg()).setPurpose(secondArg<VerifyEmailRequest.Purpose>().toString())
             .setEmail(thirdArg())
     }
-    coEvery { PasscodeRepo.deleteById(any<String>()) } returns true
+    coEvery { PasscodeRepo.deleteByEmailAndPurpose(any<String>(), any<VerifyEmailRequest.Purpose>()) } returns true
 }

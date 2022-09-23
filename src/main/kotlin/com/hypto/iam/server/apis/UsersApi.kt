@@ -233,7 +233,7 @@ fun Route.resetPasswordApi() {
         val passcodeStr = call.principal<ApiPrincipal>()!!.tokenCredential.value!!
         val request = call.receive<ResetPasswordRequest>().validate()
         val user = usersService.getUserByEmail(organizationId!!, request.email)
-        val response = usersService.setUserPassword(organizationId, user.username, request.password, passcodeStr)
+        val response = usersService.setUserPassword(organizationId, user, request.password, passcodeStr)
 
         call.respondText(
             text = gson.toJson(response),

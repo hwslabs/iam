@@ -54,10 +54,14 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .fetchOne()
     }
 
-    suspend fun deleteById(id: String): Boolean {
-        val record = PasscodesRecord().setId(id)
-        record.attach(dao().configuration())
-        val count = record.delete()
+    suspend fun deleteByEmailAndPurpose(email: String, purpose: VerifyEmailRequest.Purpose): Boolean {
+        val count = ctx("passcodes.deleteByEmailAndPurpose")
+            .deleteFrom(PASSCODES)
+            .where(
+                PASSCODES.EMAIL.eq(email),
+                PASSCODES.PURPOSE.eq(purpose.toString())
+            )
+            .execute()
         return count > 0
     }
 }
