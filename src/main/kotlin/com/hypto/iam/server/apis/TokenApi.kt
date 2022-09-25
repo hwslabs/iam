@@ -1,6 +1,8 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.models.TokenResponse
+import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
 import io.ktor.http.ContentType
@@ -20,7 +22,13 @@ fun Route.tokenApi() {
     val gson: Gson by inject()
 
     suspend fun generateToken(principal: UserPrincipal, call: ApplicationCall, responseContentType: String?) {
-        val response = tokenService.generateJwtToken(principal.hrn)
+        val response =
+            if (principal.tokenCredential.type == TokenType.JWT && principal.tokenCredential.value != null) {
+                TokenResponse(token = principal.tokenCredential.value)
+            } else {
+                tokenService.generateJwtToken(principal.hrn)
+            }
+
         when (responseContentType) {
             ContentType.Text.Plain.toString() -> call.respondText(
                 text = response.token,
@@ -44,6 +52,13 @@ fun Route.tokenApi() {
 
     authenticate("unique-basic-auth", "bearer-auth") {
         post("/token") {
+            val principal = context.principal<UserPrincipal>()!!
+            generateToken(principal, call, context.request.accept())
+        }
+    }
+
+    authenticate("basic-auth", "unique-basic-auth", "bearer-auth") {
+        post("/authenticate") {
             val principal = context.principal<UserPrincipal>()!!
             generateToken(principal, call, context.request.accept())
         }
