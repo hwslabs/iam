@@ -3,27 +3,29 @@ package com.hypto.iam.server.utils.policy
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.exceptions.PolicyFormatException
-import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import java.io.InputStream
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class PolicyBuilder() : KoinComponent {
-    val hrnFactory: HrnFactory by inject()
 
     constructor(policyHrn: ResourceHrn) : this() {
         this.policyHrn = policyHrn
         this.orgId = policyHrn.organization
     }
 
+    constructor(policyStr: String) : this() {
+        this.policyString = policyStr
+    }
+
     lateinit var policyHrn: ResourceHrn
     lateinit var orgId: String
+    lateinit var policyString: String
     var policyStatements = ArrayList<PolicyStatement>()
     var policies = ArrayList<PoliciesRecord>()
     var principalPolicies = ArrayList<PrincipalPoliciesRecord>()
 
-    fun validateStatement(statement: com.hypto.iam.server.models.PolicyStatement) {
+    private fun validateStatement(statement: com.hypto.iam.server.models.PolicyStatement) {
         val prefix = "hrn:${this.orgId}"
 
         if (!statement.resource.startsWith(prefix)) {
@@ -66,6 +68,7 @@ class PolicyBuilder() : KoinComponent {
     }
 
     override fun toString(): String {
+        if (this::policyString.isInitialized) { return this.policyString }
         val builder = StringBuilder()
         policyStatements.forEach { builder.appendLine(it.toString()) }
         policies.forEach { builder.appendLine(it.statements) }

@@ -45,6 +45,7 @@ enum class TokenType(val type: String) {
 data class TokenCredential(val value: String?, val type: TokenType?) : Credential
 abstract class IamPrincipal : Principal {
     abstract val organization: String
+    abstract val tokenCredential: TokenCredential
 }
 
 /** Class which stores email and password authenticated using Unique Basic Auth */
@@ -52,13 +53,13 @@ data class UsernamePasswordCredential(val username: String, val password: String
 
 /** Class to store the Principal authenticated using ApiKey auth **/
 data class ApiPrincipal(
-    val tokenCredential: TokenCredential,
+    override val tokenCredential: TokenCredential,
     override val organization: String
 ) : IamPrincipal()
 
 /** Class to store the Principal authenticated using Bearer auth **/
 data class UserPrincipal(
-    val tokenCredential: TokenCredential,
+    override val tokenCredential: TokenCredential,
     val hrnStr: String,
     val policies: PolicyBuilder
 ) : IamPrincipal() {

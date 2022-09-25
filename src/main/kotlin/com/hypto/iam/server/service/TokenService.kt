@@ -16,6 +16,7 @@ import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
+import com.hypto.iam.server.utils.measureTimedValue
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jws
@@ -74,60 +75,62 @@ class TokenServiceImpl : KoinComponent, TokenService {
      * @throws JwtExpiredException
      * @throws IllegalArgumentException
      */
-    override suspend fun validateJwtToken(token: String): Jws<Claims> {
-        val jws = Jwts.parserBuilder()
-            .setSigningKeyResolver(JwtSigVerificationKeyResolver)
-            .build()
-            .parseClaimsJws(token)
+    override suspend fun validateJwtToken(token: String): Jws<Claims> =
+        measureTimedValue("TokenService.validateJwtToken", logger) {
+            val jws = Jwts.parserBuilder()
+                .setSigningKeyResolver(JwtSigVerificationKeyResolver)
+                .build()
+                .parseClaimsJws(token)
 
-        // Validate claims
-        val body = jws.body
+            // Validate claims
+            val body = jws.body
 
-        val issuer: String? = body.get(Claims.ISSUER, String::class.java)
-        require(issuer != null && issuer == ISSUER) { JWT_INVALID_ISSUER }
+            val issuer: String? = body.get(Claims.ISSUER, String::class.java)
+            require(issuer != null && issuer == ISSUER) { JWT_INVALID_ISSUER }
 
-        val userHrnStr: String? = body.get(USER_CLAIM, String::class.java)
-        require(userHrnStr != null && HrnFactory.isValid(userHrnStr)) { JWT_INVALID_USER_HRN }
+            val userHrnStr: String? = body.get(USER_CLAIM, String::class.java)
+            require(userHrnStr != null && HrnFactory.isValid(userHrnStr)) { JWT_INVALID_USER_HRN }
 
-        val organization: String? = body.get(ORGANIZATION_CLAIM, String::class.java)
-        require(organization != null) { JWT_INVALID_ORGANIZATION }
+            val organization: String? = body.get(ORGANIZATION_CLAIM, String::class.java)
+            require(organization != null) { JWT_INVALID_ORGANIZATION }
 
-        val versionNum: String? = body.get(VERSION_CLAIM, String::class.java)
-        require(versionNum != null) { JWT_INVALID_VERSION_NUMBER }
+            val versionNum: String? = body.get(VERSION_CLAIM, String::class.java)
+            require(versionNum != null) { JWT_INVALID_VERSION_NUMBER }
 
-        val issuedAt: Date? = body.get(Claims.ISSUED_AT, Date::class.java)
-        require(issuedAt is Date && issuedAt.toInstant() <= Instant.now()) {
-            String.format(JWT_INVALID_ISSUED_AT, issuedAt)
+            val issuedAt: Date? = body.get(Claims.ISSUED_AT, Date::class.java)
+            require(issuedAt is Date && issuedAt.toInstant() <= Instant.now()) {
+                String.format(JWT_INVALID_ISSUED_AT, issuedAt)
+            }
+
+            return jws
         }
 
-        return jws
-    }
+    override suspend fun generateJwtToken(userHrn: Hrn): TokenResponse =
+        measureTimedValue("TokenService.generateJwtToken", logger) {
+            require(userHrn is ResourceHrn) { "The input hrn must be a userHrn" }
+            val signingKey = masterKeyCache.forSigning()
 
-    override suspend fun generateJwtToken(userHrn: Hrn): TokenResponse {
-        require(userHrn is ResourceHrn) { "The input hrn must be a userHrn" }
-        val signingKey = masterKeyCache.forSigning()
-
-        return TokenResponse(
-            Jwts.builder()
-                .setHeaderParam(KEY_ID, signingKey.id)
-                .setIssuer(ISSUER)
-                .setIssuedAt(Date())
+            return TokenResponse(
+                Jwts.builder()
+                    .setHeaderParam(KEY_ID, signingKey.id)
+                    .setIssuer(ISSUER)
+                    .setIssuedAt(Date())
 //            .setSubject("")
-                .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity)))
+                    .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity)))
 //            .setAudience("")
 //            .setId("")
-                .claim(VERSION_CLAIM, VERSION_NUM)
-                .claim(USER_CLAIM, userHrn.toString()) // UserId
-                .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
-                .claim(ENTITLEMENTS_CLAIM, principalPolicyService.fetchEntitlements(userHrn.toString()).toString())
-                .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
-                // TODO: [IMPORTANT] Uncomment before taking to prod
-                // Eventually move to Brotli from GZIP:
-                // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
-                .compressWith(CompressionCodecs.GZIP)
-                .compact()
-        )
-    }
+                    .claim(VERSION_CLAIM, VERSION_NUM)
+                    .claim(USER_CLAIM, userHrn.toString()) // UserId
+                    .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
+                    .claim(ENTITLEMENTS_CLAIM, principalPolicyService.fetchEntitlements(userHrn.toString()).toString())
+                    .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
+                    // TODO: [IMPORTANT] Uncomment before taking to prod
+                    // Eventually move to Brotli from GZIP:
+                    // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
+                    .compressWith(CompressionCodecs.GZIP)
+                    .compact()
+            )
+        }
 
     object JwtSigVerificationKeyResolver : KoinComponent, SigningKeyResolverAdapter() {
         private val masterKeyCache: MasterKeyCache by inject()
@@ -154,11 +157,11 @@ object MasterKeyCache : KoinComponent {
     private val appConfig: AppConfig by inject()
 
     private fun shouldRefreshSignKey(): Boolean {
-        return signKeyFetchTime.plusSeconds(appConfig.app.signKeyFetchInterval) > Instant.now()
+        return signKeyFetchTime.plusSeconds(appConfig.app.signKeyFetchInterval) < Instant.now()
     }
 
     private fun shouldRefreshCache(): Boolean {
-        return cacheRefreshTime.plusSeconds(appConfig.app.cacheRefreshInterval) > Instant.now()
+        return cacheRefreshTime.plusSeconds(appConfig.app.cacheRefreshInterval) < Instant.now()
     }
 
     suspend fun forSigning(): MasterKey {

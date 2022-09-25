@@ -71,8 +71,8 @@ tags:
     externalDocs:
       description: "docs"
       url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/KeyManagementApi.md"
-  - name: "User Sign-In"
-    description: "APIs used by the front-end for authentication"
+  - name: "User Authentication"
+    description: "APIs used by the for authentication"
     externalDocs:
       description: "docs"
       url: "http://hypto.com/docs/iam/SignInApi"
@@ -1045,6 +1045,33 @@ paths:
         - basicAuth: [ ]
         - bearerAuth: [ ]
 
+  /authenticate:
+    post:
+      tags:
+        - User Authentication
+      summary: Authenticate a request
+      description: >
+        Authenticates the request and respond with token. Upon successful authentication,
+        - For basic auth as well as credential based bearer auth, this API generates a token and returns it.
+        - For JWT bearer auth, returns the same JWT token in response
+      operationId: authenticate
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security:
+        - basicAuth: [ ]
+        - bearerAuth: [ ]
+
   /validate:
     post:
       tags:
@@ -1694,7 +1721,7 @@ components:
               $ref: '#/components/examples/GetUserPoliciesResponse'
 
     TokenResponse:
-      description: Response for generate token request
+      description: Response with token
       headers:
         X-Iam-User-Organization:
           schema:
