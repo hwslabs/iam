@@ -25,6 +25,7 @@ import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import com.hypto.iam.server.validators.EMAIL_REGEX
 import io.ktor.server.plugins.BadRequestException
 import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
@@ -219,8 +220,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
     }
 
     override suspend fun authenticate(username: String, password: String): User {
-        val userRecord = userRepo.findByAliasUsername(username)
-            ?: throw AuthenticationException("Invalid username and password combination")
+        val userRecord = if (EMAIL_REGEX.toRegex().matches(username)) {
+            userRepo.findByEmail(username)
+        } else {
+            userRepo.findByPreferredUsername(username)
+        } ?: throw AuthenticationException("Invalid username and password combination")
+
         val org = organizationRepo.findById(userRecord.organizationId)
             ?: throw InternalException("Internal error while trying to authenticate the identity.")
 
