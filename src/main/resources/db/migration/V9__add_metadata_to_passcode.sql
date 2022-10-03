@@ -1,0 +1,2 @@
+ALTER TABLE passcodes
+    ADD COLUMN metadata JSONB DEFAULT NULL;

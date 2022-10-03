@@ -2488,6 +2488,11 @@ components:
           enum:
             - reset
             - signup
+        metadata:
+          type: object
+          properties:
+            signup:
+              $ref: "#/components/schemas/CreateOrganizationRequest"
 
     # Responses:
     BaseSuccessResponse:

@@ -4,36 +4,29 @@ import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.models.VerifyEmailRequest
 import io.mockk.coEvery
-import io.mockk.mockkObject
-import java.time.LocalDateTime
+import org.koin.test.KoinTest
+import org.koin.test.mock.declareMock
 
-fun mockPasscodeRepo() {
-    mockkObject(PasscodeRepo)
-    coEvery {
-        PasscodeRepo.createPasscode(
-            any<String>(),
-            any<String>(),
-            any<String>(),
-            any<LocalDateTime>(),
-            any<VerifyEmailRequest.Purpose>()
-        )
-    } coAnswers {
-        PasscodesRecord().setId(firstArg()).setValidUntil(arg(3))
-            .setPurpose(arg<VerifyEmailRequest.Purpose>(4).toString()).setEmail(secondArg())
-            .setOrganizationId(thirdArg()).setCreatedAt(LocalDateTime.now())
+fun KoinTest.mockPasscodeRepo(): PasscodeRepo {
+    return declareMock {
+        coEvery {
+            createPasscode(any())
+        } coAnswers {
+            firstArg()
+        }
+        coEvery {
+            getValidPasscodeCount(any<String>(), any<VerifyEmailRequest.Purpose>())
+        } returns 0
+        coEvery {
+            getValidPasscode(
+                any<String>(),
+                any<VerifyEmailRequest.Purpose>(),
+                any<String>()
+            )
+        } coAnswers {
+            PasscodesRecord().setId(firstArg()).setPurpose(secondArg<VerifyEmailRequest.Purpose>().toString())
+                .setEmail(thirdArg())
+        }
+        coEvery { deleteByEmailAndPurpose(any<String>(), any<VerifyEmailRequest.Purpose>()) } returns true
     }
-    coEvery {
-        PasscodeRepo.getValidPasscodeCount(any<String>(), any<VerifyEmailRequest.Purpose>())
-    } returns 0
-    coEvery {
-        PasscodeRepo.getValidPasscode(
-            any<String>(),
-            any<VerifyEmailRequest.Purpose>(),
-            any<String>()
-        )
-    } coAnswers {
-        PasscodesRecord().setId(firstArg()).setPurpose(secondArg<VerifyEmailRequest.Purpose>().toString())
-            .setEmail(thirdArg())
-    }
-    coEvery { PasscodeRepo.deleteByEmailAndPurpose(any<String>(), any<VerifyEmailRequest.Purpose>()) } returns true
 }

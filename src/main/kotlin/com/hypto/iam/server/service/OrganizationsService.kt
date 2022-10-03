@@ -1,22 +1,19 @@
 package com.hypto.iam.server.service
 
 import com.google.gson.Gson
-import com.hypto.iam.server.Constants
-import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
-import com.hypto.iam.server.exceptions.PasscodeExpiredException
 import com.hypto.iam.server.extensions.toUTCOffset
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.models.BaseSuccessResponse
+import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
@@ -47,25 +44,12 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
-    private val appConfig: AppConfig by inject()
 
     override suspend fun createOrganization(
-        name: String,
-        description: String,
-        rootUser: RootUser,
+        request: CreateOrganizationRequest,
         passcodeStr: String?
     ): Pair<Organization, TokenResponse> {
-        val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
-        if (secretKey != passcodeStr) {
-            passcodeStr?.let {
-                passcodeRepo.getValidPasscode(
-                    it,
-                    VerifyEmailRequest.Purpose.signup,
-                    rootUser.email
-                ) ?: throw PasscodeExpiredException("Invalid or expired passcode")
-            }
-        }
-
+        val rootUser = request.rootUser
         val organizationId = idGenerator.organizationId()
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
         val username = idGenerator.username()
@@ -80,8 +64,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 organizationRepo.insert(
                     Organizations(
                         organizationId,
-                        name,
-                        description,
+                        request.name,
+                        request.description ?: "",
                         ResourceHrn(
                             organization = organizationId,
                             resource = IamResources.USER,
@@ -181,9 +165,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
  */
 interface OrganizationsService {
     suspend fun createOrganization(
-        name: String,
-        description: String,
-        rootUser: RootUser,
+        request: CreateOrganizationRequest,
         passcodeStr: String? = null
     ): Pair<Organization, TokenResponse>
 

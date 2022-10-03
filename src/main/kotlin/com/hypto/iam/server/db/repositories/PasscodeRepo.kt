@@ -16,15 +16,8 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
     }
 
     suspend fun createPasscode(
-        id: String,
-        email: String,
-        organizationId: String?,
-        validUntil: LocalDateTime,
-        purpose: VerifyEmailRequest.Purpose
+        record: PasscodesRecord
     ): PasscodesRecord {
-        val record =
-            PasscodesRecord().setId(id).setValidUntil(validUntil).setPurpose(purpose.toString()).setEmail(email)
-                .setOrganizationId(organizationId).setCreatedAt(LocalDateTime.now())
         record.attach(dao().configuration())
         record.store()
         return record
@@ -42,15 +35,22 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 )
             ).fetchOne(0, Int::class.java) ?: 0
 
-    suspend fun getValidPasscode(id: String, purpose: VerifyEmailRequest.Purpose, email: String): PasscodesRecord? {
+    suspend fun getValidPasscode(
+        id: String,
+        purpose: VerifyEmailRequest.Purpose,
+        email: String? = null
+    ): PasscodesRecord? {
         return ctx("passcodes.getValid")
             .selectFrom(PASSCODES)
             .where(
                 PASSCODES.ID.eq(id),
                 PASSCODES.PURPOSE.eq(purpose.toString()),
-                PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()),
-                PASSCODES.EMAIL.eq(email)
-            )
+                PASSCODES.VALID_UNTIL.ge(LocalDateTime.now())
+            ).apply {
+                email?.let {
+                    and(PASSCODES.EMAIL.eq(email))
+                }
+            }
             .fetchOne()
     }
 

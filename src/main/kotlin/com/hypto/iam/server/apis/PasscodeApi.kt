@@ -19,7 +19,12 @@ fun Route.passcodeApi() {
 
     post("/verifyEmail") {
         val request = call.receive<VerifyEmailRequest>().validate()
-        val response = passcodeService.verifyEmail(request.email, request.purpose, request.organizationId)
+        val response = passcodeService.verifyEmail(
+            request.email,
+            request.purpose,
+            request.organizationId,
+            request.metadata?.let { gson.toJson(request.metadata) }
+        )
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,

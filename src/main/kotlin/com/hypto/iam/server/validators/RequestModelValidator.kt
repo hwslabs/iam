@@ -149,7 +149,14 @@ fun ResetPasswordRequest.validate(): ResetPasswordRequest {
 }
 
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
-    return verifyEmailRequestValidation.validateAndThrowOnFailure(this)
+    verifyEmailRequestValidation.validateAndThrowOnFailure(this)
+
+    if (purpose == VerifyEmailRequest.Purpose.signup && metadata?.signup == null) {
+        throw IllegalArgumentException("Metadata is required for signup purpose")
+    }
+    this.metadata?.signup?.validate()
+
+    return this
 }
 
 fun UsernamePasswordCredential.validate(): UsernamePasswordCredential {

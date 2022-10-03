@@ -1,9 +1,14 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.Constants
+import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.models.VerifyEmailRequestMetadata
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
@@ -28,17 +33,27 @@ import org.koin.ktor.ext.inject
  * API to create organization in IAM.
  */
 fun Route.createOrganizationApi() {
-    val service: OrganizationsService by inject()
+    val organizationService: OrganizationsService by inject()
+    val passcodeRepo: PasscodeRepo by inject()
+    val appConfig: AppConfig by inject()
     val gson: Gson by inject()
 
     post("/organizations") {
-        val request = call.receive<CreateOrganizationRequest>().validate()
-        val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value
-        val (organization, tokenResponse) = service.createOrganization(
-            request.name,
-            description = request.description ?: "",
-            rootUser = request.rootUser,
-            passcodeStr = passcodeStr
+        val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
+        val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
+
+        // If secretKey is provided, then fetch use request body else use metadata from passcode table
+        val request = if (secretKey == passcodeStr)
+            call.receive<CreateOrganizationRequest>()
+        else {
+            val passcode = passcodeRepo.getValidPasscode(passcodeStr, VerifyEmailRequest.Purpose.signup)
+            gson.fromJson(passcode!!.metadata.data(), VerifyEmailRequestMetadata::class.java).signup
+        }
+        request!!.validate()
+
+        val (organization, tokenResponse) = organizationService.createOrganization(
+            request = request,
+            passcodeStr = if (secretKey != passcodeStr) passcodeStr else null
         )
         call.respondText(
             text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
