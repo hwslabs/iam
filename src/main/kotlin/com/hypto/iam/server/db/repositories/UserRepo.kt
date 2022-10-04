@@ -11,7 +11,6 @@ import org.jooq.impl.DSL
 object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
     private val idFun = fun(user: Users) = user.hrn
-    private val aliasUsernames = listOf(USERS.EMAIL, USERS.PREFERRED_USERNAME)
 
     override suspend fun dao(): DAOImpl<UsersRecord, Users, String> =
         txMan.getDao(com.hypto.iam.server.db.tables.Users.USERS, Users::class.java, idFun)
@@ -69,12 +68,10 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         .and(USERS.VERIFIED.eq(true))
         .fetchOne()
 
-    suspend fun findByAliasUsername(aliasUsername: String): UsersRecord? {
-        val conditions = DSL.or(aliasUsernames.map { it.eq(aliasUsername) })
-
+    suspend fun findByPreferredUsername(preferredUsername: String): UsersRecord? {
         return ctx("users.findByAliasUsername")
             .selectFrom(USERS)
-            .where(conditions)
+            .where(USERS.PREFERRED_USERNAME.eq(preferredUsername))
             .and(USERS.DELETED.eq(false))
             .and(USERS.VERIFIED.eq(true))
             .fetchOne()
