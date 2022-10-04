@@ -1,4 +1,4 @@
-@file:Suppress("LongMethod")
+@file:Suppress("LongMethod", "ComplexMethod")
 
 package com.hypto.iam.server
 
@@ -47,6 +47,8 @@ import com.sksamuel.cohort.logback.LogbackManager
 import com.sksamuel.cohort.threads.ThreadDeadlockHealthCheck
 import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
@@ -66,15 +68,20 @@ import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.doublereceive.DoubleReceive
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
+import io.ktor.util.AttributeKey
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.MeterBinder
 import java.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.inject
@@ -84,7 +91,12 @@ import org.koin.logger.SLF4JLogger
 private const val REQUEST_ID_HEADER = "X-Request-Id"
 private val shutdownHook = EngineShutdownHook(1.seconds, 1.minutes, 5.minutes)
 private const val MAX_THREADS_WAITING_FOR_DB_CONNS = 100
+// we need a typed key for using call attributes
+// particular name and value in CallStartTime makes no big difference, just for better debugging and readability
+@OptIn(ExperimentalTime::class)
+val CALL_START_TIME = AttributeKey<TimeMark>("CallStartTime")
 
+@OptIn(ExperimentalTime::class)
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val appConfig: AppConfig by inject()
@@ -93,9 +105,23 @@ fun Application.handleRequest() {
     val micrometerRegistry: MeterRegistry by inject()
     val micrometerBindings: List<MeterBinder> by inject()
 
+    intercept(ApplicationCallPipeline.Setup) {
+        // intercept before calling routing and mark every incoming call with a TimeMark
+        call.attributes.put(CALL_START_TIME, TimeSource.Monotonic.markNow())
+    }
     install(DefaultHeaders)
     install(CallLogging) {
         callIdMdc("call-id")
+        format { call ->
+            val time = when (val startTime = call.attributes.getOrNull(CALL_START_TIME)) {
+                null -> "" // just in case
+                else -> startTime.elapsedNow().toString()
+            }
+            val status = call.response.status()
+            val httpMethod = call.request.httpMethod.value
+            val userAgent = call.request.headers["User-Agent"]
+            "Status: $status, HTTP method: $httpMethod, User agent: $userAgent, time: $time"
+        }
     }
     install(CallId) {
         retrieveFromHeader(REQUEST_ID_HEADER)
