@@ -1,8 +1,6 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.Constants
-import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
@@ -18,7 +16,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.principal
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveOrNull
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -35,25 +35,26 @@ import org.koin.ktor.ext.inject
 fun Route.createOrganizationApi() {
     val organizationService: OrganizationsService by inject()
     val passcodeRepo: PasscodeRepo by inject()
-    val appConfig: AppConfig by inject()
     val gson: Gson by inject()
 
     post("/organizations") {
-        val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
         val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
 
-        // If secretKey is provided, then fetch use request body else use metadata from passcode table
-        val request = if (secretKey == passcodeStr)
-            call.receive<CreateOrganizationRequest>()
-        else {
-            val passcode = passcodeRepo.getValidPasscode(passcodeStr, VerifyEmailRequest.Purpose.signup)
-            gson.fromJson(passcode!!.metadata.data(), VerifyEmailRequestMetadata::class.java).signup
+        val apiRequest = call.receiveOrNull<CreateOrganizationRequest>()
+        val passcodeMetadata = passcodeRepo.getValidPasscode(passcodeStr, VerifyEmailRequest.Purpose.signup)?.metadata
+        if (passcodeMetadata != null && apiRequest != null) {
+            throw BadRequestException("Organization and root user details are already provided")
         }
+        if (passcodeMetadata == null && apiRequest == null) {
+            throw BadRequestException("Organization and root user details are missing")
+        }
+
+        val request =
+            apiRequest ?: gson.fromJson(passcodeMetadata!!.data(), VerifyEmailRequestMetadata::class.java).signup
         request!!.validate()
 
         val (organization, tokenResponse) = organizationService.createOrganization(
-            request = request,
-            passcodeStr = if (secretKey != passcodeStr) passcodeStr else null
+            request = request
         )
         call.respondText(
             text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),

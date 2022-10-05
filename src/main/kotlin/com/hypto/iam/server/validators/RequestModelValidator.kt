@@ -151,10 +151,11 @@ fun ResetPasswordRequest.validate(): ResetPasswordRequest {
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     verifyEmailRequestValidation.validateAndThrowOnFailure(this)
 
-    if (purpose == VerifyEmailRequest.Purpose.signup && metadata?.signup == null) {
-        throw IllegalArgumentException("Metadata is required for signup purpose")
+    metadata?.signup?.validate().let {
+        if (purpose == VerifyEmailRequest.Purpose.signup && it?.rootUser?.email != email) {
+            throw IllegalArgumentException("Email in metadata does not match email in request")
+        }
     }
-    this.metadata?.signup?.validate()
 
     return this
 }

@@ -53,6 +53,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             this.validUntil = validUntil
             this.purpose = purpose.toString()
             this.createdAt = LocalDateTime.now()
+            // TODO: Store metadata in encrypted form as critical information like password is present during signup
             this.metadata = metadata?.let { JSONB.valueOf(it) }
         }
         val passcode = passcodeRepo.createPasscode(passcodeRecord)

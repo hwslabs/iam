@@ -46,8 +46,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val txMan: TxMan by inject()
 
     override suspend fun createOrganization(
-        request: CreateOrganizationRequest,
-        passcodeStr: String?
+        request: CreateOrganizationRequest
     ): Pair<Organization, TokenResponse> {
         val rootUser = request.rootUser
         val organizationId = idGenerator.organizationId()
@@ -57,9 +56,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         @Suppress("TooGenericExceptionCaught")
         try {
             return txMan.wrap {
-                if (passcodeStr != null) {
-                    passcodeRepo.deleteByEmailAndPurpose(rootUser.email, VerifyEmailRequest.Purpose.signup)
-                }
+                passcodeRepo.deleteByEmailAndPurpose(rootUser.email, VerifyEmailRequest.Purpose.signup)
                 // Create Organization
                 organizationRepo.insert(
                     Organizations(
@@ -165,8 +162,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
  */
 interface OrganizationsService {
     suspend fun createOrganization(
-        request: CreateOrganizationRequest,
-        passcodeStr: String? = null
+        request: CreateOrganizationRequest
     ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization
