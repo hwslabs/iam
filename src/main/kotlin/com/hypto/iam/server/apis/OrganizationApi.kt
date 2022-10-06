@@ -2,11 +2,11 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.PasscodeRepo
+import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.models.VerifyEmailRequestMetadata
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
@@ -50,8 +50,13 @@ fun Route.createOrganizationApi() {
         }
 
         val request =
-            apiRequest ?: gson.fromJson(passcodeMetadata!!.data(), VerifyEmailRequestMetadata::class.java).signup
-        request!!.validate()
+            apiRequest ?: CreateOrganizationRequest.from(
+                gson.fromJson(
+                    passcodeMetadata!!.data(),
+                    Map::class.java
+                ) as Map<String, Any>
+            )
+        request.validate()
 
         val (organization, tokenResponse) = organizationService.createOrganization(
             request = request

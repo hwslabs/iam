@@ -6,10 +6,7 @@ import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
-import com.hypto.iam.server.models.CreateOrganizationRequest
-import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.models.VerifyEmailRequestMetadata
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -38,18 +35,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val requestBody = VerifyEmailRequest(
                 email = "abcd@abcd.com",
-                purpose = VerifyEmailRequest.Purpose.signup,
-                metadata = VerifyEmailRequestMetadata(
-                    signup = CreateOrganizationRequest(
-                        name = "orgName",
-                        RootUser(
-                            name = "test-name",
-                            passwordHash = "Test@password1",
-                            email = "abcd@abcd.com",
-                            verified = true
-                        )
-                    )
-                )
+                purpose = VerifyEmailRequest.Purpose.signup
             )
             with(
                 handleRequest(
@@ -78,18 +64,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             val requestBody = VerifyEmailRequest(
                 email = "abcd@abcd.com",
                 purpose = VerifyEmailRequest.Purpose.signup,
-                organizationId = "sampleOrg",
-                metadata = VerifyEmailRequestMetadata(
-                    signup = CreateOrganizationRequest(
-                        name = "orgName",
-                        RootUser(
-                            name = "test-name",
-                            passwordHash = "Test@password1",
-                            email = "abcd@abcd.com",
-                            verified = true
-                        )
-                    )
-                )
+                organizationId = "sampleOrg"
             )
             with(
                 handleRequest(

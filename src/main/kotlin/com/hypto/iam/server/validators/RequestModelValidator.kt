@@ -7,6 +7,7 @@ import com.hypto.iam.server.Constants.Companion.MIN_POLICY_STATEMENTS
 import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.extensions.TimeNature
 import com.hypto.iam.server.extensions.dateTime
+import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.noEndSpaces
 import com.hypto.iam.server.extensions.oneOrMoreOf
@@ -38,6 +39,7 @@ import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minItems
 import io.konform.validation.jsonschema.minLength
 import io.konform.validation.jsonschema.pattern
+import io.ktor.server.plugins.BadRequestException
 
 // This file contains extension functions to validate input data given by clients
 
@@ -151,10 +153,29 @@ fun ResetPasswordRequest.validate(): ResetPasswordRequest {
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     verifyEmailRequestValidation.validateAndThrowOnFailure(this)
 
-    metadata?.signup?.validate().let {
-        if (purpose == VerifyEmailRequest.Purpose.signup && it?.rootUser?.email != email) {
-            throw IllegalArgumentException("Email in metadata does not match email in request")
+    if (purpose == VerifyEmailRequest.Purpose.signup && metadata != null) {
+        // metadata should contain all the required keys
+        val signUpRequiredKeys = setOf(
+            "name",
+            "description",
+            "rootUserName",
+            "rootUserPasswordHash",
+            "rootUserEmail",
+            "rootUserVerified",
+            "rootUserPreferredUsername",
+            "rootUserPhone"
+        )
+        val metadataKeys = metadata.keys
+        if (!metadataKeys.containsAll(signUpRequiredKeys)) {
+            throw BadRequestException(
+                "Metadata keys should include " +
+                    "${signUpRequiredKeys.subtract(metadataKeys).joinToString(",")}"
+            )
         }
+        require(metadata["rootUserEmail"] == email) {
+            "Email in metadata should match email in request"
+        }
+        CreateOrganizationRequest.from(metadata).validate()
     }
 
     return this
