@@ -157,19 +157,15 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
         // metadata should contain all the required keys
         val signUpRequiredKeys = setOf(
             "name",
-            "description",
-            "rootUserName",
             "rootUserPasswordHash",
             "rootUserEmail",
-            "rootUserVerified",
-            "rootUserPreferredUsername",
-            "rootUserPhone"
+            "rootUserVerified"
         )
         val metadataKeys = metadata.keys
         if (!metadataKeys.containsAll(signUpRequiredKeys)) {
             throw BadRequestException(
                 "Metadata keys should include " +
-                    "${signUpRequiredKeys.subtract(metadataKeys).joinToString(",")}"
+                    signUpRequiredKeys.subtract(metadataKeys).joinToString(",")
             )
         }
         require(metadata["rootUserEmail"] == email) {
