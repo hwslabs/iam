@@ -43,10 +43,13 @@ fun Route.createOrganizationApi() {
         val apiRequest = call.receiveOrNull<CreateOrganizationRequest>()
         val passcodeMetadata = passcodeRepo.getValidPasscode(passcodeStr, VerifyEmailRequest.Purpose.signup)?.metadata
         if (passcodeMetadata != null && apiRequest != null) {
-            throw BadRequestException("Organization and root user details are already provided")
+            throw BadRequestException(
+                "Organization and Admin user details are provided " +
+                    "both during passcode creation time and sign-up request."
+            )
         }
         if (passcodeMetadata == null && apiRequest == null) {
-            throw BadRequestException("Organization and root user details are missing")
+            throw BadRequestException("Organization and Admin user details are missing")
         }
 
         val request =
