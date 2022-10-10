@@ -15,6 +15,7 @@ import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -29,11 +30,10 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.coEvery
 import io.mockk.verify
 import java.time.LocalDateTime
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.text.Charsets.UTF_8
-import org.jooq.JSONB
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
@@ -43,6 +43,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserP
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
+    private val passcodeService: PasscodeService by inject()
 
     @Test
     fun `create organization with valid root credentials`() {
@@ -213,7 +214,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     this.email = testEmail
                     this.purpose = VerifyEmailRequest.Purpose.signup.value
                     this.validUntil = LocalDateTime.MAX
-                    this.metadata = JSONB.valueOf(gson.toJson(metadata))
+                    this.metadata = passcodeService.encryptMetadata(metadata)
                 }
             }
 

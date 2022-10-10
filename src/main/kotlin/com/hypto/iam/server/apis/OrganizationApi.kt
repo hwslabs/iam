@@ -11,6 +11,7 @@ import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.OrganizationsService
+import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -35,6 +36,7 @@ import org.koin.ktor.ext.inject
 fun Route.createOrganizationApi() {
     val organizationService: OrganizationsService by inject()
     val passcodeRepo: PasscodeRepo by inject()
+    val passcodeService: PasscodeService by inject()
     val gson: Gson by inject()
 
     post("/organizations") {
@@ -54,10 +56,7 @@ fun Route.createOrganizationApi() {
 
         val request =
             apiRequest ?: CreateOrganizationRequest.from(
-                gson.fromJson(
-                    passcodeMetadata!!.data(),
-                    Map::class.java
-                ) as Map<String, Any>
+                passcodeService.decryptMetadata(passcodeMetadata!!)
             )
         request.validate()
 

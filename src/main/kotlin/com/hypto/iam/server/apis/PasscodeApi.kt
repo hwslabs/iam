@@ -23,7 +23,7 @@ fun Route.passcodeApi() {
             request.email,
             request.purpose,
             request.organizationId,
-            request.metadata?.let { gson.toJson(request.metadata) }
+            request.metadata
         )
         call.respondText(
             text = gson.toJson(response),
