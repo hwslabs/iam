@@ -193,14 +193,13 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val testPhone = "+919626012778"
+            val testPhone = "+919999999999"
             val testPassword = "testPassword@Hash1"
             val testPasscode = "testPasscode"
             val metadata = mapOf<String, Any>(
                 "name" to orgName,
                 "rootUserName" to name,
                 "rootUserPasswordHash" to testPassword,
-                "rootUserEmail" to testEmail,
                 "rootUserVerified" to true,
                 "rootUserPreferredUsername" to preferredUsername,
                 "rootUserPhone" to testPhone

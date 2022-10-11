@@ -208,13 +208,16 @@ fun UpdateUserRequest.Status.toUserStatus() = when (this) {
     UpdateUserRequest.Status.disabled -> User.Status.disabled
 }
 
-fun CreateOrganizationRequest.Companion.from(verifyEmailMetadata: Map<String, Any?>): CreateOrganizationRequest {
+fun CreateOrganizationRequest.Companion.from(
+    verifyEmailMetadata: Map<String, Any>,
+    rootUserEmail: String
+): CreateOrganizationRequest {
     return CreateOrganizationRequest(
         name = verifyEmailMetadata["name"] as String,
         description = verifyEmailMetadata["description"] as String?,
         rootUser = RootUser(
             passwordHash = verifyEmailMetadata["rootUserPasswordHash"] as String,
-            email = verifyEmailMetadata["rootUserEmail"] as String,
+            email = rootUserEmail,
             verified = verifyEmailMetadata["rootUserVerified"] as Boolean,
             name = verifyEmailMetadata["rootUserName"] as String?,
             preferredUsername = verifyEmailMetadata["rootUserPreferredUsername"] as String?,

@@ -43,7 +43,8 @@ fun Route.createOrganizationApi() {
         val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
 
         val apiRequest = call.receiveOrNull<CreateOrganizationRequest>()
-        val passcodeMetadata = passcodeRepo.getValidPasscode(passcodeStr, VerifyEmailRequest.Purpose.signup)?.metadata
+        val passcode = passcodeRepo.getValidPasscode(passcodeStr, VerifyEmailRequest.Purpose.signup)
+        val passcodeMetadata = passcode?.metadata
         if (passcodeMetadata != null && apiRequest != null) {
             throw BadRequestException(
                 "Organization and Admin user details are provided " +
@@ -56,7 +57,7 @@ fun Route.createOrganizationApi() {
 
         val request =
             apiRequest ?: CreateOrganizationRequest.from(
-                passcodeService.decryptMetadata(passcodeMetadata!!)
+                passcodeService.decryptMetadata(passcodeMetadata!!), passcode.email
             )
         request.validate()
 

@@ -39,7 +39,6 @@ import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minItems
 import io.konform.validation.jsonschema.minLength
 import io.konform.validation.jsonschema.pattern
-import io.ktor.server.plugins.BadRequestException
 
 // This file contains extension functions to validate input data given by clients
 
@@ -158,20 +157,16 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
         val signUpRequiredKeys = setOf(
             "name",
             "rootUserPasswordHash",
-            "rootUserEmail",
             "rootUserVerified"
         )
         val metadataKeys = metadata.keys
         if (!metadataKeys.containsAll(signUpRequiredKeys)) {
-            throw BadRequestException(
+            throw IllegalArgumentException(
                 "Metadata keys should include " +
                     signUpRequiredKeys.subtract(metadataKeys).joinToString(",")
             )
         }
-        require(metadata["rootUserEmail"] == email) {
-            "Email in metadata should match email in request"
-        }
-        CreateOrganizationRequest.from(metadata).validate()
+        CreateOrganizationRequest.from(metadata, email).validate()
     }
 
     return this

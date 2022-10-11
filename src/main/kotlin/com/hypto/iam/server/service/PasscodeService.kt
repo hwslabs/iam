@@ -35,21 +35,21 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
     private val gson: Gson by inject()
     private val encryptUtil: EncryptUtil by inject()
 
-    override suspend fun encryptMetadata(metadata: Map<String, Any?>): String {
+    override suspend fun encryptMetadata(metadata: Map<String, Any>): String {
         val metadataJson = gson.toJson(metadata)
         return encryptUtil.encrypt(metadataJson)
     }
 
-    override suspend fun decryptMetadata(metadata: String): Map<String, Any?> {
+    override suspend fun decryptMetadata(metadata: String): Map<String, Any> {
         val metadataJson = encryptUtil.decrypt(metadata)
-        return gson.fromJson(metadataJson, Map::class.java) as Map<String, Any?>
+        return gson.fromJson(metadataJson, Map::class.java) as Map<String, Any>
     }
 
     override suspend fun verifyEmail(
         email: String,
         purpose: Purpose,
         organizationId: String?,
-        metadata: Map<String, Any?>?
+        metadata: Map<String, Any>?
     ): BaseSuccessResponse {
         if (passcodeRepo.getValidPasscodeCount(email, purpose) >= appConfig.app.passcodeCountLimit) {
             throw PasscodeLimitExceededException(
@@ -111,9 +111,9 @@ interface PasscodeService {
         email: String,
         purpose: Purpose,
         organizationId: String?,
-        metadata: Map<String, Any?>?
+        metadata: Map<String, Any>?
     ): BaseSuccessResponse
 
-    suspend fun encryptMetadata(metadata: Map<String, Any?>): String
-    suspend fun decryptMetadata(metadata: String): Map<String, Any?>
+    suspend fun encryptMetadata(metadata: Map<String, Any>): String
+    suspend fun decryptMetadata(metadata: String): Map<String, Any>
 }
