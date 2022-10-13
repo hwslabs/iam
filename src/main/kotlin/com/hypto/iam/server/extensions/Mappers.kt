@@ -13,6 +13,7 @@ import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.Action
+import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
 import com.hypto.iam.server.models.Policy
@@ -20,6 +21,7 @@ import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
+import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPolicy
@@ -204,4 +206,22 @@ fun auditEntryFrom(
 fun UpdateUserRequest.Status.toUserStatus() = when (this) {
     UpdateUserRequest.Status.enabled -> User.Status.enabled
     UpdateUserRequest.Status.disabled -> User.Status.disabled
+}
+
+fun CreateOrganizationRequest.Companion.from(
+    verifyEmailMetadata: Map<String, Any>,
+    rootUserEmail: String
+): CreateOrganizationRequest {
+    return CreateOrganizationRequest(
+        name = verifyEmailMetadata["name"] as String,
+        description = verifyEmailMetadata["description"] as String?,
+        rootUser = RootUser(
+            passwordHash = verifyEmailMetadata["rootUserPasswordHash"] as String,
+            email = rootUserEmail,
+            verified = verifyEmailMetadata["rootUserVerified"] as Boolean,
+            name = verifyEmailMetadata["rootUserName"] as String?,
+            preferredUsername = verifyEmailMetadata["rootUserPreferredUsername"] as String?,
+            phone = verifyEmailMetadata["rootUserPhone"] as String?,
+        )
+    )
 }

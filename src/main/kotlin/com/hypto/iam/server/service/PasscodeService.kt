@@ -3,10 +3,12 @@ package com.hypto.iam.server.service
 import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.PasscodeRepo
+import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.exceptions.PasscodeLimitExceededException
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.VerifyEmailRequest.Purpose
 import com.hypto.iam.server.utils.ApplicationIdUtil
+import com.hypto.iam.server.utils.EncryptUtil
 import java.time.LocalDateTime
 import java.util.Base64
 import org.koin.core.component.KoinComponent
@@ -31,11 +33,23 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
     private val usersService: UsersService by inject()
     private val passcodeRepo: PasscodeRepo by inject()
     private val gson: Gson by inject()
+    private val encryptUtil: EncryptUtil by inject()
+
+    override suspend fun encryptMetadata(metadata: Map<String, Any>): String {
+        val metadataJson = gson.toJson(metadata)
+        return encryptUtil.encrypt(metadataJson)
+    }
+
+    override suspend fun decryptMetadata(metadata: String): Map<String, Any> {
+        val metadataJson = encryptUtil.decrypt(metadata)
+        return gson.fromJson(metadataJson, Map::class.java) as Map<String, Any>
+    }
 
     override suspend fun verifyEmail(
         email: String,
         purpose: Purpose,
-        organizationId: String?
+        organizationId: String?,
+        metadata: Map<String, Any>?
     ): BaseSuccessResponse {
         if (passcodeRepo.getValidPasscodeCount(email, purpose) >= appConfig.app.passcodeCountLimit) {
             throw PasscodeLimitExceededException(
@@ -43,13 +57,17 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             )
         }
         val validUntil = LocalDateTime.now().plusSeconds(appConfig.app.passcodeValiditySeconds)
-        val passcode = passcodeRepo.createPasscode(
-            idGenerator.passcodeId(),
-            email,
-            if (purpose == Purpose.signup) null else organizationId,
-            validUntil,
-            purpose
-        )
+
+        val passcodeRecord = PasscodesRecord().apply {
+            this.id = idGenerator.passcodeId()
+            this.email = email
+            this.purpose = if (purpose == Purpose.signup) null else organizationId
+            this.validUntil = validUntil
+            this.purpose = purpose.toString()
+            this.createdAt = LocalDateTime.now()
+            this.metadata = metadata?.let { encryptMetadata(it) }
+        }
+        val passcode = passcodeRepo.createPasscode(passcodeRecord)
         val response = when (purpose) {
             Purpose.signup -> sendSignupPasscode(email, passcode.id)
             Purpose.reset -> sendResetPassword(email, organizationId, passcode.id)
@@ -92,6 +110,10 @@ interface PasscodeService {
     suspend fun verifyEmail(
         email: String,
         purpose: Purpose,
-        organizationId: String?
+        organizationId: String?,
+        metadata: Map<String, Any>?
     ): BaseSuccessResponse
+
+    suspend fun encryptMetadata(metadata: Map<String, Any>): String
+    suspend fun decryptMetadata(metadata: String): Map<String, Any>
 }

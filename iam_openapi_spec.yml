@@ -1445,8 +1445,12 @@ components:
           schema:
             $ref: '#/components/schemas/VerifyEmailRequest'
           examples:
-            VerifyEmailRequest:
-              $ref: '#/components/examples/VerifyEmailRequest'
+            VerifyEmailRequestReset:
+              $ref: '#/components/examples/VerifyEmailRequestReset'
+            VerifyEmailRequestSignup:
+              $ref: '#/components/examples/VerifyEmailRequestSignup'
+            VerifyEmailRequestSignupWithMetadata:
+              $ref: '#/components/examples/VerifyEmailRequestSignupWithMetadata'
 
   responses:
     BaseSuccessResponse:
@@ -1928,11 +1932,30 @@ components:
         username: Bob
         salterPassword: wnr1782qbt52igbiuwbcgeuyiy==egryg123iuoh1109877t2i313489rge
 
-    VerifyEmailRequest:
+    VerifyEmailRequestReset:
       value:
         email: abcd@abcd.in
         organizationId: XlK5h64gND
         purpose: reset
+
+    VerifyEmailRequestSignup:
+      value:
+        email: abcd@abcd.in
+        purpose: signup
+
+    VerifyEmailRequestSignupWithMetadata:
+      value:
+        email: abcd@abcd.in
+        purpose: signup
+        metadata:
+          name: ACME Enterprise
+          description: Brief description about ACME
+          rootUserPasswordHash: Password@123
+          rootUserVerified: true
+          rootUserName: Lorem Ipsum
+          rootUserPreferredUsername: username
+          rootUserPhone: "+1234567890"
+
 
     # Response examples
 
@@ -2488,6 +2511,21 @@ components:
           enum:
             - reset
             - signup
+        metadata:
+          type: object
+          description: |
+            Additional metadata to be sent along with the request. Every purpose requires different metadata.
+            - signup :
+                if user provides admin user and org details in metadata, they don't need to be provided in the request body during CreateOrganization request.
+                Supported metadata keys:
+                1. name : string (required): name of the organization
+                2. description : string (optional) - description of the organization
+                3. rootUserPasswordHash : string (required) - password of the root user
+                4. rootUserVerified : boolean (required) - if the root user is verified
+                5. rootUserName : string (optional) - name of the root user
+                6. rootUserPreferredUsername : string (optional) - preferred username of the root user
+                7. rootUserPhone : string (optional) - phone number of the root user
+          additionalProperties: true
 
     # Responses:
     BaseSuccessResponse:

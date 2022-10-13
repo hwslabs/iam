@@ -23,7 +23,6 @@ import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.exceptions.InternalException
-import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
@@ -162,9 +161,8 @@ fun Application.handleRequest() {
         }
         apiKeyAuth("signup-passcode-auth") {
             validate { tokenCredential: TokenCredential ->
-                val email = this.receive<CreateOrganizationRequest>().validate().rootUser.email
                 tokenCredential.value?.let {
-                    passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.signup, email)?.let {
+                    passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.signup)?.let {
                         ApiPrincipal(tokenCredential, "hypto-root")
                     }
                 }

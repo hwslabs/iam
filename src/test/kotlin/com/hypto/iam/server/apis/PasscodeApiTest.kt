@@ -7,6 +7,7 @@ import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -180,6 +181,36 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             }
 
             DataSetupHelper.deleteOrganization(organizationId, this)
+        }
+    }
+
+    @Test
+    fun `missing admin user details in metadata while creating passcode for signup purpose - failure`() {
+        withTestApplication(Application::handleRequest) {
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val metadata = mapOf<String, Any>(
+                "name" to "test-org" + IdGenerator.randomId(),
+                "rootUserName" to "test-name" + IdGenerator.randomId(),
+                "rootUserVerified" to true,
+                "rootUserPreferredUsername" to "user" + IdGenerator.randomId()
+            )
+
+            val verifyRequestBody = VerifyEmailRequest(
+                email = testEmail,
+                purpose = VerifyEmailRequest.Purpose.signup,
+                metadata = metadata
+            )
+            with(
+                handleRequest(HttpMethod.Post, "/verifyEmail") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(verifyRequestBody))
+                }
+            ) {
+                assertEquals(HttpStatusCode.BadRequest, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8), response.contentType()
+                )
+            }
         }
     }
 }

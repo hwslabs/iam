@@ -43,6 +43,7 @@ import com.hypto.iam.server.service.UsersServiceImpl
 import com.hypto.iam.server.service.ValidationService
 import com.hypto.iam.server.service.ValidationServiceImpl
 import com.hypto.iam.server.utils.ApplicationIdUtil
+import com.hypto.iam.server.utils.EncryptUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.policy.PolicyValidator
@@ -97,6 +98,7 @@ val applicationModule = module {
     single { MicrometerConfigs.getBinders() }
     single { IdGenerator }
     single { HrnFactory }
+    single { EncryptUtil }
     single { ApplicationIdUtil.Generator }
     single { ApplicationIdUtil.Validator }
     single { PolicyValidator }

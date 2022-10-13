@@ -25,7 +25,7 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
     @Test
     fun `StatusPage - Respond to server side errors with custom error message`() {
         declareMock<OrganizationsService> {
-            coEvery { this@declareMock.createOrganization(any(), any(), any()) } coAnswers {
+            coEvery { this@declareMock.createOrganization(any()) } coAnswers {
                 @Suppress("TooGenericExceptionThrown")
                 throw RuntimeException()
             }

@@ -5,6 +5,7 @@ import com.hypto.iam.server.Constants
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
+import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
@@ -14,6 +15,7 @@ import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -27,10 +29,11 @@ import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
 import io.mockk.coEvery
 import io.mockk.verify
+import java.time.LocalDateTime
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.text.Charsets.UTF_8
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
@@ -40,6 +43,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserP
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
+    private val passcodeService: PasscodeService by inject()
 
     @Test
     fun `create organization with valid root credentials`() {
@@ -175,6 +179,68 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
                 orgId = responseBody.organization!!.id
                 assertEquals(requestBody.name, responseBody.organization!!.name)
+                assertEquals(10, responseBody.organization!!.id.length)
+            }
+
+            DataSetupHelper.deleteOrganization(orgId, this)
+        }
+    }
+
+    @Test
+    fun `create organization by providing org details during verify email`() {
+        withTestApplication(Application::handleRequest) {
+            val orgName = "test-org" + IdGenerator.randomId()
+            val preferredUsername = "user" + IdGenerator.randomId()
+            val name = "test-name" + IdGenerator.randomId()
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val testPhone = "+919999999999"
+            val testPassword = "testPassword@Hash1"
+            val testPasscode = "testPasscode"
+            val metadata = mapOf<String, Any>(
+                "name" to orgName,
+                "rootUserName" to name,
+                "rootUserPasswordHash" to testPassword,
+                "rootUserVerified" to true,
+                "rootUserPreferredUsername" to preferredUsername,
+                "rootUserPhone" to testPhone
+            )
+
+            coEvery {
+                passcodeRepo.getValidPasscode(any(), VerifyEmailRequest.Purpose.signup)
+            } coAnswers {
+                PasscodesRecord().apply {
+                    this.id = testPasscode
+                    this.email = testEmail
+                    this.purpose = VerifyEmailRequest.Purpose.signup.value
+                    this.validUntil = LocalDateTime.MAX
+                    this.metadata = passcodeService.encryptMetadata(metadata)
+                }
+            }
+
+            lateinit var orgId: String
+            val verifyRequestBody = VerifyEmailRequest(
+                email = testEmail,
+                purpose = VerifyEmailRequest.Purpose.signup,
+                metadata = metadata
+            )
+            handleRequest(HttpMethod.Post, "/verifyEmail") {
+                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(gson.toJson(verifyRequestBody))
+            }
+            with(
+                handleRequest(HttpMethod.Post, "/organizations") {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader("X-Api-Key", testPasscode)
+                }
+            ) {
+                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
+                assertEquals(HttpStatusCode.Created, response.status())
+                assertEquals(
+                    ContentType.Application.Json.withCharset(UTF_8), response.contentType()
+                )
+
+                orgId = responseBody.organization!!.id
+                assertEquals(orgName, responseBody.organization!!.name)
                 assertEquals(10, responseBody.organization!!.id.length)
             }
 

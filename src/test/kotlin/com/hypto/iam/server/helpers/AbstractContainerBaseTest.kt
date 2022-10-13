@@ -1,6 +1,8 @@
 package com.hypto.iam.server.helpers
 
+import com.hypto.iam.server.Constants
 import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.getKoinInstance
@@ -17,6 +19,7 @@ import software.amazon.awssdk.services.ses.SesClient
 abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
     protected var rootToken: String = ""
     protected lateinit var cognitoClient: CognitoIdentityProviderClient
+    protected lateinit var passcodeRepo: PasscodeRepo
     protected lateinit var sesClient: SesClient
 
     @JvmField
@@ -31,8 +34,8 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
 
     @BeforeEach
     fun setup() {
-        rootToken = getKoinInstance<AppConfig>().app.secretKey
-        mockPasscodeRepo()
+        rootToken = Constants.SECRET_PREFIX + getKoinInstance<AppConfig>().app.secretKey
+        passcodeRepo = mockPasscodeRepo()
         cognitoClient = mockCognitoClient()
         sesClient = mockSesClient()
     }
