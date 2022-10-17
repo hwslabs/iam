@@ -1262,7 +1262,7 @@ components:
   requestBodies:
     CreateOrganizationRequest:
       description: Payload to create organization
-      required: true
+      required: false
       content:
         application/json:
           schema:
@@ -1822,7 +1822,6 @@ components:
           passwordHash: <password>
           email: root@example.com
           phone: "+1234567890"
-          verified: true
 
     UpdateOrganizationRequest:
       summary: A sample UpdateOrganizationRequest
@@ -1951,7 +1950,6 @@ components:
           name: ACME Enterprise
           description: Brief description about ACME
           rootUserPasswordHash: Password@123
-          rootUserVerified: true
           rootUserName: Lorem Ipsum
           rootUserPreferredUsername: username
           rootUserPhone: "+1234567890"
@@ -1972,7 +1970,6 @@ components:
             organizationId: XlK5h64gND
             email: bob@acme.com
             status: enabled
-            verified: true
             phone: "+1234071628"
             loginAccess: true
             createdBy: ''
@@ -2095,7 +2092,6 @@ components:
           organizationId: XlK5h64gND
           email: bob@acme.com
           status: enabled
-          verified: true
           phone: "+1234071628"
           loginAccess: true
           createdBy: ""
@@ -2257,7 +2253,6 @@ components:
         - username
         - passwordHash
         - email
-        - verified
       properties:
         preferredUsername:
           type: string
@@ -2276,8 +2271,6 @@ components:
         phone:
           type: string
           maxLength: 30
-        verified:
-          type: boolean
 
 
     CreateUserRequest:
@@ -2521,10 +2514,9 @@ components:
                 1. name : string (required): name of the organization
                 2. description : string (optional) - description of the organization
                 3. rootUserPasswordHash : string (required) - password of the root user
-                4. rootUserVerified : boolean (required) - if the root user is verified
-                5. rootUserName : string (optional) - name of the root user
-                6. rootUserPreferredUsername : string (optional) - preferred username of the root user
-                7. rootUserPhone : string (optional) - phone number of the root user
+                4. rootUserName : string (optional) - name of the root user
+                5. rootUserPreferredUsername : string (optional) - preferred username of the root user
+                6. rootUserPhone : string (optional) - phone number of the root user
           additionalProperties: true
 
     # Responses:
