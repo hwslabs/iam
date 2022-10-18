@@ -54,7 +54,6 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val name = "test-name" + IdGenerator.randomId()
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPassword = "testPassword@Hash1"
-            val verified = true
 
             lateinit var orgId: String
             val requestBody = CreateOrganizationRequest(
@@ -63,8 +62,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     preferredUsername = preferredUsername,
                     name = name,
                     passwordHash = testPassword,
-                    email = testEmail,
-                    verified = verified
+                    email = testEmail
                 )
             )
             with(
@@ -117,8 +115,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                                     name = name,
                                     passwordHash = testPassword,
                                     email = testEmail,
-                                    phone = testPhone,
-                                    verified = true
+                                    phone = testPhone
                                 )
                             )
                         )
@@ -143,7 +140,6 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
             val testPasscode = "testPasscode"
-            val verified = true
 
             lateinit var orgId: String
             val verifyRequestBody = VerifyEmailRequest(
@@ -160,8 +156,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     name = name,
                     passwordHash = testPassword,
                     email = testEmail,
-                    phone = testPhone,
-                    verified = true
+                    phone = testPhone
                 )
             )
             with(
@@ -272,8 +267,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     name = name,
                     passwordHash = testPassword,
                     email = testEmail,
-                    phone = testPhone,
-                    verified = true
+                    phone = testPhone
                 )
             )
             with(
@@ -313,8 +307,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,
-                                phone = testPhone,
-                                verified = true
+                                phone = testPhone
                             )
                         )
                     )
@@ -361,8 +354,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,
-                                phone = testPhone,
-                                verified = true
+                                phone = testPhone
                             )
                         )
                     )
@@ -412,8 +404,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,
-                                phone = testPhone,
-                                verified = true
+                                phone = testPhone
                             )
                         )
                     )
@@ -462,8 +453,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                                 name = name,
                                 passwordHash = testPassword,
                                 email = testEmail,
-                                phone = testPhone,
-                                verified = true
+                                phone = testPhone
                             ),
                             orgDescription
                         )

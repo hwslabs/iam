@@ -218,10 +218,9 @@ fun CreateOrganizationRequest.Companion.from(
         rootUser = RootUser(
             passwordHash = verifyEmailMetadata["rootUserPasswordHash"] as String,
             email = rootUserEmail,
-            verified = verifyEmailMetadata["rootUserVerified"] as Boolean,
             name = verifyEmailMetadata["rootUserName"] as String?,
             preferredUsername = verifyEmailMetadata["rootUserPreferredUsername"] as String?,
-            phone = verifyEmailMetadata["rootUserPhone"] as String?,
+            phone = verifyEmailMetadata["rootUserPhone"] as String?
         )
     )
 }

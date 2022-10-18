@@ -45,7 +45,6 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
                     preferredUsername = preferredUsername,
                     name = name,
                     passwordHash = testPassword,
-                    verified = true,
                     email = testEmail,
                     phone = testPhone
                 )
