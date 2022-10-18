@@ -7,7 +7,6 @@ import com.hypto.iam.server.Constants.Companion.MIN_POLICY_STATEMENTS
 import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.extensions.TimeNature
 import com.hypto.iam.server.extensions.dateTime
-import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.noEndSpaces
 import com.hypto.iam.server.extensions.oneOrMoreOf
@@ -153,19 +152,7 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     verifyEmailRequestValidation.validateAndThrowOnFailure(this)
 
     if (purpose == VerifyEmailRequest.Purpose.signup && metadata != null) {
-        // metadata should contain all the required keys
-        val signUpRequiredKeys = setOf(
-            "name",
-            "rootUserPasswordHash"
-        )
-        val metadataKeys = metadata.keys
-        if (!metadataKeys.containsAll(signUpRequiredKeys)) {
-            throw IllegalArgumentException(
-                "Metadata keys should include " +
-                    signUpRequiredKeys.subtract(metadataKeys).joinToString(",")
-            )
-        }
-        CreateOrganizationRequest.from(metadata, email).validate()
+        validateSignupMetadata(metadata)
     }
 
     return this
