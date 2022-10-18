@@ -56,8 +56,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
             )
         )
             throw UserAlreadyExistException(
-                "Email - ${credentials.email}  or Username - ${credentials.preferredUsername} already registered." +
-                    "Unable to create user"
+                "Email - ${credentials.email} " +
+                    credentials.preferredUsername?.let {
+                        "or Username - ${credentials.preferredUsername}"
+                    }.orEmpty() +
+                    "already registered. Unable to create user"
             )
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)

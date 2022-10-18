@@ -156,8 +156,7 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
         // metadata should contain all the required keys
         val signUpRequiredKeys = setOf(
             "name",
-            "rootUserPasswordHash",
-            "rootUserVerified"
+            "rootUserPasswordHash"
         )
         val metadataKeys = metadata.keys
         if (!metadataKeys.containsAll(signUpRequiredKeys)) {
