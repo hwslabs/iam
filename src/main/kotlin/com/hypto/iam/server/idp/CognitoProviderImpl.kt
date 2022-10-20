@@ -291,7 +291,11 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     ) {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         val setPasswordRequest =
-            AdminSetUserPasswordRequest.builder().password(password).userPoolId(identityGroup.id).username(userName)
+            AdminSetUserPasswordRequest.builder()
+                .password(password)
+                .permanent(true)
+                .userPoolId(identityGroup.id)
+                .username(userName)
                 .build()
         cognitoClient.adminSetUserPassword(setPasswordRequest)
     }
