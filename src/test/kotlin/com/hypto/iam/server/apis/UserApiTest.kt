@@ -65,7 +65,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest = CreateUserRequest(
                 preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPassword@Hash1",
+                password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778",
@@ -127,7 +127,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val createUserRequest = CreateUserRequest(
                 name = "lorem ipsum",
-                passwordHash = "testPassword@Hash1",
+                password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778",
@@ -191,7 +191,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest = CreateUserRequest(
                 name = "lorem ipsum",
                 preferredUsername = preferredUsername,
-                passwordHash = "testPassword@Hash1",
+                password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778",
@@ -237,7 +237,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest = CreateUserRequest(
                 preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPassword@ash",
+                password = "testPassword@ash",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919999999999"
@@ -271,7 +271,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest = CreateUserRequest(
                 preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPassword@Hash1",
+                password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778"
@@ -332,7 +332,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest = CreateUserRequest(
                 preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPasswordHash@123",
+                password = "testPassword@123",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778"
@@ -373,7 +373,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest = CreateUserRequest(
                 preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPassword@Hash1",
+                password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778"
@@ -445,7 +445,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest1 = CreateUserRequest(
                 preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPassword@Hash1",
+                password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778"
@@ -453,7 +453,7 @@ class UserApiTest : AbstractContainerBaseTest() {
             val createUserRequest2 = CreateUserRequest(
                 preferredUsername = "testUserName",
                 name = "lorem ipsum",
-                passwordHash = "testPassword@Hash2",
+                password = "testPassword@Hash2",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778"
@@ -512,7 +512,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUserRequest = CreateUserRequest(
                     preferredUsername = "testUserName",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash1",
+                    password = "testPassword@Hash1",
                     email = testEmail,
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
@@ -638,7 +638,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash1",
+                    password = "testPassword@Hash1",
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
@@ -698,7 +698,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash1",
+                    password = "testPassword@Hash1",
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
@@ -708,7 +708,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUser2Request = CreateUserRequest(
                     preferredUsername = "testUserName2",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash2",
+                    password = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
@@ -909,7 +909,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash1",
+                    password = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
@@ -925,7 +925,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUser2Request = CreateUserRequest(
                     preferredUsername = "testUserName2",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash2",
+                    password = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
@@ -991,7 +991,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash1",
+                    password = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
@@ -1007,7 +1007,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val createUser2Request = CreateUserRequest(
                     preferredUsername = "testUserName2",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash2",
+                    password = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",

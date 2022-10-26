@@ -27,6 +27,7 @@ Class | Method | HTTP request | Description
 *ResourceManagementApi* | [**getResource**](Apis/ResourceManagementApi.md#getresource) | **GET** /organizations/{organization_id}/resources/{resource_name} | Get the resource details
 *ResourceManagementApi* | [**listResources**](Apis/ResourceManagementApi.md#listresources) | **GET** /organizations/{organization_id}/resources | List Resources
 *ResourceManagementApi* | [**updateResource**](Apis/ResourceManagementApi.md#updateresource) | **PATCH** /organizations/{organization_id}/resources/{resource_name} | Update a resource
+*UserAuthenticationApi* | [**authenticate**](Apis/UserAuthenticationApi.md#authenticate) | **POST** /authenticate | Authenticate a request
 *UserAuthorizationApi* | [**getToken**](Apis/UserAuthorizationApi.md#gettoken) | **POST** /token | Generate a token
 *UserAuthorizationApi* | [**getTokenForOrg**](Apis/UserAuthorizationApi.md#gettokenfororg) | **POST** /organizations/{organization_id}/token | Generate a organization_id scoped token
 *UserAuthorizationApi* | [**validate**](Apis/UserAuthorizationApi.md#validate) | **POST** /validate | Validate an auth request
@@ -104,6 +105,11 @@ Class | Method | HTTP request | Description
 - **Type**: API key
 - **API key parameter name**: X-API-Key
 - **Location**: HTTP header
+
+<a name="basicAuth"></a>
+### basicAuth
+
+- **Type**: HTTP basic authentication
 
 <a name="bearerAuth"></a>
 ### bearerAuth

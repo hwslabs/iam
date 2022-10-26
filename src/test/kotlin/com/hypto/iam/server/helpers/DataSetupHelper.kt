@@ -65,7 +65,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
             val rootUser = RootUser(
                 preferredUsername = preferredUsername,
                 name = name,
-                passwordHash = testPassword,
+                password = testPassword,
                 email = testEmail,
                 phone = testPhone
             )

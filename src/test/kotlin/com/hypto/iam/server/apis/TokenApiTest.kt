@@ -231,7 +231,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
 
-                val authString = "${createdUser.email}:${createdUser.passwordHash}"
+                val authString = "${createdUser.email}:${createdUser.password}"
                 val authHeader = "Basic ${Base64.getEncoder().encode(authString.encodeToByteArray())}"
 
                 declareMock<AppConfig> {
@@ -310,7 +310,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 withTestApplication(Application::handleRequest) {
                     val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
 
-                    val authString = "${createdUser.email}:${createdUser.passwordHash}"
+                    val authString = "${createdUser.email}:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
                     with(
@@ -346,7 +346,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
 
                     val email = ""
-                    val authString = "$email:${createdUser.passwordHash}"
+                    val authString = "$email:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
                     with(
@@ -407,7 +407,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
 
                     val email = "not-present-${createdUser.email}"
-                    val authString = "$email:${createdUser.passwordHash}"
+                    val authString = "$email:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
                     with(

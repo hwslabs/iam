@@ -82,7 +82,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                         name = rootUser.name,
                         email = rootUser.email,
                         phoneNumber = rootUser.phone ?: "",
-                        password = rootUser.passwordHash
+                        password = rootUser.password
                     ),
                     createdBy = "iam-system",
                     verified = true

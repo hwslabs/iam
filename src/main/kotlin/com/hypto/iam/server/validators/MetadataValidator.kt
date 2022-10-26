@@ -11,7 +11,7 @@ private val gson: Gson = getKoinInstance()
 data class SignUpMetadata(
     val name: String,
     val description: String?,
-    val rootUserPasswordHash: String,
+    val rootUserPassword: String,
     val rootUserName: String?,
     val rootUserPreferredUsername: String?,
     val rootUserPhone: String?
@@ -26,7 +26,7 @@ val signUpMetadataValidation = Validation {
         SignUpMetadata::name required {
             run(orgNameCheck)
         }
-        SignUpMetadata::rootUserPasswordHash required {
+        SignUpMetadata::rootUserPassword required {
             run(passwordCheck)
         }
         SignUpMetadata::rootUserName ifPresent {

@@ -4,6 +4,7 @@ Apis/OrganizationManagementApi.md
 Apis/PolicyManagementApi.md
 Apis/ResourceActionManagementApi.md
 Apis/ResourceManagementApi.md
+Apis/UserAuthenticationApi.md
 Apis/UserAuthorizationApi.md
 Apis/UserCredentialManagementApi.md
 Apis/UserManagementApi.md
