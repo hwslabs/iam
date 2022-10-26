@@ -85,9 +85,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
                             .value(organization.rootUser.email).build(),
                         AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(organization.rootUser.phone).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_VERIFIED)
-                            .value(organization.rootUser.verified.toString()).build(),
+                            .value(organization.rootUser.phone).build()
                     )
                     .userCreateDate(Instant.now())
                     .build()
@@ -147,9 +145,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
                             .value(organization.rootUser.email).build(),
                         AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(organization.rootUser.phone).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_VERIFIED)
-                            .value(organization.rootUser.verified.toString()).build(),
+                            .value(organization.rootUser.phone).build()
                     )
                     .userCreateDate(Instant.now())
                     .build()
@@ -298,9 +294,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
                             .value(user1.email).build(),
                         AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(user1.preferredUsername).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_VERIFIED)
-                            .value(user1.verified.toString()).build(),
+                            .value(user1.preferredUsername).build()
                     )
                     .userCreateDate(Instant.now())
                     .build()
