@@ -929,7 +929,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash1",
+                    password = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
@@ -946,7 +946,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val createUser2Request = CreateUserRequest(
                     preferredUsername = "testUserName2",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash2",
+                    password = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
@@ -994,7 +994,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash1",
+                    password = "testPassword@Hash1",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
@@ -1010,7 +1010,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val createUser2Request = CreateUserRequest(
                     preferredUsername = "testUserName2",
                     name = "lorem ipsum",
-                    passwordHash = "testPassword@Hash2",
+                    password = "testPassword@Hash2",
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",

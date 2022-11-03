@@ -61,7 +61,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 RootUser(
                     preferredUsername = preferredUsername,
                     name = name,
-                    passwordHash = testPassword,
+                    password = testPassword,
                     email = testEmail
                 )
             )
@@ -113,7 +113,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                                 RootUser(
                                     preferredUsername = preferredUsername,
                                     name = name,
-                                    passwordHash = testPassword,
+                                    password = testPassword,
                                     email = testEmail,
                                     phone = testPhone
                                 )
@@ -154,7 +154,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 RootUser(
                     preferredUsername = preferredUsername,
                     name = name,
-                    passwordHash = testPassword,
+                    password = testPassword,
                     email = testEmail,
                     phone = testPhone
                 )
@@ -194,7 +194,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val metadata = mapOf<String, Any>(
                 "name" to orgName,
                 "rootUserName" to name,
-                "rootUserPasswordHash" to testPassword,
+                "rootUserPassword" to testPassword,
                 "rootUserVerified" to true,
                 "rootUserPreferredUsername" to preferredUsername,
                 "rootUserPhone" to testPhone
@@ -265,7 +265,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 RootUser(
                     preferredUsername = preferredUsername,
                     name = name,
-                    passwordHash = testPassword,
+                    password = testPassword,
                     email = testEmail,
                     phone = testPhone
                 )
@@ -305,7 +305,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                             RootUser(
                                 preferredUsername = preferredUsername,
                                 name = name,
-                                passwordHash = testPassword,
+                                password = testPassword,
                                 email = testEmail,
                                 phone = testPhone
                             )
@@ -352,7 +352,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                             RootUser(
                                 preferredUsername = preferredUsername,
                                 name = name,
-                                passwordHash = testPassword,
+                                password = testPassword,
                                 email = testEmail,
                                 phone = testPhone
                             )
@@ -402,7 +402,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                             RootUser(
                                 preferredUsername = preferredUsername,
                                 name = name,
-                                passwordHash = testPassword,
+                                password = testPassword,
                                 email = testEmail,
                                 phone = testPhone
                             )
@@ -451,7 +451,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                             RootUser(
                                 preferredUsername = preferredUsername,
                                 name = name,
-                                passwordHash = testPassword,
+                                password = testPassword,
                                 email = testEmail,
                                 phone = testPhone
                             ),

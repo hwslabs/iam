@@ -58,7 +58,7 @@ fun Route.usersApi() {
                 name = request.name,
                 email = request.email,
                 phoneNumber = request.phone ?: "",
-                password = request.passwordHash
+                password = request.password
             )
             val user = usersService.createUser(
                 organizationId = organizationId,

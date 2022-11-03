@@ -3,6 +3,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**name** | **String** |  | [optional] [default to null]
 **email** | **String** |  | [optional] [default to null]
 **phone** | **String** |  | [optional] [default to null]
 **status** | **String** |  | [optional] [default to null]

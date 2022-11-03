@@ -22,7 +22,7 @@ Creates an organization.
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **CreateOrganizationRequest** | [**CreateOrganizationRequest**](../Models/CreateOrganizationRequest.md)| Payload to create organization |
+ **CreateOrganizationRequest** | [**CreateOrganizationRequest**](../Models/CreateOrganizationRequest.md)| Payload to create organization | [optional]
 
 ### Return type
 

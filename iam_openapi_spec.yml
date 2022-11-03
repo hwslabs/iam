@@ -1846,7 +1846,7 @@ components:
         rootUser:
           preferredUsername: username
           name: Lorem Ipsum
-          passwordHash: <password>
+          password: <password>
           email: root@example.com
           phone: "+1234567890"
 
@@ -1862,7 +1862,7 @@ components:
       summary: A sample create user request
       value:
         name: Lorem Ipsum
-        passwordHash: nii2du35bdtuethntv3q7416
+        password: nii2du35bdtuethntv3q7416
         email: bob@acme.com
         phone: "+1234071628"
         status: enabled
@@ -1976,7 +1976,7 @@ components:
         metadata:
           name: ACME Enterprise
           description: Brief description about ACME
-          rootUserPasswordHash: Password@123
+          rootUserPassword: Password@123
           rootUserName: Lorem Ipsum
           rootUserPreferredUsername: username
           rootUserPhone: "+1234567890"
@@ -2278,7 +2278,7 @@ components:
       additionalProperties: false
       required:
         - username
-        - passwordHash
+        - password
         - email
       properties:
         preferredUsername:
@@ -2288,7 +2288,7 @@ components:
         name:
           type: string
           maxLength: 50
-        passwordHash:
+        password:
           type: string
           maxLength: 100
         email:
@@ -2306,7 +2306,7 @@ components:
       additionalProperties: false
       required:
         - name
-        - passwordHash
+        - password
         - email
         - status
       properties:
@@ -2317,7 +2317,7 @@ components:
         name:
           type: string
           maxLength: 50
-        passwordHash:
+        password:
           type: string
           maxLength: 100
         email:
@@ -2540,7 +2540,7 @@ components:
                 Supported metadata keys:
                 1. name : string (required): name of the organization
                 2. description : string (optional) - description of the organization
-                3. rootUserPasswordHash : string (required) - password of the root user
+                3. rootUserPassword : string (required) - password of the root user
                 4. rootUserName : string (optional) - name of the root user
                 5. rootUserPreferredUsername : string (optional) - preferred username of the root user
                 6. rootUserPhone : string (optional) - phone number of the root user
