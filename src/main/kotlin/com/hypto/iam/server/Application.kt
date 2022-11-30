@@ -89,8 +89,11 @@ import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-Id"
-private val shutdownHook = EngineShutdownHook(1.seconds, 1.minutes, 5.minutes)
+
+private val shutdownHook = EngineShutdownHook(prewait = 1.seconds, gracePeriod = 30.seconds, timeout = 45.seconds)
+
 private const val MAX_THREADS_WAITING_FOR_DB_CONNS = 100
+
 // we need a typed key for using call attributes
 // particular name and value in CallStartTime makes no big difference, just for better debugging and readability
 @OptIn(ExperimentalTime::class)
