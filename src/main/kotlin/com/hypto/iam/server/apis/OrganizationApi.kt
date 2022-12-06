@@ -57,7 +57,8 @@ fun Route.createOrganizationApi() {
 
         val request =
             apiRequest ?: CreateOrganizationRequest.from(
-                passcodeService.decryptMetadata(passcodeMetadata!!), passcode.email
+                passcodeService.decryptMetadata(passcodeMetadata!!),
+                passcode.email
             )
         request.validate()
 

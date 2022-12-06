@@ -60,12 +60,13 @@ class UsersServiceImpl : KoinComponent, UsersService {
                 organizationId,
                 appConfig.app.uniqueUsersAcrossOrganizations
             )
-        )
+        ) {
             throw UserAlreadyExistException(
                 email?.let { "Email - $email" }.orEmpty() +
                     preferredUsername?.let { "Username - $preferredUsername" }.orEmpty() +
                     "already registered. Unable to create user"
             )
+        }
 
         if (loginAccess) {
             val passwordCredentials = PasswordCredentials(
@@ -181,9 +182,22 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): UserPaginatedResponse {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+<<<<<<< HEAD
 
         val users = userRepo.fetchUsers(organizationId, paginationContext).map { user ->
             getUser(ResourceHrn(user.hrn), user)
+=======
+        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val (users, nextToken) = identityProvider.listUsers(
+            identityGroup = identityGroup,
+            pageToken = nextToken,
+            limit = pageSize
+        )
+        val pageContext = PaginationOptions(pageSize)
+        val externalUserTypeUsers = users.map { user ->
+            val userHrn = ResourceHrn(organizationId, "", IamResources.USER, user.username)
+            getUser(userHrn, user)
+>>>>>>> b681275 (Upgrade dependencies and formatting changes)
         }.toList()
 
         val newContext = PaginationContext.from(users.lastOrNull()?.hrn, paginationContext)
@@ -247,8 +261,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
-        if (org.rootUserHrn == userHrn.toString())
+        if (org.rootUserHrn == userHrn.toString()) {
             throw BadRequestException("Cannot delete Root User")
+        }
 
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("User not found")

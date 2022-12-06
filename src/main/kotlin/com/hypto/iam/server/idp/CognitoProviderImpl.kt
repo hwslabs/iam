@@ -110,7 +110,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             return IdentityGroup(
                 createUserPoolResponse.userPool().id(),
                 createUserPoolResponse.userPool().name(),
-                IdentityProvider.IdentitySource.AWS_COGNITO, metadata
+                IdentityProvider.IdentitySource.AWS_COGNITO,
+                metadata
             )
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to create user pool with message = ${e.message}" }
@@ -257,20 +258,23 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         }
 
         val attrs = mutableListOf<AttributeType>()
-        if (!name.isNullOrEmpty())
+        if (!name.isNullOrEmpty()) {
             attrs.add(AttributeType.builder().name(ATTRIBUTE_NAME).value(name).build())
-        if (!phone.isNullOrEmpty())
+        }
+        if (!phone.isNullOrEmpty()) {
             attrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_PHONE)
                     .value(phone).build()
             )
-        if (verified != null)
+        }
+        if (verified != null) {
             attrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_EMAIL_VERIFIED)
                     .value(verified.toString()).build()
             )
+        }
         val updateRequest =
             AdminUpdateUserAttributesRequest.builder().userPoolId(identityGroup.id).username(userName)
                 .userAttributes(attrs).build()
@@ -396,8 +400,9 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         try {
             val listRequest = ListUsersRequest.builder().userPoolId(identityGroup.id).limit(limit)
-            if (pageToken != null)
+            if (pageToken != null) {
                 listRequest.paginationToken(pageToken)
+            }
             val response = cognitoClient.listUsers(listRequest.build())
             val usersTypes = response.users()
             val users = usersTypes.map { user ->

@@ -80,7 +80,6 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
         @Test
         fun `with expiry - success`() {
             withTestApplication(Application::handleRequest) {
-
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
@@ -110,7 +109,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     val responseBody = gson.fromJson(response.content, Credential::class.java)
                     Assertions.assertNotNull(responseBody.validUntil)
                     Assertions.assertEquals(
-                        expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), responseBody.validUntil
+                        expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                        responseBody.validUntil
                     )
                     Assertions.assertEquals(Credential.Status.active, responseBody.status)
                     Assertions.assertNotNull(responseBody.secret)
@@ -123,7 +123,6 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
         @Test
         fun `expiry date in past - failure`() {
             withTestApplication(Application::handleRequest) {
-
                 val (createdOrganizationResponse, createdUser) = DataSetupHelper
                     .createOrganization(this)
                 val createdOrganization = createdOrganizationResponse.organization!!
@@ -146,7 +145,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 ) {
                     Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
                     Assertions.assertEquals(
-                        Json.withCharset(UTF_8), response.contentType()
+                        Json.withCharset(UTF_8),
+                        response.contentType()
                     )
                 }
 
@@ -175,7 +175,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                 with(
                     handleRequest(
-                        HttpMethod.Post, "/organizations/${createdOrganization.id}/users/$invalidUserName/credentials"
+                        HttpMethod.Post,
+                        "/organizations/${createdOrganization.id}/users/$invalidUserName/credentials"
                     ) {
                         addHeader(HttpHeaders.ContentType, Json.toString())
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -184,7 +185,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 ) {
                     Assertions.assertEquals(HttpStatusCode.NotFound, response.status())
                     Assertions.assertEquals(
-                        Json.withCharset(UTF_8), response.contentType()
+                        Json.withCharset(UTF_8),
+                        response.contentType()
                     )
                 }
 

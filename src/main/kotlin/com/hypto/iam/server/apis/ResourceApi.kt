@@ -22,7 +22,6 @@ import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
 fun Route.resourceApi() {
-
     val resourceService: ResourceService by inject()
     val gson: Gson by inject()
 

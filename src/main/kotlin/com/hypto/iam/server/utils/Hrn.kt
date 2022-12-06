@@ -118,8 +118,9 @@ class ActionHrn : Hrn {
 
     override fun toString(): String {
         var hrnString = HRN_PREFIX + organization + HRN_DELIMITER
-        if (!account.isNullOrEmpty())
+        if (!account.isNullOrEmpty()) {
             hrnString += account
+        }
         hrnString += HRN_DELIMITER + resource
         if (!action.isNullOrEmpty()) {
             hrnString += HRN_ACTION_DELIMITER + action

@@ -27,7 +27,6 @@ import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
 fun Route.policyApi() {
-
     val policyService: PolicyService by inject()
     val gson: Gson by inject()
 

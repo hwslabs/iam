@@ -171,7 +171,9 @@ fun ApplicationRequest.tokenAuthenticationCredentials(
     }
     val result = if (transform != null && value != null) {
         transform.invoke(value)
-    } else value
+    } else {
+        value
+    }
     val type = if (result != null && isIamJWT(result)) {
         TokenType.JWT
     } else {
@@ -190,16 +192,19 @@ private val gson: Gson = getKoinInstance()
 
 fun isIamJWT(jwt: String): Boolean {
     val jwtComponents = jwt.split(".")
-    if (jwtComponents.size != MagicNumber.THREE) // The JWT is composed of three parts
+    if (jwtComponents.size != MagicNumber.THREE) {
+        // The JWT is composed of three parts
         return false
+    }
     var result = true
     try {
         val jsonFirstPart = String(Base64.getDecoder().decode(jwtComponents[0]))
         // The first part of the JWT is a JSON
         val firstPart = gson.fromJson(jsonFirstPart, JsonElement::class.java).asJsonObject
         // The first part has the attribute "alg" and "kid"
-        if (!firstPart.has(ALGORITHM) || !firstPart.has(KEY_ID))
+        if (!firstPart.has(ALGORITHM) || !firstPart.has(KEY_ID)) {
             result = false
+        }
         // Put the validations you think are necessary for the data the JWT should take to validate
     } catch (err: JsonParseException) {
         result = false
