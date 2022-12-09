@@ -9,7 +9,6 @@ import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.toUTCOffset
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
-import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Organization
@@ -76,16 +75,15 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 // Create root user for the organization
                 val user = usersService.createUser(
                     organizationId = organizationId,
-                    credentials = PasswordCredentials(
-                        username = username,
-                        preferredUsername = rootUser.preferredUsername,
-                        name = rootUser.name,
-                        email = rootUser.email,
-                        phoneNumber = rootUser.phone ?: "",
-                        password = rootUser.password
-                    ),
+                    username = username,
+                    preferredUsername = rootUser.preferredUsername,
+                    name = rootUser.name,
+                    email = rootUser.email,
+                    phoneNumber = rootUser.phone ?: "",
+                    password = rootUser.password,
                     createdBy = "iam-system",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`

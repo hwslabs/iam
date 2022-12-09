@@ -1,0 +1,4 @@
+ALTER TABLE users
+    ADD COLUMN name VARCHAR(50),
+    ADD COLUMN created_by VARCHAR(200),
+    ADD COLUMN login_access BOOLEAN DEFAULT NULL;

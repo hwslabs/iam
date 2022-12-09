@@ -1867,6 +1867,7 @@ components:
         phone: "+1234071628"
         status: enabled
         verified: true
+        loginAccess: true
 
     UpdateUserRequest:
       summary: sample update user request
@@ -2306,8 +2307,6 @@ components:
       additionalProperties: false
       required:
         - name
-        - password
-        - email
         - status
       properties:
         preferredUsername:
@@ -2333,6 +2332,8 @@ components:
             - enabled
             - disabled
         verified:
+          type: boolean
+        loginAccess:
           type: boolean
 
     UpdateUserRequest:

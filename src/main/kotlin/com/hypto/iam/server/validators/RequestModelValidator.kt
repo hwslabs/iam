@@ -370,16 +370,26 @@ val policyAssociationRequestValidation = Validation<PolicyAssociationRequest> {
 }
 
 val createUserRequestValidation = Validation<CreateUserRequest> {
+    CreateUserRequest::loginAccess required {}
+//
+//    addConstraint("Email is mandatory for Users with loginAccess") {
+//        return@addConstraint (it.loginAccess == true && it.email.isNullOrEmpty()) || (it.loginAccess == false)
+//    }
+//
+//    addConstraint("Password is mandatory for Users with loginAccess") {
+//        return@addConstraint (it.loginAccess == true && !it.password.isNullOrEmpty()) || (it.loginAccess == false)
+//    }
+
     CreateUserRequest::preferredUsername ifPresent {
         run(preferredUserNameCheck)
     }
     CreateUserRequest::name required {
         run(nameOfUserCheck)
     }
-    CreateUserRequest::email {
+    CreateUserRequest::email ifPresent {
         run(emailCheck)
     }
-    CreateUserRequest::password {
+    CreateUserRequest::password ifPresent {
         run(passwordCheck)
     }
     CreateUserRequest::phone ifPresent {
