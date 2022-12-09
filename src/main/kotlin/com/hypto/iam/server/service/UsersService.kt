@@ -171,7 +171,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.setUserPassword(identityGroup, user.username, password)
-        passcodeRepo.deleteByEmailAndPurpose(user.email, VerifyEmailRequest.Purpose.reset)
+        passcodeRepo.deleteByEmailAndPurpose(user.email!!, VerifyEmailRequest.Purpose.reset)
         return BaseSuccessResponse(true)
     }
 

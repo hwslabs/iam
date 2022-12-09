@@ -260,6 +260,88 @@ class UserApiTest : AbstractContainerBaseTest() {
                 DataSetupHelper.deleteOrganization(organization.id, this)
             }
         }
+
+        @Test
+        fun `create user without login access - success case`() {
+            val createUserRequest = CreateUserRequest(
+                preferredUsername = "testUserName",
+                name = "lorem ipsum",
+                status = CreateUserRequest.Status.enabled,
+                verified = true,
+                loginAccess = false
+            )
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+
+                with(
+                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
+                ) {
+                    val responseBody = gson.fromJson(response.content, User::class.java)
+                    assertEquals(HttpStatusCode.Created, response.status())
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    assertEquals(
+                        organization.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
+
+                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
+                    assertEquals(createUserRequest.email, responseBody.email)
+                    assertEquals(createUserRequest.name, responseBody.name)
+                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
+                    assertEquals(createUserRequest.verified, responseBody.verified)
+                    assertEquals(createUserRequest.loginAccess, responseBody.loginAccess)
+                }
+
+                DataSetupHelper.deleteOrganization(organization.id, this)
+            }
+        }
+
+        @Test
+        fun `create user without login access - request validation error`() {
+            val createUserRequest = CreateUserRequest(
+                preferredUsername = "testUserName",
+                name = "lorem ipsum",
+                status = CreateUserRequest.Status.enabled,
+                verified = true,
+                email = "testuser@test.com",
+                password = "testPassword@ash",
+                loginAccess = false
+            )
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+
+                with(
+                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
+                ) {
+                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+
+                DataSetupHelper.deleteOrganization(organization.id, this)
+            }
+        }
     }
 
     @Nested

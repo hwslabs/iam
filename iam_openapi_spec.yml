@@ -2335,6 +2335,7 @@ components:
           type: boolean
         loginAccess:
           type: boolean
+          default: false
 
     UpdateUserRequest:
       description: Payload to create ledger account
@@ -2738,9 +2739,9 @@ components:
         - username
         - name
         - organizationId
-        - email
         - status
         - verified
+        - loginAccess
       properties:
         hrn:
           type: string
