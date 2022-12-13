@@ -605,32 +605,34 @@ class TokenApiTest : AbstractContainerBaseTest() {
             }
         }
 
-//        @Test
-//        fun `generate token with basic credentials`() {
-//            withTestApplication(Application::handleRequest) {
-//                val (createdOrganization, _) = DataSetupHelper.createOrganization(this)
-//
-//                with(
-//                    handleRequest(
-//                        HttpMethod.Post,
-//                        "/organizations/${createdOrganization.organization.id}/token"
-//                    ) {
-//                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//                        addHeader(HttpHeaders.Authorization, "Basic bmFtZTEwOlBhc3N3b3JkQDEyMw==")
-//                    }
-//                ) {
-//                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
-//                    Assertions.assertEquals(
-//                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-//                        response.contentType()
-//                    )
-//                    Assertions.assertEquals(
-//                        createdOrganization.organization.id,
-//                        response.headers[Constants.X_ORGANIZATION_HEADER]
-//                    )
-//                }
-//            }
-//        }
+        @Test
+        fun `generate token with basic credentials`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganization, rootUser) = DataSetupHelper.createOrganization(this)
+                val authString = "${rootUser.email}:${rootUser.password}"
+                val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createdOrganization.organization.id}/token"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, authHeader)
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    Assertions.assertEquals(
+                        createdOrganization.organization.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
+                }
+            }
+        }
 
         @Test
         fun `generate token and validate action after key rotation`() {
