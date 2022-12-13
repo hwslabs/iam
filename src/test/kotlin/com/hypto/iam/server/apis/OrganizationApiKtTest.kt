@@ -75,9 +75,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-                orgId = responseBody.organization!!.id
-                assertEquals(requestBody.name, responseBody.organization!!.name)
-                assertEquals(10, responseBody.organization!!.id.length)
+                orgId = responseBody.organization.id
+                assertEquals(requestBody.name, responseBody.organization.name)
+                assertEquals(10, responseBody.organization.id.length)
             }
 
             DataSetupHelper.deleteOrganization(orgId, this)
@@ -174,9 +174,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     response.contentType()
                 )
 
-                orgId = responseBody.organization!!.id
-                assertEquals(requestBody.name, responseBody.organization!!.name)
-                assertEquals(10, responseBody.organization!!.id.length)
+                orgId = responseBody.organization.id
+                assertEquals(requestBody.name, responseBody.organization.name)
+                assertEquals(10, responseBody.organization.id.length)
             }
 
             DataSetupHelper.deleteOrganization(orgId, this)
@@ -237,9 +237,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     response.contentType()
                 )
 
-                orgId = responseBody.organization!!.id
-                assertEquals(orgName, responseBody.organization!!.name)
-                assertEquals(10, responseBody.organization!!.id.length)
+                orgId = responseBody.organization.id
+                assertEquals(orgName, responseBody.organization.name)
+                assertEquals(10, responseBody.organization.id.length)
             }
 
             DataSetupHelper.deleteOrganization(orgId, this)
@@ -320,7 +320,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
+                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, "Bearer test-bearer-token")
                 }
@@ -331,7 +331,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(null, response.content)
             }
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
+            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
         }
     }
 
@@ -380,7 +380,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(createdOrganization.organization, fetchedOrganization)
             }
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
+            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
         }
     }
 
@@ -430,7 +430,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(HttpStatusCode.Forbidden, response.status())
             }
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
+            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
         }
     }
 

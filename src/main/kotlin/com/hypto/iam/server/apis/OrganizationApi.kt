@@ -19,7 +19,7 @@ import io.ktor.server.application.call
 import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveOrNull
+import io.ktor.server.request.receiveNullable
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -42,7 +42,7 @@ fun Route.createOrganizationApi() {
     post("/organizations") {
         val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
 
-        val apiRequest = call.receiveOrNull<CreateOrganizationRequest>()
+        val apiRequest = kotlin.runCatching { call.receiveNullable<CreateOrganizationRequest>() }.getOrNull()
         val passcode = passcodeRepo.getValidPasscode(passcodeStr, VerifyEmailRequest.Purpose.signup)
         val passcodeMetadata = passcode?.metadata
         if (passcodeMetadata != null && apiRequest != null) {
