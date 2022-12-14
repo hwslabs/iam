@@ -3,13 +3,13 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.idp.PasswordCredentials
+import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
-import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
@@ -52,19 +52,17 @@ fun Route.usersApi() {
             val organizationId = call.parameters["organization_id"]!!
             val request = call.receive<CreateUserRequest>().validate()
             val username = idGenerator.username()
-            val passwordCredentials = PasswordCredentials(
+            val user = usersService.createUser(
+                organizationId = organizationId,
                 username = username,
                 preferredUsername = request.preferredUsername,
                 name = request.name,
                 email = request.email,
                 phoneNumber = request.phone ?: "",
-                password = request.password
-            )
-            val user = usersService.createUser(
-                organizationId = organizationId,
-                credentials = passwordCredentials,
+                password = request.password,
                 createdBy = call.principal<UserPrincipal>()?.hrnStr,
-                verified = request.verified ?: false
+                verified = request.verified ?: false,
+                loginAccess = request.loginAccess ?: false
             )
             call.respondText(
                 text = gson.toJson(user),
@@ -100,8 +98,15 @@ fun Route.usersApi() {
             val organizationId = call.parameters["organization_id"]!!
             val nextToken = call.request.queryParameters["next_token"]
             val pageSize = call.request.queryParameters["page_size"]
-            val (users, token, options) = usersService.listUsers(organizationId, nextToken, pageSize?.toInt())
-            val response = UserPaginatedResponse(data = users, nextToken = token, context = options)
+            val sortOrder = call.request.queryParameters["sortOrder"]
+
+            val paginationContext = PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
+            )
+
+            val response = usersService.listUsers(organizationId, paginationContext)
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,

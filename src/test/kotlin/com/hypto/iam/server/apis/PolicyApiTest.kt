@@ -933,7 +933,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
 
                 val (user1, _) = DataSetupHelper.createUser(
@@ -950,7 +951,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
                 val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
@@ -998,7 +1000,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
 
                 val (user1, _) = DataSetupHelper.createUser(
@@ -1014,7 +1017,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
                 val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,

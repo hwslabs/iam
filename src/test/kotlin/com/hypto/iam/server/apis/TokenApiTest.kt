@@ -608,15 +608,17 @@ class TokenApiTest : AbstractContainerBaseTest() {
         @Test
         fun `generate token with basic credentials`() {
             withTestApplication(Application::handleRequest) {
-                val (createdOrganization, _) = DataSetupHelper.createOrganization(this)
+                val (createdOrganization, rootUser) = DataSetupHelper.createOrganization(this)
+                val authString = "${rootUser.email}:${rootUser.password}"
+                val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/organizations/${createdOrganization.organization?.id}/token"
+                        "/organizations/${createdOrganization.organization.id}/token"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Basic bmFtZTEwOlBhc3N3b3JkQDEyMw==")
+                        addHeader(HttpHeaders.Authorization, authHeader)
                     }
                 ) {
                     Assertions.assertEquals(HttpStatusCode.OK, response.status())
@@ -625,7 +627,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         response.contentType()
                     )
                     Assertions.assertEquals(
-                        createdOrganization.organization?.id,
+                        createdOrganization.organization.id,
                         response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
                 }

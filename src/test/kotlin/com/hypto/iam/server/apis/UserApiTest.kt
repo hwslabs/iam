@@ -69,7 +69,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778",
-                verified = true
+                verified = true,
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -129,7 +130,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778",
-                verified = true
+                verified = true,
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -170,7 +172,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
 
-                    assertEquals("", responseBody.preferredUsername)
+                    assertEquals(null, responseBody.preferredUsername)
                     assertEquals(createUserRequest.email, responseBody.email)
                     assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
                     assertEquals(createUserRequest.verified, responseBody.verified)
@@ -191,7 +193,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
                 phone = "+919626012778",
-                verified = true
+                verified = true,
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this, preferredUsername)
@@ -236,7 +239,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                 password = "testPassword@ash",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
-                phone = "+919999999999"
+                phone = "+919999999999",
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -256,6 +260,88 @@ class UserApiTest : AbstractContainerBaseTest() {
                 DataSetupHelper.deleteOrganization(organization.id, this)
             }
         }
+
+        @Test
+        fun `create user without login access - success case`() {
+            val createUserRequest = CreateUserRequest(
+                preferredUsername = "testUserName",
+                name = "lorem ipsum",
+                status = CreateUserRequest.Status.enabled,
+                verified = true,
+                loginAccess = false
+            )
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+
+                with(
+                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
+                ) {
+                    val responseBody = gson.fromJson(response.content, User::class.java)
+                    assertEquals(HttpStatusCode.Created, response.status())
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    assertEquals(
+                        organization.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
+
+                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
+                    assertEquals(createUserRequest.email, responseBody.email)
+                    assertEquals(createUserRequest.name, responseBody.name)
+                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
+                    assertEquals(createUserRequest.verified, responseBody.verified)
+                    assertEquals(createUserRequest.loginAccess, responseBody.loginAccess)
+                }
+
+                DataSetupHelper.deleteOrganization(organization.id, this)
+            }
+        }
+
+        @Test
+        fun `create user without login access - request validation error`() {
+            val createUserRequest = CreateUserRequest(
+                preferredUsername = "testUserName",
+                name = "lorem ipsum",
+                status = CreateUserRequest.Status.enabled,
+                verified = true,
+                email = "testuser@test.com",
+                password = "testPassword@ash",
+                loginAccess = false
+            )
+            withTestApplication(Application::handleRequest) {
+                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+                val organization = organizationResponse.organization!!
+                val rootUserToken = organizationResponse.rootUserToken!!
+
+                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+
+                with(
+                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
+                ) {
+                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+
+                DataSetupHelper.deleteOrganization(organization.id, this)
+            }
+        }
     }
 
     @Nested
@@ -270,7 +356,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                 password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778"
+                phone = "+919626012778",
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -329,7 +416,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                 password = "testPassword@123",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778"
+                phone = "+919626012778",
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -370,7 +458,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                 password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778"
+                phone = "+919626012778",
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -442,15 +531,17 @@ class UserApiTest : AbstractContainerBaseTest() {
                 password = "testPassword@Hash1",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778"
+                phone = "+919626012778",
+                loginAccess = true
             )
             val createUserRequest2 = CreateUserRequest(
-                preferredUsername = "testUserName",
+                preferredUsername = "testUserName2",
                 name = "lorem ipsum",
                 password = "testPassword@Hash2",
                 email = testEmail,
                 status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778"
+                phone = "+919626012778",
+                loginAccess = true
             )
             withTestApplication(Application::handleRequest) {
                 val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
@@ -479,13 +570,11 @@ class UserApiTest : AbstractContainerBaseTest() {
                         addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 ) {
-                    val slot = slot<ListUsersRequest>()
-                    verify { get<CognitoIdentityProviderClient>().listUsers(capture(slot)) }
-                    val listUserRequest = slot.captured
-                    assertEquals("testUserPoolId", listUserRequest.userPoolId())
-
-                    gson.fromJson(response.content, UserPaginatedResponse::class.java)
                     assertEquals(HttpStatusCode.OK, response.status())
+                    assertEquals(ContentType.Application.Json.withCharset(Charsets.UTF_8), response.contentType())
+
+                    val responseBody = gson.fromJson(response.content, UserPaginatedResponse::class.java)
+                    assertEquals(responseBody.data!!.size, 2)
                 }
                 DataSetupHelper.deleteOrganization(organization.id, this)
             }
@@ -510,7 +599,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = testEmail,
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
-                    verified = false
+                    verified = false,
+                    loginAccess = true
                 )
 
                 // Create user1
@@ -636,7 +726,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
 
                 val (user1, credential) = DataSetupHelper.createUser(
@@ -696,7 +787,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email1" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
 
                 val createUser2Request = CreateUserRequest(
@@ -706,7 +798,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919626012778",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
                 val (user1, _) =
                     DataSetupHelper.createUser(
@@ -907,7 +1000,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
 
                 val (user1, _) = DataSetupHelper.createUser(
@@ -923,7 +1017,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
                 val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
@@ -989,7 +1084,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
 
                 val (user1, _) = DataSetupHelper.createUser(
@@ -1005,7 +1101,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     email = "test-user-email" + IdGenerator.randomId() + "@iam.in",
                     status = CreateUserRequest.Status.enabled,
                     phone = "+919999999999",
-                    verified = true
+                    verified = true,
+                    loginAccess = true
                 )
                 val (user2, credential) = DataSetupHelper.createUser(
                     organization.id,
