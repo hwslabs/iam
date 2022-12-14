@@ -74,8 +74,8 @@ class ActionServiceImpl : KoinComponent, ActionService {
     override suspend fun deleteAction(organizationId: String, resourceName: String, name: String): BaseSuccessResponse {
         val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
-        val response = actionRepo.delete(actionHrn)
-        return BaseSuccessResponse(response)
+        actionRepo.delete(actionHrn)
+        return BaseSuccessResponse(true)
     }
 }
 

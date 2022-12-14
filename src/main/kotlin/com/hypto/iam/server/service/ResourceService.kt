@@ -60,10 +60,7 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
     override suspend fun deleteResource(organizationId: String, name: String): BaseSuccessResponse {
         val resourceHrn = ResourceHrn(organizationId, null, name, null)
 
-        if (!resourceRepo.delete(resourceHrn)) {
-            throw EntityNotFoundException("Resource not found")
-        }
-
+        resourceRepo.delete(resourceHrn)
         return BaseSuccessResponse(true)
     }
 }
