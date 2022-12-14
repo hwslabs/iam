@@ -132,6 +132,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
         }
     }
 
+    @Suppress("UnusedPrivateMember")
     fun createAndAttachPolicy(
         orgId: String,
         username: String?,
@@ -145,7 +146,14 @@ object DataSetupHelper : AutoCloseKoinTest() {
         effect: PolicyStatement.Effect = PolicyStatement.Effect.allow
     ): Policy {
         with(engine) {
-            val (resourceHrn, actionHrn) = createResourceActionHrn(
+            val (resource, action) = createResourceAction(
+                bearerToken,
+                engine,
+                orgId,
+                resourceName,
+                actionName
+            )
+            val (resourceHrn, actionHrn) = generateResourceActionHrn(
                 orgId,
                 accountId,
                 resourceName,
@@ -209,17 +217,24 @@ object DataSetupHelper : AutoCloseKoinTest() {
         orgId: String,
         resource: Resource? = null,
         jwtToken: String,
-        engine: TestApplicationEngine
+        engine: TestApplicationEngine,
+        actionName: String? = null
     ): Pair<Action, Resource> {
         with(engine) {
             val createdResource = resource ?: createResource(orgId, jwtToken, engine)
-            val actionName = "test-action" + IdGenerator.randomId()
 
             val createActionCall =
                 handleRequest(HttpMethod.Post, "/organizations/$orgId/resources/${createdResource.name}/actions") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, "Bearer $jwtToken")
-                    setBody(gson.toJson(CreateActionRequest(name = actionName)))
+                    setBody(
+                        gson.toJson(
+                            CreateActionRequest(
+                                name = actionName
+                                    ?: ("test-action" + IdGenerator.randomId())
+                            )
+                        )
+                    )
                 }
 
             val createdAction = gson
@@ -229,7 +244,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
         }
     }
 
-    fun createResourceActionHrn(
+    fun generateResourceActionHrn(
         orgId: String,
         accountId: String?,
         resourceName: String,
@@ -239,6 +254,24 @@ object DataSetupHelper : AutoCloseKoinTest() {
         val resourceHrn = ResourceHrn(orgId, accountId, resourceName, resourceInstance).toString()
         val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toString()
         return Pair(resourceHrn, actionHrn)
+    }
+
+    fun createResourceAction(
+        jwtToken: String,
+        engine: TestApplicationEngine,
+        orgId: String,
+        resourceName: String,
+        actionName: String
+    ): Pair<Resource, Action> {
+        val resource = createResource(
+            orgId,
+            jwtToken, engine, resourceName
+        )
+        val action = createAction(
+            orgId, resource,
+            jwtToken, engine, actionName
+        ).first
+        return Pair(resource, action)
     }
 
     // This function is used for cleaning up all the data created during the test for the organization

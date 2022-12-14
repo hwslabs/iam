@@ -65,4 +65,16 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
         record.attach(dao().configuration())
         return record.delete() > 0
     }
+
+    suspend fun fetchActionsFromHrns(
+        organizationId: String,
+        actionHrns: List<String>
+    ): Result<ActionsRecord> {
+        return ctx("action.fetchActionsFromHrns").selectFrom(ACTIONS)
+            .where(
+                ACTIONS.ORGANIZATION_ID.eq(organizationId)
+                    .and(ACTIONS.HRN.`in`(actionHrns))
+            )
+            .fetch()
+    }
 }

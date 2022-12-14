@@ -1,5 +1,6 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.db.Tables
 import com.hypto.iam.server.db.Tables.RESOURCES
 import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
@@ -58,4 +59,16 @@ object ResourceRepo : BaseRepo<ResourcesRecord, Resources, String>() {
         .where(RESOURCES.ORGANIZATION_ID.eq(organizationId))
         .paginate(RESOURCES.HRN, paginationContext)
         .fetch()
+
+    suspend fun fetchResourcesFromHrns(
+        organizationId: String,
+        resourceHrns: List<String>
+    ): Result<ResourcesRecord> {
+        return ctx("action.fetchResourcesFromHrns").selectFrom(Tables.RESOURCES)
+            .where(
+                Tables.RESOURCES.ORGANIZATION_ID.eq(organizationId)
+                    .and(Tables.RESOURCES.HRN.`in`(resourceHrns))
+            )
+            .fetch()
+    }
 }

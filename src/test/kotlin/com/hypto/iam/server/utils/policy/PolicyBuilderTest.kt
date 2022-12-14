@@ -21,8 +21,12 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
         val resourceName2 = "sampleResourceName2"
         val policyHrn = ResourceHrn(orgId, "", IamResources.POLICY, "policy1")
 
-        val (resourceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn(orgId, null, resourceName1, "action1")
-        val (resourceHrn2, actionHrn2) = DataSetupHelper.createResourceActionHrn(orgId, null, resourceName2, "action2")
+        val (resourceHrn1, actionHrn1) = DataSetupHelper.generateResourceActionHrn(
+            orgId, null, resourceName1, "action1"
+        )
+        val (resourceHrn2, actionHrn2) = DataSetupHelper.generateResourceActionHrn(
+            orgId, null, resourceName2, "action2"
+        )
 
         val builder = PolicyBuilder(policyHrn)
             .withStatement(
@@ -52,13 +56,13 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
         val policy1Hrn = ResourceHrn(orgId, "", IamResources.POLICY, "policy1")
         val policy1HrnStr = policy1Hrn.toString()
 
-        val (resourceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn(
+        val (resourceHrn1, actionHrn1) = DataSetupHelper.generateResourceActionHrn(
             orgId,
             null,
             "sampleResourceName1",
             "action1"
         )
-        val (resourceHrn2, actionHrn2) = DataSetupHelper.createResourceActionHrn(
+        val (resourceHrn2, actionHrn2) = DataSetupHelper.generateResourceActionHrn(
             orgId,
             null,
             "sampleResourceName2",
