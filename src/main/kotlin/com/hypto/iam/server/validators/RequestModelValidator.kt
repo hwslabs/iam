@@ -370,20 +370,22 @@ val policyAssociationRequestValidation = Validation<PolicyAssociationRequest> {
 }
 
 val createUserRequestValidation = Validation<CreateUserRequest> {
-    addConstraint("Email is mandatory for Users with loginAccess") {
-        return@addConstraint ((it.loginAccess == true && !it.email.isNullOrEmpty()) || (it.loginAccess == false))
+    addConstraint("Email and password is mandatory for Users with loginAccess") {
+        return@addConstraint (
+            (
+                it.loginAccess == true && !it.email.isNullOrEmpty() &&
+                    !it.password.isNullOrEmpty()
+                ) || (it.loginAccess == false)
+            )
     }
 
-    addConstraint("Password is mandatory for Users with loginAccess") {
-        return@addConstraint ((it.loginAccess == true && !it.password.isNullOrEmpty()) || (it.loginAccess == false))
-    }
-
-    addConstraint("Email is required only for Users with loginAccess") {
-        return@addConstraint ((it.loginAccess == false && it.email.isNullOrEmpty()) || (it.loginAccess == true))
-    }
-
-    addConstraint("Password is required only for Users with loginAccess") {
-        return@addConstraint ((it.loginAccess == false && it.password.isNullOrEmpty()) || (it.loginAccess == true))
+    addConstraint("Email or password is required only for Users with loginAccess") {
+        return@addConstraint (
+            (
+                it.loginAccess == false && it.email.isNullOrEmpty() &&
+                    it.password.isNullOrEmpty()
+                ) || (it.loginAccess == true)
+            )
     }
 
     CreateUserRequest::preferredUsername ifPresent {
