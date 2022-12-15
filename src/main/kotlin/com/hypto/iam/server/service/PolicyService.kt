@@ -94,37 +94,37 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 
     @Suppress("ThrowsCount")
     private suspend fun validateStatements(organizationId: String, statements: List<PolicyStatement>) {
-        val resourceHrns = mutableListOf<String>()
-        val actionHrns = mutableListOf<String>()
+        val resourceIds = mutableListOf<String>()
+        val actionIds = mutableListOf<String>()
         statements.forEach {
             var resourceHrn: ResourceHrn? = null
             if (it.resource.matches(ResourceHrn.RESOURCE_HRN_REGEX)) {
                 resourceHrn = ResourceHrn(it.resource)
                 if (resourceHrn.resource != "*" && resourceHrn.resource != null)
-                    resourceHrns.add(resourceHrn.toString().substringBeforeLast("/"))
+                    resourceIds.add(resourceHrn.toString().substringBeforeLast("/"))
             }
             if (it.action.matches(ActionHrn.ACTION_HRN_REGEX)) {
                 val actionHrn = ActionHrn(it.action)
                 if (resourceHrn != null && resourceHrn.resource != actionHrn.resource)
-                    throw BadRequestException("Action - ${it.action} does not belong to resource - ${it.resource}")
+                    throw BadRequestException("Action - ${it.action} does not belong to Resource - ${it.resource}")
                 if (actionHrn.action != "*" && actionHrn.action != null)
-                    actionHrns.add(actionHrn.toString().substringBeforeLast("/"))
+                    actionIds.add(actionHrn.toString().substringBeforeLast("/"))
             }
         }
 
-        if (resourceHrns.isNotEmpty()) {
-            val existingResources = resourceRepo.fetchResourcesFromHrns(organizationId, resourceHrns).map {
+        if (resourceIds.isNotEmpty()) {
+            val existingResourceIds = resourceRepo.fetchResourcesFromHrns(organizationId, resourceIds).map {
                 it.hrn
             }
-            if (resourceHrns.toSet().minus(existingResources.toSet()).isNotEmpty()) {
+            if (resourceIds.toSet().minus(existingResourceIds.toSet()).isNotEmpty()) {
                 throw BadRequestException("1 or more Resources do not exist")
             }
         }
-        if (actionHrns.isNotEmpty()) {
-            val existingActionResources = actionRepo.fetchActionsFromHrns(organizationId, actionHrns).map {
+        if (actionIds.isNotEmpty()) {
+            val existingActionIds = actionRepo.fetchActionsFromHrns(organizationId, actionIds).map {
                 it.hrn
             }
-            if (actionHrns.toSet().minus(existingActionResources.toSet()).isNotEmpty()) {
+            if (actionIds.toSet().minus(existingActionIds.toSet()).isNotEmpty()) {
                 throw BadRequestException("1 or more Actions do not exist")
             }
         }
