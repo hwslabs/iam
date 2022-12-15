@@ -2,6 +2,7 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
@@ -27,11 +28,14 @@ import io.ktor.server.testing.contentType
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.ktor.server.testing.withTestApplication
+import io.mockk.every
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
+import org.koin.test.mock.declareMock
 
 class PolicyApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -256,126 +260,329 @@ class PolicyApiTest : AbstractContainerBaseTest() {
             }
         }
 
-        @Test
-        fun `1 or more Resources do not exist`() {
-            withTestApplication(Application::handleRequest) {
-                val (createdOrganizationResponse, _) = DataSetupHelper
-                    .createOrganization(this)
-
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
-
-                val policyName = "test-policy"
-                val (resourceHrn, actionHrn) = DataSetupHelper.generateResourceActionHrn(
-                    createdOrganization.id, null,
-                    "resource", "action"
-                )
-                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
-                val requestBody = CreatePolicyRequest(policyName, policyStatements)
-
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${createdOrganization.id}/policies"
-                    ) {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(requestBody))
+        @Nested
+        @DisplayName("with StrictPolicyStatementValidation=true Tests")
+        inner class CreatePolicyWithStrictValidationTest {
+            @BeforeEach
+            fun setStrictPolicyStatementValidationAsTrue() {
+                declareMock<AppConfig> {
+                    every { this@declareMock.app } answers {
+                        AppConfig.App(
+                            AppConfig.Environment.Development,
+                            "IAM",
+                            "local",
+                            300,
+                            600,
+                            "iam-secret-key",
+                            30,
+                            30,
+                            600,
+                            5,
+                            "https://localhost",
+                            "mail@iam.com",
+                            "signupTemplateId",
+                            "resetPasswordTemplateId",
+                            uniqueUsersAcrossOrganizations = false,
+                            strictPolicyStatementValidation = true
+                        )
                     }
-                ) {
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
                 }
-
-                DataSetupHelper.deleteOrganization(createdOrganization.id, this)
             }
-        }
 
-        @Test
-        fun `Action does not belong to resource`() {
-            withTestApplication(Application::handleRequest) {
-                val (createdOrganizationResponse, _) = DataSetupHelper
-                    .createOrganization(this)
+            @Test
+            fun `valid policy - success`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganizationResponse, _) = DataSetupHelper
+                        .createOrganization(this)
 
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                    val createdOrganization = createdOrganizationResponse.organization!!
+                    val rootUserToken = createdOrganizationResponse.rootUserToken!!
 
-                val policyName = "test-policy"
-                val resourceHrn = ResourceHrn(
-                    createdOrganization.id,
-                    null, "resource", null
-                ).toString()
-                val actionHrn = ActionHrn(
-                    createdOrganization.id,
-                    null, "invalid_resource", "action"
-                ).toString()
-
-                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
-                val requestBody = CreatePolicyRequest(policyName, policyStatements)
-
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${createdOrganization.id}/policies"
-                    ) {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(requestBody))
-                    }
-                ) {
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
+                    val policyName = "test-policy"
+                    val (resource, action) = DataSetupHelper.createResourceAction(
+                        rootUserToken, this,
+                        createdOrganization.id, "resource", "action"
                     )
-                }
+                    val policyStatements = listOf(
+                        PolicyStatement(
+                            resource.hrn, action.hrn,
+                            PolicyStatement.Effect.allow
+                        )
+                    )
+                    val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
-                DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/organizations/${createdOrganization.id}/policies"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                            setBody(gson.toJson(requestBody))
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.Created, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                        Assertions.assertEquals(
+                            createdOrganization.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
+
+                        val responseBody = gson.fromJson(response.content, Policy::class.java)
+                        Assertions.assertEquals(createdOrganization.id, responseBody.organizationId)
+
+                        val expectedPolicyHrn = ResourceHrn(
+                            organization = createdOrganization.id,
+                            resource = IamResources.POLICY,
+                            account = null,
+                            resourceInstance = policyName
+                        )
+
+                        Assertions.assertEquals(expectedPolicyHrn.toString(), responseBody.hrn)
+                        Assertions.assertEquals(policyName, responseBody.name)
+                        Assertions.assertEquals(1, responseBody.version)
+                        Assertions.assertEquals(policyStatements, responseBody.statements)
+                    }
+
+                    DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                }
             }
-        }
 
-        @Test
-        fun `1 or more Actions do not exist`() {
-            withTestApplication(Application::handleRequest) {
-                val (createdOrganizationResponse, _) = DataSetupHelper
-                    .createOrganization(this)
+            @Test
+            fun `1 or more Resources do not exist`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganizationResponse, _) = DataSetupHelper
+                        .createOrganization(this)
 
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                    val createdOrganization = createdOrganizationResponse.organization!!
+                    val rootUserToken = createdOrganizationResponse.rootUserToken!!
 
-                val policyName = "test-policy"
-                val resourceHrn = DataSetupHelper.createResource(
-                    createdOrganization.id, rootUserToken, this, "resource"
-                ).hrn
-                val actionHrn = ActionHrn(
-                    createdOrganization.id,
-                    null, "resource", "invalid_action"
-                ).toString()
-
-                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
-                val requestBody = CreatePolicyRequest(policyName, policyStatements)
-
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${createdOrganization.id}/policies"
-                    ) {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(requestBody))
-                    }
-                ) {
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
+                    val policyName = "test-policy"
+                    val (resourceHrn, actionHrn) = DataSetupHelper.generateResourceActionHrn(
+                        createdOrganization.id, null,
+                        "resource", "action"
                     )
-                }
+                    val policyStatements = listOf(
+                        PolicyStatement(
+                            resourceHrn, actionHrn,
+                            PolicyStatement.Effect.allow
+                        )
+                    )
+                    val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
-                DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/organizations/${createdOrganization.id}/policies"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                            setBody(gson.toJson(requestBody))
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+
+                    DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                }
+            }
+
+            @Test
+            fun `Action does not belong to resource`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganizationResponse, _) = DataSetupHelper
+                        .createOrganization(this)
+
+                    val createdOrganization = createdOrganizationResponse.organization!!
+                    val rootUserToken = createdOrganizationResponse.rootUserToken!!
+
+                    val policyName = "test-policy"
+                    val resourceHrn = ResourceHrn(
+                        createdOrganization.id,
+                        null, "resource", null
+                    ).toString()
+                    val actionHrn = ActionHrn(
+                        createdOrganization.id,
+                        null, "non_existent_resource", "action"
+                    ).toString()
+
+                    val policyStatements = listOf(
+                        PolicyStatement(
+                            resourceHrn, actionHrn,
+                            PolicyStatement.Effect.allow
+                        )
+                    )
+                    val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/organizations/${createdOrganization.id}/policies"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                            setBody(gson.toJson(requestBody))
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+
+                    DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                }
+            }
+
+            @Test
+            fun `1 or more Actions do not exist`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganizationResponse, _) = DataSetupHelper
+                        .createOrganization(this)
+
+                    val createdOrganization = createdOrganizationResponse.organization!!
+                    val rootUserToken = createdOrganizationResponse.rootUserToken!!
+
+                    val policyName = "test-policy"
+                    val resourceHrn = DataSetupHelper.createResource(
+                        createdOrganization.id, rootUserToken, this, "resource"
+                    ).hrn
+                    val actionHrn = ActionHrn(
+                        createdOrganization.id,
+                        null, "resource", "non_existent_action"
+                    ).toString()
+
+                    val policyStatements = listOf(
+                        PolicyStatement(
+                            resourceHrn, actionHrn,
+                            PolicyStatement.Effect.allow
+                        )
+                    )
+                    val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/organizations/${createdOrganization.id}/policies"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                            setBody(gson.toJson(requestBody))
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+
+                    DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                }
+            }
+
+            @Test
+            fun `Invalid Resource Name`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganizationResponse, _) = DataSetupHelper
+                        .createOrganization(this)
+
+                    val createdOrganization = createdOrganizationResponse.organization!!
+                    val rootUserToken = createdOrganizationResponse.rootUserToken!!
+
+                    val policyName = "test-policy"
+                    val resourceHrn = ResourceHrn(
+                        createdOrganization.id,
+                        null, "_", null
+                    ).toString()
+                    val actionHrn = ActionHrn(
+                        createdOrganization.id,
+                        null, "_", "action"
+                    ).toString()
+
+                    val policyStatements = listOf(
+                        PolicyStatement(
+                            resourceHrn, actionHrn,
+                            PolicyStatement.Effect.allow
+                        )
+                    )
+                    val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/organizations/${createdOrganization.id}/policies"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                            setBody(gson.toJson(requestBody))
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+
+                    DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                }
+            }
+
+            @Test
+            fun `Invalid Action Name`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganizationResponse, _) = DataSetupHelper
+                        .createOrganization(this)
+
+                    val createdOrganization = createdOrganizationResponse.organization!!
+                    val rootUserToken = createdOrganizationResponse.rootUserToken!!
+
+                    val policyName = "test-policy"
+                    val resourceHrn = ResourceHrn(
+                        createdOrganization.id,
+                        null, "resource", null
+                    ).toString()
+                    val actionHrn = ActionHrn(
+                        createdOrganization.id,
+                        null, "resource", "_"
+                    ).toString()
+
+                    val policyStatements = listOf(
+                        PolicyStatement(
+                            resourceHrn, actionHrn,
+                            PolicyStatement.Effect.allow
+                        )
+                    )
+                    val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/organizations/${createdOrganization.id}/policies"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                            setBody(gson.toJson(requestBody))
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+
+                    DataSetupHelper.deleteOrganization(createdOrganization.id, this)
+                }
             }
         }
     }

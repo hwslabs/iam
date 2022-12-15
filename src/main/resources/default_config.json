@@ -40,7 +40,8 @@
     "sender_email_address": "<placeholder for senders email address>",
     "sign_up_email_template": "<placeholder for signup user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
-    "unique_users_across_organizations": false
+    "unique_users_across_organizations": false,
+    "strict_policy_statement_validation": false
   },
   "aws": {
     "region": "us-east-1",

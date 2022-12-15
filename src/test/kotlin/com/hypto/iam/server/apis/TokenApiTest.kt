@@ -251,7 +251,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "mail@iam.com",
                             "signupTemplateId",
                             "resetPasswordTemplateId",
-                            false
+                            uniqueUsersAcrossOrganizations = false,
+                            strictPolicyStatementValidation = false
                         )
                     }
                 }
@@ -299,7 +300,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "mail@iam.com",
                             "signupTemplateId",
                             "resetPasswordTemplateId",
-                            true
+                            uniqueUsersAcrossOrganizations = true,
+                            strictPolicyStatementValidation = false
                         )
                     }
                 }

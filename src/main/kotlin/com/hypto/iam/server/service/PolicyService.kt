@@ -1,5 +1,6 @@
 package com.hypto.iam.server.service
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
@@ -7,6 +8,7 @@ import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.RESOURCE_NAME_REGEX
 import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Policy
@@ -26,6 +28,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     private val actionRepo: ActionRepo by inject()
     private val resourceRepo: ResourceRepo by inject()
     private val principalPolicyRepo: PrincipalPoliciesRepo by inject()
+    private val appConfig: AppConfig by inject()
 
     override suspend fun createPolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
         val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, name)
@@ -35,7 +38,9 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 
         val newPolicyBuilder = PolicyBuilder(policyHrn)
         statements.forEach { newPolicyBuilder.withStatement(it) }
-        validateStatements(organizationId, statements)
+
+        if (appConfig.app.strictPolicyStatementValidation)
+            validateStatements(organizationId, statements)
 
         val policyRecord = policyRepo.create(policyHrn, newPolicyBuilder.build())
         return Policy.from(policyRecord)
@@ -54,7 +59,9 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 
         val newPolicyBuilder = PolicyBuilder(policyHrn)
         statements.forEach { newPolicyBuilder.withStatement(it) }
-        validateStatements(organizationId, statements)
+
+        if (appConfig.app.strictPolicyStatementValidation)
+            validateStatements(organizationId, statements)
 
         val policyRecord = policyRepo.update(
             policyHrnStr,
@@ -97,19 +104,16 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         val resourceIds = mutableListOf<String>()
         val actionIds = mutableListOf<String>()
         statements.forEach {
-            var resourceHrn: ResourceHrn? = null
-            if (it.resource.matches(ResourceHrn.RESOURCE_HRN_REGEX)) {
-                resourceHrn = ResourceHrn(it.resource)
-                if (resourceHrn.resource != "*" && resourceHrn.resource != null)
-                    resourceIds.add(resourceHrn.toString().substringBeforeLast("/"))
-            }
-            if (it.action.matches(ActionHrn.ACTION_HRN_REGEX)) {
-                val actionHrn = ActionHrn(it.action)
-                if (resourceHrn != null && resourceHrn.resource != actionHrn.resource)
-                    throw BadRequestException("Action - ${it.action} does not belong to Resource - ${it.resource}")
-                if (actionHrn.action != "*" && actionHrn.action != null)
-                    actionIds.add(actionHrn.toString().substringBeforeLast("/"))
-            }
+            val resourceId = fetchResourceIdFromStatementResource(it.resource)
+            if (!resourceId.isNullOrEmpty())
+                resourceIds.add(resourceId)
+
+            val actionId = fetchActionIdFromStatementAction(
+                if (resourceId.isNullOrEmpty()) null else resourceId.substringAfterLast(":"),
+                it.action
+            )
+            if (!actionId.isNullOrEmpty())
+                actionIds.add(actionId)
         }
 
         if (resourceIds.isNotEmpty()) {
@@ -128,6 +132,37 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
                 throw BadRequestException("1 or more Actions do not exist")
             }
         }
+    }
+
+    private fun fetchResourceIdFromStatementResource(resource: String): String? {
+        if (resource.matches(ResourceHrn.RESOURCE_HRN_REGEX)) {
+            val resourceHrn = ResourceHrn(resource)
+
+            if (resourceHrn.resource != null && resourceHrn.resource.matches(RESOURCE_NAME_REGEX.toRegex())) {
+                return resourceHrn.toString().substringBeforeLast("/")
+            } else if (resourceHrn.resource != "*") {
+                throw BadRequestException("Resource - $resource contains invalid resource name")
+            }
+        }
+
+        return null
+    }
+
+    private fun fetchActionIdFromStatementAction(resource: String?, action: String): String? {
+        if (action.matches(ActionHrn.ACTION_HRN_REGEX)) {
+            val actionHrn = ActionHrn(action)
+
+            if (!resource.isNullOrEmpty() && resource != actionHrn.resource)
+                throw BadRequestException("Action - $action does not belong to Resource - $resource")
+
+            if (actionHrn.action != null && actionHrn.action.matches(RESOURCE_NAME_REGEX.toRegex())) {
+                return actionHrn.toString().substringBeforeLast("/")
+            } else if (actionHrn.action != "*") {
+                throw BadRequestException("Action - $action contains invalid action name")
+            }
+        }
+
+        return null
     }
 }
 

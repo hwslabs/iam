@@ -47,6 +47,9 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
      * @param resetPasswordEmailTemplate Template name used for sending emails during resetting password
      * @param uniqueUsersAcrossOrganizations Represents whether the users should be unique across all
      *                                          organizations. Uniqueness is determined with the user emails.
+     * @param strictPolicyStatementValidation Decides whether to validate policy statements strictly by only
+     *                                          accepting resource and action names present in resources & actions
+     *                                          tables. This will also accept "*" but won't accept any other Regex.
      */
     data class App(
         val env: Environment,
@@ -63,7 +66,8 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val senderEmailAddress: String,
         val signUpEmailTemplate: String,
         val resetPasswordEmailTemplate: String,
-        val uniqueUsersAcrossOrganizations: Boolean
+        val uniqueUsersAcrossOrganizations: Boolean,
+        val strictPolicyStatementValidation: Boolean
     ) {
         val isDevelopment: Boolean
             get() = env == Environment.Development
