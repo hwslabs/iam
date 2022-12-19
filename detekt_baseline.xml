@@ -11,7 +11,9 @@
     <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn.Companion$"""^hrn:(?&lt;organization&gt;[^:\n]+):(?&lt;accountId&gt;[^:\n]*):(?&lt;resource&gt;[^:/\n]*)/{0,1}(?&lt;resourceInstance&gt;[^/\n:]*)""".toRegex()</ID>
     <ID>SpreadOperator:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$(emailAttr, emailVerifiedAttr, createdBy, *optionalUserAttrs.toTypedArray())</ID>
+    <ID>SwallowedException:Application.kt$e: Exception</ID>
     <ID>ThrowsCount:ResourceApi.kt$fun Route.resourceApi()</ID>
+    <ID>TooGenericExceptionCaught:Application.kt$e: Exception</ID>
     <ID>TooGenericExceptionThrown:AuditEventHandler.kt$AuditEventHandler$throw Exception("few Batch inserts failed")</ID>
     <ID>TooManyFunctions:IdentityProvider.kt$IdentityProvider</ID>
     <ID>TooManyFunctions:Mappers.kt$com.hypto.iam.server.extensions.Mappers.kt</ID>
