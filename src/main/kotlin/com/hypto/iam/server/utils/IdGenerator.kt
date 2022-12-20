@@ -57,10 +57,8 @@ object IdGenerator {
     private const val MIN_TIME_BASED_RANDOM_ID_SIZE = 10
 
     fun timeBasedRandomId(length: Long = 10, charset: Charset = Charset.UPPERCASE_ALPHABETS): String {
-        if (length < MIN_TIME_BASED_RANDOM_ID_SIZE) {
-            throw IllegalArgumentException(
-                "Cannot generate a timestamp based random id with less than $MIN_TIME_BASED_RANDOM_ID_SIZE characters"
-            )
+        require(length >= MIN_TIME_BASED_RANDOM_ID_SIZE) {
+            "Cannot generate a timestamp based random id with less than $MIN_TIME_BASED_RANDOM_ID_SIZE characters"
         }
         val timeId = numberToId(Instant.now().toEpochMilli(), charset)
 

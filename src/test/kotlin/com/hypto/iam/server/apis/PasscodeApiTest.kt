@@ -208,7 +208,8 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             ) {
                 assertEquals(HttpStatusCode.BadRequest, response.status())
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8), response.contentType()
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
                 )
             }
         }

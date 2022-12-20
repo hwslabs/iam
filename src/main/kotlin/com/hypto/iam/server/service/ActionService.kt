@@ -24,8 +24,8 @@ class ActionServiceImpl : KoinComponent, ActionService {
         val actionHrn = ActionHrn(organizationId, null, resourceName, name)
         val resourceHrn = ResourceHrn(organizationId, null, resourceName, null)
 
-        if (actionRepo.existsById(actionHrn.toString())) {
-            throw IllegalArgumentException("Action with name [$name] already exists")
+        require(!actionRepo.existsById(actionHrn.toString())) {
+            "Action with name [$name] already exists"
         }
 
         val actionRecord = actionRepo.create(organizationId, resourceHrn, actionHrn, description)
@@ -66,7 +66,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
         val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
         val actionRecord = actionRepo.update(actionHrn, description)
-            ?: throw IllegalStateException("Action cannot be updated")
+        checkNotNull(actionRecord) { "Action cannot be updated" }
 
         return Action.from(actionRecord)
     }

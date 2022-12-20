@@ -87,8 +87,8 @@ object MagicNumber {
 val COMMA_REGEX = Regex("\\s*,\\s*")
 fun PolicyStatement.Companion.from(policyString: String): PolicyStatement {
     val components = policyString.trim().split(COMMA_REGEX)
-    if (components.size != MagicNumber.FIVE && components[MagicNumber.ZERO] != "p") {
-        throw IllegalArgumentException("Invalid statement string")
+    require(components.size == MagicNumber.FIVE || components[MagicNumber.ZERO] == "p") {
+        "Invalid statement string"
     }
     return PolicyStatement(
         components[MagicNumber.TWO],

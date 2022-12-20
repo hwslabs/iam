@@ -60,12 +60,13 @@ class UsersServiceImpl : KoinComponent, UsersService {
                 organizationId,
                 appConfig.app.uniqueUsersAcrossOrganizations
             )
-        )
+        ) {
             throw UserAlreadyExistException(
                 email?.let { "Email - $email" }.orEmpty() +
                     preferredUsername?.let { "Username - $preferredUsername" }.orEmpty() +
                     "already registered. Unable to create user"
             )
+        }
 
         if (loginAccess) {
             val passwordCredentials = PasswordCredentials(
@@ -80,9 +81,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
             identityProvider.createUser(
                 RequestContext(
                     organizationId = organizationId,
-                    requestedPrincipal = createdBy ?: "unknown user", verified
+                    requestedPrincipal = createdBy ?: "unknown user",
+                    verified
                 ),
-                identityGroup, passwordCredentials
+                identityGroup,
+                passwordCredentials
             )
         }
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, username)
@@ -145,8 +148,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("Unable to find user")
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - $userName does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.authenticate(identityGroup, userName, oldPassword)
@@ -166,8 +170,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(user.hrn)
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("Unable to find user")
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - ${userHrn.resourceInstance} does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.setUserPassword(identityGroup, user.username, password)
@@ -247,8 +252,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
-        if (org.rootUserHrn == userHrn.toString())
+        if (org.rootUserHrn == userHrn.toString()) {
             throw BadRequestException("Cannot delete Root User")
+        }
 
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("User not found")
@@ -268,8 +274,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
 
         val userRecord = userRepo.findByEmail(userName, organizationId)
             ?: throw EntityNotFoundException("User not found")
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - $userName does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.authenticate(identityGroup, userName, password)
@@ -287,8 +294,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(userRecord.organizationId)
             ?: throw InternalException("Internal error while trying to authenticate the identity.")
 
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - $username does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val user = identityProvider.authenticate(identityGroup, username, password)

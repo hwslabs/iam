@@ -95,6 +95,6 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val configuration: AppConfig = ConfigLoaderBuilder.default()
             .addPropertySource(
                 EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true)
-            ).report().build().loadConfigOrThrow("/default_config.json")
+            ).withReport().build().loadConfigOrThrow("/default_config.json")
     }
 }

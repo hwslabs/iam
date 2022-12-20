@@ -52,7 +52,6 @@ class Authorization(config: Configuration) : KoinComponent {
     ) {
         pipeline.insertPhaseBefore(ApplicationCallPipeline.Call, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
-
             val principal =
                 call.authentication.principal<UserPrincipal>() ?: throw AuthenticationException("Missing principal")
 

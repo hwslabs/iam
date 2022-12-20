@@ -68,7 +68,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                             resourceInstance = username
                         ).toString(),
                         JSONB.jsonb(gson.toJson(identityGroup)),
-                        LocalDateTime.now(), LocalDateTime.now()
+                        LocalDateTime.now(),
+                        LocalDateTime.now()
                     )
                 )
 

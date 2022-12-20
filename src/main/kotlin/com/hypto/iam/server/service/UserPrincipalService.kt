@@ -39,8 +39,11 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         return UserPrincipal(
             tokenCredential,
             userHrnStr,
-            if (deepCheck) principalPolicyService.fetchEntitlements(userHrnStr)
-            else PolicyBuilder(entitlements)
+            if (deepCheck) {
+                principalPolicyService.fetchEntitlements(userHrnStr)
+            } else {
+                PolicyBuilder(entitlements)
+            }
         )
     }
 

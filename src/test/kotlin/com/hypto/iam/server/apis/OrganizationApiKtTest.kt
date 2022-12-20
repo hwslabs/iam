@@ -47,7 +47,6 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization with valid root credentials`() {
-
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
@@ -76,9 +75,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-                orgId = responseBody.organization!!.id
-                assertEquals(requestBody.name, responseBody.organization!!.name)
-                assertEquals(10, responseBody.organization!!.id.length)
+                orgId = responseBody.organization.id
+                assertEquals(requestBody.name, responseBody.organization.name)
+                assertEquals(10, responseBody.organization.id.length)
             }
 
             DataSetupHelper.deleteOrganization(orgId, this)
@@ -90,7 +89,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
         declareMock<PasscodeRepo> {
             coEvery {
                 getValidPasscode(
-                    any<String>(), any<VerifyEmailRequest.Purpose>(), any<String>()
+                    any<String>(),
+                    any<VerifyEmailRequest.Purpose>(),
+                    any<String>()
                 )
             } returns null
         }
@@ -131,7 +132,6 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization with verify email method`() {
-
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
@@ -143,7 +143,8 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             lateinit var orgId: String
             val verifyRequestBody = VerifyEmailRequest(
-                email = testEmail, purpose = VerifyEmailRequest.Purpose.signup
+                email = testEmail,
+                purpose = VerifyEmailRequest.Purpose.signup
             )
             handleRequest(HttpMethod.Post, "/verifyEmail") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -169,12 +170,13 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(
-                    ContentType.Application.Json.withCharset(UTF_8), response.contentType()
+                    ContentType.Application.Json.withCharset(UTF_8),
+                    response.contentType()
                 )
 
-                orgId = responseBody.organization!!.id
-                assertEquals(requestBody.name, responseBody.organization!!.name)
-                assertEquals(10, responseBody.organization!!.id.length)
+                orgId = responseBody.organization.id
+                assertEquals(requestBody.name, responseBody.organization.name)
+                assertEquals(10, responseBody.organization.id.length)
             }
 
             DataSetupHelper.deleteOrganization(orgId, this)
@@ -231,12 +233,13 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status())
                 assertEquals(
-                    ContentType.Application.Json.withCharset(UTF_8), response.contentType()
+                    ContentType.Application.Json.withCharset(UTF_8),
+                    response.contentType()
                 )
 
-                orgId = responseBody.organization!!.id
-                assertEquals(orgName, responseBody.organization!!.name)
-                assertEquals(10, responseBody.organization!!.id.length)
+                orgId = responseBody.organization.id
+                assertEquals(orgName, responseBody.organization.name)
+                assertEquals(10, responseBody.organization.id.length)
             }
 
             DataSetupHelper.deleteOrganization(orgId, this)
@@ -245,8 +248,8 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization - rollback on error`() {
-
-        @Suppress("TooGenericExceptionThrown") declareMock<OrganizationRepo> {
+        @Suppress("TooGenericExceptionThrown")
+        declareMock<OrganizationRepo> {
             coEvery { this@declareMock.insert(any<Organizations>()) } coAnswers {
                 throw Exception("Random DB error occurred")
             }
@@ -317,7 +320,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
             with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
+                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization.id}") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(HttpHeaders.Authorization, "Bearer test-bearer-token")
                 }
@@ -328,7 +331,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(null, response.content)
             }
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
+            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
         }
     }
 
@@ -377,7 +380,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(createdOrganization.organization, fetchedOrganization)
             }
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
+            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
         }
     }
 
@@ -417,7 +420,8 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 handleRequest(HttpMethod.Get, "/organizations/inValidOrganizationId") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader(
-                        HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}"
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.rootUserToken}"
                     )
                 }
 
@@ -426,7 +430,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(HttpStatusCode.Forbidden, response.status())
             }
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization!!.id, this)
+            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
         }
     }
 

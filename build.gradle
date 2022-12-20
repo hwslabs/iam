@@ -1,17 +1,19 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 buildscript {
-    ext.kotlin_version = '1.7.10'
-    ext.ktor_version = '2.1.0'
-    ext.koin_version = '3.2.0'
+    ext.kotlin_version = '1.7.22'
+    ext.ktor_version = '2.1.3'
+    ext.koin_version = '3.2.2'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
-    ext.jooq_version = '3.16.6'
+    ext.jooq_version = '3.16.11'
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = '5.9.0'
-    ext.flyway_version = '8.5.12'
-    ext.casbin_version = '1.27.0'
-    ext.postgres_jdbc_driver = '42.5.0'
+    ext.flyway_version = '9.8.3'
+    ext.casbin_version = '1.31.2'
+    ext.postgres_jdbc_driver = '42.5.1'
+    ext.detekt_version = '1.22.0'
+    ext.cohort_version = '1.7.3'
 
     repositories {
         google()
@@ -33,7 +35,7 @@ buildscript {
 plugins {
     id 'org.flywaydb.flyway' version "$flyway_version"
     id 'nu.studer.jooq' version '7.1'
-    id "io.gitlab.arturbosch.detekt" version "1.20.0"
+    id "io.gitlab.arturbosch.detekt" version "$detekt_version"
     id "org.jlleitschuh.gradle.ktlint" version "10.3.0"
     id "jacoco"
     id "org.openapi.generator" version "5.3.0"
@@ -338,7 +340,7 @@ ktlint {
 }
 
 dependencies {
-    detektPlugins('io.gitlab.arturbosch.detekt:detekt-formatting:1.21.0')
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detekt_version")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     implementation("io.ktor:ktor-server-cio:$ktor_version")
     implementation("io.ktor:ktor-server-metrics:$ktor_version")
@@ -365,7 +367,7 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:$ktor_version")
 
 
-    implementation("ch.qos.logback:logback-classic:1.2.11")
+    implementation('ch.qos.logback:logback-classic:1.4.5')
     implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
     implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
     implementation("org.postgresql:postgresql:$postgres_jdbc_driver") // DB JDBC driver
@@ -385,7 +387,7 @@ dependencies {
     implementation "io.insert-koin:koin-logger-slf4j:$koin_version"
 
     // Logging
-    implementation 'io.github.microutils:kotlin-logging:2.1.23'
+    implementation 'io.github.microutils:kotlin-logging:2.1.21'
     implementation 'org.slf4j:slf4j-simple:1.7.36'
 
     // Metrics
@@ -405,20 +407,20 @@ dependencies {
     implementation('io.konform:konform:0.4.0')
 
     // AWS Lambda
-    implementation("com.amazonaws:aws-lambda-java-core:1.2.1")
+    implementation('com.amazonaws:aws-lambda-java-core:1.2.2')
     implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
 
     // Hoplite
-    implementation('com.sksamuel.hoplite:hoplite-json:2.6.2')
+    implementation('com.sksamuel.hoplite:hoplite-json:2.7.0')
 
     // Cohort
-    implementation('com.sksamuel.cohort:cohort-core:1.6.2')
-    implementation('com.sksamuel.cohort:cohort-ktor2:1.6.2')
-    implementation('com.sksamuel.cohort:cohort-hikari:1.6.2')
-    implementation('com.sksamuel.cohort:cohort-logback:1.6.2')
+    implementation("com.sksamuel.cohort:cohort-core:$cohort_version")
+    implementation("com.sksamuel.cohort:cohort-ktor2:$cohort_version")
+    implementation("com.sksamuel.cohort:cohort-hikari:$cohort_version")
+    implementation("com.sksamuel.cohort:cohort-logback:$cohort_version")
 
     // AWS
-    implementation platform('software.amazon.awssdk:bom:2.17.143')
+    implementation platform('software.amazon.awssdk:bom:2.18.25')
     implementation("software.amazon.awssdk:cognitoidentity")
     implementation("software.amazon.awssdk:cognitoidentityprovider")
     implementation("software.amazon.awssdk:ses")
@@ -431,12 +433,12 @@ dependencies {
     testImplementation("io.insert-koin:koin-test:$koin_version")
     testImplementation "io.insert-koin:koin-test-junit5:$koin_version"
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
-    testImplementation('io.mockk:mockk:1.12.7')
+    testImplementation('io.mockk:mockk:1.13.2')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    testImplementation 'org.testcontainers:junit-jupiter:1.17.3'
-    testImplementation 'org.testcontainers:testcontainers:1.17.3'
-    testImplementation 'org.testcontainers:postgresql:1.17.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
+    testImplementation 'org.testcontainers:testcontainers:1.17.6'
+    testImplementation 'org.testcontainers:postgresql:1.17.6'
 }
 
 // configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources

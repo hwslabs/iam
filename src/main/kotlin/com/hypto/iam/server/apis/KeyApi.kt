@@ -20,9 +20,7 @@ fun Route.keyApi() {
         val format = call.request.queryParameters["format"] ?: "pem"
         val type = call.request.queryParameters["type"] ?: "public"
 
-        if (type != "public") {
-            throw IllegalArgumentException("Only public key is supported")
-        }
+        require(type == "public") { "Only public key is supported" }
 
         val masterKey = MasterKey.of(kid!!)
         val key = when (format) {

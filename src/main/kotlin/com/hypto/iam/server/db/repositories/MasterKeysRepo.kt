@@ -24,7 +24,8 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
     override suspend fun dao(): DAOImpl<MasterKeysRecord, MasterKeys, UUID> {
         return txMan.getDao(
             com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS,
-            MasterKeys::class.java, idFun
+            MasterKeys::class.java,
+            idFun
         )
     }
 
@@ -45,11 +46,9 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
     // TODO: #1 - [IMPORTANT] Encrypt private keys stored in database with a passphrase
     // TODO: #2 - GRANT only necessary permissions for iam application user to the master_keys table
     suspend fun rotateKey(skipIfPresent: Boolean = false): Boolean {
-
         txMan.wrap {
             val c = dao().configuration()
             if (getMasterKeyOperationLock(c) && shouldRotate(skipIfPresent)) {
-
                 println("Generating key pair")
                 MasterKeyUtil.generateKeyPair()
 

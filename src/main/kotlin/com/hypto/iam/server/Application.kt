@@ -186,7 +186,8 @@ fun Application.handleRequest() {
             validate { credentials ->
                 val organizationId = this.parameters["organization_id"]!!
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    organizationId, credentials.name,
+                    organizationId,
+                    credentials.name,
                     credentials.password
                 )
                 if (principal != null) {
@@ -209,11 +210,12 @@ fun Application.handleRequest() {
         }
         basic("unique-basic-auth") {
             validate { credentials ->
-                if (!appConfig.app.uniqueUsersAcrossOrganizations)
+                if (!appConfig.app.uniqueUsersAcrossOrganizations) {
                     throw BadRequestException(
                         "Email not unique across organizations. " +
                             "Please use Token APIs with organization ID"
                     )
+                }
 
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
                     UsernamePasswordCredential(credentials.name, credentials.password)
@@ -236,7 +238,6 @@ fun Application.handleRequest() {
     install(IgnoreTrailingSlash) {}
 
     install(Routing) {
-
         authenticate("hypto-iam-root-auth", "signup-passcode-auth") {
             createOrganizationApi()
         }
@@ -302,7 +303,9 @@ fun main() {
     val appConfig: AppConfig = AppConfig.configuration
 
     embeddedServer(
-        CIO, appConfig.server.port, module = Application::module,
+        CIO,
+        appConfig.server.port,
+        module = Application::module,
         configure = {
             // Refer io.ktor.server.engine.ApplicationEngine.Configuration
             connectionGroupSize = appConfig.server.connectionGroupSize

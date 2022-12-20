@@ -135,8 +135,11 @@ object MicrometerConfigs {
          *  direct metrics logs to a separate "togai_core_metrics.log" logback appender
          * http://javadox.com/io.micrometer/micrometer-core/1.2.1/io/micrometer/core/instrument/logging/LoggingMeterRegistry.Builder.html#loggingSink(java.util.function.Consumer)
          */
-        if (appConfig.app.isDevelopment) registry.add(LoggingMeterRegistry())
-        else registry.add(getNewRelicMeterRegistry())
+        if (appConfig.app.isDevelopment) {
+            registry.add(LoggingMeterRegistry())
+        } else {
+            registry.add(getNewRelicMeterRegistry())
+        }
     }
 
     fun getRegistry(): MeterRegistry {

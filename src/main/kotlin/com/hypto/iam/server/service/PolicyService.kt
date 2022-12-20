@@ -74,7 +74,8 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     ): PolicyPaginatedResponse {
         val policies = principalPolicyRepo
             .fetchPoliciesByUserHrnPaginated(
-                ResourceHrn(organizationId, "", IamResources.USER, userId).toString(), context
+                ResourceHrn(organizationId, "", IamResources.USER, userId).toString(),
+                context
             )
         val newContext = PaginationContext.from(policies.lastOrNull()?.hrn, context)
         return PolicyPaginatedResponse(policies.map { Policy.from(it) }, newContext.nextToken, newContext.toOptions())
