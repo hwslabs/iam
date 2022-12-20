@@ -201,10 +201,14 @@ fun Application.handleRequest() {
                 if (tokenCredential.value == null) {
                     return@validate null
                 }
-                return@validate when (tokenCredential.type) {
-                    TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
-                    TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
-                    else -> throw InternalException("Invalid token credential")
+                try {
+                    when (tokenCredential.type) {
+                        TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
+                        TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
+                        else -> throw InternalException("Invalid token credential")
+                    }
+                } catch (e: Exception) {
+                    null
                 }
             }
         }
