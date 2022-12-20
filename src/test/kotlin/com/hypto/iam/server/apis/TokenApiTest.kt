@@ -2,14 +2,12 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
-import com.hypto.iam.server.ErrorMessageStrings
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelper
 import com.hypto.iam.server.models.CreateOrganizationResponse
-import com.hypto.iam.server.models.ErrorResponse
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
 import com.hypto.iam.server.models.RootUser
@@ -781,12 +779,6 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 ) {
                     // Assert
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertTrue(responseBody.message.contains("JWT expired"))
                 }
             }
         }
@@ -815,13 +807,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 ) {
                     // Assert
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_ISSUER, responseBody.message)
+                    Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
                 }
             }
         }
@@ -849,13 +835,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         )
                     }
                 ) {
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_USER_HRN, responseBody.message)
+                    Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
                 }
             }
         }
@@ -884,13 +864,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 ) {
                     // Assert
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_ORGANIZATION, responseBody.message)
+                    Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
                 }
             }
         }
@@ -919,13 +893,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 ) {
                     // Assert
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(ErrorMessageStrings.JWT_INVALID_VERSION_NUMBER, responseBody.message)
+                    Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
                 }
             }
         }
@@ -955,16 +923,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 ) {
                     // Assert
-                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
-                    Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    val responseBody = gson.fromJson(response.content, ErrorResponse::class.java)
-                    Assertions.assertEquals(
-                        String.format(ErrorMessageStrings.JWT_INVALID_ISSUED_AT, issuedAt),
-                        responseBody.message
-                    )
+                    Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
                 }
             }
         }
