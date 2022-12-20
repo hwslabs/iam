@@ -6,12 +6,14 @@ buildscript {
     ext.koin_version = '3.2.2'
     ext.shadow_version = '5.2.0'
     ext.exposed_version = "0.37.3"
-    ext.jooq_version = '3.16.6'
+    ext.jooq_version = '3.16.11'
     ext.hikari_cp_version = "5.0.1"
     ext.junit_version = '5.9.0'
-    ext.flyway_version = '8.5.12'
+    ext.flyway_version = '9.8.3'
     ext.casbin_version = '1.31.2'
     ext.postgres_jdbc_driver = '42.5.1'
+    ext.detekt_version = '1.22.0'
+    ext.cohort_version = '1.7.3'
 
     repositories {
         google()
@@ -33,7 +35,7 @@ buildscript {
 plugins {
     id 'org.flywaydb.flyway' version "$flyway_version"
     id 'nu.studer.jooq' version '7.1'
-    id "io.gitlab.arturbosch.detekt" version "1.20.0"
+    id "io.gitlab.arturbosch.detekt" version "$detekt_version"
     id "org.jlleitschuh.gradle.ktlint" version "10.3.0"
     id "jacoco"
     id "org.openapi.generator" version "5.3.0"
@@ -338,7 +340,7 @@ ktlint {
 }
 
 dependencies {
-    detektPlugins('io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0')
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detekt_version")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     implementation("io.ktor:ktor-server-cio:$ktor_version")
     implementation("io.ktor:ktor-server-metrics:$ktor_version")
@@ -385,7 +387,7 @@ dependencies {
     implementation "io.insert-koin:koin-logger-slf4j:$koin_version"
 
     // Logging
-    implementation 'io.github.microutils:kotlin-logging:2.1.23'
+    implementation 'io.github.microutils:kotlin-logging:2.1.21'
     implementation 'org.slf4j:slf4j-simple:1.7.36'
 
     // Metrics
@@ -412,10 +414,10 @@ dependencies {
     implementation('com.sksamuel.hoplite:hoplite-json:2.7.0')
 
     // Cohort
-    implementation('com.sksamuel.cohort:cohort-core:1.7.3')
-    implementation('com.sksamuel.cohort:cohort-ktor2:1.6.2')
-    implementation('com.sksamuel.cohort:cohort-hikari:1.6.2')
-    implementation('com.sksamuel.cohort:cohort-logback:1.6.2')
+    implementation("com.sksamuel.cohort:cohort-core:$cohort_version")
+    implementation("com.sksamuel.cohort:cohort-ktor2:$cohort_version")
+    implementation("com.sksamuel.cohort:cohort-hikari:$cohort_version")
+    implementation("com.sksamuel.cohort:cohort-logback:$cohort_version")
 
     // AWS
     implementation platform('software.amazon.awssdk:bom:2.18.25')
@@ -434,8 +436,8 @@ dependencies {
     testImplementation('io.mockk:mockk:1.13.2')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    testImplementation 'org.testcontainers:junit-jupiter:1.17.3'
-    testImplementation 'org.testcontainers:testcontainers:1.17.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
+    testImplementation 'org.testcontainers:testcontainers:1.17.6'
     testImplementation 'org.testcontainers:postgresql:1.17.6'
 }
 

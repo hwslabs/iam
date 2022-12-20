@@ -81,9 +81,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
             identityProvider.createUser(
                 RequestContext(
                     organizationId = organizationId,
-                    requestedPrincipal = createdBy ?: "unknown user", verified
+                    requestedPrincipal = createdBy ?: "unknown user",
+                    verified
                 ),
-                identityGroup, passwordCredentials
+                identityGroup,
+                passwordCredentials
             )
         }
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, username)
@@ -146,8 +148,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("Unable to find user")
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - $userName does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.authenticate(identityGroup, userName, oldPassword)
@@ -167,8 +170,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(user.hrn)
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("Unable to find user")
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - ${userHrn.resourceInstance} does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.setUserPassword(identityGroup, user.username, password)
@@ -182,22 +186,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): UserPaginatedResponse {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
-<<<<<<< HEAD
 
         val users = userRepo.fetchUsers(organizationId, paginationContext).map { user ->
             getUser(ResourceHrn(user.hrn), user)
-=======
-        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        val (users, nextToken) = identityProvider.listUsers(
-            identityGroup = identityGroup,
-            pageToken = nextToken,
-            limit = pageSize
-        )
-        val pageContext = PaginationOptions(pageSize)
-        val externalUserTypeUsers = users.map { user ->
-            val userHrn = ResourceHrn(organizationId, "", IamResources.USER, user.username)
-            getUser(userHrn, user)
->>>>>>> b681275 (Upgrade dependencies and formatting changes)
         }.toList()
 
         val newContext = PaginationContext.from(users.lastOrNull()?.hrn, paginationContext)
@@ -283,8 +274,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
 
         val userRecord = userRepo.findByEmail(userName, organizationId)
             ?: throw EntityNotFoundException("User not found")
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - $userName does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.authenticate(identityGroup, userName, password)
@@ -302,8 +294,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(userRecord.organizationId)
             ?: throw InternalException("Internal error while trying to authenticate the identity.")
 
-        if (!userRecord.loginAccess)
+        if (!userRecord.loginAccess) {
             throw BadRequestException("User - $username does not have login access")
+        }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val user = identityProvider.authenticate(identityGroup, username, password)

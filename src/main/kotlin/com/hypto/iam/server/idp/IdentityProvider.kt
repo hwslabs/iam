@@ -65,8 +65,8 @@ data class User(
     val createdAt: String
 )
 
-abstract class UserCredentials {
-    abstract val username: String
+interface UserCredentials {
+    val username: String
 }
 
 data class PasswordCredentials(
@@ -76,14 +76,14 @@ data class PasswordCredentials(
     val phoneNumber: String,
     val password: String,
     val preferredUsername: String?
-) : UserCredentials()
+) : UserCredentials
 
 data class AccessTokenCredentials(
     override val username: String,
     val email: String,
     val phoneNumber: String,
     val accessToken: String
-) : UserCredentials()
+) : UserCredentials
 
 data class RequestContext(
     val organizationId: String,

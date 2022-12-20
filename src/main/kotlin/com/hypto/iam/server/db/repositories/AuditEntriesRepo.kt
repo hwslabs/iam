@@ -87,8 +87,8 @@ object AuditEntriesRepo : BaseRepo<AuditEntriesRecord, AuditEntries, UUID>() {
         val result = batchBindStep.execute()
         var returnValue = true
 
-        result.forEachIndexed { index, it ->
-            if (it != 1) {
+        result.forEachIndexed { index, insertCount ->
+            if (insertCount != 1) {
                 returnValue = false
                 logger.error { "Insert failed: ${auditEntries[index]}" }
             }

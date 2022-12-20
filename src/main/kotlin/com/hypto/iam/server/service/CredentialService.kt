@@ -77,7 +77,7 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
             validUntil?.let { LocalDateTime.parse(validUntil, DateTimeFormatter.ISO_LOCAL_DATE_TIME) }
         )
 
-        credentialsRecord ?: throw IllegalStateException("Update unsuccessful")
+        checkNotNull(credentialsRecord) { "Update unsuccessful" }
 
         auditLog()?.append(userHrn)
 

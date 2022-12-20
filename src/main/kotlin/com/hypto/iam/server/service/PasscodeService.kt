@@ -91,8 +91,9 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
 
     private suspend fun sendResetPassword(email: String, organizationId: String?, passcode: String): Boolean {
         val user = usersService.getUserByEmail(organizationId, email)
-        if (!user.loginAccess)
+        if (!user.loginAccess) {
             return false
+        }
         val link =
             "${appConfig.app.baseUrl}/organizations/${user.organizationId}/users/resetPassword?" +
                 "passcode=$passcode&email=${Base64.getEncoder().encodeToString(email.toByteArray())}"

@@ -139,8 +139,8 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
 
     private fun persistEntry(applicationCall: ApplicationCall, message: Any, resourceHrnStr: String) {
         val principalHrn = applicationCall.principal<UserPrincipal>()?.hrn as ResourceHrn?
-            ?: throw IllegalStateException("User principal missing in application context")
-        applicationCall.callId ?: throw IllegalStateException("Request id missing in application context")
+            ?: error("User principal missing in application context")
+        applicationCall.callId ?: error("Request id missing in application context")
 
         val meta = hashMapOf(
             Pair("HttpMethod", applicationCall.request.httpMethod.value),
