@@ -148,7 +148,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userName)
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("Unable to find user")
-        if (!userRecord.loginAccess) {
+        if (userRecord.loginAccess != true) {
             throw BadRequestException("User - $userName does not have login access")
         }
 
@@ -170,7 +170,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(user.hrn)
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("Unable to find user")
-        if (!userRecord.loginAccess) {
+        if (userRecord.loginAccess != true) {
             throw BadRequestException("User - ${userHrn.resourceInstance} does not have login access")
         }
 
@@ -206,12 +206,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
         hrn = userHrn.toString(),
         username = userHrn.resourceInstance.toString(),
         preferredUsername = user.preferredUsername,
-        name = user.name,
+        name = user.name ?: "",
         organizationId = userHrn.organization,
         email = user.email,
         status = if (user.status == User.Status.enabled.value) User.Status.enabled else User.Status.disabled,
         verified = user.verified,
-        createdBy = user.createdBy,
+        createdBy = user.createdBy ?: "",
         loginAccess = user.loginAccess
     )
 
@@ -230,7 +230,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             ?: throw EntityNotFoundException("User not found")
 
         val userStatus = status?.toUserStatus()
-        if (userRecord.loginAccess) {
+        if (userRecord.loginAccess == true) {
             val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
 
             identityProvider.updateUser(
@@ -259,7 +259,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("User not found")
 
-        if (userRecord.loginAccess) {
+        if (userRecord.loginAccess == true) {
             val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
             identityProvider.deleteUser(identityGroup, userName)
         }
@@ -274,7 +274,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
 
         val userRecord = userRepo.findByEmail(userName, organizationId)
             ?: throw EntityNotFoundException("User not found")
-        if (!userRecord.loginAccess) {
+        if (userRecord.loginAccess != true) {
             throw BadRequestException("User - $userName does not have login access")
         }
 
@@ -294,7 +294,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val org = organizationRepo.findById(userRecord.organizationId)
             ?: throw InternalException("Internal error while trying to authenticate the identity.")
 
-        if (!userRecord.loginAccess) {
+        if (userRecord.loginAccess == null) {
             throw BadRequestException("User - $username does not have login access")
         }
 
