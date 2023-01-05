@@ -124,7 +124,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         link.path = when (purpose) {
             Purpose.signup -> "/signup"
             Purpose.reset -> "/organizations/${organizationId!!}/users/resetPassword"
-            Purpose.invite -> "/organizations/${organizationId!!}/users"
+            Purpose.invite -> "/organizations/${organizationId!!}/users/verifyUser"
         }
 
         return link.setParameter("passcode", passcode)
