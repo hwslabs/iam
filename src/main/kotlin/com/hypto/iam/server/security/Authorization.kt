@@ -52,18 +52,30 @@ class Authorization(config: Configuration) : KoinComponent {
     ) {
         pipeline.insertPhaseBefore(ApplicationCallPipeline.Call, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
-            val principal =
-                call.authentication.principal<UserPrincipal>() ?: throw AuthenticationException("Missing principal")
-
-            val principalHrn = principal.hrnStr
             val resourceHrn = getResourceHrn(context.request)
+            val userPrincipal = call.authentication.principal<UserPrincipal>()
+            val apiPrincipal = call.authentication.principal<ApiPrincipal>()
+            if (userPrincipal == null && apiPrincipal == null) {
+                throw AuthenticationException("User is not authenticated")
+            }
+            val (principalHrn, policies) = if (userPrincipal != null) {
+                Pair(userPrincipal.hrnStr, userPrincipal.policies)
+            } else if (apiPrincipal != null) {
+                Pair(
+                    ResourceHrn(apiPrincipal.organization, null, apiPrincipal.organization, null).toString(),
+                    apiPrincipal.policies ?: throw AuthorizationException("User not authorized")
+                )
+            } else {
+                throw AuthenticationException("Principal not valid")
+            }
+
             val denyReasons = mutableListOf<String>()
             all?.let {
                 val policyRequests = all.map {
                     val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
                     PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
-                if (!policyValidator.validate(principal.policies.stream(), policyRequests)) {
+                if (!policyValidator.validate(policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn lacks one or more permission(s) -" +
                         "  ${policyRequests.joinToString { it.action }}"
                 }
@@ -74,7 +86,7 @@ class Authorization(config: Configuration) : KoinComponent {
                     val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
                     PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
-                if (!policyValidator.validateAny(principal.policies.stream(), policyRequests)) {
+                if (!policyValidator.validateAny(policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn has none of the permission(s) -" +
                         "  ${policyRequests.joinToString { it.action }}"
                 }
@@ -85,7 +97,7 @@ class Authorization(config: Configuration) : KoinComponent {
                     val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
                     PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
                 }.toList()
-                if (!policyValidator.validateNone(principal.policies.stream(), policyRequests)) {
+                if (!policyValidator.validateNone(policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn shouldn't have these permission(s) -" +
                         "  ${policyRequests.joinToString { it.action }}"
                 }

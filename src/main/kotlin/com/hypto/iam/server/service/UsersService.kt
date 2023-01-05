@@ -23,19 +23,24 @@ import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.AuthenticationException
+import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.EMAIL_REGEX
+import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
 import java.time.LocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class UsersServiceImpl : KoinComponent, UsersService {
+    private val principalPolicyService: PrincipalPolicyService by inject()
+    private val hrnFactory: HrnFactory by inject()
     private val userRepo: UserRepo by inject()
     private val organizationRepo: OrganizationRepo by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
+    private val txMan: TxMan by inject()
     private val appConfig: AppConfig by inject()
     private val passcodeRepo: PasscodeRepo by inject()
 
@@ -49,10 +54,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
         phoneNumber: String?,
         password: String?,
         createdBy: String?,
-        verified: Boolean
+        verified: Boolean,
+        policies: List<String>?
     ): User {
         val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to create a user")
+            ?: throw EntityNotFoundException("Invalid organization id. Unable to create a user")
 
         if (userRepo.existsByAliasUsername(
                 preferredUsername,
@@ -68,45 +74,56 @@ class UsersServiceImpl : KoinComponent, UsersService {
             )
         }
 
-        if (loginAccess) {
-            val passwordCredentials = PasswordCredentials(
-                username = username,
-                preferredUsername = preferredUsername,
-                name = name,
-                email = email!!,
-                phoneNumber = phoneNumber ?: "",
-                password = password!!
-            )
-            val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-            identityProvider.createUser(
-                RequestContext(
-                    organizationId = organizationId,
-                    requestedPrincipal = createdBy ?: "unknown user",
-                    verified
-                ),
-                identityGroup,
-                passwordCredentials
-            )
-        }
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, username)
-
-        val userRecord = userRepo.insert(
-            UsersRecord().apply {
-                this.hrn = userHrn.toString()
-                this.organizationId = organizationId
-                this.email = email
-                this.status = User.Status.enabled.value
-                this.verified = verified
-                this.deleted = false
-                this.createdAt = LocalDateTime.now()
-                this.updatedAt = LocalDateTime.now()
-                this.preferredUsername = preferredUsername
-                this.loginAccess = loginAccess
-                this.name = name
-                this.createdBy = createdBy
+        return txMan.wrap {
+            if (loginAccess) {
+                val passwordCredentials = PasswordCredentials(
+                    username = username,
+                    preferredUsername = preferredUsername,
+                    name = name,
+                    email = email ?: throw BadRequestException("Email is required"),
+                    phoneNumber = phoneNumber ?: "",
+                    password = password ?: throw BadRequestException("Password is required"),
+                )
+                val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+                identityProvider.createUser(
+                    RequestContext(
+                        organizationId = organizationId,
+                        requestedPrincipal = createdBy ?: "unknown user",
+                        verified
+                    ),
+                    identityGroup,
+                    passwordCredentials
+                )
             }
-        ) ?: throw InternalException("Unable to create user")
-        return getUser(userHrn, userRecord)
+            val userHrn = ResourceHrn(organizationId, "", IamResources.USER, username)
+            val userRecord = userRepo.insert(
+                UsersRecord().apply {
+                    this.hrn = userHrn.toString()
+                    this.organizationId = organizationId
+                    this.email = email
+                    this.status = User.Status.enabled.value
+                    this.verified = verified
+                    this.deleted = false
+                    this.createdAt = LocalDateTime.now()
+                    this.updatedAt = LocalDateTime.now()
+                    this.preferredUsername = preferredUsername
+                    this.loginAccess = loginAccess
+                    this.name = name
+                    this.createdBy = createdBy
+                }
+            ) ?: throw InternalException("Unable to create user")
+
+            policies?.let {
+                principalPolicyService.attachPoliciesToUser(
+                    ResourceHrn(userHrn.toString()),
+                    policies.map { hrnFactory.getHrn(it) }
+                )
+            }
+            email?.let {
+                passcodeRepo.deleteByEmailAndPurpose(email, VerifyEmailRequest.Purpose.invite)
+            }
+            getUser(userHrn, userRecord)
+        }
     }
 
     override suspend fun getUser(organizationId: String, userName: String): User {
@@ -212,7 +229,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         status = if (user.status == User.Status.enabled.value) User.Status.enabled else User.Status.disabled,
         verified = user.verified,
         createdBy = user.createdBy ?: "",
-        loginAccess = user.loginAccess
+        loginAccess = user.loginAccess ?: false
     )
 
     override suspend fun updateUser(
@@ -319,7 +336,8 @@ interface UsersService {
         phoneNumber: String?,
         password: String?,
         createdBy: String?,
-        verified: Boolean
+        verified: Boolean,
+        policies: List<String>? = null
     ): User
 
     suspend fun getUser(organizationId: String, userName: String): User

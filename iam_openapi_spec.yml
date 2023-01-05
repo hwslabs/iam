@@ -1554,10 +1554,10 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/CreateUserResponse'
           examples:
             User:
-              $ref: '#/components/examples/User'
+              $ref: '#/components/examples/CreateUserResponse'
 
     UpdateUserResponse:
       description: Response for UpdateUserRequest
@@ -2127,6 +2127,21 @@ components:
         createdAt: 2020-01-01T00:00:00.000Z
         updatedAt: 2020-01-01T00:00:00.000Z
 
+    CreateUserResponse:
+      value:
+        user:
+          hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+          username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+          name: Lorem Ipsum
+          organizationId: XlK5h64gND
+          email: bob@acme.com
+          status: enabled
+          verified: true
+          phone: "+1234071628"
+          loginAccess: true
+          createdBy: hrn:Xghfdksd::iam-user/johnny314
+        userToken: jfkdlasfdsfdsfdsfdsfdsfdsfdsafsdf
+
     User:
       summary: A sample user
       value:
@@ -2533,6 +2548,7 @@ components:
           enum:
             - reset
             - signup
+            - invite
         metadata:
           type: object
           description: |
@@ -2775,6 +2791,19 @@ components:
           maxLength: 50
         verified:
           type: boolean
+
+    CreateUserResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - user
+        - userToken
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        userToken:
+          description: JWT token of the user
+          type: string
 
     Credential:
       type: object

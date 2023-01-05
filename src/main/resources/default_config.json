@@ -14,7 +14,7 @@
     "publish_interval": 10
   },
   "server": {
-    "port": 8080,
+    "port": 4101,
     "connectionGroupSize": 32,
     "workerGroupSize": 64,
     "callGroupSize": 256,
@@ -36,10 +36,11 @@
     "cache_refresh_interval": 300,
     "passcode_validity_seconds": 86400,
     "passcode_count_limit": 5,
-    "base_url": "<placeholder for base url>",
+    "base_url": "localhost",
     "sender_email_address": "<placeholder for senders email address>",
     "sign_up_email_template": "<placeholder for signup user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
+    "invite_user_email_template": "<placeholder for invite user template name>",
     "unique_users_across_organizations": false
   },
   "aws": {

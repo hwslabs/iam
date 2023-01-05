@@ -9,6 +9,7 @@ import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
@@ -100,7 +101,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         setBody(gson.toJson(createUserRequest))
                     }
                 ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
+                    val responseBody = gson.fromJson(response.content, CreateUserResponse::class.java)
                     assertEquals(HttpStatusCode.Created, response.status())
                     assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
@@ -111,10 +112,10 @@ class UserApiTest : AbstractContainerBaseTest() {
                         response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
 
-                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
-                    assertEquals(createUserRequest.email, responseBody.email)
-                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
-                    assertEquals(createUserRequest.verified, responseBody.verified)
+                    assertEquals(createUserRequest.preferredUsername, responseBody.user.preferredUsername)
+                    assertEquals(createUserRequest.email, responseBody.user.email)
+                    assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
+                    assertEquals(createUserRequest.verified, responseBody.user.verified)
                 }
 
                 DataSetupHelper.deleteOrganization(organization.id, this)
@@ -161,7 +162,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         setBody(gson.toJson(createUserRequest))
                     }
                 ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
+                    val responseBody = gson.fromJson(response.content, CreateUserResponse::class.java)
                     assertEquals(HttpStatusCode.Created, response.status())
                     assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
@@ -172,10 +173,10 @@ class UserApiTest : AbstractContainerBaseTest() {
                         response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
 
-                    assertEquals(null, responseBody.preferredUsername)
-                    assertEquals(createUserRequest.email, responseBody.email)
-                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
-                    assertEquals(createUserRequest.verified, responseBody.verified)
+                    assertEquals(null, responseBody.user.preferredUsername)
+                    assertEquals(createUserRequest.email, responseBody.user.email)
+                    assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
+                    assertEquals(createUserRequest.verified, responseBody.user.verified)
                 }
 
                 DataSetupHelper.deleteOrganization(organization.id, this)
@@ -284,7 +285,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                         setBody(gson.toJson(createUserRequest))
                     }
                 ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
+                    val responseBody = gson.fromJson(response.content, CreateUserResponse::class.java)
                     assertEquals(HttpStatusCode.Created, response.status())
                     assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
@@ -295,12 +296,12 @@ class UserApiTest : AbstractContainerBaseTest() {
                         response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
 
-                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
-                    assertEquals(createUserRequest.email, responseBody.email)
-                    assertEquals(createUserRequest.name, responseBody.name)
-                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
-                    assertEquals(createUserRequest.verified, responseBody.verified)
-                    assertEquals(createUserRequest.loginAccess, responseBody.loginAccess)
+                    assertEquals(createUserRequest.preferredUsername, responseBody.user.preferredUsername)
+                    assertEquals(createUserRequest.email, responseBody.user.email)
+                    assertEquals(createUserRequest.name, responseBody.user.name)
+                    assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
+                    assertEquals(createUserRequest.verified, responseBody.user.verified)
+                    assertEquals(createUserRequest.loginAccess, responseBody.user.loginAccess)
                 }
 
                 DataSetupHelper.deleteOrganization(organization.id, this)

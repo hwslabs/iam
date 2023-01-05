@@ -8,6 +8,7 @@ import com.hypto.iam.server.Constants.Companion.AUTHORIZATION_HEADER
 import com.hypto.iam.server.Constants.Companion.X_API_KEY_HEADER
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.MagicNumber
+import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.policy.PolicyBuilder
@@ -38,7 +39,8 @@ enum class TokenLocation(val location: String) {
 enum class TokenType(val type: String) {
     CREDENTIAL("credential"),
     JWT("jwt"),
-    BASIC("basic")
+    BASIC("basic"),
+    PASSCODE("passcode")
 }
 
 /** Class which stores the token credentials sent by the client */
@@ -54,7 +56,8 @@ data class UsernamePasswordCredential(val username: String, val password: String
 /** Class to store the Principal authenticated using ApiKey auth **/
 data class ApiPrincipal(
     override val tokenCredential: TokenCredential,
-    override val organization: String
+    override val organization: String,
+    val policies: PolicyBuilder? = null
 ) : IamPrincipal()
 
 /** Class to store the Principal authenticated using Bearer auth **/
@@ -73,11 +76,13 @@ class TokenAuthenticationProvider internal constructor(
     internal var authenticationFunction = config.authenticationFunction
     private val tokenKeyName = config.keyName
     private val tokenKeyLocation = config.keyLocation
+    private val tokenType = config.tokenType
     private val authSchemeExists = config.authSchemeExists
+    private val optionalAuth = config.optionalAuth
 
     override suspend fun onAuthenticate(context: AuthenticationContext) {
         val call = context.call
-        val credentials = call.request.tokenAuthenticationCredentials(tokenKeyName, tokenKeyLocation) {
+        val credentials = call.request.tokenAuthenticationCredentials(tokenKeyName, tokenKeyLocation, tokenType) {
             if (!authSchemeExists) {
                 return@tokenAuthenticationCredentials it
             }
@@ -95,7 +100,7 @@ class TokenAuthenticationProvider internal constructor(
         }
         val principal = credentials?.let { authenticationFunction(call, it) }
 
-        validateResponse(credentials, principal, context, tokenKeyName)
+        validateResponse(credentials, principal, context, tokenKeyName, optionalAuth)
     }
 
     /**
@@ -105,7 +110,9 @@ class TokenAuthenticationProvider internal constructor(
         name: String?,
         val keyName: String,
         val keyLocation: TokenLocation = TokenLocation.HEADER,
-        val authSchemeExists: Boolean = false
+        val authSchemeExists: Boolean = false,
+        val tokenType: TokenType? = null,
+        val optionalAuth: Boolean = false
     ) : AuthenticationProvider.Config(name) {
         internal var authenticationFunction: suspend ApplicationCall.(TokenCredential) -> IamPrincipal? = {
             throw NotImplementedError("Token auth validate function is not specified.")
@@ -128,9 +135,31 @@ fun AuthenticationConfig.apiKeyAuth(name: String? = null, configure: TokenAuthen
     register(provider)
 }
 
+fun AuthenticationConfig.passcodeAuth(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
+    val provider = TokenAuthenticationProvider(
+        TokenAuthenticationProvider.Config(name, X_API_KEY_HEADER, tokenType = TokenType.PASSCODE).apply(configure)
+    )
+    register(provider)
+}
+
 fun AuthenticationConfig.bearer(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
     val provider = TokenAuthenticationProvider(
         TokenAuthenticationProvider.Config(name, AUTHORIZATION_HEADER, authSchemeExists = true).apply(configure)
+    )
+    register(provider)
+}
+
+fun AuthenticationConfig.optionalBearer(
+    name: String? = null,
+    configure: TokenAuthenticationProvider.Config.() -> Unit
+) {
+    val provider = TokenAuthenticationProvider(
+        TokenAuthenticationProvider.Config(
+            name,
+            AUTHORIZATION_HEADER,
+            authSchemeExists = true,
+            optionalAuth = true
+        ).apply(configure)
     )
     register(provider)
 }
@@ -139,7 +168,8 @@ private fun validateResponse(
     credentials: TokenCredential?,
     principal: IamPrincipal?,
     context: AuthenticationContext,
-    apiKeyName: String
+    apiKeyName: String,
+    optionalAuth: Boolean
 ) {
     val cause = when {
         credentials == null -> AuthenticationFailedCause.NoCredentials
@@ -147,7 +177,7 @@ private fun validateResponse(
         else -> null
     }
 
-    if (cause != null) {
+    if (cause != null && !optionalAuth) {
         context.challenge(apiKeyName, cause) { challenge, call ->
             call.respond(UnauthorizedResponse())
             challenge.complete()
@@ -163,6 +193,7 @@ private fun validateResponse(
 fun ApplicationRequest.tokenAuthenticationCredentials(
     apiKeyName: String,
     tokenLocation: TokenLocation,
+    tokenType: TokenType? = null,
     transform: ((String) -> String?)? = null
 ): TokenCredential? {
     val value: String? = when (tokenLocation) {
@@ -174,11 +205,12 @@ fun ApplicationRequest.tokenAuthenticationCredentials(
     } else {
         value
     }
-    val type = if (result != null && isIamJWT(result)) {
+    val type = tokenType ?: if (result != null && isIamJWT(result)) {
         TokenType.JWT
     } else {
         TokenType.CREDENTIAL
     }
+
     return when (result) {
         null -> null
         else -> TokenCredential(result, type)
@@ -210,4 +242,23 @@ fun isIamJWT(jwt: String): Boolean {
         result = false
     }
     return result
+}
+
+fun bearerAuthValidation(
+    userPrincipalService: UserPrincipalService
+): suspend ApplicationCall.(tokenCredential: TokenCredential) -> UserPrincipal? {
+    return { tokenCredential ->
+        if (tokenCredential.value == null) {
+            null
+        }
+        try {
+            when (tokenCredential.type) {
+                TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
+                TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
+                else -> null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

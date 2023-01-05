@@ -62,6 +62,7 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val baseUrl: String,
         val senderEmailAddress: String,
         val signUpEmailTemplate: String,
+        val inviteUserEmailTemplate: String,
         val resetPasswordEmailTemplate: String,
         val uniqueUsersAcrossOrganizations: Boolean
     ) {

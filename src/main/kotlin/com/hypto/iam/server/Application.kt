@@ -5,6 +5,7 @@ package com.hypto.iam.server
 import com.hypto.iam.server.Constants.Companion.SECRET_PREFIX
 import com.hypto.iam.server.apis.actionApi
 import com.hypto.iam.server.apis.createOrganizationApi
+import com.hypto.iam.server.apis.createUsersApi
 import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.deleteOrganizationApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
@@ -22,19 +23,25 @@ import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
-import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Authorization
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
+import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.UsernamePasswordCredential
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
+import com.hypto.iam.server.security.bearerAuthValidation
+import com.hypto.iam.server.security.optionalBearer
+import com.hypto.iam.server.security.passcodeAuth
 import com.hypto.iam.server.service.DatabaseFactory.pool
+import com.hypto.iam.server.service.PasscodeService
+import com.hypto.iam.server.service.PrincipalPolicyService
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.ApplicationIdUtil
+import com.hypto.iam.server.validators.InviteMetadata
 import com.hypto.iam.server.validators.validate
 import com.sksamuel.cohort.HealthCheckRegistry
 import com.sksamuel.cohort.db.DatabaseHealthCheck
@@ -83,12 +90,12 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import org.koin.core.component.inject
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-Id"
+private const val ROOT_ORG = "hypto-root"
 
 private val shutdownHook = EngineShutdownHook(prewait = 1.seconds, gracePeriod = 30.seconds, timeout = 45.seconds)
 
@@ -104,6 +111,8 @@ fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val appConfig: AppConfig by inject()
     val passcodeRepo: PasscodeRepo by inject()
+    val passcodeService: PasscodeService by inject()
+    val principalPolicyService: PrincipalPolicyService by inject()
     val userPrincipalService: UserPrincipalService by inject()
     val micrometerRegistry: MeterRegistry by inject()
     val micrometerBindings: List<MeterBinder> by inject()
@@ -158,26 +167,40 @@ fun Application.handleRequest() {
             val secretKey = SECRET_PREFIX + appConfig.app.secretKey
             validate { tokenCredential: TokenCredential ->
                 when (tokenCredential.value) {
-                    secretKey -> ApiPrincipal(tokenCredential, "hypto-root")
+                    secretKey -> ApiPrincipal(tokenCredential, ROOT_ORG)
                     else -> null
                 }
             }
         }
-        apiKeyAuth("signup-passcode-auth") {
+        passcodeAuth("signup-passcode-auth") {
             validate { tokenCredential: TokenCredential ->
                 tokenCredential.value?.let {
                     passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.signup)?.let {
-                        ApiPrincipal(tokenCredential, "hypto-root")
+                        ApiPrincipal(tokenCredential, ROOT_ORG)
                     }
                 }
             }
         }
-        apiKeyAuth("reset-passcode-auth") {
+        passcodeAuth("reset-passcode-auth") {
             validate { tokenCredential: TokenCredential ->
                 val email = this.receive<ResetPasswordRequest>().validate().email
                 tokenCredential.value?.let {
                     passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.reset, email)?.let {
-                        ApiPrincipal(tokenCredential, "hypto-root")
+                        ApiPrincipal(tokenCredential, ROOT_ORG)
+                    }
+                }
+            }
+        }
+        passcodeAuth("invite-passcode-auth") {
+            validate { tokenCredential: TokenCredential ->
+                tokenCredential.value?.let { value ->
+                    passcodeRepo.getValidPasscode(value, VerifyEmailRequest.Purpose.invite)?.let {
+                        val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
+                        return@validate UserPrincipal(
+                            TokenCredential(tokenCredential.value, TokenType.PASSCODE),
+                            metadata.inviterUserHrn,
+                            principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
+                        )
                     }
                 }
             }
@@ -197,20 +220,7 @@ fun Application.handleRequest() {
             }
         }
         bearer("bearer-auth") {
-            validate { tokenCredential: TokenCredential ->
-                if (tokenCredential.value == null) {
-                    return@validate null
-                }
-                try {
-                    when (tokenCredential.type) {
-                        TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
-                        TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
-                        else -> throw InternalException("Invalid token credential")
-                    }
-                } catch (e: Exception) {
-                    null
-                }
-            }
+            validate(bearerAuthValidation(userPrincipalService))
         }
         basic("unique-basic-auth") {
             validate { credentials ->
@@ -227,6 +237,9 @@ fun Application.handleRequest() {
                 response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
                 return@validate principal
             }
+        }
+        optionalBearer("optional-bearer-auth") {
+            validate(bearerAuthValidation(userPrincipalService))
         }
     }
 
@@ -250,6 +263,10 @@ fun Application.handleRequest() {
             deleteOrganizationApi()
         }
 
+        authenticate("bearer-auth", "invite-passcode-auth") {
+            createUsersApi()
+        }
+
         authenticate("bearer-auth") {
             getAndUpdateOrganizationApi()
             actionApi()
@@ -266,7 +283,10 @@ fun Application.handleRequest() {
 
         tokenApi() // Authentication handled along with API definitions
         keyApi()
-        passcodeApi()
+
+        authenticate("optional-bearer-auth") {
+            passcodeApi()
+        }
     }
 
     install(Cohort) {

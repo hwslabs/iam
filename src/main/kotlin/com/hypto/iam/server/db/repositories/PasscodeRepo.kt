@@ -38,7 +38,8 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
     suspend fun getValidPasscode(
         id: String,
         purpose: VerifyEmailRequest.Purpose,
-        email: String? = null
+        email: String? = null,
+        organizationId: String? = null
     ): PasscodesRecord? {
         return ctx("passcodes.getValid")
             .selectFrom(PASSCODES)
@@ -49,6 +50,9 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             ).apply {
                 email?.let {
                     and(PASSCODES.EMAIL.eq(email))
+                }
+                organizationId?.let {
+                    and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
                 }
             }
             .fetchOne()
