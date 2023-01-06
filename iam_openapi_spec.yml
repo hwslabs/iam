@@ -1502,17 +1502,6 @@ components:
             VerifyEmailRequestSignupWithMetadata:
               $ref: '#/components/examples/VerifyEmailRequestSignupWithMetadata'
 
-    PasscodePaginatedResponse:
-      description: Paginated response of passcodes
-      required: true
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PasscodePaginatedResponse'
-          examples:
-            PasscodePaginatedResponse:
-              $ref: '#/components/examples/PasscodePaginatedResponse'
-
   responses:
     BaseSuccessResponse:
       description: OK
@@ -1526,6 +1515,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/BaseSuccessResponse'
+
+    PasscodePaginatedResponse:
+      description: Paginated response of passcodesm
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PasscodePaginatedResponse'
+          examples:
+            PasscodePaginatedResponse:
+              $ref: '#/components/examples/PasscodePaginatedResponse'
 
     ErrorResponse:
       description: Error response
@@ -2028,6 +2027,15 @@ components:
 
 
     # Response examples
+
+    PasscodePaginatedResponse:
+      value:
+        data:
+          - email: abcd@abcd.com
+            purpose: invite
+            createdAt: 2021-01-01T00:00:00
+            validUntil: 2021-01-01T00:00:00
+        nextToken: dshfoadshfjshadkfjkdsal
 
     CreateOrganizationResponse:
       value:
