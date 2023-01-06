@@ -8,6 +8,7 @@ import com.hypto.iam.server.db.tables.pojos.PrincipalPolicies
 import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.records.ActionsRecord
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
+import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
@@ -16,6 +17,7 @@ import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
+import com.hypto.iam.server.models.Passcode
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.Resource
@@ -222,5 +224,16 @@ fun CreateOrganizationRequest.Companion.from(
             preferredUsername = verifyEmailMetadata["rootUserPreferredUsername"] as String?,
             phone = verifyEmailMetadata["rootUserPhone"] as String?
         )
+    )
+}
+
+fun Passcode.Companion.from(
+    record: PasscodesRecord
+): Passcode {
+    return Passcode(
+        record.email,
+        record.purpose,
+        record.createdAt.toUTCOffset(),
+        record.validUntil.toUTCOffset()
     )
 }

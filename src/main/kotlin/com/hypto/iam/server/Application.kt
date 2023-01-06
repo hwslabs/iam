@@ -10,7 +10,8 @@ import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.deleteOrganizationApi
 import com.hypto.iam.server.apis.getAndUpdateOrganizationApi
 import com.hypto.iam.server.apis.keyApi
-import com.hypto.iam.server.apis.passcodeApi
+import com.hypto.iam.server.apis.createPasscodeApi
+import com.hypto.iam.server.apis.passcodeApis
 import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resetPasswordApi
 import com.hypto.iam.server.apis.resourceApi
@@ -275,6 +276,7 @@ fun Application.handleRequest() {
             resourceApi()
             usersApi()
             validationApi()
+            passcodeApis()
         }
 
         authenticate("reset-passcode-auth") {
@@ -285,7 +287,7 @@ fun Application.handleRequest() {
         keyApi()
 
         authenticate("optional-bearer-auth") {
-            passcodeApi()
+            createPasscodeApi()
         }
     }
 
