@@ -11,6 +11,7 @@ import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.toUTCOffset
 import com.hypto.iam.server.extensions.toUserStatus
 import com.hypto.iam.server.idp.IdentityGroup
 import com.hypto.iam.server.idp.IdentityProvider
@@ -229,6 +230,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         status = if (user.status == User.Status.enabled.value) User.Status.enabled else User.Status.disabled,
         verified = user.verified,
         createdBy = user.createdBy ?: "",
+        createdAt = user.createdAt.toUTCOffset(),
         loginAccess = user.loginAccess ?: false
     )
 

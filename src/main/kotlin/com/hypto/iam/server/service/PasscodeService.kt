@@ -10,7 +10,11 @@ import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.PasscodeLimitExceededException
+import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.from
 import com.hypto.iam.server.models.BaseSuccessResponse
+import com.hypto.iam.server.models.Passcode
+import com.hypto.iam.server.models.PasscodePaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest.Purpose
 import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.security.UserPrincipal
@@ -100,7 +104,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val passcode = passcodeRepo.createPasscode(passcodeRecord)
         val response = when (purpose) {
             Purpose.signup -> sendSignupPasscode(email, passcode.id)
-            Purpose.reset -> sendResetPassword(email, organizationId!!, passcode.id)
+            Purpose.reset -> sendResetPassword(email, organizationId, passcode.id)
             Purpose.invite -> sendInviteUserPasscode(
                 email,
                 organizationId!!,
@@ -146,12 +150,12 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return true
     }
 
-    private suspend fun sendResetPassword(email: String, organizationId: String, passcode: String): Boolean {
+    private suspend fun sendResetPassword(email: String, organizationId: String?, passcode: String): Boolean {
         val user = usersService.getUserByEmail(organizationId, email)
         if (!user.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
-        val link = createPasscodeLink(passcode, email, Purpose.reset, organizationId)
+        val link = createPasscodeLink(passcode, email, Purpose.reset, user.organizationId)
         val templateData = ResetPasswordTemplateData(link, user.name)
         val emailRequest = SendTemplatedEmailRequest.builder()
             .source(appConfig.app.senderEmailAddress)
@@ -194,6 +198,21 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         sesClient.sendTemplatedEmail(emailRequest)
         return true
     }
+
+    override suspend fun listOrgPasscodes(
+        organizationId: String,
+        purpose: Purpose,
+        paginationContext: PaginationContext
+    ): PasscodePaginatedResponse {
+        val passcodes = passcodeRepo.listPasscodes(organizationId, purpose, paginationContext)
+
+        val newContext = PaginationContext.from(passcodes.lastOrNull()?.id, paginationContext)
+        return PasscodePaginatedResponse(
+            passcodes.map { Passcode.from(it) },
+            newContext.nextToken,
+            newContext.toOptions()
+        )
+    }
 }
 
 interface PasscodeService {
@@ -204,6 +223,12 @@ interface PasscodeService {
         metadata: Map<String, Any>?,
         principal: UserPrincipal?
     ): BaseSuccessResponse
+
+    suspend fun listOrgPasscodes(
+        organizationId: String,
+        purpose: Purpose,
+        paginationContext: PaginationContext
+    ): PasscodePaginatedResponse
 
     suspend fun encryptMetadata(metadata: Map<String, Any>): String
     suspend fun decryptMetadata(metadata: String): Map<String, Any>

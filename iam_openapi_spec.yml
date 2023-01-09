@@ -1135,6 +1135,27 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       security: [ ]
 
+  /organization/{organization_id}/invites:
+    get:
+      tags:
+        - User Verification
+      summary: Get organization passcodes
+      description: Get passcodes for the organization
+      operationId: listInvites
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/PasscodePaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security: [ ]
 
 security:
   - bearerAuth: [ ]
@@ -1474,6 +1495,8 @@ components:
           examples:
             VerifyEmailRequestReset:
               $ref: '#/components/examples/VerifyEmailRequestReset'
+            VerifyEmailRequestInvite:
+              $ref: '#/components/examples/VerifyEmailRequestInvite'
             VerifyEmailRequestSignup:
               $ref: '#/components/examples/VerifyEmailRequestSignup'
             VerifyEmailRequestSignupWithMetadata:
@@ -1492,6 +1515,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/BaseSuccessResponse'
+
+    PasscodePaginatedResponse:
+      description: Paginated response of passcodesm
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PasscodePaginatedResponse'
+          examples:
+            PasscodePaginatedResponse:
+              $ref: '#/components/examples/PasscodePaginatedResponse'
 
     ErrorResponse:
       description: Error response
@@ -1965,6 +1998,16 @@ components:
         organizationId: XlK5h64gND
         purpose: reset
 
+    VerifyEmailRequestInvite:
+      value:
+        email: abcd@abcd.in
+        organizationId: XlK5h64gND
+        purpose: invite
+        metadata:
+          inviterUserHrn: hrn:XlK5h64gND::iam-user/bob
+          policies:
+            - hrn:XlK5h64gND::iam-policy/ROOT_USER_POLICY
+
     VerifyEmailRequestSignup:
       value:
         email: abcd@abcd.in
@@ -1984,6 +2027,15 @@ components:
 
 
     # Response examples
+
+    PasscodePaginatedResponse:
+      value:
+        data:
+          - email: abcd@abcd.com
+            purpose: invite
+            createdAt: 2021-01-01T00:00:00
+            validUntil: 2021-01-01T00:00:00
+        nextToken: dshfoadshfjshadkfjkdsal
 
     CreateOrganizationResponse:
       value:
@@ -2140,7 +2192,7 @@ components:
           phone: "+1234071628"
           loginAccess: true
           createdBy: hrn:Xghfdksd::iam-user/johnny314
-        userToken: jfkdlasfdsfdsfdsfdsfdsfdsfdsafsdf
+        userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
     User:
       summary: A sample user
@@ -2562,6 +2614,9 @@ components:
                 4. rootUserName : string (optional) - name of the root user
                 5. rootUserPreferredUsername : string (optional) - preferred username of the root user
                 6. rootUserPhone : string (optional) - phone number of the root user
+            - invite:
+                1. inviterUserHrn : string (required) - hrn of the user who is inviting the new user
+                2. policies: array<string> (required) - policies to be attached to the new user
           additionalProperties: true
 
     # Responses:
@@ -2757,6 +2812,7 @@ components:
         - organizationId
         - status
         - verified
+        - createdAt
         - loginAccess
       properties:
         hrn:
@@ -2789,6 +2845,9 @@ components:
         createdBy:
           type: string
           maxLength: 50
+        createdAt:
+          type: string
+          format: date-time
         verified:
           type: boolean
 
@@ -2968,6 +3027,39 @@ components:
           enum:
             - allow
             - deny
+
+    Passcode:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - purpose
+        - createdAt
+        - validUntil
+      properties:
+        email:
+          type: string
+        purpose:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+    
+    PasscodePaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Passcode'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
 
     # Others
     ResourceAction:

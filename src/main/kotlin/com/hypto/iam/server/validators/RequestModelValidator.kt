@@ -154,9 +154,6 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     if (purpose == VerifyEmailRequest.Purpose.signup) {
         metadata?.let { validateSignupMetadata(metadata) }
     }
-    if (purpose == VerifyEmailRequest.Purpose.reset) {
-        requireNotNull(organizationId) { "organizationId is required for reset purpose" }
-    }
     if (purpose == VerifyEmailRequest.Purpose.invite) {
         requireNotNull(organizationId) { "organizationId is required for invite purpose" }
         requireNotNull(metadata) { "metadata is required for invite purpose" }
