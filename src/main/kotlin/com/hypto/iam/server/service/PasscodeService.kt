@@ -104,7 +104,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val passcode = passcodeRepo.createPasscode(passcodeRecord)
         val response = when (purpose) {
             Purpose.signup -> sendSignupPasscode(email, passcode.id)
-            Purpose.reset -> sendResetPassword(email, passcode.id)
+            Purpose.reset -> sendResetPassword(email, organizationId, passcode.id)
             Purpose.invite -> sendInviteUserPasscode(
                 email,
                 organizationId!!,
@@ -150,8 +150,8 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return true
     }
 
-    private suspend fun sendResetPassword(email: String, passcode: String): Boolean {
-        val user = usersService.getUserByEmail(null, email)
+    private suspend fun sendResetPassword(email: String, organizationId: String?, passcode: String): Boolean {
+        val user = usersService.getUserByEmail(organizationId, email)
         if (!user.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
