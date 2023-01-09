@@ -34,7 +34,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
     ): List<UsersRecord> {
         return ctx("users.fetchMany").selectFrom(USERS)
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
-            .paginate(USERS.HRN, paginationContext)
+            .paginate(USERS.CREATED_AT, paginationContext)
             .fetch()
     }
 
