@@ -89,7 +89,12 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                 "Invalid policies found"
             }
         }
-
+        if (purpose == Purpose.invite) {
+            val oldInviteRecord = passcodeRepo.getValidPasscodeCount(email, Purpose.invite, organizationId!!)
+            if (oldInviteRecord > 0) {
+                passcodeRepo.deleteByEmailAndPurpose(email, purpose, organizationId)
+            }
+        }
         val validUntil = LocalDateTime.now().plusSeconds(appConfig.app.passcodeValiditySeconds)
 
         val passcodeRecord = PasscodesRecord().apply {

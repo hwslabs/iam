@@ -25,7 +25,11 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
         return record
     }
 
-    suspend fun getValidPasscodeCount(email: String, purpose: VerifyEmailRequest.Purpose): Int =
+    suspend fun getValidPasscodeCount(
+        email: String,
+        purpose: VerifyEmailRequest.Purpose,
+        organizationId: String? = null
+    ): Int =
         ctx("passcodes.getValidCount")
             .selectCount()
             .from(PASSCODES)
@@ -35,7 +39,13 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                         LocalDateTime.now()
                     )
                 )
-            ).fetchOne(0, Int::class.java) ?: 0
+            )
+            .apply {
+                organizationId?.let {
+                    and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+                }
+            }
+            .fetchOne(0, Int::class.java) ?: 0
 
     suspend fun getValidPasscode(
         id: String,
@@ -73,17 +83,27 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                     and(PASSCODES.PURPOSE.eq(purpose.toString()))
                 }
             }
+            .and(PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()))
             .paginate(PASSCODES.CREATED_AT, paginationContext)
             .fetch()
     }
 
-    suspend fun deleteByEmailAndPurpose(email: String, purpose: VerifyEmailRequest.Purpose): Boolean {
+    suspend fun deleteByEmailAndPurpose(
+        email: String,
+        purpose: VerifyEmailRequest.Purpose,
+        organizationId: String? = null
+    ): Boolean {
         val count = ctx("passcodes.deleteByEmailAndPurpose")
             .deleteFrom(PASSCODES)
             .where(
                 PASSCODES.EMAIL.eq(email),
                 PASSCODES.PURPOSE.eq(purpose.toString())
             )
+            .apply {
+                organizationId?.let {
+                    and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+                }
+            }
             .execute()
         return count > 0
     }
