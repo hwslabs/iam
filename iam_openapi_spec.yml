@@ -2192,7 +2192,7 @@ components:
           phone: "+1234071628"
           loginAccess: true
           createdBy: hrn:Xghfdksd::iam-user/johnny314
-        userToken: jfkdlasfdsfdsfdsfdsfdsfdsfdsafsdf
+        userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
     User:
       summary: A sample user
@@ -2812,6 +2812,7 @@ components:
         - organizationId
         - status
         - verified
+        - createdAt
         - loginAccess
       properties:
         hrn:
@@ -2844,6 +2845,9 @@ components:
         createdBy:
           type: string
           maxLength: 50
+        createdAt:
+          type: string
+          format: date-time
         verified:
           type: boolean
 
