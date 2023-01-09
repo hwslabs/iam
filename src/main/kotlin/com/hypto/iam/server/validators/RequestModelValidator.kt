@@ -151,8 +151,13 @@ fun ResetPasswordRequest.validate(): ResetPasswordRequest {
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     verifyEmailRequestValidation.validateAndThrowOnFailure(this)
 
-    if (purpose == VerifyEmailRequest.Purpose.signup && metadata != null) {
-        validateSignupMetadata(metadata)
+    if (purpose == VerifyEmailRequest.Purpose.signup) {
+        metadata?.let { validateSignupMetadata(metadata) }
+    }
+    if (purpose == VerifyEmailRequest.Purpose.invite) {
+        requireNotNull(organizationId) { "organizationId is required for invite purpose" }
+        requireNotNull(metadata) { "metadata is required for invite purpose" }
+        validateInviteMetadata(metadata)
     }
 
     return this
@@ -372,17 +377,15 @@ val policyAssociationRequestValidation = Validation<PolicyAssociationRequest> {
 val createUserRequestValidation = Validation<CreateUserRequest> {
     addConstraint("Email and password is mandatory for Users with loginAccess") {
         return@addConstraint (
-            (
-                it.loginAccess == true && !it.email.isNullOrEmpty() &&
-                    !it.password.isNullOrEmpty()
-                ) || (it.loginAccess == false)
+            (it.loginAccess == true && !it.email.isNullOrEmpty() && !it.password.isNullOrEmpty()) ||
+                !(it.loginAccess ?: false)
             )
     }
 
-    addConstraint("Email or password is required only for Users with loginAccess") {
+    addConstraint("Email and password is not required for Users without loginAccess") {
         return@addConstraint (
             (
-                it.loginAccess == false && it.email.isNullOrEmpty() &&
+                !(it.loginAccess ?: false) && it.email.isNullOrEmpty() &&
                     it.password.isNullOrEmpty()
                 ) || (it.loginAccess == true)
             )

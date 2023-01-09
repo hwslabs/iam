@@ -122,7 +122,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 cognitoClient.listUsers(any<ListUsersRequest>())
             } returns listUsersResponse
 
-            val organizationId = organizationResponse.organization!!.id
+            val organizationId = organizationResponse.organization.id
 
             val requestBody = VerifyEmailRequest(
                 email = createdUser.email,

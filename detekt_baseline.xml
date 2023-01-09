@@ -2,6 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
+    <ID>CommentSpacing:com.hypto.iam.server.apis.PasscodeApi.kt:25</ID>
     <ID>LongParameterList:DataSetupHelper.kt$DataSetupHelper$( orgId: String, username: String?, bearerToken: String, policyName: String, accountId: String?, resourceName: String, actionName: String, resourceInstance: String, engine: TestApplicationEngine, effect: PolicyStatement.Effect = PolicyStatement.Effect.allow )</ID>
     <ID>LongParameterList:IdentityProvider.kt$IdentityProvider$( identityGroup: IdentityGroup, userName: String, name: String?, phone: String?, status: com.hypto.iam.server.models.User.Status?, verified: Boolean? )</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
@@ -11,15 +12,17 @@
     <ID>MaxLineLength:Hrn.kt$Hrn$*</ID>
     <ID>MaxLineLength:Hrn.kt$ResourceHrn.Companion$"""^hrn:(?&lt;organization&gt;[^:\n]+):(?&lt;accountId&gt;[^:\n]*):(?&lt;resource&gt;[^:/\n]*)/{0,1}(?&lt;resourceInstance&gt;[^/\n:]*)""".toRegex()</ID>
     <ID>SpreadOperator:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$(emailAttr, emailVerifiedAttr, createdBy, *optionalUserAttrs.toTypedArray())</ID>
-    <ID>SwallowedException:Application.kt$e: Exception</ID>
+    <ID>SwallowedException:Authentication.kt$e: Exception</ID>
+    <ID>SwallowedException:PasscodeService.kt$PasscodeServiceImpl$e: EntityNotFoundException</ID>
+    <ID>ThrowsCount:Authorization.kt$Authorization$fun interceptPipeline( pipeline: ApplicationCallPipeline, any: Set&lt;Action&gt;? = null, all: Set&lt;Action&gt;? = null, none: Set&lt;Action&gt;? = null, getResourceHrn: (ApplicationRequest) -&gt; ResourceHrn )</ID>
+    <ID>ThrowsCount:PasscodeService.kt$PasscodeServiceImpl$private suspend fun sendInviteUserPasscode( email: String, orgId: String, passcode: String, principal: UserPrincipal ): Boolean</ID>
     <ID>ThrowsCount:ResourceApi.kt$fun Route.resourceApi()</ID>
-    <ID>TooGenericExceptionCaught:Application.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Authentication.kt$e: Exception</ID>
     <ID>TooGenericExceptionThrown:AuditEventHandler.kt$AuditEventHandler$throw Exception("few Batch inserts failed")</ID>
     <ID>TooManyFunctions:IdentityProvider.kt$IdentityProvider</ID>
     <ID>TooManyFunctions:Mappers.kt$com.hypto.iam.server.extensions.Mappers.kt</ID>
     <ID>TooManyFunctions:RequestModelValidator.kt$com.hypto.iam.server.validators.RequestModelValidator.kt</ID>
     <ID>TooManyFunctions:UsersService.kt$UsersServiceImpl : KoinComponentUsersService</ID>
-    <ID>UnnecessaryAbstractClass:IdentityProvider.kt$UserCredentials</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$context: RequestContext</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$identityGroup: IdentityGroup</ID>
     <ID>UnusedPrivateMember:CognitoProviderImpl.kt$CognitoIdentityProviderImpl$userCredentials: AccessTokenCredentials</ID>

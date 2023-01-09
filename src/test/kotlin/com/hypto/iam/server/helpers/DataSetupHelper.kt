@@ -19,6 +19,7 @@ import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyAssociationRequest
@@ -124,11 +125,11 @@ object DataSetupHelper : AutoCloseKoinTest() {
                 setBody(gson.toJson(createUserRequest))
             }
             val createdUser = gson
-                .fromJson(createUserCall.response.content, User::class.java)
+                .fromJson(createUserCall.response.content, CreateUserResponse::class.java)
             val credential =
-                createCredential(orgId, createdUser.username, bearerToken, engine)
+                createCredential(orgId, createdUser.user.username, bearerToken, engine)
 
-            return Pair(createdUser, credential)
+            return Pair(createdUser.user, credential)
         }
     }
 

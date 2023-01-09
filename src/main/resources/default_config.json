@@ -36,10 +36,11 @@
     "cache_refresh_interval": 300,
     "passcode_validity_seconds": 86400,
     "passcode_count_limit": 5,
-    "base_url": "<placeholder for base url>",
+    "base_url": "localhost",
     "sender_email_address": "<placeholder for senders email address>",
     "sign_up_email_template": "<placeholder for signup user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
+    "invite_user_email_template": "<placeholder for invite user template name>",
     "unique_users_across_organizations": false
   },
   "aws": {

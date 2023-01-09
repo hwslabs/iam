@@ -2,6 +2,7 @@ package com.hypto.iam.server.validators
 
 import com.google.gson.Gson
 import com.hypto.iam.server.di.getKoinInstance
+import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
 import io.konform.validation.Validation
 
@@ -17,8 +18,17 @@ data class SignUpMetadata(
     val rootUserPhone: String?
 )
 
+data class InviteMetadata(val map: Map<String, Any>) {
+    val inviterUserHrn: String by map
+    val policies: List<String> by map
+}
+
 data class VerifyEmailSignUpMetadata(
     val metadata: SignUpMetadata
+)
+
+data class VerifyEmailInviteMetadata(
+    val metadata: InviteMetadata
 )
 
 val signUpMetadataValidation = Validation {
@@ -41,7 +51,19 @@ val signUpMetadataValidation = Validation {
     }
 }
 
+val inviteMetadataValidation = Validation {
+    InviteMetadata::inviterUserHrn required {
+        run(hrnCheck)
+    }
+    InviteMetadata::policies onEach { hrn() }
+}
+
 fun validateSignupMetadata(metadata: Map<String, Any>) {
     val metadataObject = gson.fromJson(gson.toJsonTree(metadata), SignUpMetadata::class.java)
     signUpMetadataValidation.validateAndThrowOnFailure(VerifyEmailSignUpMetadata(metadataObject))
+}
+
+fun validateInviteMetadata(metadata: Map<String, Any>) {
+    val metadataObject = InviteMetadata(metadata)
+    inviteMetadataValidation.validateAndThrowOnFailure(metadataObject)
 }

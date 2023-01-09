@@ -3,6 +3,8 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.Tables.PASSCODES
 import com.hypto.iam.server.db.tables.pojos.Passcodes
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
+import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.models.VerifyEmailRequest
 import java.time.LocalDateTime
 import org.jooq.impl.DAOImpl
@@ -38,7 +40,8 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
     suspend fun getValidPasscode(
         id: String,
         purpose: VerifyEmailRequest.Purpose,
-        email: String? = null
+        email: String? = null,
+        organizationId: String? = null
     ): PasscodesRecord? {
         return ctx("passcodes.getValid")
             .selectFrom(PASSCODES)
@@ -50,8 +53,28 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 email?.let {
                     and(PASSCODES.EMAIL.eq(email))
                 }
+                organizationId?.let {
+                    and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+                }
             }
             .fetchOne()
+    }
+
+    suspend fun listPasscodes(
+        organizationId: String,
+        purpose: VerifyEmailRequest.Purpose? = null,
+        paginationContext: PaginationContext
+    ): List<PasscodesRecord> {
+        return ctx("passcodes.list")
+            .selectFrom(PASSCODES)
+            .where(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+            .apply {
+                purpose?.let {
+                    and(PASSCODES.PURPOSE.eq(purpose.toString()))
+                }
+            }
+            .paginate(PASSCODES.CREATED_AT, paginationContext)
+            .fetch()
     }
 
     suspend fun deleteByEmailAndPurpose(email: String, purpose: VerifyEmailRequest.Purpose): Boolean {
