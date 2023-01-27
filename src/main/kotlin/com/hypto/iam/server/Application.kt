@@ -278,13 +278,13 @@ fun Application.handleRequest() {
             usersApi()
             validationApi()
             passcodeApis()
-            tokenApi() // Authentication handled along with API definitions
         }
 
         authenticate("reset-passcode-auth") {
             resetPasswordApi()
         }
 
+        tokenApi() // Authentication handled along with API definitions
         loginApi()
         keyApi()
 

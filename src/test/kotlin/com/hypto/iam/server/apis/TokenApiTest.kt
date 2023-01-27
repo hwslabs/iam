@@ -70,8 +70,465 @@ class TokenApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
 
     @Nested
+    @DisplayName("Generate JWT token test: /token")
+    inner class GenerateJwtTokenWithoutOrgIdToken {
+        @Test
+        fun `generate token - Accept Json`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+                val username = createdOrganization.organization.rootUser.username
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/token"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}"
+                        )
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    Assertions.assertEquals(
+                        createdOrganization.organization?.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
+                    val responseBody = gson.fromJson(response.content, TokenResponse::class.java)
+                    Assertions.assertNotNull(responseBody.token)
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/validate"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
+                            setBody(
+                                gson.toJson(
+                                    ValidationRequest(
+                                        listOf(
+                                            ResourceAction(
+                                                ResourceHrn(
+                                                    organization = createdOrganization.organization!!.id,
+                                                    resource = IamResources.USER,
+                                                    resourceInstance = username
+                                                ).toString(),
+                                                ActionHrn(
+                                                    organization = createdOrganization.organization!!.id,
+                                                    resource = IamResources.USER,
+                                                    action = "createCredentials"
+                                                ).toString()
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                        Assertions.assertEquals(
+                            createdOrganization.organization?.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
+                        val validationResponseBody = gson.fromJson(response.content, ValidationResponse::class.java)
+                        validationResponseBody.results.forEach {
+                            Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
+                        }
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `generate token - Accept Text_Plain`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+                val username = createdOrganization.organization.rootUser.username
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/token"
+                    ) {
+                        addHeader(HttpHeaders.Accept, ContentType.Text.Plain.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}"
+                        )
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Text.Plain.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    Assertions.assertEquals(
+                        createdOrganization.organization!!.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
+                    val responseBody = response.content
+                    Assertions.assertNotNull(responseBody)
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/validate"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(HttpHeaders.Authorization, "Bearer $responseBody")
+                            setBody(
+                                gson.toJson(
+                                    ValidationRequest(
+                                        listOf(
+                                            ResourceAction(
+                                                ResourceHrn(
+                                                    organization = createdOrganization.organization!!.id,
+                                                    resource = IamResources.USER,
+                                                    resourceInstance = username
+                                                ).toString(),
+                                                ActionHrn(
+                                                    organization = createdOrganization.organization!!.id,
+                                                    resource = IamResources.USER,
+                                                    action = "createCredentials"
+                                                ).toString()
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                        Assertions.assertEquals(
+                            createdOrganization.organization!!.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
+                        val validationResponseBody = gson.fromJson(response.content, ValidationResponse::class.java)
+                        validationResponseBody.results.forEach {
+                            Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
+                        }
+                    }
+                }
+            }
+        }
+
+        @Test
+        fun `Basic Auth with Uniqueness flag as false`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+                val authString = "${createdUser.email}:${createdUser.password}"
+                val authHeader = "Basic ${Base64.getEncoder().encode(authString.encodeToByteArray())}"
+
+                declareMock<AppConfig> {
+                    every { this@declareMock.app } answers {
+                        AppConfig.App(
+                            AppConfig.Environment.Development,
+                            "IAM",
+                            "local",
+                            300,
+                            600,
+                            "iam-secret-key",
+                            30,
+                            30,
+                            600,
+                            5,
+                            "https://localhost",
+                            "mail@iam.com",
+                            "signupTemplateId",
+                            "inviteUserTemplateId",
+                            "resetPasswordTemplateId",
+                            false
+                        )
+                    }
+                }
+
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/token"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            authHeader
+                        )
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                }
+            }
+        }
+
+        @Nested
+        @DisplayName("Basic Auth with Uniqueness flag as true")
+        inner class LoginUnique {
+            @BeforeEach
+            fun setUniquenessFlag() {
+                declareMock<AppConfig> {
+                    every { this@declareMock.app } answers {
+                        AppConfig.App(
+                            AppConfig.Environment.Development,
+                            "IAM",
+                            "local",
+                            300,
+                            600,
+                            "iam-secret-key",
+                            30,
+                            30,
+                            600,
+                            5,
+                            "https://localhost",
+                            "mail@iam.com",
+                            "signupTemplateId",
+                            "inviteUserTemplateId",
+                            "resetPasswordTemplateId",
+                            true
+                        )
+                    }
+                }
+            }
+
+            @Test
+            fun `Valid Credentials`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+                    val authString = "${createdUser.email}:${createdUser.password}"
+                    val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/token"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                authHeader
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                        Assertions.assertEquals(
+                            createdOrganization.organization?.id,
+                            response.headers[Constants.X_ORGANIZATION_HEADER]
+                        )
+                        val responseBody = gson.fromJson(response.content, TokenResponse::class.java)
+                        Assertions.assertNotNull(responseBody.token)
+                    }
+                }
+            }
+
+            @Test
+            fun `Invalid User`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+                    val email = ""
+                    val authString = "$email:${createdUser.password}"
+                    val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/token"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                authHeader
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+                }
+            }
+
+            @Test
+            fun `Invalid Password`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+                    val email = createdUser.email
+                    val password = ""
+                    val authString = "$email:$password"
+                    val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/token"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                authHeader
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.BadRequest, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+                }
+            }
+
+            @Test
+            fun `User not present`() {
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+                    val email = "not-present-${createdUser.email}"
+                    val authString = "$email:${createdUser.password}"
+                    val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/token"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                authHeader
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+                }
+            }
+
+            @Test
+            fun `Incorrect Password`() {
+                val invalidPassword = "some_invalid_pass"
+                // Override the cognito mock to throw error for invalid username
+                declareMock<CognitoIdentityProviderClient> {
+                    coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
+                        val result = CreateUserPoolResponse.builder()
+                            .userPool(
+                                UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build()
+                            ).build()
+                        result
+                    }
+                    coEvery { this@declareMock.adminCreateUser(any<AdminCreateUserRequest>()) } coAnswers {
+                        AdminCreateUserResponse.builder()
+                            .user(
+                                UserType.builder().attributes(listOf())
+                                    .username(firstArg<AdminCreateUserRequest>().username())
+                                    .userCreateDate(Instant.now())
+                                    .attributes(firstArg<AdminCreateUserRequest>().userAttributes())
+                                    .build()
+                            )
+                            .build()
+                    }
+                    coEvery {
+                        this@declareMock.adminInitiateAuth(
+                            match<AdminInitiateAuthRequest> {
+                                it.authParameters()["PASSWORD"] == invalidPassword
+                            }
+                        )
+                    } throws NotAuthorizedException.builder()
+                        .message("Invalid username and password combination").build()
+
+                    coEvery {
+                        this@declareMock.adminInitiateAuth(
+                            match<AdminInitiateAuthRequest> {
+                                it.authParameters()["PASSWORD"] != invalidPassword
+                            }
+                        )
+                    } coAnswers {
+                        AdminInitiateAuthResponse.builder()
+                            .session("").build()
+                    }
+
+                    coEvery { this@declareMock.createUserPoolClient(any<CreateUserPoolClientRequest>()) } coAnswers {
+                        CreateUserPoolClientResponse.builder()
+                            .userPoolClient(UserPoolClientType.builder().clientId("12345").build()).build()
+                    }
+                    coEvery {
+                        this@declareMock.adminRespondToAuthChallenge(
+                            any<AdminRespondToAuthChallengeRequest>()
+                        )
+                    } returns mockk()
+
+                    coEvery { this@declareMock.adminGetUser(any<AdminGetUserRequest>()) } coAnswers {
+                        AdminGetUserResponse.builder()
+                            .enabled(true)
+                            .userAttributes(listOf())
+                            .username(firstArg<AdminGetUserRequest>().username())
+                            .userCreateDate(Instant.now())
+                            .build()
+                    }
+                    coEvery { this@declareMock.addCustomAttributes(any<AddCustomAttributesRequest>()) } returns mockk()
+                    coEvery { this@declareMock.deleteUserPool(any<DeleteUserPoolRequest>()) } returns
+                        DeleteUserPoolResponse.builder().build()
+                }
+
+                withTestApplication(Application::handleRequest) {
+                    val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
+
+                    val authString = "${createdUser.email}:$invalidPassword"
+                    val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                    with(
+                        handleRequest(
+                            HttpMethod.Post,
+                            "/token"
+                        ) {
+                            addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            addHeader(
+                                HttpHeaders.Authorization,
+                                authHeader
+                            )
+                        }
+                    ) {
+                        Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status())
+                        Assertions.assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            response.contentType()
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("Generate JWT token test: /login")
-    inner class GenerateJwtTokenWithoutOrgId {
+    inner class GenerateJwtTokenWithoutOrgIdByLogin {
         @Test
         fun `generate token - Accept Json`() {
             withTestApplication(Application::handleRequest) {

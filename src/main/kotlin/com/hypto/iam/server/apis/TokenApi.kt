@@ -16,9 +16,8 @@ import io.ktor.server.request.accept
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-
-val tokenService: TokenService = getKoinInstance()
-val gson: Gson = getKoinInstance()
+private val tokenService: TokenService = getKoinInstance()
+private val gson: Gson = getKoinInstance()
 
 suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
     val principal = context.principal<UserPrincipal>()!!
@@ -46,6 +45,12 @@ suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
 fun Route.tokenApi() {
     authenticate("basic-auth", "bearer-auth") {
         post("/organizations/{organization_id}/token") {
+            generateToken(call, context)
+        }
+    }
+
+    authenticate("unique-basic-auth", "bearer-auth") {
+        post("/token") {
             generateToken(call, context)
         }
     }
