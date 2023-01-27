@@ -70,7 +70,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
 
     @Nested
-    @DisplayName("Generate JWT token test: /token")
+    @DisplayName("Generate JWT token test: /login")
     inner class GenerateJwtTokenWithoutOrgId {
         @Test
         fun `generate token - Accept Json`() {
@@ -80,7 +80,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/token"
+                        "/login"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
@@ -156,7 +156,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/token"
+                        "/login"
                     ) {
                         addHeader(HttpHeaders.Accept, ContentType.Text.Plain.toString())
                         addHeader(
@@ -258,7 +258,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 with(
                     handleRequest(
                         HttpMethod.Post,
-                        "/token"
+                        "/login"
                     ) {
                         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         addHeader(
@@ -316,7 +316,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     with(
                         handleRequest(
                             HttpMethod.Post,
-                            "/token"
+                            "/login"
                         ) {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
@@ -352,7 +352,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     with(
                         handleRequest(
                             HttpMethod.Post,
-                            "/token"
+                            "/login"
                         ) {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
@@ -383,7 +383,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     with(
                         handleRequest(
                             HttpMethod.Post,
-                            "/token"
+                            "/login"
                         ) {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
@@ -413,7 +413,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     with(
                         handleRequest(
                             HttpMethod.Post,
-                            "/token"
+                            "/login"
                         ) {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
@@ -506,7 +506,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     with(
                         handleRequest(
                             HttpMethod.Post,
-                            "/token"
+                            "/login"
                         ) {
                             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                             addHeader(
