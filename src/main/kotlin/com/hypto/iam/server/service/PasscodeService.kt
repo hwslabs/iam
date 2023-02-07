@@ -21,15 +21,18 @@ import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.EncryptUtil
 import com.hypto.iam.server.validators.InviteMetadata
+import io.ktor.server.plugins.BadRequestException
 import java.time.LocalDateTime
 import java.util.Base64
 import mu.KotlinLogging
 import org.apache.http.client.utils.URIBuilder
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import software.amazon.awssdk.http.HttpStatusCode
 import software.amazon.awssdk.services.ses.SesClient
 import software.amazon.awssdk.services.ses.model.Destination
 import software.amazon.awssdk.services.ses.model.SendTemplatedEmailRequest
+import software.amazon.awssdk.services.ses.model.SesException
 
 data class ResetPasswordTemplateData(
     val link: String,
@@ -151,7 +154,15 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             .templateData(gson.toJson(templateData))
             .destination(Destination.builder().toAddresses(email).build())
             .build()
-        sesClient.sendTemplatedEmail(emailRequest)
+        try {
+            sesClient.sendTemplatedEmail(emailRequest)
+        } catch (e: SesException) {
+            if (e.statusCode() == HttpStatusCode.BAD_REQUEST) {
+                throw BadRequestException("Bad request values")
+            } else {
+                throw e
+            }
+        }
         return true
     }
 
