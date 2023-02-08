@@ -21,6 +21,8 @@ import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.EncryptUtil
 import com.hypto.iam.server.validators.InviteMetadata
+import io.ktor.server.plugins.BadRequestException
+import io.ktor.util.logging.error
 import java.time.LocalDateTime
 import java.util.Base64
 import mu.KotlinLogging
@@ -30,6 +32,7 @@ import org.koin.core.component.inject
 import software.amazon.awssdk.services.ses.SesClient
 import software.amazon.awssdk.services.ses.model.Destination
 import software.amazon.awssdk.services.ses.model.SendTemplatedEmailRequest
+import software.amazon.awssdk.services.ses.model.SesException
 
 data class ResetPasswordTemplateData(
     val link: String,
@@ -151,7 +154,18 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             .templateData(gson.toJson(templateData))
             .destination(Destination.builder().toAddresses(email).build())
             .build()
-        sesClient.sendTemplatedEmail(emailRequest)
+        try {
+            sesClient.sendTemplatedEmail(emailRequest)
+        } catch (e: SesException) {
+            val exceptionMessage: String? = e.message
+            if (exceptionMessage != null && exceptionMessage.contains("Domain contains illegal character")) {
+                logger.error("Email contains illegal characters")
+                throw BadRequestException("Invalid email address: $email")
+            } else {
+                logger.error(e)
+                throw e
+            }
+        }
         return true
     }
 
