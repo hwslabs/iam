@@ -22,13 +22,13 @@ import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.EncryptUtil
 import com.hypto.iam.server.validators.InviteMetadata
 import io.ktor.server.plugins.BadRequestException
+import io.ktor.util.logging.error
 import java.time.LocalDateTime
 import java.util.Base64
 import mu.KotlinLogging
 import org.apache.http.client.utils.URIBuilder
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import software.amazon.awssdk.http.HttpStatusCode
 import software.amazon.awssdk.services.ses.SesClient
 import software.amazon.awssdk.services.ses.model.Destination
 import software.amazon.awssdk.services.ses.model.SendTemplatedEmailRequest
@@ -157,9 +157,12 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         try {
             sesClient.sendTemplatedEmail(emailRequest)
         } catch (e: SesException) {
-            if (e.statusCode() == HttpStatusCode.BAD_REQUEST) {
-                throw BadRequestException("Bad request values")
+            val exceptionMessage: String? = e.message
+            if (exceptionMessage != null && exceptionMessage.contains("Domain contains illegal character")) {
+                logger.error("Email contains illegal characters")
+                throw BadRequestException("Domain contains illegal character")
             } else {
+                logger.error(e)
                 throw e
             }
         }
