@@ -160,7 +160,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             val exceptionMessage: String? = e.message
             if (exceptionMessage != null && exceptionMessage.contains("Domain contains illegal character")) {
                 logger.error("Email contains illegal characters")
-                throw BadRequestException("Domain contains illegal character")
+                throw BadRequestException("Invalid email address: $email")
             } else {
                 logger.error(e)
                 throw e
