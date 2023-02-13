@@ -87,7 +87,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
             val createdOrganizationResponse = gson
                 .fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
-            return Pair(createdOrganizationResponse, rootUser)
+            return Pair(createdOrganizationResponse, rootUser.copy(email = rootUser.email.lowercase()))
         }
     }
 
