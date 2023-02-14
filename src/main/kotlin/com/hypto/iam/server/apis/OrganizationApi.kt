@@ -55,11 +55,14 @@ fun Route.createOrganizationApi() {
             throw BadRequestException("Organization and Admin user details are missing")
         }
 
-        val request =
-            apiRequest ?: CreateOrganizationRequest.from(
-                passcodeService.decryptMetadata(passcodeMetadata!!),
-                passcode.email
+        val request = apiRequest?.copy(
+            rootUser = apiRequest.rootUser.copy(
+                email = apiRequest.rootUser.email.lowercase()
             )
+        ) ?: CreateOrganizationRequest.from(
+            passcodeService.decryptMetadata(passcodeMetadata!!),
+            passcode.email.lowercase()
+        )
         request.validate()
 
         val (organization, tokenResponse) = organizationService.createOrganization(

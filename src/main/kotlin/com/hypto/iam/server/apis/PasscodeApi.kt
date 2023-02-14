@@ -28,6 +28,7 @@ fun Route.createPasscodeApi() {
     post("/verifyEmail") {
         val principal = context.principal<UserPrincipal>()
         val request = call.receive<VerifyEmailRequest>().validate()
+        val lowerCaseEmail = request.email.lowercase()
         // TODO: createuser permission checks needed for this endpoint if purpose is invite
         // TODO: add tests for invite user purpose
 
@@ -50,7 +51,7 @@ fun Route.createPasscodeApi() {
         }
 
         val response = passcodeService.verifyEmail(
-            request.email,
+            lowerCaseEmail,
             request.purpose,
             request.organizationId,
             request.metadata,

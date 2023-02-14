@@ -71,7 +71,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw UserAlreadyExistException(
                 email?.let { "Email - $email" }.orEmpty() +
                     preferredUsername?.let { "Username - $preferredUsername" }.orEmpty() +
-                    "already registered. Unable to create user"
+                    " already registered. Unable to create user"
             )
         }
 
