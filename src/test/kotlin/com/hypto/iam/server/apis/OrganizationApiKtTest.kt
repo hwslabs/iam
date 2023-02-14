@@ -54,7 +54,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 .createOrganization(this)
             val createdOrganization = createdOrganizationResponse.organization
             val authString = "${createdUser.email.uppercase()}:${createdUser.password}"
-            // testing for case Insensitive Email
+            // testing for case Insensitive Email by passing uppercase email
             val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
             with(
                 handleRequest(
