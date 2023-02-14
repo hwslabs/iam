@@ -212,7 +212,7 @@ fun Application.handleRequest() {
                 val organizationId = this.parameters["organization_id"]!!
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
                     organizationId,
-                    credentials.name,
+                    credentials.name.lowercase(),
                     credentials.password
                 )
                 if (principal != null) {
@@ -234,7 +234,7 @@ fun Application.handleRequest() {
                 }
 
                 val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    UsernamePasswordCredential(credentials.name, credentials.password)
+                    UsernamePasswordCredential(credentials.name.lowercase(), credentials.password)
                 )
                 response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
                 return@validate principal
