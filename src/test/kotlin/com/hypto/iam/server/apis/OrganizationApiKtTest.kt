@@ -30,10 +30,12 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.coEvery
 import io.mockk.verify
 import java.time.LocalDateTime
+import java.util.Base64
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.text.Charsets.UTF_8
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
@@ -44,6 +46,37 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserP
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
     private val passcodeService: PasscodeService by inject()
+
+    @Test
+    fun `create organization with valid root credentials and check login success`() {
+        withTestApplication(Application::handleRequest) {
+            val (createdOrganizationResponse, createdUser) = DataSetupHelper
+                .createOrganization(this)
+            val createdOrganization = createdOrganizationResponse.organization
+            val authString = "${createdUser.email.uppercase()}:${createdUser.password}"
+            // testing for case Insensitive Email
+            val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+            with(
+                handleRequest(
+                    HttpMethod.Post,
+                    "/organizations/${createdOrganization.id}/token"
+                ) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader(HttpHeaders.Authorization, authHeader)
+                }
+            ) {
+                Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                Assertions.assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                Assertions.assertEquals(
+                    createdOrganization.id,
+                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                )
+            }
+        }
+    }
 
     @Test
     fun `create organization with valid root credentials`() {
