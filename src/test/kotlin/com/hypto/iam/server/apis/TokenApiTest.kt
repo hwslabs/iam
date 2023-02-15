@@ -530,6 +530,36 @@ class TokenApiTest : AbstractContainerBaseTest() {
     @DisplayName("Generate JWT token test: /login")
     inner class GenerateJwtTokenWithoutOrgIdByLogin {
         @Test
+        fun `generate token for case insensitive email credential`() {
+            withTestApplication(Application::handleRequest) {
+                val (createdOrganizationResponse, createdUser) = DataSetupHelper
+                    .createOrganization(this)
+                val createdOrganization = createdOrganizationResponse.organization
+                val authString = "${createdUser.email.uppercase()}:${createdUser.password}"
+                val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+                with(
+                    handleRequest(
+                        HttpMethod.Post,
+                        "/organizations/${createdOrganization.id}/token"
+                    ) {
+                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        addHeader(HttpHeaders.Authorization, authHeader)
+                    }
+                ) {
+                    Assertions.assertEquals(HttpStatusCode.OK, response.status())
+                    Assertions.assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        response.contentType()
+                    )
+                    Assertions.assertEquals(
+                        createdOrganization.id,
+                        response.headers[Constants.X_ORGANIZATION_HEADER]
+                    )
+                }
+            }
+        }
+
+        @Test
         fun `generate token - Accept Json`() {
             withTestApplication(Application::handleRequest) {
                 val (createdOrganization, createdUser) = DataSetupHelper.createOrganization(this)
