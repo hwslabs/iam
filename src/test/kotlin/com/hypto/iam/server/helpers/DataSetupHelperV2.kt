@@ -29,7 +29,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.server.testing.ApplicationTestBuilder
+import io.ktor.server.testing.TestApplication
 import kotlinx.coroutines.runBlocking
 import org.koin.test.inject
 import org.koin.test.junit5.AutoCloseKoinTest
@@ -45,7 +45,8 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
     private val resourceRepo: ResourceRepo by inject()
     private val actionRepo: ActionRepo by inject()
 
-    suspend fun ApplicationTestBuilder.createOrganization(
+    suspend fun createOrganization(
+        testApp: TestApplication,
         preferredUsername: String = "user" + IdGenerator.randomId()
     ): Pair<CreateOrganizationResponse, RootUser> {
         // Create organization
@@ -63,7 +64,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
             phone = testPhone
         )
 
-        val createOrganizationCall = client.post("/organizations") {
+        val createOrganizationCall = testApp.client.post("/organizations") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             header("X-Api-Key", rootToken)
             setBody(
@@ -82,12 +83,13 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         return Pair(createdOrganizationResponse, rootUser.copy(email = rootUser.email.lowercase()))
     }
 
-    suspend fun ApplicationTestBuilder.createCredential(
+    suspend fun createCredential(
+        testApp: TestApplication,
         orgId: String,
         userName: String,
         jwtToken: String,
     ): Credential {
-        val createCredentialCall = client.post(
+        val createCredentialCall = testApp.client.post(
             "/organizations/$orgId/users/$userName/credentials"
         ) {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -165,14 +167,15 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
 //        return policy
 //    }
 
-    suspend fun ApplicationTestBuilder.createResource(
+    suspend fun createResource(
+        testApp: TestApplication,
         orgId: String,
         jwtToken: String,
         resourceName: String? = null
     ): Resource {
         val name = resourceName ?: ("test-resource" + IdGenerator.randomId())
 
-        val createResourceCall = client.post("/organizations/$orgId/resources") {
+        val createResourceCall = testApp.client.post("/organizations/$orgId/resources") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             header(HttpHeaders.Authorization, "Bearer $jwtToken")
             setBody(gson.toJson(CreateResourceRequest(name = name)))
@@ -182,16 +185,17 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
             .fromJson(createResourceCall.bodyAsText(), Resource::class.java)
     }
 
-    suspend fun ApplicationTestBuilder.createAction(
+    suspend fun createAction(
+        testApp: TestApplication,
         orgId: String,
         resource: Resource? = null,
         jwtToken: String,
     ): Pair<Action, Resource> {
-        val createdResource = resource ?: createResource(orgId, jwtToken)
+        val createdResource = resource ?: createResource(testApp, orgId, jwtToken)
         val actionName = "test-action" + IdGenerator.randomId()
 
         val createActionCall =
-            client.post("/organizations/$orgId/resources/${createdResource.name}/actions") {
+            testApp.client.post("/organizations/$orgId/resources/${createdResource.name}/actions") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header(HttpHeaders.Authorization, "Bearer $jwtToken")
                 setBody(gson.toJson(CreateActionRequest(name = actionName)))
