@@ -6,9 +6,8 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
-import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelper
+import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
@@ -17,16 +16,19 @@ import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.utils.IdGenerator
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.http.withCharset
-import io.ktor.server.application.Application
-import io.ktor.server.testing.contentType
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
+import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.verify
 import java.time.LocalDateTime
@@ -47,7 +49,10 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization with valid root credentials`() {
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -64,23 +69,20 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     email = testEmail
                 )
             )
-            with(
-                handleRequest(HttpMethod.Post, "/organizations") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader("X-Api-Key", rootToken)
-                    setBody(gson.toJson(requestBody))
-                }
-            ) {
-                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
-                assertEquals(HttpStatusCode.Created, response.status())
-                assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
-
-                orgId = responseBody.organization.id
-                assertEquals(requestBody.name, responseBody.organization.name)
-                assertEquals(10, responseBody.organization.id.length)
+            val response = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", rootToken)
+                setBody(gson.toJson(requestBody))
             }
+            val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
+            assertEquals(HttpStatusCode.Created, response.status)
+            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-            DataSetupHelper.deleteOrganization(orgId, this)
+            orgId = responseBody.organization.id
+            assertEquals(requestBody.name, responseBody.organization.name)
+            assertEquals(10, responseBody.organization.id.length)
+
+            deleteOrganization(orgId)
         }
     }
 
@@ -95,7 +97,10 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 )
             } returns null
         }
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -103,36 +108,35 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
-            with(
-                handleRequest(HttpMethod.Post, "/organizations") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader("X-Api-Key", "bad creds")
-                    setBody(
-                        gson.toJson(
-                            CreateOrganizationRequest(
-                                orgName,
-                                RootUser(
-                                    preferredUsername = preferredUsername,
-                                    name = name,
-                                    password = testPassword,
-                                    email = testEmail,
-                                    phone = testPhone
-                                )
+            val response = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", "bad creds")
+                setBody(
+                    gson.toJson(
+                        CreateOrganizationRequest(
+                            orgName,
+                            RootUser(
+                                preferredUsername = preferredUsername,
+                                name = name,
+                                password = testPassword,
+                                email = testEmail,
+                                phone = testPhone
                             )
                         )
                     )
-                }
-            ) {
-                assertEquals(HttpStatusCode.Unauthorized, response.status())
-                assertFalse(response.headers.contains(HttpHeaders.ContentType))
-                assertEquals(null, response.content)
+                )
             }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+            assertFalse(response.headers.contains(HttpHeaders.ContentType))
         }
     }
 
     @Test
     fun `create organization with verify email method`() {
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -146,8 +150,8 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 email = testEmail,
                 purpose = VerifyEmailRequest.Purpose.signup
             )
-            handleRequest(HttpMethod.Post, "/verifyEmail") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            client.post("/verifyEmail") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(gson.toJson(verifyRequestBody))
             }
             val requestBody = CreateOrganizationRequest(
@@ -160,32 +164,32 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     phone = testPhone
                 )
             )
-            with(
-                handleRequest(HttpMethod.Post, "/organizations") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader("X-Api-Key", testPasscode)
-                    setBody(gson.toJson(requestBody))
-                }
-            ) {
-                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
-                assertEquals(HttpStatusCode.Created, response.status())
-                assertEquals(
-                    ContentType.Application.Json.withCharset(UTF_8),
-                    response.contentType()
-                )
-
-                orgId = responseBody.organization.id
-                assertEquals(requestBody.name, responseBody.organization.name)
-                assertEquals(10, responseBody.organization.id.length)
+            val response = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", testPasscode)
+                setBody(gson.toJson(requestBody))
             }
+            val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
+            assertEquals(HttpStatusCode.Created, response.status)
+            assertEquals(
+                ContentType.Application.Json.withCharset(UTF_8),
+                response.contentType()
+            )
 
-            DataSetupHelper.deleteOrganization(orgId, this)
+            orgId = responseBody.organization.id
+            assertEquals(requestBody.name, responseBody.organization.name)
+            assertEquals(10, responseBody.organization.id.length)
+
+            deleteOrganization(orgId)
         }
     }
 
     @Test
     fun `create organization by providing org details during verify email`() {
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -220,29 +224,26 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 purpose = VerifyEmailRequest.Purpose.signup,
                 metadata = metadata
             )
-            handleRequest(HttpMethod.Post, "/verifyEmail") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            client.post("/verifyEmail") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(gson.toJson(verifyRequestBody))
             }
-            with(
-                handleRequest(HttpMethod.Post, "/organizations") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader("X-Api-Key", testPasscode)
-                }
-            ) {
-                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
-                assertEquals(HttpStatusCode.Created, response.status())
-                assertEquals(
-                    ContentType.Application.Json.withCharset(UTF_8),
-                    response.contentType()
-                )
-
-                orgId = responseBody.organization.id
-                assertEquals(orgName, responseBody.organization.name)
-                assertEquals(10, responseBody.organization.id.length)
+            val response = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", testPasscode)
             }
+            val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
+            assertEquals(HttpStatusCode.Created, response.status)
+            assertEquals(
+                ContentType.Application.Json.withCharset(UTF_8),
+                response.contentType()
+            )
 
-            DataSetupHelper.deleteOrganization(orgId, this)
+            orgId = responseBody.organization.id
+            assertEquals(orgName, responseBody.organization.name)
+            assertEquals(10, responseBody.organization.id.length)
+
+            deleteOrganization(orgId)
         }
     }
 
@@ -255,7 +256,10 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             }
         }
 
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -273,24 +277,24 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     phone = testPhone
                 )
             )
-            with(
-                handleRequest(HttpMethod.Post, "/organizations") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader("X-Api-Key", rootToken)
-                    setBody(gson.toJson(requestBody))
-                }
-            ) {
-                val responseBody = gson.fromJson(response.content, CreateOrganizationResponse::class.java)
-                verify {
-                    cognitoClient.deleteUserPool(any<DeleteUserPoolRequest>())
-                }
+            val response = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", rootToken)
+                setBody(gson.toJson(requestBody))
+            }
+            val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
+            verify {
+                cognitoClient.deleteUserPool(any<DeleteUserPoolRequest>())
             }
         }
     }
 
     @Test
     fun `get organization with invalid credentials`() {
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -298,9 +302,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
-            val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader("X-Api-Key", rootToken)
+            val createOrganizationCall = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", rootToken)
                 setBody(
                     gson.toJson(
                         CreateOrganizationRequest(
@@ -317,27 +321,26 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 )
             }
             val createdOrganization =
-                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
+                gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
-            with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization.id}") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer test-bearer-token")
-                }
-            ) {
-                assertEquals(HttpStatusCode.Unauthorized, response.status())
-                assertFalse(response.headers.contains(HttpHeaders.ContentType))
-                assertNull(response.headers[Constants.X_ORGANIZATION_HEADER])
-                assertEquals(null, response.content)
+            val response = client.get("/organizations/${createdOrganization.organization.id}") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer test-bearer-token")
             }
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
+            assertFalse(response.headers.contains(HttpHeaders.ContentType))
+            assertNull(response.headers[Constants.X_ORGANIZATION_HEADER])
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
+            deleteOrganization(createdOrganization.organization.id)
         }
     }
 
     @Test
     fun `get organization success`() {
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -345,9 +348,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
-            val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader("X-Api-Key", rootToken)
+            val createOrganizationCall = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", rootToken)
                 setBody(
                     gson.toJson(
                         CreateOrganizationRequest(
@@ -364,29 +367,28 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 )
             }
             val createdOrganization =
-                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
+                gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
-            with(
-                handleRequest(HttpMethod.Get, "/organizations/${createdOrganization.organization!!.id}") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
-                }
-
-            ) {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
-
-                val fetchedOrganization = gson.fromJson(response.content, Organization::class.java)
-                assertEquals(createdOrganization.organization, fetchedOrganization)
+            val response = client.get("/organizations/${createdOrganization.organization!!.id}") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
             }
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
+            val fetchedOrganization = gson.fromJson(response.bodyAsText(), Organization::class.java)
+            assertEquals(createdOrganization.organization, fetchedOrganization)
+
+            deleteOrganization(createdOrganization.organization.id)
         }
     }
 
     @Test
     fun `get organization not found`() {
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -395,9 +397,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPassword = "testPassword@Hash1"
 
             // Create organization
-            val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader("X-Api-Key", rootToken)
+            val createOrganizationCall = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", rootToken)
                 setBody(
                     gson.toJson(
                         CreateOrganizationRequest(
@@ -414,29 +416,27 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 )
             }
             val createdOrganization =
-                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
+                gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
-            with(
-                handleRequest(HttpMethod.Get, "/organizations/inValidOrganizationId") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                }
-
-            ) {
-                // These assertions
-                assertEquals(HttpStatusCode.Forbidden, response.status())
+            val response = client.get("/organizations/inValidOrganizationId") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(
+                    HttpHeaders.Authorization,
+                    "Bearer ${createdOrganization.rootUserToken}"
+                )
             }
-
-            DataSetupHelper.deleteOrganization(createdOrganization.organization.id, this)
+            // These assertions
+            assertEquals(HttpStatusCode.Forbidden, response.status)
+            deleteOrganization(createdOrganization.organization.id)
         }
     }
 
     @Test
     fun `update organization name success`() {
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val orgDescription = "test-org-description"
             val preferredUsername = "user" + IdGenerator.randomId()
@@ -445,9 +445,9 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
-            val createOrganizationCall = handleRequest(HttpMethod.Post, "/organizations") {
-                addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                addHeader("X-Api-Key", rootToken)
+            val createOrganizationCall = client.post("/organizations") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header("X-Api-Key", rootToken)
                 setBody(
                     gson.toJson(
                         CreateOrganizationRequest(
@@ -465,29 +465,26 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 )
             }
             val createdOrganization =
-                gson.fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
+                gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
             val updatedOrgName = "updated-org" + IdGenerator.randomId()
-            with(
-                handleRequest(HttpMethod.Patch, "/organizations/${createdOrganization.organization!!.id}") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
-                    setBody(
-                        gson.toJson(
-                            UpdateOrganizationRequest(
-                                updatedOrgName
-                            )
+            val response = client.patch("/organizations/${createdOrganization.organization!!.id}") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
+                setBody(
+                    gson.toJson(
+                        UpdateOrganizationRequest(
+                            updatedOrgName
                         )
                     )
-                }
-            ) {
-                assertEquals(HttpStatusCode.OK, response.status())
-                assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
-
-                val fetchedOrganization = gson.fromJson(response.content, Organization::class.java)
-                assertEquals(updatedOrgName, fetchedOrganization.name)
-                assertEquals(orgDescription, fetchedOrganization.description)
+                )
             }
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+
+            val fetchedOrganization = gson.fromJson(response.bodyAsText(), Organization::class.java)
+            assertEquals(updatedOrgName, fetchedOrganization.name)
+            assertEquals(orgDescription, fetchedOrganization.description)
         }
     }
 }
