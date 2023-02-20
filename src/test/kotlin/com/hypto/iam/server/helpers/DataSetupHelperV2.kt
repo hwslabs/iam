@@ -16,20 +16,28 @@ import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
+import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.Credential
+import com.hypto.iam.server.models.Policy
+import com.hypto.iam.server.models.PolicyAssociationRequest
+import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.User
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.server.testing.TestApplication
+import io.ktor.server.testing.ApplicationTestBuilder
 import kotlinx.coroutines.runBlocking
 import org.koin.test.inject
 import org.koin.test.junit5.AutoCloseKoinTest
@@ -45,8 +53,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
     private val resourceRepo: ResourceRepo by inject()
     private val actionRepo: ActionRepo by inject()
 
-    suspend fun createOrganization(
-        testApp: TestApplication,
+    suspend fun ApplicationTestBuilder.createOrganization(
         preferredUsername: String = "user" + IdGenerator.randomId()
     ): Pair<CreateOrganizationResponse, RootUser> {
         // Create organization
@@ -64,7 +71,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
             phone = testPhone
         )
 
-        val createOrganizationCall = testApp.client.post("/organizations") {
+        val createOrganizationCall = client.post("/organizations") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             header("X-Api-Key", rootToken)
             setBody(
@@ -83,13 +90,12 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         return Pair(createdOrganizationResponse, rootUser.copy(email = rootUser.email.lowercase()))
     }
 
-    suspend fun createCredential(
-        testApp: TestApplication,
+    suspend fun ApplicationTestBuilder.createCredential(
         orgId: String,
         userName: String,
         jwtToken: String,
     ): Credential {
-        val createCredentialCall = testApp.client.post(
+        val createCredentialCall = client.post(
             "/organizations/$orgId/users/$userName/credentials"
         ) {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -101,81 +107,80 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
             .fromJson(createCredentialCall.bodyAsText(), Credential::class.java)
     }
 
-//    suspend fun ApplicationTestBuilder.createUser(
-//        orgId: String,
-//        bearerToken: String,
-//        createUserRequest: CreateUserRequest,
-//    ): Pair<User, Credential> {
-//        val createUserCall = client.post("/organizations/$orgId/users") {
-//            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//            header(HttpHeaders.Authorization, "Bearer $bearerToken")
-//            setBody(gson.toJson(createUserRequest))
-//        }
-//        val createdUser = gson
-//            .fromJson(createUserCall.bodyAsText(), CreateUserResponse::class.java)
-//        val credential =
-//            createCredential(orgId, createdUser.user.username, bearerToken)
-//
-//        return Pair(createdUser.user, credential)
-//    }
-//
-//    suspend fun ApplicationTestBuilder.createAndAttachPolicy(
-//        orgId: String,
-//        username: String?,
-//        bearerToken: String,
-//        policyName: String,
-//        accountId: String?,
-//        resourceName: String,
-//        actionName: String,
-//        resourceInstance: String,
-//        effect: PolicyStatement.Effect = PolicyStatement.Effect.allow
-//    ): Policy {
-//        val (resourceHrn, actionHrn) = createResourceActionHrn(
-//            orgId,
-//            accountId,
-//            resourceName,
-//            actionName,
-//            resourceInstance
-//        )
-//        val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, effect))
-//        val requestBody = CreatePolicyRequest(policyName, policyStatements)
-//
-//        val createPolicyCall = client.post(
-//            "/organizations/$orgId/policies"
-//        ) {
-//            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//            header(HttpHeaders.Authorization, "Bearer $bearerToken")
-//            setBody(gson.toJson(requestBody))
-//        }
-//
-//        val policy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
-//
-//        if (username != null) {
-//            client.patch(
-//                "/organizations/$orgId/users/" +
-//                    "$username/attach_policies"
-//            ) {
-//                val createAssociationRequest = PolicyAssociationRequest(listOf(policy.hrn))
-//                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-//                header(
-//                    HttpHeaders.Authorization,
-//                    "Bearer $bearerToken"
-//                )
-//                setBody(gson.toJson(createAssociationRequest))
-//            }
-//        }
-//        return policy
-//    }
+    suspend fun ApplicationTestBuilder.createUser(
+        orgId: String,
+        bearerToken: String,
+        createUserRequest: CreateUserRequest,
+    ): Pair<User, Credential> {
+        val createUserCall = client.post("/organizations/$orgId/users") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $bearerToken")
+            setBody(gson.toJson(createUserRequest))
+        }
+        val createdUser = gson
+            .fromJson(createUserCall.bodyAsText(), CreateUserResponse::class.java)
+        val credential =
+            createCredential(orgId, createdUser.user.username, bearerToken)
 
-    suspend fun createResource(
-        testApp: TestApplication,
+        return Pair(createdUser.user, credential)
+    }
+
+    suspend fun ApplicationTestBuilder.createAndAttachPolicy(
+        orgId: String,
+        username: String?,
+        bearerToken: String,
+        policyName: String,
+        accountId: String?,
+        resourceName: String,
+        actionName: String,
+        resourceInstance: String,
+        effect: PolicyStatement.Effect = PolicyStatement.Effect.allow
+    ): Policy {
+        val (resourceHrn, actionHrn) = createResourceActionHrn(
+            orgId,
+            accountId,
+            resourceName,
+            actionName,
+            resourceInstance
+        )
+        val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, effect))
+        val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+        val createPolicyCall = client.post(
+            "/organizations/$orgId/policies"
+        ) {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $bearerToken")
+            setBody(gson.toJson(requestBody))
+        }
+
+        val policy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
+
+        if (username != null) {
+            client.patch(
+                "/organizations/$orgId/users/" +
+                    "$username/attach_policies"
+            ) {
+                val createAssociationRequest = PolicyAssociationRequest(listOf(policy.hrn))
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(
+                    HttpHeaders.Authorization,
+                    "Bearer $bearerToken"
+                )
+                setBody(gson.toJson(createAssociationRequest))
+            }
+        }
+        return policy
+    }
+
+    suspend fun ApplicationTestBuilder.createResource(
         orgId: String,
         jwtToken: String,
         resourceName: String? = null
     ): Resource {
         val name = resourceName ?: ("test-resource" + IdGenerator.randomId())
 
-        val createResourceCall = testApp.client.post("/organizations/$orgId/resources") {
+        val createResourceCall = client.post("/organizations/$orgId/resources") {
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             header(HttpHeaders.Authorization, "Bearer $jwtToken")
             setBody(gson.toJson(CreateResourceRequest(name = name)))
@@ -185,17 +190,16 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
             .fromJson(createResourceCall.bodyAsText(), Resource::class.java)
     }
 
-    suspend fun createAction(
-        testApp: TestApplication,
+    suspend fun ApplicationTestBuilder.createAction(
         orgId: String,
         resource: Resource? = null,
         jwtToken: String,
     ): Pair<Action, Resource> {
-        val createdResource = resource ?: createResource(testApp, orgId, jwtToken)
+        val createdResource = resource ?: createResource(orgId, jwtToken)
         val actionName = "test-action" + IdGenerator.randomId()
 
         val createActionCall =
-            testApp.client.post("/organizations/$orgId/resources/${createdResource.name}/actions") {
+            client.post("/organizations/$orgId/resources/${createdResource.name}/actions") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header(HttpHeaders.Authorization, "Bearer $jwtToken")
                 setBody(gson.toJson(CreateActionRequest(name = actionName)))
@@ -207,7 +211,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         return Pair(createdAction, createdResource)
     }
 
-    fun createResourceActionHrn(
+    fun ApplicationTestBuilder.createResourceActionHrn(
         orgId: String,
         accountId: String?,
         resourceName: String,
@@ -220,7 +224,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
     }
 
     // This function is used for cleaning up all the data created during the test for the organization
-    fun deleteOrganization(orgId: String) {
+    fun ApplicationTestBuilder.deleteOrganization(orgId: String) {
         runBlocking {
             // TODO: Optimize the queries to do it one query (CASCADE DELETE)
             policyRepo.fetchByOrganizationId(orgId).forEach { policies ->

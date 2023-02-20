@@ -9,3 +9,5 @@ style:
 complexity:
   LongMethod:
     active: false
+  LongParameterList:
+    functionThreshold : 10

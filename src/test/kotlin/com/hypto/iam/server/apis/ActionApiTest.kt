@@ -25,11 +25,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.TestApplication
-import io.ktor.test.dispatcher.testSuspend
-import org.junit.jupiter.api.AfterAll
+import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 
@@ -38,13 +35,16 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create action success case1`() {
-        testSuspend {
-            val (organizationResponse, _) = createOrganization(testApp)
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse, _) = createOrganization()
 
             val organization = organizationResponse.organization!!
             val rootUserToken = organizationResponse.rootUserToken!!
-            val resource = createResource(testApp, organization.id, rootUserToken)
-            val response = testApp.client.post("/organizations/${organization.id}/resources/${resource.name}/actions") {
+            val resource = createResource(organization.id, rootUserToken)
+            val response = client.post("/organizations/${organization.id}/resources/${resource.name}/actions") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 setBody(gson.toJson(CreateActionRequest(name = "test-action")))
@@ -69,14 +69,17 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `get action`() {
-        testSuspend {
-            val (organizationResponse, _) = createOrganization(testApp)
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse, _) = createOrganization()
             val organization = organizationResponse.organization!!
             val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action, resource) = createAction(testApp, organization.id, null, rootUserToken)
+            val (action, resource) = createAction(organization.id, null, rootUserToken)
 
-            val response = testApp.client.get(
+            val response = client.get(
                 "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
             ) {
                 header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -98,18 +101,21 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `get action failure for unauthorized user access`() {
-        testSuspend {
-            val (organizationResponse1, _) = createOrganization(testApp)
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse1, _) = createOrganization()
             val organization1 = organizationResponse1.organization!!
             val rootUserToken1 = organizationResponse1.rootUserToken!!
 
-            val (organizationResponse2, _) = createOrganization(testApp)
+            val (organizationResponse2, _) = createOrganization()
             val organization2 = organizationResponse2.organization!!
             val rootUserToken2 = organizationResponse2.rootUserToken!!
 
-            val (action, resource) = createAction(testApp, organization1.id, null, rootUserToken1)
+            val (action, resource) = createAction(organization1.id, null, rootUserToken1)
 
-            val response = testApp.client.get(
+            val response = client.get(
                 "/organizations/${organization1.id}/resources/${resource.name}/actions/${action.name}"
             ) {
                 header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
@@ -127,13 +133,16 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `delete action`() {
-        testSuspend {
-            val (organizationResponse, _) = createOrganization(testApp)
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse, _) = createOrganization()
             val organization = organizationResponse.organization!!
             val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action, resource) = createAction(testApp, organization.id, null, rootUserToken)
-            var response = testApp.client.delete(
+            val (action, resource) = createAction(organization.id, null, rootUserToken)
+            var response = client.delete(
                 "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
             ) {
                 header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -144,7 +153,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
             assertEquals(true, responseBody.success)
 
             // Check that the action is not available
-            response = testApp.client.get(
+            response = client.get(
                 "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
             ) {
                 header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -157,14 +166,17 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `list actions for a resource`() {
-        testSuspend {
-            val (organizationResponse, _) = createOrganization(testApp)
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse, _) = createOrganization()
             val organization = organizationResponse.organization!!
             val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action1, resource) = createAction(testApp, organization.id, null, rootUserToken,)
-            val (action2, _) = createAction(testApp, organization.id, resource, rootUserToken)
-            val response = testApp.client.get(
+            val (action1, resource) = createAction(organization.id, null, rootUserToken,)
+            val (action2, _) = createAction(organization.id, resource, rootUserToken)
+            val response = client.get(
                 "/organizations/${organization.id}/resources/${resource.name}/actions"
             ) {
                 header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -186,14 +198,17 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `update action`() {
-        testSuspend {
-            val (organizationResponse, _) = createOrganization(testApp)
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse, _) = createOrganization()
             val organization = organizationResponse.organization!!
             val rootUserToken = organizationResponse.rootUserToken!!
 
-            val (action, resource) = createAction(testApp, organization.id, null, rootUserToken)
+            val (action, resource) = createAction(organization.id, null, rootUserToken)
             val newDescription = "new description"
-            val response = testApp.client.patch(
+            val response = client.patch(
                 "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
             ) {
                 header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -212,26 +227,6 @@ class ActionApiTest : AbstractContainerBaseTest() {
             assertEquals(newDescription, responseBody.description)
 
             deleteOrganization(organization.id)
-        }
-    }
-
-    companion object {
-        lateinit var testApp: TestApplication
-
-        @JvmStatic
-        @BeforeAll
-        fun setupFirst() {
-            testApp = TestApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-            }
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun teardownLast() {
-            testApp.stop()
         }
     }
 }
