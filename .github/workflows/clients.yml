@@ -48,7 +48,7 @@ jobs:
       - name: Generate Files
         working-directory: client
         run: |
-          gradle generateClient
+          gradle --stacktrace --debug generateClient
       - name: Push changes
         uses: actions-js/push@v1.3
         with:
