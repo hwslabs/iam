@@ -21,16 +21,13 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.TestApplication
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.text.Charsets.UTF_8
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -58,7 +55,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 // Actual test
                 val requestBody = CreateCredentialRequest()
-                val response = testApp.client.post(
+                val response = client.post(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -96,7 +93,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val expiry = LocalDateTime.now().plusDays(1)
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
 
-                val response = testApp.client.post(
+                val response = client.post(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -137,7 +134,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val now = LocalDateTime.now().minusDays(1)
                 val requestBody = CreateCredentialRequest(now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
 
-                val response = testApp.client.post(
+                val response = client.post(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -175,7 +172,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 val expiry = LocalDateTime.now().plusDays(1)
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                val response = testApp.client.post(
+                val response = client.post(
                     "/organizations/${createdOrganization.id}/users/$invalidUserName/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -206,7 +203,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
-                val createCredentialCall = testApp.client.post(
+                val createCredentialCall = client.post(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -218,7 +215,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     gson.fromJson(createCredentialCall.bodyAsText(), Credential::class.java)
 
                 // Delete Credential
-                var response = testApp.client.delete(
+                var response = client.delete(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -228,7 +225,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
 
                 // Validate that credential has been deleted
-                response = testApp.client.get(
+                response = client.get(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -237,7 +234,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
 
                 // Validate that using deleted credentials returns 401
-                response = testApp.client.get(
+                response = client.get(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials/${credentialsToDelete.id}"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -263,7 +260,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val nonExistentCredentialId = UUID.randomUUID().toString()
 
                 // Delete Credential
-                val response = testApp.client.delete(
+                val response = client.delete(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -293,7 +290,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val rootUserToken2 = organizationResponse2.rootUserToken!!
 
                 // Delete Credential
-                val response = testApp.client.delete(
+                val response = client.delete(
                     "/organizations/${organization1.id}/users/$user1Name/credentials/${credential1.id}"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -323,7 +320,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 val createdCredentials = createCredential(createdOrganization.id, userName, rootUserToken)
 
-                val response = testApp.client.get(
+                val response = client.get(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials/${createdCredentials.id}"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -353,7 +350,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val userName = createdOrganizationResponse.organization.rootUser.username
                 val nonExistentCredentialId = UUID.randomUUID().toString()
 
-                val response = testApp.client.get(
+                val response = client.get(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -377,7 +374,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
-                val response = testApp.client.get(
+                val response = client.get(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials/inValid_credential_id"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -409,7 +406,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val credential2 =
                     createCredential(createdOrganization.id, userName, rootUserToken)
 
-                val response = testApp.client.get(
+                val response = client.get(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -439,7 +436,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
                 } throws UserNotFoundException.builder().message("User does not exist.").build()
 
-                val response = testApp.client.get(
+                val response = client.get(
                     "/organizations/${createdOrganization.id}/users/unknown_user/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -461,7 +458,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val rootUserToken = createdOrganizationResponse.rootUserToken!!
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
-                val response = testApp.client.get(
+                val response = client.get(
                     "/organizations/${createdOrganization.id}/users/$userName/credentials"
                 ) {
                     header(HttpHeaders.ContentType, Json.toString())
@@ -473,25 +470,6 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val responseBody = gson.fromJson(response.bodyAsText(), ListCredentialResponse::class.java)
                 Assertions.assertEquals(0, responseBody.credentials.size)
             }
-        }
-    }
-    companion object {
-        lateinit var testApp: TestApplication
-
-        @JvmStatic
-        @BeforeAll
-        fun setupFirst() {
-            testApp = TestApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-            }
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun teardownLast() {
-            testApp.stop()
         }
     }
 }
