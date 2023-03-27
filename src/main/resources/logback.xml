@@ -46,12 +46,12 @@
 <!--        <appender-ref ref="AUDIT-FILE"/>-->
     </root>
 
-    <logger name="org.eclipse.jetty" level="${app_logging_level:-INFO}"/>
-    <logger name="io.netty" level="${app_logging_level:-INFO}"/>
+    <logger name="org.eclipse.jetty" level="${app__logging_level:-INFO}"/>
+    <logger name="io.netty" level="${app__logging_level:-INFO}"/>
 
-    <logger name="com.zaxxer.hikari" level="${app_logging_level:-INFO}"/>
-    <logger name="org.jooq" level="${app_logging_level:-INFO}"/>
-    <logger name="org.casbin.jcasbin" level="${app_logging_level:-WARN}"/>
+    <logger name="com.zaxxer.hikari" level="${app__logging_level:-INFO}"/>
+    <logger name="org.jooq" level="${app__logging_level:-INFO}"/>
+    <logger name="org.casbin.jcasbin" level="${app__logging_level:-WARN}"/>
 
     <logger name="audit-logger" level="info" additivity="false">
         <appender-ref ref="FILE-AUDIT" />
