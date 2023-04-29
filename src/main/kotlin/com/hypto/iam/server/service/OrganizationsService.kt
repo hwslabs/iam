@@ -86,15 +86,17 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     loginAccess = true
                 )
 
-                val policies = policyTemplatesService.createAndPersistPolicyRecordsForOrganization(organizationId)
+                val policyHrns = policyTemplatesService
+                    .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId)
+                    .map { ResourceHrn(it.hrn) }
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
                 val userHrn = hrnFactory.getHrn(user.hrn)
-                principalPolicyService.attachPoliciesToUser(
-                    userHrn,
-                    policies.map { ResourceHrn(it.hrn) }
-                )
+
+                if (policyHrns.isNotEmpty()) {
+                    principalPolicyService.attachPoliciesToUser(userHrn, policyHrns)
+                }
 
                 val token = tokenService.generateJwtToken(userHrn)
                 return@wrap Pair(organization, token)
