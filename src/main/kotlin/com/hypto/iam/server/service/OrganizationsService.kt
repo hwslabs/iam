@@ -12,7 +12,6 @@ import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Organization
-import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
@@ -36,9 +35,9 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val passcodeRepo: PasscodeRepo by inject()
     private val usersService: UsersService by inject()
     private val tokenService: TokenService by inject()
-    private val policyService: PolicyService by inject()
     private val hrnFactory: HrnFactory by inject()
     private val principalPolicyService: PrincipalPolicyService by inject()
+    private val policyTemplatesService: PolicyTemplatesService by inject()
     private val idGenerator: ApplicationIdUtil.Generator by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
@@ -87,19 +86,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     loginAccess = true
                 )
 
+                val policies = policyTemplatesService.createAndPersistPolicyRecordsForOrganization(organizationId)
+
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
-                // Add policies for the root user
-                val policyStatements = listOf(
-                    // TODO: Change organization root user's policy string to hrn:::iam-organization/$orgId
-                    PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
-                    PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
-                )
-                val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
                 val userHrn = hrnFactory.getHrn(user.hrn)
                 principalPolicyService.attachPoliciesToUser(
                     userHrn,
-                    listOf(hrnFactory.getHrn(policy.hrn))
+                    policies.map { ResourceHrn(it.hrn) }
                 )
 
                 val token = tokenService.generateJwtToken(userHrn)
