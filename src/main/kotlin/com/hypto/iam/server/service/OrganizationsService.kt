@@ -46,7 +46,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOrganization(
         request: CreateOrganizationRequest
     ): Pair<Organization, TokenResponse> {
-        val rootUser = request.rootUser
+        val rootUserFromRequest = request.rootUser
         val organizationId = idGenerator.organizationId()
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
         val username = idGenerator.username()
@@ -54,7 +54,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         @Suppress("TooGenericExceptionCaught")
         try {
             return txMan.wrap {
-                passcodeRepo.deleteByEmailAndPurpose(rootUser.email, VerifyEmailRequest.Purpose.signup)
+                passcodeRepo.deleteByEmailAndPurpose(rootUserFromRequest.email, VerifyEmailRequest.Purpose.signup)
                 // Create Organization
                 organizationRepo.insert(
                     Organizations(
@@ -73,26 +73,26 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 )
 
                 // Create root user for the organization
-                val user = usersService.createUser(
+                val rootUser = usersService.createUser(
                     organizationId = organizationId,
                     username = username,
-                    preferredUsername = rootUser.preferredUsername,
-                    name = rootUser.name,
-                    email = rootUser.email,
-                    phoneNumber = rootUser.phone ?: "",
-                    password = rootUser.password,
+                    preferredUsername = rootUserFromRequest.preferredUsername,
+                    name = rootUserFromRequest.name,
+                    email = rootUserFromRequest.email,
+                    phoneNumber = rootUserFromRequest.phone ?: "",
+                    password = rootUserFromRequest.password,
                     createdBy = "iam-system",
                     verified = true,
                     loginAccess = true
                 )
 
                 val policyHrns = policyTemplatesService
-                    .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId)
+                    .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
                     .map { ResourceHrn(it.hrn) }
 
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
-                val userHrn = hrnFactory.getHrn(user.hrn)
+                val userHrn = hrnFactory.getHrn(rootUser.hrn)
 
                 if (policyHrns.isNotEmpty()) {
                     principalPolicyService.attachPoliciesToUser(userHrn, policyHrns)

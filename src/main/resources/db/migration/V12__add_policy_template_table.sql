@@ -8,12 +8,14 @@ CREATE TABLE policy_templates (
     updated_at timestamp NOT NULL
 );
 
+
+
 INSERT INTO policy_templates values (
-    'ROOT_USER_POLICY',
+    'admin',
     'ACTIVE',
     TRUE,
-    'p, hrn:{{organization_id}}::iam-policy/ROOT_USER_POLICY, hrn:{{organization_id}}, hrn:{{organization_id}}:*, allow
-p, hrn:{{organization_id}}::iam-policy/ROOT_USER_POLICY, hrn:{{organization_id}}::*, hrn:{{organization_id}}::*, allow
+    'p, hrn:{{organization_id}}::iam-policy/admin, ^hrn:{{organization_id}}$, hrn:{{organization_id}}:*, allow
+p, hrn:{{organization_id}}::iam-policy/admin, ^hrn:{{organization_id}}::*, hrn:{{organization_id}}::*, allow
 ',
     'NOW()',
     'NOW()'

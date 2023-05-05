@@ -120,7 +120,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val listPoliciesResponse = gson.fromJson(actResponse.bodyAsText(), PolicyPaginatedResponse::class.java)
             Assertions.assertNotNull(listPoliciesResponse.nextToken)
             Assertions.assertEquals(1, listPoliciesResponse.data?.size)
-            Assertions.assertEquals("ROOT_USER_POLICY", listPoliciesResponse.data!![0].name)
+            Assertions.assertEquals("admin", listPoliciesResponse.data!![0].name)
 
             // Assert policy association
             val userPoliciesResponse = client.get(
@@ -137,7 +137,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val policies = gson.fromJson(userPoliciesResponse.bodyAsText(), PolicyPaginatedResponse::class.java)
             Assertions.assertEquals(1, policies.data?.size)
-            Assertions.assertEquals("ROOT_USER_POLICY", policies.data!![0].name)
+            Assertions.assertEquals("admin", policies.data!![0].name)
 
             deleteOrganization(orgId)
         }
