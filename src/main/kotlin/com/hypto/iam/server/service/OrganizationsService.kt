@@ -12,7 +12,6 @@ import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Organization
-import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.ApplicationIdUtil
@@ -36,9 +35,9 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val passcodeRepo: PasscodeRepo by inject()
     private val usersService: UsersService by inject()
     private val tokenService: TokenService by inject()
-    private val policyService: PolicyService by inject()
     private val hrnFactory: HrnFactory by inject()
     private val principalPolicyService: PrincipalPolicyService by inject()
+    private val policyTemplatesService: PolicyTemplatesService by inject()
     private val idGenerator: ApplicationIdUtil.Generator by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
@@ -47,7 +46,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOrganization(
         request: CreateOrganizationRequest
     ): Pair<Organization, TokenResponse> {
-        val rootUser = request.rootUser
+        val rootUserFromRequest = request.rootUser
         val organizationId = idGenerator.organizationId()
         val identityGroup = identityProvider.createIdentityGroup(organizationId)
         val username = idGenerator.username()
@@ -55,7 +54,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         @Suppress("TooGenericExceptionCaught")
         try {
             return txMan.wrap {
-                passcodeRepo.deleteByEmailAndPurpose(rootUser.email, VerifyEmailRequest.Purpose.signup)
+                passcodeRepo.deleteByEmailAndPurpose(rootUserFromRequest.email, VerifyEmailRequest.Purpose.signup)
                 // Create Organization
                 organizationRepo.insert(
                     Organizations(
@@ -74,33 +73,30 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 )
 
                 // Create root user for the organization
-                val user = usersService.createUser(
+                val rootUser = usersService.createUser(
                     organizationId = organizationId,
                     username = username,
-                    preferredUsername = rootUser.preferredUsername,
-                    name = rootUser.name,
-                    email = rootUser.email,
-                    phoneNumber = rootUser.phone ?: "",
-                    password = rootUser.password,
+                    preferredUsername = rootUserFromRequest.preferredUsername,
+                    name = rootUserFromRequest.name,
+                    email = rootUserFromRequest.email,
+                    phoneNumber = rootUserFromRequest.phone ?: "",
+                    password = rootUserFromRequest.password,
                     createdBy = "iam-system",
                     verified = true,
                     loginAccess = true
                 )
 
+                val policyHrns = policyTemplatesService
+                    .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
+                    .map { ResourceHrn(it.hrn) }
+
                 // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
-                // Add policies for the root user
-                val policyStatements = listOf(
-                    // TODO: Change organization root user's policy string to hrn:::iam-organization/$orgId
-                    PolicyStatement("hrn:$organizationId", "hrn:$organizationId:*", PolicyStatement.Effect.allow),
-                    PolicyStatement("hrn:$organizationId::*", "hrn:$organizationId::*", PolicyStatement.Effect.allow)
-                )
-                val policy = policyService.createPolicy(organizationId, "ROOT_USER_POLICY", policyStatements)
-                val userHrn = hrnFactory.getHrn(user.hrn)
-                principalPolicyService.attachPoliciesToUser(
-                    userHrn,
-                    listOf(hrnFactory.getHrn(policy.hrn))
-                )
+                val userHrn = hrnFactory.getHrn(rootUser.hrn)
+
+                if (policyHrns.isNotEmpty()) {
+                    principalPolicyService.attachPoliciesToUser(userHrn, policyHrns)
+                }
 
                 val token = tokenService.generateJwtToken(userHrn)
                 return@wrap Pair(organization, token)

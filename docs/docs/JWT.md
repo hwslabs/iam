@@ -9,7 +9,7 @@ The structure of a JWT token is as what is specified in [RFC7519](https://www.rf
 
 **kid** - This field contains the key-id which was used to sign the JWT token. This is further explained in the Signature section.
 
-**zip** - This field contains the aglorithm which was used to compress the body.
+**zip** - This field contains the algorithm which was used to compress the body.
 Further info in [Notes on Compression](JWT.md#notes-on-compression) section. 
 
 ```json5
@@ -33,7 +33,7 @@ The **entitlements** claim contains all the permissions that the user has in
   "ver": "1.0",
   "usr": "hrn:N1nEvjKSCr::iam-user/admin", //user HRN
   "org": "N1nEvjKSCr", // Organization id
-  "entitlements": "p, hrn:N1nEvjKSCr::iam-policy/ROOT_USER_POLICY, N1nEvjKSCr, hrn:N1nEvjKSCr:*, allow\n\ng, hrn:N1nEvjKSCr::iam-user/admin, hrn:N1nEvjKSCr::iam-policy/ROOT_USER_POLICY\n"
+  "entitlements": "p, hrn:N1nEvjKSCr::iam-policy/admin, N1nEvjKSCr, hrn:N1nEvjKSCr:*, allow\n\ng, hrn:N1nEvjKSCr::iam-user/admin, hrn:N1nEvjKSCr::iam-policy/admin\n"
 }
 ```
 

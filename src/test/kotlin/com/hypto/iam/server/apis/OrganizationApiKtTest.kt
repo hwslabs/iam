@@ -11,8 +11,10 @@ import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
+import com.hypto.iam.server.models.PolicyPaginatedResponse
 import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.UpdateOrganizationRequest
+import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.utils.IdGenerator
@@ -36,6 +38,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.text.Charsets.UTF_8
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
@@ -75,12 +78,66 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 setBody(gson.toJson(requestBody))
             }
             val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
+
+            // Assert API response
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
             orgId = responseBody.organization.id
             assertEquals(requestBody.name, responseBody.organization.name)
             assertEquals(10, responseBody.organization.id.length)
+
+            // Assert root user creation
+            val listUsersResponse = client.get("/organizations/$orgId/users") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer ${responseBody.rootUserToken}")
+            }
+            Assertions.assertEquals(HttpStatusCode.OK, listUsersResponse.status)
+            Assertions.assertEquals(
+                ContentType.Application.Json.withCharset(UTF_8),
+                listUsersResponse.contentType()
+            )
+
+            val listUserResponse = gson.fromJson(listUsersResponse.bodyAsText(), UserPaginatedResponse::class.java)
+            Assertions.assertEquals(listUserResponse.data!!.size, 1)
+
+            // Assert policy creation
+            val actResponse = client.get(
+                "/organizations/$orgId/policies?pageSize=50"
+            ) {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(
+                    HttpHeaders.Authorization,
+                    "Bearer ${responseBody.rootUserToken}"
+                )
+            }
+            Assertions.assertEquals(HttpStatusCode.OK, actResponse.status)
+            Assertions.assertEquals(
+                ContentType.Application.Json.withCharset(UTF_8),
+                actResponse.contentType()
+            )
+
+            val listPoliciesResponse = gson.fromJson(actResponse.bodyAsText(), PolicyPaginatedResponse::class.java)
+            Assertions.assertNotNull(listPoliciesResponse.nextToken)
+            Assertions.assertEquals(1, listPoliciesResponse.data?.size)
+            Assertions.assertEquals("admin", listPoliciesResponse.data!![0].name)
+
+            // Assert policy association
+            val userPoliciesResponse = client.get(
+                "/organizations/$orgId/users/${responseBody.organization.rootUser.username}/policies"
+            ) {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer ${responseBody.rootUserToken}")
+            }
+            Assertions.assertEquals(HttpStatusCode.OK, userPoliciesResponse.status)
+            Assertions.assertEquals(
+                ContentType.Application.Json.withCharset(UTF_8),
+                userPoliciesResponse.contentType()
+            )
+
+            val policies = gson.fromJson(userPoliciesResponse.bodyAsText(), PolicyPaginatedResponse::class.java)
+            Assertions.assertEquals(1, policies.data?.size)
+            Assertions.assertEquals("admin", policies.data!![0].name)
 
             deleteOrganization(orgId)
         }

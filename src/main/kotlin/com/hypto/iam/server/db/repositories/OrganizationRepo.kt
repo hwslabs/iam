@@ -31,8 +31,6 @@ object OrganizationRepo : BaseRepo<OrganizationsRecord, Organizations, String>()
         return updateStep.where(ORGANIZATIONS.ID.eq(id)).returning().fetchOne()
     }
 
-    suspend fun insert(organization: Organizations) = dao().insert(organization)
-
     suspend fun findById(id: String): Organizations? = dao().findById(id)
 
     suspend fun deleteById(id: String) = dao().deleteById(id)

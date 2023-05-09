@@ -41,13 +41,9 @@ fun Route.createPasscodeApi() {
             }
         }
         if (request.purpose == VerifyEmailRequest.Purpose.invite) {
-            requireNotNull(principal) {
-                "User must be logged in for invite purpose"
-            }
+            requireNotNull(principal) { "User must be logged in for invite purpose" }
             val inviteMetadata = InviteMetadata(request.metadata!!)
-            require(inviteMetadata.inviterUserHrn == principal.hrnStr) {
-                "Does not support cross user invites"
-            }
+            require(inviteMetadata.inviterUserHrn == principal.hrnStr) { "Does not support cross user invites" }
         }
 
         val response = passcodeService.verifyEmail(

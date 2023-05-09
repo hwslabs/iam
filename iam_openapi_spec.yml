@@ -2006,7 +2006,7 @@ components:
         metadata:
           inviterUserHrn: hrn:XlK5h64gND::iam-user/bob
           policies:
-            - hrn:XlK5h64gND::iam-policy/ROOT_USER_POLICY
+            - hrn:XlK5h64gND::iam-policy/admin
 
     VerifyEmailRequestSignup:
       value:

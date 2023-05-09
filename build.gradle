@@ -428,6 +428,9 @@ dependencies {
     // TxMan
     implementation("com.github.hwslabs:txman:0.1.0")
 
+    //Mustache Template
+    implementation("net.pwall.mustache:kotlin-mustache:0.10")
+
     // Test dependencies
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
     testImplementation("io.insert-koin:koin-test:$koin_version")

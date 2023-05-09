@@ -2,6 +2,8 @@ package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
+import com.hypto.iam.server.db.repositories.RawPolicyPayload
+import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.PaginationContext
@@ -33,6 +35,28 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 
         val policyRecord = policyRepo.create(policyHrn, newPolicyBuilder.build())
         return Policy.from(policyRecord)
+    }
+
+    /**
+     * example of rawPolicyPayloadsList:
+     *   [[policy_name_1, <policy_1_statements as string>], [policy_name_2, <policy_2_statements as string>]]
+     */
+    override suspend fun batchCreatePolicyRaw(
+        organizationId: String,
+        rawPolicyPayloadsList: List<Pair<String, String>>
+    ): List<PoliciesRecord> {
+        val policyHrnStrings = mutableListOf<String>()
+        val rawPolicyPayloads = rawPolicyPayloadsList.map {
+            val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, it.first)
+            policyHrnStrings.add(policyHrn.toString())
+            RawPolicyPayload(policyHrn, it.second)
+        }
+
+        if (policyRepo.fetchByHrns(policyHrnStrings).isNotEmpty()) {
+            throw EntityAlreadyExistsException("One or more policies already exists")
+        }
+
+        return policyRepo.batchCreate(rawPolicyPayloads)
     }
 
     override suspend fun getPolicy(organizationId: String, name: String): Policy {
@@ -100,4 +124,8 @@ interface PolicyService {
     ): PolicyPaginatedResponse
 
     suspend fun listPolicies(organizationId: String, context: PaginationContext): PolicyPaginatedResponse
+    suspend fun batchCreatePolicyRaw(
+        organizationId: String,
+        rawPolicyPayloadsList: List<Pair<String, String>>
+    ): List<PoliciesRecord>
 }

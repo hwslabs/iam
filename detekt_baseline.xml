@@ -2,9 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>CommentSpacing:com.hypto.iam.server.apis.PasscodeApi.kt:25</ID>
     <ID>LongParameterList:DataSetupHelper.kt$DataSetupHelper$( orgId: String, username: String?, bearerToken: String, policyName: String, accountId: String?, resourceName: String, actionName: String, resourceInstance: String, engine: TestApplicationEngine, effect: PolicyStatement.Effect = PolicyStatement.Effect.allow )</ID>
-    <ID>LongParameterList:IdentityProvider.kt$IdentityProvider$( identityGroup: IdentityGroup, userName: String, name: String?, phone: String?, status: com.hypto.iam.server.models.User.Status?, verified: Boolean? )</ID>
     <ID>MagicNumber:Configuration.kt$10.0</ID>
     <ID>MagicNumber:Configuration.kt$1024</ID>
     <ID>MagicNumber:Configuration.kt$365</ID>
@@ -19,6 +17,7 @@
     <ID>ThrowsCount:ResourceApi.kt$fun Route.resourceApi()</ID>
     <ID>TooGenericExceptionCaught:Authentication.kt$e: Exception</ID>
     <ID>TooGenericExceptionThrown:AuditEventHandler.kt$AuditEventHandler$throw Exception("few Batch inserts failed")</ID>
+    <ID>TooManyFunctions:BaseRepo.kt$BaseRepo&lt;R : UpdatableRecord&lt;R&gt;, P, T&gt; : KoinComponent</ID>
     <ID>TooManyFunctions:IdentityProvider.kt$IdentityProvider</ID>
     <ID>TooManyFunctions:Mappers.kt$com.hypto.iam.server.extensions.Mappers.kt</ID>
     <ID>TooManyFunctions:RequestModelValidator.kt$com.hypto.iam.server.validators.RequestModelValidator.kt</ID>

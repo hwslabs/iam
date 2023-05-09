@@ -43,8 +43,8 @@ task createRootOrganization {
 
         def orgId = args[0]
         def addRootPrivilegeStatementQuery = "UPDATE policies SET statements = " +
-                "concat(statements, E'\\n', 'p, hrn:$orgId::iam-policy/ROOT_USER_POLICY, hrn:*, hrn:*, allow') " +
-                "WHERE hrn='hrn:$orgId::iam-policy/ROOT_USER_POLICY' AND " +
+                "concat(statements, E'\\n', 'p, hrn:$orgId::iam-policy/admin, hrn:*, hrn:*, allow') " +
+                "WHERE hrn='hrn:$orgId::iam-policy/admin' AND " +
                 "organization_id='$orgId' AND " +
                 "statements not like '%hrn:\\*, hrn:\\*, allow%';"
         println("executing query = $addRootPrivilegeStatementQuery")

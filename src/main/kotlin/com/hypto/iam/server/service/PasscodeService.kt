@@ -88,16 +88,19 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         }
         if (purpose == Purpose.invite) {
             val inviteMetadata = InviteMetadata(metadata!!)
+
+            // Validate policies to be attached to invited user
             require(policiesRepo.existsByIds(inviteMetadata.policies.map { it })) {
                 "Invalid policies found"
             }
-        }
-        if (purpose == Purpose.invite) {
+
+            // Clean-up old invites
             val oldInviteRecord = passcodeRepo.getValidPasscodeCount(email, Purpose.invite, organizationId!!)
             if (oldInviteRecord > 0) {
                 passcodeRepo.deleteByEmailAndPurpose(email, purpose, organizationId)
             }
         }
+
         val validUntil = LocalDateTime.now().plusSeconds(appConfig.app.passcodeValiditySeconds)
 
         val passcodeRecord = PasscodesRecord().apply {
