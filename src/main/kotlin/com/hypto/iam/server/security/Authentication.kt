@@ -12,6 +12,7 @@ import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.policy.PolicyBuilder
+import io.jsonwebtoken.Claims
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.http.auth.parseAuthorizationHeader
 import io.ktor.server.application.ApplicationCall
@@ -64,6 +65,7 @@ data class ApiPrincipal(
 data class UserPrincipal(
     override val tokenCredential: TokenCredential,
     val hrnStr: String,
+    val claims: Claims? = null,
     val policies: PolicyBuilder
 ) : IamPrincipal() {
     val hrn: Hrn = HrnFactory.getHrn(hrnStr)

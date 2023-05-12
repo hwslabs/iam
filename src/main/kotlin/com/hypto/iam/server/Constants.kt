@@ -27,5 +27,6 @@ class Constants private constructor() {
         const val AUTHORIZATION_HEADER = "Authorization"
         const val SECRET_PREFIX = "$"
         const val JOOQ_QUERY_NAME = "queryName"
+        const val SECONDS_IN_DAY = 24 * 60 * 60L
     }
 }

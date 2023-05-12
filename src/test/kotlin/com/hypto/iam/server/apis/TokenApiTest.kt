@@ -6,7 +6,12 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV2.createResourceActionHrn
 import com.hypto.iam.server.models.CreateOrganizationResponse
+import com.hypto.iam.server.models.CreatePolicyRequest
+import com.hypto.iam.server.models.GetDelegateTokenRequest
+import com.hypto.iam.server.models.Policy
+import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
 import com.hypto.iam.server.models.RootUser
@@ -18,6 +23,7 @@ import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import io.jsonwebtoken.Claims
 import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
@@ -1390,5 +1396,244 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
             }
         }
+    }
+
+    @Nested
+    @DisplayName("Generate Delegate JWT token test: /delegate_token")
+    inner class GenerateDelegateToken {
+        @Test
+        fun `generate delegate token - Accept Json`() {
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (createdOrganization, createdUser) = createOrganization()
+
+                // Create policy to delegate
+                val policyName = "samplePolicy"
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = createResourceActionHrn(
+                    createdOrganization.organization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val createPolictRequest = CreatePolicyRequest(policyName, policyStatements)
+
+                val createPolicyCall = client.post(
+                    "/organizations/${createdOrganization.organization?.id}/policies"
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.rootUserToken}"
+                    )
+                    setBody(gson.toJson(createPolictRequest))
+                }
+
+                val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
+
+                // Test DelegateToken call
+                val requestBody = GetDelegateTokenRequest(
+                    policy = createdPolicy.hrn,
+                    principal = "dummyDelegate",
+                    expiry = 100L
+                )
+                val tokenResponse = client.post(
+                    "/delegate_token"
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.rootUserToken}"
+                    )
+                    setBody(gson.toJson(requestBody))
+                }
+                Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
+                Assertions.assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    tokenResponse.contentType()
+                )
+                Assertions.assertEquals(
+                    createdOrganization.organization.id,
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                )
+                val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
+                Assertions.assertNotNull(responseBody.token)
+
+                val tokenWithoutSignaturePart =
+                    responseBody.token.substring(0, responseBody.token.lastIndexOf(".") + 1)
+
+                // Assertion permissions to principal by validating
+                val claims = Jwts.parserBuilder().build().parseClaimsJwt(tokenWithoutSignaturePart).body as Claims
+                Assertions.assertEquals(claims.get("usr", String::class.java) as String, "dummyDelegate")
+                Assertions.assertEquals(
+                    claims.get("org", String::class.java) as String,
+                    createdOrganization.organization.id
+                )
+                Assertions.assertEquals(
+                    claims.get("obof", String::class.java) as String,
+                    createdOrganization.organization.rootUser.hrn
+                )
+                Assertions.assertEquals(
+                    claims.expiration.toInstant().epochSecond - claims.issuedAt.toInstant().epochSecond,
+                    100L
+                )
+
+                Assertions.assertTrue(
+                    (claims.get("entitlements", String::class.java) as String)
+                        .contains("g, dummyDelegate, ${createdPolicy.hrn}")
+                )
+            }
+        }
+
+        @Test
+        fun `generate delegate token - Accept Text_Plain`() {
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (createdOrganization, createdUser) = createOrganization()
+
+                // Create policy to delegate
+                val policyName = "samplePolicy"
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = createResourceActionHrn(
+                    createdOrganization.organization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val createPolictRequest = CreatePolicyRequest(policyName, policyStatements)
+
+                val createPolicyCall = client.post(
+                    "/organizations/${createdOrganization.organization?.id}/policies"
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.rootUserToken}"
+                    )
+                    setBody(gson.toJson(createPolictRequest))
+                }
+
+                val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
+
+                // Test DelegateToken call
+                val requestBody = GetDelegateTokenRequest(
+                    policy = createdPolicy.hrn,
+                    principal = "dummyDelegate",
+                    expiry = 100L
+                )
+                val tokenResponse = client.post(
+                    "/delegate_token"
+                ) {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.toString())
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.rootUserToken}"
+                    )
+                    setBody(gson.toJson(requestBody))
+                }
+                Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
+                Assertions.assertEquals(
+                    ContentType.Text.Plain.withCharset(Charsets.UTF_8),
+                    tokenResponse.contentType()
+                )
+                Assertions.assertEquals(
+                    createdOrganization.organization.id,
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                )
+            }
+        }
+
+        @Test
+        fun `generate delegate token - JWT requester, without expiry`() {
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (createdOrganization, createdUser) = createOrganization()
+
+                // Create policy to delegate
+                val policyName = "samplePolicy"
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) = createResourceActionHrn(
+                    createdOrganization.organization.id,
+                    null,
+                    resourceName,
+                    "action"
+                )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val createPolicyRequest = CreatePolicyRequest(policyName, policyStatements)
+
+                val createPolicyCall = client.post(
+                    "/organizations/${createdOrganization.organization?.id}/policies"
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.rootUserToken}"
+                    )
+                    setBody(gson.toJson(createPolicyRequest))
+                }
+
+                val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
+
+                // Test DelegateToken call
+                val requestBody = GetDelegateTokenRequest(
+                    policy = createdPolicy.hrn,
+                    principal = "dummyDelegate"
+                )
+                val tokenResponse = client.post(
+                    "/delegate_token"
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(
+                        HttpHeaders.Authorization,
+                        "Bearer ${createdOrganization.rootUserToken}"
+                    )
+                    setBody(gson.toJson(requestBody))
+                }
+                val rootUserClaims = with(createdOrganization.rootUserToken) {
+                    Jwts.parserBuilder().build().parseClaimsJwt(substring(0, lastIndexOf(".") + 1)).body as Claims
+                }
+
+                val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
+                Assertions.assertNotNull(responseBody.token)
+
+                val tokenWithoutSignaturePart =
+                    responseBody.token.substring(0, responseBody.token.lastIndexOf(".") + 1)
+
+                // Assertion permissions to principal by validating
+                val claims = Jwts.parserBuilder().build().parseClaimsJwt(tokenWithoutSignaturePart).body as Claims
+                Assertions.assertEquals(claims.get("usr", String::class.java) as String, "dummyDelegate")
+                Assertions.assertEquals(
+                    claims.get("org", String::class.java) as String,
+                    createdOrganization.organization.id
+                )
+                Assertions.assertEquals(
+                    claims.get("obof", String::class.java) as String,
+                    createdOrganization.organization.rootUser.hrn
+                )
+                Assertions.assertEquals(claims.expiration, rootUserClaims.expiration)
+
+                Assertions.assertTrue(
+                    (claims.get("entitlements", String::class.java) as String)
+                        .contains("g, dummyDelegate, ${createdPolicy.hrn}")
+                )
+            }
+        }
+
+        /**
+         * TODO: Cases to add
+         * - generate delegate token - Credential requester, with expiry
+         * - generate delegate token - Credential requester, without expiry
+         * - generate delegate token - policy does not exist
+         * - generate delegate token - requestor does not have delegate_policy permission
+         */
     }
 }

@@ -22,9 +22,9 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     override suspend fun getUserPrincipalByRefreshToken(tokenCredential: TokenCredential): UserPrincipal? {
         return credentialsRepo.fetchByRefreshToken(tokenCredential.value!!)?.let { credential ->
             UserPrincipal(
-                tokenCredential,
-                credential.userHrn,
-                principalPolicyService.fetchEntitlements(credential.userHrn)
+                tokenCredential = tokenCredential,
+                hrnStr = credential.userHrn,
+                policies = principalPolicyService.fetchEntitlements(credential.userHrn)
             )
         }
     }
@@ -35,11 +35,13 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     ): UserPrincipal = measureTimedValue("TokenService.getUserPrincipalByJwtToken.$deepCheck", logger) {
         val token = tokenService.validateJwtToken(tokenCredential.value!!)
         val userHrnStr: String = token.body.get(TokenServiceImpl.USER_CLAIM, String::class.java)
+        val creatorHrnStr: String? = token.body.get(TokenServiceImpl.ON_BEHALF_CLAIM, String::class.java)
         val entitlements: String = token.body.get(TokenServiceImpl.ENTITLEMENTS_CLAIM, String::class.java)
         return UserPrincipal(
             tokenCredential,
             userHrnStr,
-            if (deepCheck) {
+            token.body,
+            if (deepCheck && (creatorHrnStr == null)) {
                 principalPolicyService.fetchEntitlements(userHrnStr)
             } else {
                 PolicyBuilder(entitlements)
@@ -51,9 +53,9 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         UserPrincipal = measureTimedValue("TokenService.getUserPrincipalByCredentials", logger) {
         val user = usersService.authenticate(organizationId, userName, password)
         return UserPrincipal(
-            TokenCredential(userName, TokenType.BASIC),
-            user.hrn,
-            principalPolicyService.fetchEntitlements(user.hrn)
+            tokenCredential = TokenCredential(userName, TokenType.BASIC),
+            hrnStr = user.hrn,
+            policies = principalPolicyService.fetchEntitlements(user.hrn)
         )
     }
 
@@ -61,9 +63,9 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         val validCredentials = credentials.validate()
         val user = usersService.authenticate(validCredentials.username, validCredentials.password)
         return UserPrincipal(
-            TokenCredential(validCredentials.username, TokenType.BASIC),
-            user.hrn,
-            principalPolicyService.fetchEntitlements(user.hrn)
+            tokenCredential = TokenCredential(validCredentials.username, TokenType.BASIC),
+            hrnStr = user.hrn,
+            policies = principalPolicyService.fetchEntitlements(user.hrn)
         )
     }
 }
