@@ -18,6 +18,7 @@ import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResetPasswordRequest
@@ -165,6 +166,10 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
 
 fun UsernamePasswordCredential.validate(): UsernamePasswordCredential {
     return usernamePasswordCredentialValidation.validateAndThrowOnFailure(this)
+}
+
+fun GetDelegateTokenRequest.validate(): GetDelegateTokenRequest {
+    return getDelegateTokenRequestValidation.validateAndThrowOnFailure(this)
 }
 
 // Validations used by ValidationBuilders
@@ -446,4 +451,8 @@ val usernamePasswordCredentialValidation = Validation<UsernamePasswordCredential
     UsernamePasswordCredential::password required {
         run(credentialPasswordCheck)
     }
+}
+
+val getDelegateTokenRequestValidation = Validation<GetDelegateTokenRequest> {
+    GetDelegateTokenRequest::policy required {}
 }

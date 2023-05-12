@@ -2,10 +2,12 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.di.getKoinInstance
+import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
+import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -13,6 +15,7 @@ import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
 import io.ktor.server.request.accept
+import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
@@ -52,6 +55,29 @@ fun Route.tokenApi() {
     authenticate("unique-basic-auth", "bearer-auth") {
         post("/token") {
             generateToken(call, context)
+        }
+    }
+
+    authenticate("basic-auth", "bearer-auth") {
+        post("delegate_token") {
+            // No static validations required for GetDelegateTokenRequest
+            val request = call.receive<GetDelegateTokenRequest>().validate()
+            val responseContentType = context.request.accept()
+            val principal = context.principal<UserPrincipal>()!!
+            val response = tokenService.generateDelegateJwtToken(principal, request)
+
+            when (responseContentType) {
+                ContentType.Text.Plain.toString() -> call.respondText(
+                    text = response.token,
+                    contentType = ContentType.Text.Plain,
+                    status = HttpStatusCode.OK
+                )
+                else -> call.respondText(
+                    text = gson.toJson(response),
+                    contentType = ContentType.Application.Json,
+                    status = HttpStatusCode.OK
+                )
+            }
         }
     }
 

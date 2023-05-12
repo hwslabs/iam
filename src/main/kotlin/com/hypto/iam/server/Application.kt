@@ -199,9 +199,9 @@ fun Application.handleRequest() {
                     passcodeRepo.getValidPasscode(value, VerifyEmailRequest.Purpose.invite)?.let {
                         val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
                         return@validate UserPrincipal(
-                            TokenCredential(tokenCredential.value, TokenType.PASSCODE),
-                            metadata.inviterUserHrn,
-                            principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
+                            tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),
+                            hrnStr = metadata.inviterUserHrn,
+                            policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
                         )
                     }
                 }

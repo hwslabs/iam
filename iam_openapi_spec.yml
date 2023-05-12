@@ -1045,6 +1045,32 @@ paths:
         - basicAuth: [ ]
         - bearerAuth: [ ]
 
+  /delegate_token:
+    post:
+      tags:
+        - User Authorization
+      summary: Generate a delegate token
+      description: Generate a token with ad-hoc principal on behalf of an user with permissions to a policy to which the user has delegate rights.
+      operationId: getDelegateToken
+      requestBody:
+        $ref: '#/components/requestBodies/GetDelegateTokenRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security:
+        - basicAuth: [ ]
+        - bearerAuth: [ ]
+
   /authenticate:
     post:
       tags:
@@ -1501,6 +1527,16 @@ components:
               $ref: '#/components/examples/VerifyEmailRequestSignup'
             VerifyEmailRequestSignupWithMetadata:
               $ref: '#/components/examples/VerifyEmailRequestSignupWithMetadata'
+    GetDelegateTokenRequest:
+      description: Payload to generate a delegate-able token
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GetDelegateTokenRequest'
+          examples:
+            GetDelegateTokenRequest:
+              $ref: '#/components/examples/GetDelegateTokenRequest'
 
   responses:
     BaseSuccessResponse:
@@ -2024,6 +2060,12 @@ components:
           rootUserName: Lorem Ipsum
           rootUserPreferredUsername: username
           rootUserPhone: "+1234567890"
+
+    GetDelegateTokenRequest:
+      value:
+        principal: hrn:XlK5h64gND::iam-user/Bob
+        expiry: 3600
+        policy: hrn:XlK5h64gND::iam-policy/dataReadOnly
 
 
     # Response examples
@@ -2618,6 +2660,30 @@ components:
                 1. inviterUserHrn : string (required) - hrn of the user who is inviting the new user
                 2. policies: array<string> (required) - policies to be attached to the new user
           additionalProperties: true
+
+    GetDelegateTokenRequest:
+      description: payload to generate a delegate_token
+      type: object
+      additionalProperties: false
+      required:
+        - policy
+      properties:
+        principal:
+          description: Principal to delegate the token to. Will default to the requestor if not provided
+          type: string
+        expiry:
+          description: |
+              Expiry in seconds from the time of generation. 
+              If not provided, generated token will have the expiry of the token used for requesting.
+              If a credential is used for requesting, expiry will be 24 hours from the time of requesting.
+          type: integer
+          format: int64
+        policy:
+          description: |
+            Policy with which to generate the delegate token.
+            Can be just the name of the policy if it is in the requestors organization or a complete policy resourceHrn
+          type: string
+
 
     # Responses:
     BaseSuccessResponse:
