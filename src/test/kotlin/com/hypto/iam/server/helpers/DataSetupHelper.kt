@@ -11,6 +11,7 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
+import com.hypto.iam.server.helpers.DataSetupHelperV2.toStringEscape
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
@@ -238,7 +239,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
         resourceInstance: String? = null
     ): Pair<String, String> {
         val resourceHrn = ResourceHrn(orgId, accountId, resourceName, resourceInstance).toString()
-        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toString()
+        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toStringEscape()
         return Pair(resourceHrn, actionHrn)
     }
 
