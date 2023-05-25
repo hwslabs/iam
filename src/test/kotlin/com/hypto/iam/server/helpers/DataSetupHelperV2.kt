@@ -211,6 +211,10 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         return Pair(createdAction, createdResource)
     }
 
+    fun ActionHrn.toStringEscape(): String {
+        return this.toString().replace("$", "\\$").replace("*", ".*")
+    }
+
     fun ApplicationTestBuilder.createResourceActionHrn(
         orgId: String,
         accountId: String?,
@@ -219,7 +223,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         resourceInstance: String? = null
     ): Pair<String, String> {
         val resourceHrn = ResourceHrn(orgId, accountId, resourceName, resourceInstance).toString()
-        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toString()
+        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toStringEscape()
         return Pair(resourceHrn, actionHrn)
     }
 
