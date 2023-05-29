@@ -50,7 +50,7 @@ jobs:
         with:
           ref: badges
           path: badges
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: jacoco-report
       - name: Generate JaCoCo badge
