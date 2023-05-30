@@ -3,7 +3,7 @@ name: Build
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [ main, release ]
 
 jobs:
   build:
@@ -28,12 +28,12 @@ jobs:
           name: jacoco-report
           path: build/jacoco/test/jacocoTestReport.csv
       - name: Build Fat Jar
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'release'
         uses: gradle/gradle-build-action@v2
         with:
           arguments: shadowJar
       - name: Publish Build File
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'release'
         shell: bash
         env:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
