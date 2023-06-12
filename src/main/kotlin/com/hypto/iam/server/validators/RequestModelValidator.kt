@@ -18,6 +18,7 @@ import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResetPasswordRequest
@@ -151,8 +152,13 @@ fun ResetPasswordRequest.validate(): ResetPasswordRequest {
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     verifyEmailRequestValidation.validateAndThrowOnFailure(this)
 
-    if (purpose == VerifyEmailRequest.Purpose.signup && metadata != null) {
-        validateSignupMetadata(metadata)
+    if (purpose == VerifyEmailRequest.Purpose.signup) {
+        metadata?.let { validateSignupMetadata(metadata) }
+    }
+    if (purpose == VerifyEmailRequest.Purpose.invite) {
+        requireNotNull(organizationId) { "organizationId is required for invite purpose" }
+        requireNotNull(metadata) { "metadata is required for invite purpose" }
+        validateInviteMetadata(metadata)
     }
 
     return this
@@ -160,6 +166,10 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
 
 fun UsernamePasswordCredential.validate(): UsernamePasswordCredential {
     return usernamePasswordCredentialValidation.validateAndThrowOnFailure(this)
+}
+
+fun GetDelegateTokenRequest.validate(): GetDelegateTokenRequest {
+    return getDelegateTokenRequestValidation.validateAndThrowOnFailure(this)
 }
 
 // Validations used by ValidationBuilders
@@ -171,8 +181,8 @@ const val PREFERRED_USERNAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ ar
 const val PHONE_NUMBER_REGEX = "^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*\$"
 const val PHONE_NUMBER_REGEX_HINT = "Only characters +, -, 0..9 are supported."
 const val HRN_PREFIX_REGEX = "^hrn:[^\n]*"
-const val EMAIL_REGEX = "^\\S+@\\S+\\.\\S+\$"
-const val EMAIL_REGEX_HINT = "Email should contain `.`, `@`"
+const val EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$"
+const val EMAIL_REGEX_HINT = "Email should be valid and contain `.`, `@`"
 const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w]).*\$"
 const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase letter, " +
     "one lowercase letter, one number and one special character"
@@ -372,17 +382,15 @@ val policyAssociationRequestValidation = Validation<PolicyAssociationRequest> {
 val createUserRequestValidation = Validation<CreateUserRequest> {
     addConstraint("Email and password is mandatory for Users with loginAccess") {
         return@addConstraint (
-            (
-                it.loginAccess == true && !it.email.isNullOrEmpty() &&
-                    !it.password.isNullOrEmpty()
-                ) || (it.loginAccess == false)
+            (it.loginAccess == true && !it.email.isNullOrEmpty() && !it.password.isNullOrEmpty()) ||
+                !(it.loginAccess ?: false)
             )
     }
 
-    addConstraint("Email or password is required only for Users with loginAccess") {
+    addConstraint("Email and password is not required for Users without loginAccess") {
         return@addConstraint (
             (
-                it.loginAccess == false && it.email.isNullOrEmpty() &&
+                !(it.loginAccess ?: false) && it.email.isNullOrEmpty() &&
                     it.password.isNullOrEmpty()
                 ) || (it.loginAccess == true)
             )
@@ -443,4 +451,8 @@ val usernamePasswordCredentialValidation = Validation<UsernamePasswordCredential
     UsernamePasswordCredential::password required {
         run(credentialPasswordCheck)
     }
+}
+
+val getDelegateTokenRequestValidation = Validation<GetDelegateTokenRequest> {
+    GetDelegateTokenRequest::policy required {}
 }

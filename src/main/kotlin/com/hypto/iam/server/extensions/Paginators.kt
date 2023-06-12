@@ -61,8 +61,8 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
         }
 
         fun from(nextToken: String?, pageSize: Int?, sortOrder: SortOrder?): PaginationContext {
-            if (pageSize != null && pageSize > PAGINATION_MAX_PAGE_SIZE) {
-                throw IllegalArgumentException("Page Size must be less than or equal to $PAGINATION_MAX_PAGE_SIZE")
+            require(pageSize == null || pageSize <= PAGINATION_MAX_PAGE_SIZE) {
+                "Page Size must be less than or equal to $PAGINATION_MAX_PAGE_SIZE"
             }
 
             if (nextToken != null) {

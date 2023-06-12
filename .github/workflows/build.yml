@@ -3,15 +3,15 @@ name: Build
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [ main, release ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up JDK 11
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'temurin'
@@ -23,10 +23,30 @@ jobs:
         with:
           arguments: build
       - name: Upload JaCoCo coverage report as a workflow artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: jacoco-report
           path: build/jacoco/test/jacocoTestReport.csv
+      - name: Build Fat Jar
+        if: github.ref_name == 'main' || github.ref_name == 'release'
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: shadowJar
+      - name: Publish Build File
+        if: github.ref_name == 'main' || github.ref_name == 'release'
+        shell: bash
+        env:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_s3_bucket: ${{ secrets.S3_BUCKET }}
+        run: |
+          sudo apt-get update && sudo apt-get -y install awscli
+          aws configure set aws_access_key_id $aws_access_key_id
+          aws configure set aws_secret_access_key $aws_secret_access_key
+          aws configure set default.region $aws_region
+          if [ $(ls build/libs/*.jar -1 | wc -l) -gt 1 ]; then JAR_FILE=$(ls build/libs/*-all.jar); echo $JAR_FILE; else JAR_FILE=$(ls build/libs/*.jar); echo $JAR_FILE; fi
+          aws s3api put-object --bucket $aws_s3_bucket --key iam-service/${{ github.ref_name }}/${{ github.sha }}.jar --body $JAR_FILE
 
   commit-badge:
     runs-on: ubuntu-latest
@@ -50,7 +70,7 @@ jobs:
         with:
           ref: badges
           path: badges
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: jacoco-report
       - name: Generate JaCoCo badge

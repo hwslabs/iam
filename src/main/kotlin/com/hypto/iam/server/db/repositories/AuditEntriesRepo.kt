@@ -76,14 +76,19 @@ object AuditEntriesRepo : BaseRepo<AuditEntriesRecord, AuditEntries, UUID>() {
         auditEntries.forEach {
             val principalHrn: ResourceHrn = hrnFactory.getHrn(it.principal) as ResourceHrn
             batchBindStep.bind(
-                it.requestId, it.eventTime, it.principal, principalHrn.organization, it.resource, it.operation
+                it.requestId,
+                it.eventTime,
+                it.principal,
+                principalHrn.organization,
+                it.resource,
+                it.operation
             )
         }
         val result = batchBindStep.execute()
         var returnValue = true
 
-        result.forEachIndexed { index, it ->
-            if (it != 1) {
+        result.forEachIndexed { index, insertCount ->
+            if (insertCount != 1) {
                 returnValue = false
                 logger.error { "Insert failed: ${auditEntries[index]}" }
             }

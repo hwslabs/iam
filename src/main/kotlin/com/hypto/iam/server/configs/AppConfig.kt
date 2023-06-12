@@ -65,6 +65,7 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val baseUrl: String,
         val senderEmailAddress: String,
         val signUpEmailTemplate: String,
+        val inviteUserEmailTemplate: String,
         val resetPasswordEmailTemplate: String,
         val uniqueUsersAcrossOrganizations: Boolean,
         val strictPolicyStatementValidation: Boolean
@@ -99,6 +100,6 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
         val configuration: AppConfig = ConfigLoaderBuilder.default()
             .addPropertySource(
                 EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true)
-            ).report().build().loadConfigOrThrow("/default_config.json")
+            ).withReport().build().loadConfigOrThrow("/default_config.json")
     }
 }

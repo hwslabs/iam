@@ -116,7 +116,11 @@ fun Route.credentialApi() {
             val request = call.receive<UpdateCredentialRequest>().validate()
 
             val response = credentialService.updateCredentialAndGetWithoutSecret(
-                organizationId, userId, id, request.status, request.validUntil
+                organizationId,
+                userId,
+                id,
+                request.status,
+                request.validUntil
             )
 
             call.respondText(

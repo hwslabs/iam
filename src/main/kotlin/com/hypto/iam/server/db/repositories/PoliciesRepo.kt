@@ -10,6 +10,8 @@ import java.time.LocalDateTime
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
+data class RawPolicyPayload(val hrn: ResourceHrn, val statements: String)
+
 object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
 
     private val idFun = fun (policy: Policies) = policy.hrn
@@ -38,6 +40,9 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
     suspend fun fetchByHrn(hrn: String): PoliciesRecord? =
         ctx("policies.fetchByHrn").selectFrom(POLICIES).where(POLICIES.HRN.equal(hrn)).fetchOne()
 
+    suspend fun fetchByHrns(hrns: List<String>): List<PoliciesRecord> =
+        ctx("policies.fetchByHrns").selectFrom(POLICIES).where(POLICIES.HRN.`in`(hrns)).fetch()
+
     suspend fun create(hrn: ResourceHrn, statements: String): PoliciesRecord {
         val record = PoliciesRecord()
             .setHrn(hrn.toString())
@@ -50,6 +55,20 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
         record.attach(txMan.configuration())
         record.store()
         return record
+    }
+
+    suspend fun batchCreate(rawPolicyPayloads: List<RawPolicyPayload>): List<PoliciesRecord> {
+        val policiesToCreate = rawPolicyPayloads.map {
+            PoliciesRecord(
+                it.hrn.toString(),
+                it.hrn.organization,
+                1,
+                it.statements,
+                LocalDateTime.now(),
+                LocalDateTime.now()
+            )
+        }
+        return insertBatch("policies.batchCreate", policiesToCreate)
     }
 
     suspend fun deleteByHrn(hrn: String): Boolean {

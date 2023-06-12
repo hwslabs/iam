@@ -3,23 +3,32 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
+import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.AuthenticationException
+import com.hypto.iam.server.security.IamPrincipal
+import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
+import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.service.PrincipalPolicyService
+import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import com.hypto.iam.server.validators.InviteMetadata
 import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -34,14 +43,15 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
-fun Route.usersApi() {
-    val principalPolicyService: PrincipalPolicyService by inject()
+fun Route.createUsersApi() {
     val gson: Gson by inject()
-    val hrnFactory: HrnFactory by inject()
     val usersService: UsersService by inject()
+    val passcodeRepo: PasscodeRepo by inject()
+    val passcodeService: PasscodeService by inject()
     val idGenerator: ApplicationIdUtil.Generator by inject()
+    val tokenService: TokenService by inject()
 
-    // **** User management apis ****//
+    // **** Create User api ****//
 
     // Create user
     withPermission(
@@ -49,8 +59,26 @@ fun Route.usersApi() {
         getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
     ) {
         post("/organizations/{organization_id}/users") {
+            val principal = context.principal<IamPrincipal>() ?: throw AuthenticationException("User not authenticated")
             val organizationId = call.parameters["organization_id"]!!
             val request = call.receive<CreateUserRequest>().validate()
+
+            var verified: Boolean = request.verified ?: false
+            var loginAccess: Boolean = request.loginAccess ?: false
+            var policies: List<String>? = null
+
+            if (principal.tokenCredential.type == TokenType.PASSCODE) {
+                val passcode = passcodeRepo.getValidPasscode(
+                    principal.tokenCredential.value!!,
+                    VerifyEmailRequest.Purpose.invite,
+                    organizationId = organizationId
+                ) ?: throw AuthenticationException("Invalid passcode")
+                require(passcode.email == request.email) { "Email in passcode does not match email in request" }
+                verified = true
+                loginAccess = true
+                policies = InviteMetadata(passcodeService.decryptMetadata(passcode.metadata!!)).policies
+            }
+
             val username = idGenerator.username()
             val user = usersService.createUser(
                 organizationId = organizationId,
@@ -61,16 +89,28 @@ fun Route.usersApi() {
                 phoneNumber = request.phone ?: "",
                 password = request.password,
                 createdBy = call.principal<UserPrincipal>()?.hrnStr,
-                verified = request.verified ?: false,
-                loginAccess = request.loginAccess ?: false
+                verified = verified,
+                loginAccess = loginAccess,
+                policies = policies
             )
+
+            val token = tokenService.generateJwtToken(ResourceHrn(user.hrn))
             call.respondText(
-                text = gson.toJson(user),
+                text = gson.toJson(CreateUserResponse(user, token.token)),
                 contentType = ContentType.Application.Json,
                 status = HttpStatusCode.Created
             )
         }
     }
+}
+
+fun Route.usersApi() {
+    val principalPolicyService: PrincipalPolicyService by inject()
+    val gson: Gson by inject()
+    val hrnFactory: HrnFactory by inject()
+    val usersService: UsersService by inject()
+
+    // **** User Management api ****//
 
     // Get user
     withPermission(

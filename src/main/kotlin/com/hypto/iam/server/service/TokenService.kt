@@ -1,5 +1,6 @@
 package com.hypto.iam.server.service
 
+import com.hypto.iam.server.Constants.Companion.SECONDS_IN_DAY
 import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ISSUED_AT
 import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ISSUER
 import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ORGANIZATION
@@ -8,15 +9,26 @@ import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_VERSION_NUMBER
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo.Status
+import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
+import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
+import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.exceptions.JwtExpiredException
 import com.hypto.iam.server.exceptions.PublicKeyExpiredException
+import com.hypto.iam.server.extensions.hrnFactory
+import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.TokenResponse
+import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.IamResources.POLICY
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.measureTimedValue
+import com.hypto.iam.server.utils.policy.PolicyBuilder
+import com.hypto.iam.server.utils.policy.PolicyRequest
+import com.hypto.iam.server.utils.policy.PolicyValidator
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jws
@@ -45,12 +57,18 @@ private val logger = KotlinLogging.logger("service.TokenService")
 interface TokenService {
     suspend fun generateJwtToken(userHrn: Hrn): TokenResponse
     suspend fun validateJwtToken(token: String): Jws<Claims>
+    suspend fun generateDelegateJwtToken(
+        requesterPrincipal: UserPrincipal,
+        request: GetDelegateTokenRequest
+    ): TokenResponse
 }
 
 class TokenServiceImpl : KoinComponent, TokenService {
     private val principalPolicyService: PrincipalPolicyService by inject()
     private val appConfig: AppConfig by inject()
     private val masterKeyCache: MasterKeyCache by inject()
+    private val policyValidator: PolicyValidator by inject()
+    private val policiesRepo: PoliciesRepo by inject()
 
     companion object {
         const val ISSUER = "https://iam.hypto.com"
@@ -61,6 +79,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
         const val ENTITLEMENTS_CLAIM = "entitlements"
         const val KEY_ID = "kid"
         const val VERSION_NUM = "1.0"
+        const val ON_BEHALF_CLAIM = "obof"
     }
 
     /**
@@ -88,8 +107,15 @@ class TokenServiceImpl : KoinComponent, TokenService {
             val issuer: String? = body.get(Claims.ISSUER, String::class.java)
             require(issuer != null && issuer == ISSUER) { JWT_INVALID_ISSUER }
 
+            // usr is a valid hrn for normal user generated tokens
+            // In case of delegate tokens, usr field contains the principal to which the token is delegated to.
+            // The principal of the creator of the token will be present in "obof" claim
+            val onBehalfOfUser: String? = body.get(ON_BEHALF_CLAIM, String::class.java)
             val userHrnStr: String? = body.get(USER_CLAIM, String::class.java)
-            require(userHrnStr != null && HrnFactory.isValid(userHrnStr)) { JWT_INVALID_USER_HRN }
+            require(
+                userHrnStr != null &&
+                    (HrnFactory.isValid(userHrnStr) || onBehalfOfUser?.let { HrnFactory.isValid(it) } ?: false)
+            ) { JWT_INVALID_USER_HRN }
 
             val organization: String? = body.get(ORGANIZATION_CLAIM, String::class.java)
             require(organization != null) { JWT_INVALID_ORGANIZATION }
@@ -105,32 +131,103 @@ class TokenServiceImpl : KoinComponent, TokenService {
             return jws
         }
 
+    override suspend fun generateDelegateJwtToken(
+        requesterPrincipal: UserPrincipal,
+        request: GetDelegateTokenRequest
+    ): TokenResponse {
+        // Validate permission
+        val policyHrn = if (hrnFactory.isValid(request.policy)) {
+            request.policy
+        } else {
+            ResourceHrn(
+                organization = requesterPrincipal.organization,
+                resource = POLICY,
+                resourceInstance = request.policy
+            ).toString()
+        }
+        val actionHrn = ActionHrn(
+            organization = requesterPrincipal.organization,
+            resource = POLICY,
+            action = "delegatePolicy"
+        ).toString()
+
+        val hasPermissionToDelegate = policyValidator.validate(
+            requesterPrincipal.policies.stream(),
+            PolicyRequest(requesterPrincipal.hrnStr, policyHrn, actionHrn)
+        )
+        require(hasPermissionToDelegate) {
+            "User ${requesterPrincipal.hrnStr} does not have 'delegatePolicy' permission on $policyHrn"
+        }
+
+        // Get policy and custom craft JWT token
+        val policy = policiesRepo.fetchByHrn(policyHrn)
+            ?: throw EntityNotFoundException("Cannot find policy: $policyHrn")
+        logger.info { policy.statements }
+
+        val policyBuilder = PolicyBuilder()
+            .withPolicy(policy)
+            .withPrincipalPolicy(PrincipalPoliciesRecord(null, request.principal, policy.hrn, null))
+
+        /**
+         * Expiry in seconds from the time of generation.
+         *   If not provided, generated token will have the expiry of the token used for requesting.
+         *   If a credential is used for requesting, expiry will be 24 hours from the time of requesting.
+         */
+        val expiryDate = request.expiry?.let { Date.from(Instant.now().plusSeconds(it.toLong())) }
+            ?: requesterPrincipal.claims?.expiration
+            ?: Date.from(Instant.now().plusSeconds(SECONDS_IN_DAY))
+
+        return generateJwtTokenWithPolicy(
+            organization = requesterPrincipal.organization,
+            principal = request.principal ?: requesterPrincipal.hrnStr,
+            requester = requesterPrincipal.hrnStr,
+            entitlements = policyBuilder.toString(),
+            expiryDate = expiryDate
+        )
+    }
+
     override suspend fun generateJwtToken(userHrn: Hrn): TokenResponse =
         measureTimedValue("TokenService.generateJwtToken", logger) {
             require(userHrn is ResourceHrn) { "The input hrn must be a userHrn" }
-            val signingKey = masterKeyCache.forSigning()
-
-            return TokenResponse(
-                Jwts.builder()
-                    .setHeaderParam(KEY_ID, signingKey.id)
-                    .setIssuer(ISSUER)
-                    .setIssuedAt(Date())
-//            .setSubject("")
-                    .setExpiration(Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity)))
-//            .setAudience("")
-//            .setId("")
-                    .claim(VERSION_CLAIM, VERSION_NUM)
-                    .claim(USER_CLAIM, userHrn.toString()) // UserId
-                    .claim(ORGANIZATION_CLAIM, userHrn.organization) // OrganizationId
-                    .claim(ENTITLEMENTS_CLAIM, principalPolicyService.fetchEntitlements(userHrn.toString()).toString())
-                    .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
-                    // TODO: [IMPORTANT] Uncomment before taking to prod
-                    // Eventually move to Brotli from GZIP:
-                    // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
-                    .compressWith(CompressionCodecs.GZIP)
-                    .compact()
+            generateJwtTokenWithPolicy(
+                userHrn.organization,
+                userHrn.toString(),
+                entitlements = principalPolicyService.fetchEntitlements(userHrn.toString()).toString(),
+                expiryDate = Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity))
             )
         }
+
+    private suspend fun generateJwtTokenWithPolicy(
+        organization: String,
+        principal: String,
+        requester: String? = null,
+        entitlements: String,
+        expiryDate: Date
+    ): TokenResponse {
+        val signingKey = masterKeyCache.forSigning()
+
+        return TokenResponse(
+            Jwts.builder()
+                .setHeaderParam(KEY_ID, signingKey.id)
+                .setIssuer(ISSUER)
+                .setIssuedAt(Date())
+//            .setSubject("")
+                .setExpiration(expiryDate)
+//            .setAudience("")
+//            .setId("")
+                .claim(VERSION_CLAIM, VERSION_NUM)
+                .claim(USER_CLAIM, principal) // UserId
+                .claim(ORGANIZATION_CLAIM, organization)
+                .claim(ENTITLEMENTS_CLAIM, entitlements)
+                .apply { requester?.let { claim(ON_BEHALF_CLAIM, it) } }
+                .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
+                // TODO: [IMPORTANT] Uncomment before taking to prod
+                // Eventually move to Brotli from GZIP:
+                // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
+                .compressWith(CompressionCodecs.GZIP)
+                .compact()
+        )
+    }
 
     object JwtSigVerificationKeyResolver : KoinComponent, SigningKeyResolverAdapter() {
         private val masterKeyCache: MasterKeyCache by inject()

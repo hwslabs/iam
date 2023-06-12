@@ -1045,6 +1045,32 @@ paths:
         - basicAuth: [ ]
         - bearerAuth: [ ]
 
+  /delegate_token:
+    post:
+      tags:
+        - User Authorization
+      summary: Generate a delegate token
+      description: Generate a token with ad-hoc principal on behalf of an user with permissions to a policy to which the user has delegate rights.
+      operationId: getDelegateToken
+      requestBody:
+        $ref: '#/components/requestBodies/GetDelegateTokenRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security:
+        - basicAuth: [ ]
+        - bearerAuth: [ ]
+
   /authenticate:
     post:
       tags:
@@ -1135,6 +1161,27 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       security: [ ]
 
+  /organization/{organization_id}/invites:
+    get:
+      tags:
+        - User Verification
+      summary: Get organization passcodes
+      description: Get passcodes for the organization
+      operationId: listInvites
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/PasscodePaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security: [ ]
 
 security:
   - bearerAuth: [ ]
@@ -1474,10 +1521,22 @@ components:
           examples:
             VerifyEmailRequestReset:
               $ref: '#/components/examples/VerifyEmailRequestReset'
+            VerifyEmailRequestInvite:
+              $ref: '#/components/examples/VerifyEmailRequestInvite'
             VerifyEmailRequestSignup:
               $ref: '#/components/examples/VerifyEmailRequestSignup'
             VerifyEmailRequestSignupWithMetadata:
               $ref: '#/components/examples/VerifyEmailRequestSignupWithMetadata'
+    GetDelegateTokenRequest:
+      description: Payload to generate a delegate-able token
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GetDelegateTokenRequest'
+          examples:
+            GetDelegateTokenRequest:
+              $ref: '#/components/examples/GetDelegateTokenRequest'
 
   responses:
     BaseSuccessResponse:
@@ -1492,6 +1551,16 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/BaseSuccessResponse'
+
+    PasscodePaginatedResponse:
+      description: Paginated response of passcodesm
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PasscodePaginatedResponse'
+          examples:
+            PasscodePaginatedResponse:
+              $ref: '#/components/examples/PasscodePaginatedResponse'
 
     ErrorResponse:
       description: Error response
@@ -1554,10 +1623,10 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/CreateUserResponse'
           examples:
             User:
-              $ref: '#/components/examples/User'
+              $ref: '#/components/examples/CreateUserResponse'
 
     UpdateUserResponse:
       description: Response for UpdateUserRequest
@@ -1965,6 +2034,16 @@ components:
         organizationId: XlK5h64gND
         purpose: reset
 
+    VerifyEmailRequestInvite:
+      value:
+        email: abcd@abcd.in
+        organizationId: XlK5h64gND
+        purpose: invite
+        metadata:
+          inviterUserHrn: hrn:XlK5h64gND::iam-user/bob
+          policies:
+            - hrn:XlK5h64gND::iam-policy/admin
+
     VerifyEmailRequestSignup:
       value:
         email: abcd@abcd.in
@@ -1982,8 +2061,23 @@ components:
           rootUserPreferredUsername: username
           rootUserPhone: "+1234567890"
 
+    GetDelegateTokenRequest:
+      value:
+        principal: hrn:XlK5h64gND::iam-user/Bob
+        expiry: 3600
+        policy: hrn:XlK5h64gND::iam-policy/dataReadOnly
+
 
     # Response examples
+
+    PasscodePaginatedResponse:
+      value:
+        data:
+          - email: abcd@abcd.com
+            purpose: invite
+            createdAt: 2021-01-01T00:00:00
+            validUntil: 2021-01-01T00:00:00
+        nextToken: dshfoadshfjshadkfjkdsal
 
     CreateOrganizationResponse:
       value:
@@ -2126,6 +2220,21 @@ components:
         rootUserHrn: "hrn:XlK5h64gND::iam-user/root-user-name"
         createdAt: 2020-01-01T00:00:00.000Z
         updatedAt: 2020-01-01T00:00:00.000Z
+
+    CreateUserResponse:
+      value:
+        user:
+          hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+          username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+          name: Lorem Ipsum
+          organizationId: XlK5h64gND
+          email: bob@acme.com
+          status: enabled
+          verified: true
+          phone: "+1234071628"
+          loginAccess: true
+          createdBy: hrn:Xghfdksd::iam-user/johnny314
+        userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
     User:
       summary: A sample user
@@ -2533,6 +2642,7 @@ components:
           enum:
             - reset
             - signup
+            - invite
         metadata:
           type: object
           description: |
@@ -2546,7 +2656,34 @@ components:
                 4. rootUserName : string (optional) - name of the root user
                 5. rootUserPreferredUsername : string (optional) - preferred username of the root user
                 6. rootUserPhone : string (optional) - phone number of the root user
+            - invite:
+                1. inviterUserHrn : string (required) - hrn of the user who is inviting the new user
+                2. policies: array<string> (required) - policies to be attached to the new user
           additionalProperties: true
+
+    GetDelegateTokenRequest:
+      description: payload to generate a delegate_token
+      type: object
+      additionalProperties: false
+      required:
+        - policy
+      properties:
+        principal:
+          description: Principal to delegate the token to. Will default to the requestor if not provided
+          type: string
+        expiry:
+          description: |
+              Expiry in seconds from the time of generation. 
+              If not provided, generated token will have the expiry of the token used for requesting.
+              If a credential is used for requesting, expiry will be 24 hours from the time of requesting.
+          type: integer
+          format: int64
+        policy:
+          description: |
+            Policy with which to generate the delegate token.
+            Can be just the name of the policy if it is in the requestors organization or a complete policy resourceHrn
+          type: string
+
 
     # Responses:
     BaseSuccessResponse:
@@ -2741,6 +2878,7 @@ components:
         - organizationId
         - status
         - verified
+        - createdAt
         - loginAccess
       properties:
         hrn:
@@ -2773,8 +2911,24 @@ components:
         createdBy:
           type: string
           maxLength: 50
+        createdAt:
+          type: string
+          format: date-time
         verified:
           type: boolean
+
+    CreateUserResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - user
+        - userToken
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        userToken:
+          description: JWT token of the user
+          type: string
 
     Credential:
       type: object
@@ -2939,6 +3093,39 @@ components:
           enum:
             - allow
             - deny
+
+    Passcode:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - purpose
+        - createdAt
+        - validUntil
+      properties:
+        email:
+          type: string
+        purpose:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+    
+    PasscodePaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Passcode'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
 
     # Others
     ResourceAction:

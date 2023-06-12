@@ -2,13 +2,17 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
-import com.hypto.iam.server.handleRequest
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelper
+import com.hypto.iam.server.helpers.DataSetupHelperV2.createAndAttachPolicy
+import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV2.createResource
+import com.hypto.iam.server.helpers.DataSetupHelperV2.createUser
+import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
@@ -17,16 +21,20 @@ import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.IdGenerator
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.http.withCharset
-import io.ktor.server.application.Application
-import io.ktor.server.testing.contentType
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
+import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.slot
 import io.mockk.verify
@@ -72,8 +80,11 @@ class UserApiTest : AbstractContainerBaseTest() {
                 verified = true,
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
@@ -91,33 +102,30 @@ class UserApiTest : AbstractContainerBaseTest() {
                     .userCreateDate(Instant.now())
                     .build()
 
-                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+                createResource(organization.id, rootUserToken)
 
-                with(
-                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(createUserRequest))
-                    }
-                ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
-                    assertEquals(HttpStatusCode.Created, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    assertEquals(
-                        organization.id,
-                        response.headers[Constants.X_ORGANIZATION_HEADER]
-                    )
-
-                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
-                    assertEquals(createUserRequest.email, responseBody.email)
-                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
-                    assertEquals(createUserRequest.verified, responseBody.verified)
+                val response = client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(createUserRequest))
                 }
+                val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
+                assertEquals(HttpStatusCode.Created, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                assertEquals(
+                    organization.id,
+                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                )
 
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(createUserRequest.preferredUsername, responseBody.user.preferredUsername)
+                assertEquals(createUserRequest.email, responseBody.user.email)
+                assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
+                assertEquals(createUserRequest.verified, responseBody.user.verified)
+
+                deleteOrganization(organization.id)
             }
         }
 
@@ -133,8 +141,11 @@ class UserApiTest : AbstractContainerBaseTest() {
                 verified = true,
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
@@ -152,33 +163,30 @@ class UserApiTest : AbstractContainerBaseTest() {
                     .userCreateDate(Instant.now())
                     .build()
 
-                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+                createResource(organization.id, rootUserToken)
 
-                with(
-                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(createUserRequest))
-                    }
-                ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
-                    assertEquals(HttpStatusCode.Created, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    assertEquals(
-                        organization.id,
-                        response.headers[Constants.X_ORGANIZATION_HEADER]
-                    )
-
-                    assertEquals(null, responseBody.preferredUsername)
-                    assertEquals(createUserRequest.email, responseBody.email)
-                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
-                    assertEquals(createUserRequest.verified, responseBody.verified)
+                val response = client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(createUserRequest))
                 }
+                val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
+                assertEquals(HttpStatusCode.Created, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                assertEquals(
+                    organization.id,
+                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                )
 
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(null, responseBody.user.preferredUsername)
+                assertEquals(createUserRequest.email, responseBody.user.email)
+                assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
+                assertEquals(createUserRequest.verified, responseBody.user.verified)
+
+                deleteOrganization(organization.id)
             }
         }
 
@@ -196,8 +204,11 @@ class UserApiTest : AbstractContainerBaseTest() {
                 verified = true,
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this, preferredUsername)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization(preferredUsername)
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
@@ -210,23 +221,20 @@ class UserApiTest : AbstractContainerBaseTest() {
                 } throws UserNotFoundException.builder()
                     .build()
 
-                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+                createResource(organization.id, rootUserToken)
 
-                with(
-                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(createUserRequest))
-                    }
-                ) {
-                    assertEquals(HttpStatusCode.BadRequest, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                val response = client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(createUserRequest))
                 }
+                assertEquals(HttpStatusCode.BadRequest, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
 
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                deleteOrganization(organization.id)
             }
         }
 
@@ -242,22 +250,23 @@ class UserApiTest : AbstractContainerBaseTest() {
                 phone = "+919999999999",
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
-                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+                createResource(organization.id, rootUserToken)
 
-                with(
-                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(createUserRequest))
-                    }
-                ) {
-                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                val response = client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(createUserRequest))
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+
+                assertEquals(HttpStatusCode.BadRequest, response.status)
+                deleteOrganization(organization.id)
             }
         }
 
@@ -270,40 +279,40 @@ class UserApiTest : AbstractContainerBaseTest() {
                 verified = true,
                 loginAccess = false
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, rootUser) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
-                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+                createResource(organization.id, rootUserToken)
 
-                with(
-                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(createUserRequest))
-                    }
-                ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
-                    assertEquals(HttpStatusCode.Created, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-                    assertEquals(
-                        organization.id,
-                        response.headers[Constants.X_ORGANIZATION_HEADER]
-                    )
-
-                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
-                    assertEquals(createUserRequest.email, responseBody.email)
-                    assertEquals(createUserRequest.name, responseBody.name)
-                    assertEquals(User.Status.enabled.toString(), responseBody.status.toString())
-                    assertEquals(createUserRequest.verified, responseBody.verified)
-                    assertEquals(createUserRequest.loginAccess, responseBody.loginAccess)
+                val response = client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(createUserRequest))
                 }
+                val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
+                assertEquals(HttpStatusCode.Created, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                assertEquals(
+                    organization.id,
+                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                )
 
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(createUserRequest.preferredUsername, responseBody.user.preferredUsername)
+                assertEquals(createUserRequest.email, responseBody.user.email)
+                assertEquals(createUserRequest.name, responseBody.user.name)
+                assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
+                assertEquals(createUserRequest.verified, responseBody.user.verified)
+                assertEquals(createUserRequest.loginAccess, responseBody.user.loginAccess)
+
+                deleteOrganization(organization.id)
             }
         }
 
@@ -318,28 +327,28 @@ class UserApiTest : AbstractContainerBaseTest() {
                 password = "testPassword@ash",
                 loginAccess = false
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, rootUser) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
-                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+                createResource(organization.id, rootUserToken)
 
-                with(
-                    handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        setBody(gson.toJson(createUserRequest))
-                    }
-                ) {
-                    assertEquals(HttpStatusCode.BadRequest, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                val response = client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(createUserRequest))
                 }
+                assertEquals(HttpStatusCode.BadRequest, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
 
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                deleteOrganization(organization.id)
             }
         }
     }
@@ -359,17 +368,19 @@ class UserApiTest : AbstractContainerBaseTest() {
                 phone = "+919626012778",
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 // Create user
-                val (user1, _) = DataSetupHelper.createUser(
+                val (user1, _) = createUser(
                     orgId = organization.id,
                     bearerToken = rootUserToken,
-                    createUserRequest = createUserRequest,
-                    this
+                    createUserRequest = createUserRequest
                 )
 
                 coEvery {
@@ -387,23 +398,20 @@ class UserApiTest : AbstractContainerBaseTest() {
                     .build()
 
                 // Get user
-                with(
-                    handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/${user1.username}") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    }
-                ) {
-                    val responseBody = gson.fromJson(response.content, User::class.java)
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
-
-                    assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
-                    assertEquals(false, responseBody.verified)
+                val response = client.get("/organizations/${organization.id}/users/${user1.username}") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                val responseBody = gson.fromJson(response.bodyAsText(), User::class.java)
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+
+                assertEquals(createUserRequest.preferredUsername, responseBody.preferredUsername)
+                assertEquals(false, responseBody.verified)
+                deleteOrganization(organization.id)
             }
         }
 
@@ -419,29 +427,28 @@ class UserApiTest : AbstractContainerBaseTest() {
                 phone = "+919626012778",
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 // Create user
-                val (user1, _) = DataSetupHelper.createUser(
+                val (user1, _) = createUser(
                     orgId = organization.id,
                     bearerToken = rootUserToken,
-                    createUserRequest = createUserRequest,
-                    this
+                    createUserRequest = createUserRequest
                 )
 
                 // Get user
-                with(
-                    handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users/${user1.username}") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer badSecret")
-                    }
-                ) {
-                    assertEquals(HttpStatusCode.Unauthorized, response.status())
+                val response = client.get("/organizations/${organization.id}/users/${user1.username}") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer badSecret")
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.Unauthorized, response.status)
+                deleteOrganization(organization.id)
             }
         }
     }
@@ -461,60 +468,58 @@ class UserApiTest : AbstractContainerBaseTest() {
                 phone = "+919626012778",
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
                 // Create user
-                val (user1, _) = DataSetupHelper.createUser(
+                val (user1, _) = createUser(
                     orgId = organization.id,
                     bearerToken = rootUserToken,
-                    createUserRequest = createUserRequest,
-                    this
+                    createUserRequest = createUserRequest
                 )
 
                 // Delete user
-                with(
-                    handleRequest(HttpMethod.Delete, "/organizations/${organization.id}/users/${user1.username}") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    }
-                ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-
-                    // Verify the value from mocks
-                    val slot = slot<AdminDeleteUserRequest>()
-                    verify { get<CognitoIdentityProviderClient>().adminDeleteUser(capture(slot)) }
-                    val adminUserRequest = slot.captured
-                    assertEquals(user1.username, adminUserRequest.username())
+                val response = client.delete("/organizations/${organization.id}/users/${user1.username}") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.OK, response.status)
+
+                // Verify the value from mocks
+                val slot = slot<AdminDeleteUserRequest>()
+                verify { get<CognitoIdentityProviderClient>().adminDeleteUser(capture(slot)) }
+                val adminUserRequest = slot.captured
+                assertEquals(user1.username, adminUserRequest.username())
+                deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `delete root user`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
 
                 val username = organizationResponse.organization.rootUser.username
 
                 // Delete root user
-                with(
-                    handleRequest(
-                        HttpMethod.Delete,
-                        "/organizations/${organization.id}/users/$username"
-                    ) {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    }
+                val response = client.delete(
+                    "/organizations/${organization.id}/users/$username"
                 ) {
-                    assertEquals(HttpStatusCode.BadRequest, response.status())
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.BadRequest, response.status)
+                deleteOrganization(organization.id)
             }
         }
     }
@@ -543,40 +548,43 @@ class UserApiTest : AbstractContainerBaseTest() {
                 phone = "+919626012778",
                 loginAccess = true
             )
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
-                DataSetupHelper.createResource(organization.id, rootUserToken, this)
+                createResource(organization.id, rootUserToken)
 
                 // Create user1
-                handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(createUserRequest1))
                 }
 
                 // Create user2
-                handleRequest(HttpMethod.Post, "/organizations/${organization.id}/users") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                client.post("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(createUserRequest2))
                 }
 
                 // List users
-                with(
-                    handleRequest(HttpMethod.Get, "/organizations/${organization.id}/users") {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    }
-                ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(ContentType.Application.Json.withCharset(Charsets.UTF_8), response.contentType())
-
-                    val responseBody = gson.fromJson(response.content, UserPaginatedResponse::class.java)
-                    assertEquals(responseBody.data!!.size, 2)
+                val listUsersResponse = client.get("/organizations/${organization.id}/users") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.OK, listUsersResponse.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    listUsersResponse.contentType()
+                )
+
+                val responseBody = gson.fromJson(listUsersResponse.bodyAsText(), UserPaginatedResponse::class.java)
+                assertEquals(responseBody.data!!.size, 2)
+                deleteOrganization(organization.id)
             }
         }
     }
@@ -586,8 +594,11 @@ class UserApiTest : AbstractContainerBaseTest() {
     inner class UpdateUserTest {
         @Test
         fun `update user`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
                 val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
@@ -604,11 +615,10 @@ class UserApiTest : AbstractContainerBaseTest() {
                 )
 
                 // Create user1
-                val (user1, _) = DataSetupHelper.createUser(
+                val (user1, _) = createUser(
                     orgId = organization.id,
                     bearerToken = rootUserToken,
-                    createUserRequest = createUserRequest,
-                    this
+                    createUserRequest = createUserRequest
                 )
 
                 val updateUserRequest = UpdateUserRequest(
@@ -618,24 +628,20 @@ class UserApiTest : AbstractContainerBaseTest() {
                     verified = true
                 )
 
-                with(
-                    handleRequest(
-                        HttpMethod.Patch,
-                        "/organizations/${organization.id}/users/${user1.username}"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(updateUserRequest))
-                    }
+                val response = client.patch(
+                    "/organizations/${organization.id}/users/${user1.username}"
                 ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(updateUserRequest))
                 }
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
 
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                deleteOrganization(organization.id)
             }
         }
     }
@@ -646,8 +652,11 @@ class UserApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `change root user password - success`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, rootUser) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
                 val username = organizationResponse.organization.rootUser.username
@@ -656,30 +665,29 @@ class UserApiTest : AbstractContainerBaseTest() {
                     oldPassword = "testPassword@Hash1",
                     newPassword = "testPassword@Hash2"
                 )
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${organization.id}/users/$username/change_password"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(changePasswordRequest))
-                    }
+                val response = client.post(
+                    "/organizations/${organization.id}/users/$username/change_password"
                 ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(changePasswordRequest))
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `change password with wrong old password - failure`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, rootUser) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
                 val username = organizationResponse.organization.rootUser.username
@@ -692,30 +700,29 @@ class UserApiTest : AbstractContainerBaseTest() {
                     oldPassword = "testPassword@Hash3",
                     newPassword = "testPassword@Hash2"
                 )
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${organization.id}/users/$username/change_password"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(changePasswordRequest))
-                    }
+                val response = client.post(
+                    "/organizations/${organization.id}/users/$username/change_password"
                 ) {
-                    assertEquals(HttpStatusCode.Unauthorized, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(changePasswordRequest))
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.Unauthorized, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `user to change password on their own with permission - success`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
@@ -730,14 +737,13 @@ class UserApiTest : AbstractContainerBaseTest() {
                     loginAccess = true
                 )
 
-                val (user1, credential) = DataSetupHelper.createUser(
+                val (user1, credential) = createUser(
                     organization.id,
                     rootUserToken,
-                    createUser1Request,
-                    this
+                    createUser1Request
                 )
 
-                DataSetupHelper.createAndAttachPolicy(
+                createAndAttachPolicy(
                     orgId = organization.id,
                     username = user1.username,
                     bearerToken = rootUserToken,
@@ -746,37 +752,35 @@ class UserApiTest : AbstractContainerBaseTest() {
                     resourceName = IamResources.USER,
                     actionName = "changePassword",
                     resourceInstance = user1.username,
-                    engine = this
                 )
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
                     oldPassword = "testPassword@Hash1",
                     newPassword = "testPassword@Hash2"
                 )
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${organization.id}/users/${user1.username}/change_password"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(changePasswordRequest))
-                    }
+                val response = client.post(
+                    "/organizations/${organization.id}/users/${user1.username}/change_password"
                 ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                    header(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(changePasswordRequest))
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `change password of different user without permission - failure`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
@@ -802,20 +806,18 @@ class UserApiTest : AbstractContainerBaseTest() {
                     loginAccess = true
                 )
                 val (user1, _) =
-                    DataSetupHelper.createUser(
+                    createUser(
                         organization.id,
                         rootUserToken,
-                        createUser1Request,
-                        this
+                        createUser1Request
                     )
-                val (user2, credential) = DataSetupHelper.createUser(
+                val (user2, credential) = createUser(
                     organization.id,
                     rootUserToken,
-                    createUser2Request,
-                    this
+                    createUser2Request
                 )
 
-                DataSetupHelper.createAndAttachPolicy(
+                createAndAttachPolicy(
                     orgId = organization.id,
                     username = user2.username,
                     bearerToken = rootUserToken,
@@ -823,34 +825,32 @@ class UserApiTest : AbstractContainerBaseTest() {
                     accountId = null,
                     resourceName = IamResources.USER,
                     actionName = "changePassword",
-                    resourceInstance = user2.username,
-                    engine = this
+                    resourceInstance = user2.username
                 )
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
                     oldPassword = "testPassword@Hash1",
                     newPassword = "testPassword@Hash2"
                 )
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${organization.id}/users/${user1.username}/change_password"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(changePasswordRequest))
-                    }
+                val response = client.post(
+                    "/organizations/${organization.id}/users/${user1.username}/change_password"
                 ) {
-                    assertEquals(HttpStatusCode.Forbidden, response.status())
+                    header(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(changePasswordRequest))
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.Forbidden, response.status)
+                deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `generate token after changing password - success`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, rootUser) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, rootUser) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
                 val username = organizationResponse.organization.rootUser.username
@@ -859,45 +859,38 @@ class UserApiTest : AbstractContainerBaseTest() {
                     oldPassword = "testPassword@Hash1",
                     newPassword = "testPassword@Hash2"
                 )
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${organization.id}/users/$username/change_password"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(changePasswordRequest))
-                    }
+                val response = client.post(
+                    "/organizations/${organization.id}/users/$username/change_password"
                 ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(changePasswordRequest))
                 }
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
 
                 val authString = "${rootUser.email}:${changePasswordRequest.newPassword}"
                 val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/${organization.id}/token"
-                    ) {
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        addHeader(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                val tokenResponse = client.post(
+                    "/organizations/${organization.id}/token"
                 ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(
+                        HttpHeaders.Authorization,
+                        authHeader
                     )
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+
+                assertEquals(HttpStatusCode.OK, tokenResponse.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    tokenResponse.contentType()
+                )
+                deleteOrganization(organization.id)
             }
         }
     }
@@ -907,8 +900,11 @@ class UserApiTest : AbstractContainerBaseTest() {
     inner class ResetUserPasswordTest {
         @Test
         fun `reset Password - success`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, createdUser) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, createdUser) = createOrganization()
                 val organizationId = organizationResponse.organization!!.id
                 val testPasscode = "testPasscode"
 
@@ -942,8 +938,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     cognitoClient.listUsers(any<ListUsersRequest>())
                 } returns listUsersResponse
 
-                handleRequest(HttpMethod.Post, "/verifyEmail") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                client.post("/verifyEmail") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
                         gson.toJson(
                             VerifyEmailRequest(
@@ -955,30 +951,26 @@ class UserApiTest : AbstractContainerBaseTest() {
                     )
                 }
 
-                with(
-                    handleRequest(
-                        HttpMethod.Post,
-                        "/organizations/$organizationId/users/resetPassword"
-                    ) {
-                        addHeader("X-Api-Key", testPasscode)
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(
-                            gson.toJson(
-                                ResetPasswordRequest(email = createdUser.email, password = "testPassword@123")
-                            )
-                        )
-                    }
+                val resetPasswordResponse = client.post(
+                    "/organizations/$organizationId/users/resetPassword"
                 ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
+                    header("X-Api-Key", testPasscode)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(
+                        gson.toJson(
+                            ResetPasswordRequest(email = createdUser.email, password = "testPassword@123")
+                        )
                     )
-                    val response = gson.fromJson(response.content, BaseSuccessResponse::class.java)
-                    assertTrue(response.success)
                 }
+                assertEquals(HttpStatusCode.OK, resetPasswordResponse.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    resetPasswordResponse.contentType()
+                )
+                val response = gson.fromJson(resetPasswordResponse.bodyAsText(), BaseSuccessResponse::class.java)
+                assertTrue(response.success)
 
-                DataSetupHelper.deleteOrganization(organizationId, this)
+                deleteOrganization(organizationId)
             }
         }
     }
@@ -988,8 +980,11 @@ class UserApiTest : AbstractContainerBaseTest() {
     inner class UserAttachPolicyTest {
         @Test
         fun `user to attach policy to a different user with permission - success`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
@@ -1004,11 +999,10 @@ class UserApiTest : AbstractContainerBaseTest() {
                     loginAccess = true
                 )
 
-                val (user1, _) = DataSetupHelper.createUser(
+                val (user1, _) = createUser(
                     organization.id,
                     rootUserToken,
-                    createUser1Request,
-                    this
+                    createUser1Request
                 )
                 val createUser2Request = CreateUserRequest(
                     preferredUsername = "testUserName2",
@@ -1020,14 +1014,13 @@ class UserApiTest : AbstractContainerBaseTest() {
                     verified = true,
                     loginAccess = true
                 )
-                val (user2, credential) = DataSetupHelper.createUser(
+                val (user2, credential) = createUser(
                     organization.id,
                     rootUserToken,
-                    createUser2Request,
-                    this
+                    createUser2Request
                 )
 
-                DataSetupHelper.createAndAttachPolicy(
+                createAndAttachPolicy(
                     orgId = organization.id,
                     username = user2.username,
                     bearerToken = rootUserToken,
@@ -1036,10 +1029,9 @@ class UserApiTest : AbstractContainerBaseTest() {
                     resourceName = IamResources.USER,
                     actionName = "attachPolicies",
                     resourceInstance = user1.username,
-                    engine = this
                 )
 
-                val samplePolicy = DataSetupHelper.createAndAttachPolicy(
+                val samplePolicy = createAndAttachPolicy(
                     orgId = organization.id,
                     username = null,
                     bearerToken = rootUserToken,
@@ -1048,32 +1040,30 @@ class UserApiTest : AbstractContainerBaseTest() {
                     resourceName = "sample-resource",
                     actionName = "sample-action",
                     resourceInstance = "instanceId",
-                    engine = this
                 )
-                with(
-                    handleRequest(
-                        HttpMethod.Patch,
-                        "/organizations/${organization.id}/users/${user1.username}/attach_policies"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
-                    }
+                val response = client.patch(
+                    "/organizations/${organization.id}/users/${user1.username}/attach_policies"
                 ) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                    header(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `user to attach policies to a different user without permission - failure`() {
-            withTestApplication(Application::handleRequest) {
-                val (organizationResponse, _) = DataSetupHelper.createOrganization(this)
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
                 val organization = organizationResponse.organization!!
                 val rootUserToken = organizationResponse.rootUserToken!!
 
@@ -1088,11 +1078,10 @@ class UserApiTest : AbstractContainerBaseTest() {
                     loginAccess = true
                 )
 
-                val (user1, _) = DataSetupHelper.createUser(
+                val (user1, _) = createUser(
                     organization.id,
                     rootUserToken,
-                    createUser1Request,
-                    this
+                    createUser1Request
                 )
                 val createUser2Request = CreateUserRequest(
                     preferredUsername = "testUserName2",
@@ -1104,13 +1093,12 @@ class UserApiTest : AbstractContainerBaseTest() {
                     verified = true,
                     loginAccess = true
                 )
-                val (user2, credential) = DataSetupHelper.createUser(
+                val (user2, credential) = createUser(
                     organization.id,
                     rootUserToken,
-                    createUser2Request,
-                    this
+                    createUser2Request
                 )
-                DataSetupHelper.createAndAttachPolicy(
+                createAndAttachPolicy(
                     orgId = organization.id,
                     username = user2.username,
                     bearerToken = rootUserToken,
@@ -1118,11 +1106,10 @@ class UserApiTest : AbstractContainerBaseTest() {
                     accountId = null,
                     resourceName = IamResources.USER,
                     actionName = "attachPolicies",
-                    resourceInstance = user2.username,
-                    engine = this
+                    resourceInstance = user2.username
                 )
 
-                val samplePolicy = DataSetupHelper.createAndAttachPolicy(
+                val samplePolicy = createAndAttachPolicy(
                     orgId = organization.id,
                     username = null,
                     bearerToken = rootUserToken,
@@ -1130,27 +1117,23 @@ class UserApiTest : AbstractContainerBaseTest() {
                     accountId = null,
                     resourceName = "sample-resource",
                     actionName = "sample-action",
-                    resourceInstance = "instanceId",
-                    engine = this
+                    resourceInstance = "instanceId"
                 )
 
-                with(
-                    handleRequest(
-                        HttpMethod.Patch,
-                        "/organizations/${organization.id}/users/${user1.username}/attach_policies"
-                    ) {
-                        addHeader(HttpHeaders.Authorization, "Bearer ${credential.secret}")
-                        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
-                    }
+                val response = client.patch(
+                    "/organizations/${organization.id}/users/${user1.username}/attach_policies"
                 ) {
-                    assertEquals(HttpStatusCode.Forbidden, response.status())
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        response.contentType()
-                    )
+                    header(HttpHeaders.Authorization, "Bearer ${credential.secret}")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
                 }
-                DataSetupHelper.deleteOrganization(organization.id, this)
+
+                assertEquals(HttpStatusCode.Forbidden, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+                deleteOrganization(organization.id)
             }
         }
     }

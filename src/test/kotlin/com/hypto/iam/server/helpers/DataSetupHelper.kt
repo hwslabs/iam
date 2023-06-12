@@ -11,6 +11,7 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
+import com.hypto.iam.server.helpers.DataSetupHelperV2.toStringEscape
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
@@ -19,6 +20,7 @@ import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyAssociationRequest
@@ -86,7 +88,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
             val createdOrganizationResponse = gson
                 .fromJson(createOrganizationCall.response.content, CreateOrganizationResponse::class.java)
 
-            return Pair(createdOrganizationResponse, rootUser)
+            return Pair(createdOrganizationResponse, rootUser.copy(email = rootUser.email.lowercase()))
         }
     }
 
@@ -124,11 +126,11 @@ object DataSetupHelper : AutoCloseKoinTest() {
                 setBody(gson.toJson(createUserRequest))
             }
             val createdUser = gson
-                .fromJson(createUserCall.response.content, User::class.java)
+                .fromJson(createUserCall.response.content, CreateUserResponse::class.java)
             val credential =
-                createCredential(orgId, createdUser.username, bearerToken, engine)
+                createCredential(orgId, createdUser.user.username, bearerToken, engine)
 
-            return Pair(createdUser, credential)
+            return Pair(createdUser.user, credential)
         }
     }
 
@@ -252,7 +254,7 @@ object DataSetupHelper : AutoCloseKoinTest() {
         resourceInstance: String? = null
     ): Pair<String, String> {
         val resourceHrn = ResourceHrn(orgId, accountId, resourceName, resourceInstance).toString()
-        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toString()
+        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toStringEscape()
         return Pair(resourceHrn, actionHrn)
     }
 
@@ -265,11 +267,16 @@ object DataSetupHelper : AutoCloseKoinTest() {
     ): Pair<Resource, Action> {
         val resource = createResource(
             orgId,
-            jwtToken, engine, resourceName
+            jwtToken,
+            engine,
+            resourceName
         )
         val action = createAction(
-            orgId, resource,
-            jwtToken, engine, actionName
+            orgId,
+            resource,
+            jwtToken,
+            engine,
+            actionName
         ).first
         return Pair(resource, action)
     }

@@ -16,7 +16,7 @@ import org.jooq.impl.DAOImpl
 
 object PrincipalPoliciesRepo : BaseRepo<PrincipalPoliciesRecord, PrincipalPolicies, UUID>() {
 
-    private val idFun = fun (PrincipalPolicies: PrincipalPolicies): UUID = PrincipalPolicies.id
+    private val idFun = fun (principalPolicies: PrincipalPolicies): UUID = principalPolicies.id
 
     override suspend fun dao(): DAOImpl<PrincipalPoliciesRecord, PrincipalPolicies, UUID> =
         txMan.getDao(PRINCIPAL_POLICIES, PrincipalPolicies::class.java, idFun)

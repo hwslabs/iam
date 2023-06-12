@@ -4,7 +4,9 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
+import com.hypto.iam.server.db.repositories.RawPolicyPayload
 import com.hypto.iam.server.db.repositories.ResourceRepo
+import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.PaginationContext
@@ -39,11 +41,34 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         val newPolicyBuilder = PolicyBuilder(policyHrn)
         statements.forEach { newPolicyBuilder.withStatement(it) }
 
-        if (appConfig.app.strictPolicyStatementValidation)
+        if (appConfig.app.strictPolicyStatementValidation) {
             validateStatements(organizationId, statements)
+        }
 
         val policyRecord = policyRepo.create(policyHrn, newPolicyBuilder.build())
         return Policy.from(policyRecord)
+    }
+
+    /**
+     * example of rawPolicyPayloadsList:
+     *   [[policy_name_1, <policy_1_statements as string>], [policy_name_2, <policy_2_statements as string>]]
+     */
+    override suspend fun batchCreatePolicyRaw(
+        organizationId: String,
+        rawPolicyPayloadsList: List<Pair<String, String>>
+    ): List<PoliciesRecord> {
+        val policyHrnStrings = mutableListOf<String>()
+        val rawPolicyPayloads = rawPolicyPayloadsList.map {
+            val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, it.first)
+            policyHrnStrings.add(policyHrn.toString())
+            RawPolicyPayload(policyHrn, it.second)
+        }
+
+        if (policyRepo.fetchByHrns(policyHrnStrings).isNotEmpty()) {
+            throw EntityAlreadyExistsException("One or more policies already exists")
+        }
+
+        return policyRepo.batchCreate(rawPolicyPayloads)
     }
 
     override suspend fun getPolicy(organizationId: String, name: String): Policy {
@@ -60,8 +85,9 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         val newPolicyBuilder = PolicyBuilder(policyHrn)
         statements.forEach { newPolicyBuilder.withStatement(it) }
 
-        if (appConfig.app.strictPolicyStatementValidation)
+        if (appConfig.app.strictPolicyStatementValidation) {
             validateStatements(organizationId, statements)
+        }
 
         val policyRecord = policyRepo.update(
             policyHrnStr,
@@ -87,7 +113,8 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     ): PolicyPaginatedResponse {
         val policies = principalPolicyRepo
             .fetchPoliciesByUserHrnPaginated(
-                ResourceHrn(organizationId, "", IamResources.USER, userId).toString(), context
+                ResourceHrn(organizationId, "", IamResources.USER, userId).toString(),
+                context
             )
         val newContext = PaginationContext.from(policies.lastOrNull()?.hrn, context)
         return PolicyPaginatedResponse(policies.map { Policy.from(it) }, newContext.nextToken, newContext.toOptions())
@@ -105,15 +132,17 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         val actionIds = mutableListOf<String>()
         statements.forEach {
             val resourceId = fetchResourceIdFromStatementResource(it.resource)
-            if (!resourceId.isNullOrEmpty())
+            if (!resourceId.isNullOrEmpty()) {
                 resourceIds.add(resourceId)
+            }
 
             val actionId = fetchActionIdFromStatementAction(
                 if (resourceId.isNullOrEmpty()) null else resourceId.substringAfterLast(":"),
                 it.action
             )
-            if (!actionId.isNullOrEmpty())
+            if (!actionId.isNullOrEmpty()) {
                 actionIds.add(actionId)
+            }
         }
 
         if (resourceIds.isNotEmpty()) {
@@ -152,8 +181,9 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         if (action.matches(ActionHrn.ACTION_HRN_REGEX)) {
             val actionHrn = ActionHrn(action)
 
-            if (!resource.isNullOrEmpty() && resource != actionHrn.resource)
+            if (!resource.isNullOrEmpty() && resource != actionHrn.resource) {
                 throw BadRequestException("Action - $action does not belong to Resource - $resource")
+            }
 
             if (actionHrn.action != null && actionHrn.action.matches(RESOURCE_NAME_REGEX.toRegex())) {
                 return actionHrn.toString().substringBeforeLast("/")
@@ -178,4 +208,8 @@ interface PolicyService {
     ): PolicyPaginatedResponse
 
     suspend fun listPolicies(organizationId: String, context: PaginationContext): PolicyPaginatedResponse
+    suspend fun batchCreatePolicyRaw(
+        organizationId: String,
+        rawPolicyPayloadsList: List<Pair<String, String>>
+    ): List<PoliciesRecord>
 }

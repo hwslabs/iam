@@ -31,8 +31,12 @@ class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
     }
 
     override suspend fun attachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse {
-        if (!policiesRepo.existsByIds(policies.map { it.toString() })) {
-            throw IllegalArgumentException("Invalid policies found")
+        require(policies.isNotEmpty()) {
+            "No policy Hrns provided to attach"
+        }
+
+        require(policiesRepo.existsByIds(policies.map { it.toString() })) {
+            "Invalid policies found"
         }
 
         principalPoliciesRepo.insert(

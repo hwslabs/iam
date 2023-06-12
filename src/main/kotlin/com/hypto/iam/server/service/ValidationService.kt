@@ -28,8 +28,8 @@ class ValidationServiceImpl : ValidationService, KoinComponent {
         )
 
         return ValidationResponse(
-            results.mapIndexed { i, it ->
-                ResourceActionEffect.from(validations[i], if (it) { Effect.allow } else { Effect.deny })
+            results.mapIndexed { i, isValid ->
+                ResourceActionEffect.from(validations[i], if (isValid) { Effect.allow } else { Effect.deny })
             }
         )
     }

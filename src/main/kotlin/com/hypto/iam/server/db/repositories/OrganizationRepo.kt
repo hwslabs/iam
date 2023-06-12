@@ -22,14 +22,14 @@ object OrganizationRepo : BaseRepo<OrganizationsRecord, Organizations, String>()
         val updateStep = ctx("organizations.update")
             .update(ORGANIZATIONS)
             .set(ORGANIZATIONS.UPDATED_AT, LocalDateTime.now())
-        if (!name.isNullOrEmpty())
+        if (!name.isNullOrEmpty()) {
             updateStep.set(ORGANIZATIONS.NAME, name)
-        if (!description.isNullOrEmpty())
+        }
+        if (!description.isNullOrEmpty()) {
             updateStep.set(ORGANIZATIONS.DESCRIPTION, description)
+        }
         return updateStep.where(ORGANIZATIONS.ID.eq(id)).returning().fetchOne()
     }
-
-    suspend fun insert(organization: Organizations) = dao().insert(organization)
 
     suspend fun findById(id: String): Organizations? = dao().findById(id)
 

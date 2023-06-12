@@ -34,7 +34,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
     ): List<UsersRecord> {
         return ctx("users.fetchMany").selectFrom(USERS)
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
-            .paginate(USERS.HRN, paginationContext)
+            .paginate(USERS.CREATED_AT, paginationContext)
             .fetch()
     }
 
@@ -93,8 +93,9 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .where(USERS.EMAIL.eq(email))
             .and(USERS.DELETED.eq(false))
             .and(USERS.VERIFIED.eq(true))
-        if (!organizationId.isNullOrEmpty())
+        if (!organizationId.isNullOrEmpty()) {
             builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
+        }
         return builder.fetchOne()
     }
 

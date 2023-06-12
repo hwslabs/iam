@@ -22,10 +22,16 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
         val policyHrn = ResourceHrn(orgId, "", IamResources.POLICY, "policy1")
 
         val (resourceHrn1, actionHrn1) = DataSetupHelper.generateResourceActionHrn(
-            orgId, null, resourceName1, "action1"
+            orgId,
+            null,
+            resourceName1,
+            "action1"
         )
         val (resourceHrn2, actionHrn2) = DataSetupHelper.generateResourceActionHrn(
-            orgId, null, resourceName2, "action2"
+            orgId,
+            null,
+            resourceName2,
+            "action2"
         )
 
         val builder = PolicyBuilder(policyHrn)
@@ -86,7 +92,12 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
             .toString()
 
         val policyRecord = PoliciesRecord(
-            policy1HrnStr, orgId, 1, policy1Statements, LocalDateTime.now(), LocalDateTime.now()
+            policy1HrnStr,
+            orgId,
+            1,
+            policy1Statements,
+            LocalDateTime.now(),
+            LocalDateTime.now()
         )
 
         val userHrn = ResourceHrn(orgId, "", IamResources.USER, "user1").toString()

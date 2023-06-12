@@ -53,7 +53,8 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
             description
         )
 
-        resourceRecord ?: throw IllegalStateException("Update unsuccessful")
+        checkNotNull(resourceRecord) { "Update unsuccessful" }
+
         return Resource.from(resourceRecord)
     }
 
