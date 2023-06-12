@@ -24,9 +24,12 @@ import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
-import io.jsonwebtoken.Jwts.header
 import io.ktor.client.request.delete
+import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -280,17 +283,30 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                             300,
                             600,
                             "iam-secret-key",
-                            30,
-                            30,
-                            600,
+                            300,
+                            300,
+                            86400,
                             5,
-                            "https://localhost",
+                            "localhost",
                             "mail@iam.com",
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
                             uniqueUsersAcrossOrganizations = false,
                             strictPolicyStatementValidation = true
+                        )
+                    }
+                    every { this@declareMock.database } answers {
+                        AppConfig.Database(
+                            "localhost",
+                            4921,
+                            "root",
+                            "password",
+                            32,
+                            5,
+                            true,
+
+                            "TRANSACTION_REPEATABLE_READ"
                         )
                     }
                 }
@@ -308,7 +324,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     val rootUserToken = createdOrganizationResponse.rootUserToken
 
                     val policyName = "test-policy"
-                    val (resource, action) = createAction(
+                    val (action, resource) = createAction(
                         createdOrganization.id,
                         null,
                         rootUserToken,
@@ -329,6 +345,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                         setBody(gson.toJson(requestBody))
                     }
+
                     Assertions.assertEquals(HttpStatusCode.Created, response.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
@@ -338,7 +355,6 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         createdOrganization.id,
                         response.headers[Constants.X_ORGANIZATION_HEADER]
                     )
-
                     val responseBody = gson.fromJson(response.bodyAsText(), Policy::class.java)
                     Assertions.assertEquals(createdOrganization.id, responseBody.organizationId)
 
