@@ -22,7 +22,9 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
     }
 
     suspend fun fetchByHrn(hrn: ActionHrn): ActionsRecord? {
-        return ctx("action.findByHrn").selectFrom(ACTIONS).where(ACTIONS.HRN.eq(hrn.toString())).fetchOne()
+        return ctx("action.findByHrn").selectFrom(ACTIONS).where(
+            ACTIONS.HRN.eq(hrn.toString()).and(ACTIONS.DELETED.eq(false))
+        ).fetchOne()
     }
 
     suspend fun create(orgId: String, resourceHrn: ResourceHrn, hrn: ActionHrn, description: String?): ActionsRecord {
@@ -33,6 +35,7 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
             .setDescription(description)
             .setCreatedAt(LocalDateTime.now())
             .setUpdatedAt(LocalDateTime.now())
+            .setDeleted(false)
 
         record.attach(dao().configuration())
         record.store()
@@ -40,7 +43,7 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
     }
 
     suspend fun update(hrn: ActionHrn, description: String): ActionsRecord? {
-        val condition = ACTIONS.HRN.eq(hrn.toString())
+        val condition = ACTIONS.HRN.eq(hrn.toString()).and(ACTIONS.DELETED.eq(false))
         return ctx("action.update").update(ACTIONS)
             .set(ACTIONS.DESCRIPTION, description)
             .set(ACTIONS.UPDATED_AT, LocalDateTime.now())
@@ -56,14 +59,19 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
     ): Result<ActionsRecord> {
         return ctx("action.fetchPaginated").selectFrom(ACTIONS)
             .where(ACTIONS.ORGANIZATION_ID.eq(organizationId).and(ACTIONS.RESOURCE_HRN.eq(resourceHrn.toString())))
+            .and(ACTIONS.DELETED.eq(false))
             .paginate(ACTIONS.HRN, paginationContext)
             .fetch()
     }
 
-    suspend fun delete(hrn: ActionHrn): Boolean {
-        val record = ActionsRecord().setHrn(hrn.toString())
-        record.attach(dao().configuration())
-        return record.delete() > 0
+    suspend fun delete(hrn: ActionHrn): ActionsRecord? {
+        val condition = ACTIONS.HRN.eq(hrn.toString()).and(ACTIONS.DELETED.eq(false))
+        return ctx("action.delete").update(ACTIONS)
+            .set(ACTIONS.UPDATED_AT, LocalDateTime.now())
+            .set(ACTIONS.DELETED, true)
+            .where(condition)
+            .returning()
+            .fetchOne()
     }
 
     suspend fun fetchActionsFromHrns(
@@ -74,6 +82,7 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
             .where(
                 ACTIONS.ORGANIZATION_ID.eq(organizationId)
                     .and(ACTIONS.HRN.`in`(actionHrns))
+                    .and(ACTIONS.DELETED.eq(false))
             )
             .fetch()
     }

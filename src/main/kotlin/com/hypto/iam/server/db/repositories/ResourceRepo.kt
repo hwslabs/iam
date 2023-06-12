@@ -22,7 +22,9 @@ object ResourceRepo : BaseRepo<ResourcesRecord, Resources, String>() {
      * Fetch a unique record that has `hrn = value`
      */
     suspend fun fetchByHrn(hrn: ResourceHrn): ResourcesRecord? = ctx("resources.fetchByHrn")
-        .selectFrom(RESOURCES).where(RESOURCES.HRN.equal(hrn.toString())).fetchOne()
+        .selectFrom(RESOURCES).where(RESOURCES.HRN.equal(hrn.toString()))
+        .and(RESOURCES.DELETED.eq(false))
+        .fetchOne()
 
     suspend fun create(hrn: ResourceHrn, description: String): ResourcesRecord {
         val record = ResourcesRecord()
@@ -31,6 +33,7 @@ object ResourceRepo : BaseRepo<ResourcesRecord, Resources, String>() {
             .setCreatedAt(LocalDateTime.now())
             .setUpdatedAt(LocalDateTime.now())
             .setDescription(description)
+            .setDeleted(false)
 
         record.attach(dao().configuration())
         record.store()
@@ -41,14 +44,18 @@ object ResourceRepo : BaseRepo<ResourcesRecord, Resources, String>() {
         .update(RESOURCES)
         .set(RESOURCES.DESCRIPTION, description)
         .set(RESOURCES.UPDATED_AT, LocalDateTime.now())
-        .where(RESOURCES.HRN.equal(hrn.toString()))
+        .where(RESOURCES.HRN.equal(hrn.toString()).and(RESOURCES.DELETED.eq(false)))
         .returning()
         .fetchOne()
 
-    suspend fun delete(hrn: ResourceHrn): Boolean {
-        val record = ResourcesRecord().setHrn(hrn.toString())
-        record.attach(dao().configuration())
-        return record.delete() > 0
+    suspend fun delete(hrn: ResourceHrn): ResourcesRecord? {
+        val condition = RESOURCES.HRN.eq(hrn.toString()).and(RESOURCES.DELETED.eq(false))
+        return ActionRepo.ctx("resource.delete").update(RESOURCES)
+            .set(RESOURCES.UPDATED_AT, LocalDateTime.now())
+            .set(RESOURCES.DELETED, true)
+            .where(condition)
+            .returning()
+            .fetchOne()
     }
 
     suspend fun fetchByOrganizationIdPaginated(
@@ -56,7 +63,7 @@ object ResourceRepo : BaseRepo<ResourcesRecord, Resources, String>() {
         paginationContext: PaginationContext
     ): Result<ResourcesRecord> = ctx("resources.fetchPaginated")
         .selectFrom(RESOURCES)
-        .where(RESOURCES.ORGANIZATION_ID.eq(organizationId))
+        .where(RESOURCES.ORGANIZATION_ID.eq(organizationId).and(RESOURCES.DELETED.eq(false)))
         .paginate(RESOURCES.HRN, paginationContext)
         .fetch()
 
@@ -66,8 +73,9 @@ object ResourceRepo : BaseRepo<ResourcesRecord, Resources, String>() {
     ): Result<ResourcesRecord> {
         return ctx("action.fetchResourcesFromHrns").selectFrom(Tables.RESOURCES)
             .where(
-                Tables.RESOURCES.ORGANIZATION_ID.eq(organizationId)
-                    .and(Tables.RESOURCES.HRN.`in`(resourceHrns))
+                RESOURCES.ORGANIZATION_ID.eq(organizationId)
+                    .and(RESOURCES.HRN.`in`(resourceHrns))
+                    .and(RESOURCES.DELETED.eq(false))
             )
             .fetch()
     }
