@@ -47,7 +47,7 @@ jobs:
           aws configure set aws_secret_access_key $aws_secret_access_key
           aws configure set default.region $aws_region
           if [ $(ls build/libs/*.jar -1 | wc -l) -gt 1 ]; then JAR_FILE=$(ls build/libs/*-all.jar); echo $JAR_FILE; else JAR_FILE=$(ls build/libs/*.jar); echo $JAR_FILE; fi
-          aws s3api put-object --bucket $aws_s3_bucket --key iam-service/${{ github.ref_name }}/${{ github.sha }}.jar --body $JAR_FILE
+          aws s3api put-object --bucket $aws_s3_bucket --key iam-service/builds/${{ github.sha }}.jar --body $JAR_FILE
 
   commit-badge:
     runs-on: ubuntu-latest
