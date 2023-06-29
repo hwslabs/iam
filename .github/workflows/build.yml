@@ -63,7 +63,7 @@ jobs:
           aws configure set aws_secret_access_key $aws_secret_access_key
           aws configure set default.region $aws_region
           if [ $(ls build/libs/*.jar -1 | wc -l) -gt 1 ]; then JAR_FILE=$(ls build/libs/*-all.jar); echo $JAR_FILE; else JAR_FILE=$(ls build/libs/*.jar); echo $JAR_FILE; fi
-          aws s3api put-object --bucket $aws_s3_bucket --key iam-service/builds/${{ github.sha }}.jar --body $JAR_FILE
+          aws s3api put-object --metadata CommitSha=${{ github.sha }} --bucket $aws_s3_bucket --key iam-service/builds/${{ github.sha }}.jar --body $JAR_FILE
       - name: Update Latest Build File
         if: ${{ !startsWith(github.ref, 'refs/pull/') }}
         shell: bash
@@ -77,7 +77,7 @@ jobs:
           aws configure set aws_access_key_id $aws_access_key_id
           aws configure set aws_secret_access_key $aws_secret_access_key
           aws configure set default.region $aws_region
-          aws s3api copy-object --copy-source $aws_s3_bucket/iam-service/builds/${{ github.sha }}.jar --bucket $aws_s3_bucket --key iam-service/${{ github.ref_name }}.jar
+          aws s3api copy-object --metadata-directive COPY --copy-source $aws_s3_bucket/iam-service/builds/${{ github.sha }}.jar --bucket $aws_s3_bucket --key iam-service/${{ github.ref_name }}.jar
 
 
   commit-badge:
