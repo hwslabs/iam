@@ -28,13 +28,29 @@ jobs:
         with:
           name: jacoco-report
           path: build/jacoco/test/jacocoTestReport.csv
+      - name: Check if commit is already built and pushed
+        id: check-commit-already-built-and-pushed
+        if: ${{ !startsWith(github.ref, 'refs/pull/') }}
+        shell: bash
+        env:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          aws_s3_bucket: ${{ secrets.S3_BUCKET }}
+        run: |
+          sudo apt-get update && sudo apt-get -y install awscli
+          aws configure set aws_access_key_id $aws_access_key_id
+          aws configure set aws_secret_access_key $aws_secret_access_key
+          aws configure set default.region $aws_region
+          count=$(aws s3api list-objects-v2 --bucket $aws_s3_bucket --prefix iam-service/builds/${{ github.sha }}.jar | jq '.Contents | length')
+          echo "count=${count}" >> "$GITHUB_OUTPUT"
       - name: Build Fat Jar
-        if: github.ref_name == 'main' || github.ref_name == 'release'
+        if: ${{ steps.check-commit-already-built-and-pushed.outputs.count == 0 && !startsWith(github.ref, 'refs/pull/') }}
         uses: gradle/gradle-build-action@v2
         with:
           arguments: shadowJar
       - name: Publish Build File
-        if: github.ref_name == 'main' || github.ref_name == 'release'
+        if: ${{ steps.check-commit-already-built-and-pushed.outputs.count == 0 && !startsWith(github.ref, 'refs/pull/') }}
         shell: bash
         env:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
