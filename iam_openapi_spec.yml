@@ -1183,6 +1183,29 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
       security: [ ]
 
+  /organizations/{organizationId}/invites/resend:
+    post:
+      tags:
+        - User Verification
+      summary: Resend organization passcodes
+      description: Resend passcodes for the organization
+      operationId: resendInvite
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/ResendInviteRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 security:
   - bearerAuth: [ ]
 
@@ -1527,6 +1550,18 @@ components:
               $ref: '#/components/examples/VerifyEmailRequestSignup'
             VerifyEmailRequestSignupWithMetadata:
               $ref: '#/components/examples/VerifyEmailRequestSignupWithMetadata'
+
+    ResendInviteRequest:
+      description: Payload to resend invite
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResendInviteRequest'
+          examples:
+            ResendInviteRequest:
+              $ref: '#/components/examples/ResendInviteRequest'
+
     GetDelegateTokenRequest:
       description: Payload to generate a delegate-able token
       required: true
@@ -2060,6 +2095,10 @@ components:
           rootUserName: Lorem Ipsum
           rootUserPreferredUsername: username
           rootUserPhone: "+1234567890"
+
+    ResendInviteRequest:
+      value:
+        email: "email@email.com"
 
     GetDelegateTokenRequest:
       value:
@@ -2660,6 +2699,16 @@ components:
                 1. inviterUserHrn : string (required) - hrn of the user who is inviting the new user
                 2. policies: array<string> (required) - policies to be attached to the new user
           additionalProperties: true
+
+    ResendInviteRequest:
+      description: Payload to resend invite
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
 
     GetDelegateTokenRequest:
       description: payload to generate a delegate_token

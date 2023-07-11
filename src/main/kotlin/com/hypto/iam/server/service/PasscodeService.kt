@@ -222,17 +222,10 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
     }
 
     override suspend fun resendInvitePasscode(
-        email: String,
         orgId: String,
+        email: String,
         principal: UserPrincipal
     ): Boolean {
-        try {
-            usersService.getUserByEmail(null, email)
-            throw EntityAlreadyExistsException("User with email $email already exists")
-        } catch (e: EntityNotFoundException) {
-            logger.info { "User with email $email does not exist" }
-        }
-
         val record = passcodeRepo.getValidPasscodeByEmail(
             organizationId = orgId,
             purpose = Purpose.invite,
@@ -288,7 +281,7 @@ interface PasscodeService {
         purpose: Purpose,
         paginationContext: PaginationContext
     ): PasscodePaginatedResponse
-    suspend fun resendInvitePasscode(email: String, orgId: String, principal: UserPrincipal): Boolean
+    suspend fun resendInvitePasscode(orgId: String, email: String, principal: UserPrincipal): Boolean
     suspend fun encryptMetadata(metadata: Map<String, Any>): String
     suspend fun decryptMetadata(metadata: String): Map<String, Any>
 }

@@ -1,11 +1,13 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
+import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.client.request.header
@@ -21,6 +23,7 @@ import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import java.time.Instant
+import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
@@ -209,6 +212,101 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
                 response.contentType()
             )
+        }
+    }
+
+    @Test
+    fun `resend invite for already invited user - success`() {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse, _) = createOrganization()
+            val organizationId = organizationResponse.organization.id
+            val rootUserToken = organizationResponse.rootUserToken
+
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+            val requestBody = VerifyEmailRequest(
+                email = testEmail,
+                purpose = VerifyEmailRequest.Purpose.invite,
+                organizationId = organizationId,
+                metadata = mapOf(
+                    "inviterUserHrn" to organizationResponse.organization.rootUser.hrn,
+                    "policies" to listOf("hrn:$organizationId::iam-policy/admin")
+                )
+            )
+
+            coEvery {
+                passcodeRepo.getValidPasscodeCount(any(), VerifyEmailRequest.Purpose.invite, any())
+            } coAnswers {
+                0
+            }
+            val response = client.post("/verifyEmail") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                setBody(gson.toJson(requestBody))
+            }
+            assertEquals(HttpStatusCode.OK, response.status)
+            assertEquals(
+                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                response.contentType()
+            )
+
+            coEvery {
+                passcodeRepo.getValidPasscodeByEmail(
+                    organizationId,
+                    VerifyEmailRequest.Purpose.invite,
+                    testEmail
+                )
+            } coAnswers {
+                PasscodesRecord(
+                    "test-id",
+                    LocalDateTime.now(),
+                    testEmail,
+                    organizationId,
+                    VerifyEmailRequest.Purpose.invite.value,
+                    LocalDateTime.now(),
+                    null
+                )
+            }
+            val resendEmailResponse = client.post("/organizations/$organizationId/invites/resend") {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                setBody(gson.toJson(ResendInviteRequest(testEmail)))
+            }
+            assertEquals(HttpStatusCode.OK, resendEmailResponse.status)
+        }
+    }
+
+    @Test
+    fun `resend invite for non invited user - failure`() {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            val (organizationResponse, createdUser) = createOrganization()
+            val rootUserToken = organizationResponse.rootUserToken
+            val organizationId = organizationResponse.organization.id
+            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
+
+            coEvery {
+                passcodeRepo.getValidPasscodeByEmail(
+                    organizationId = organizationId,
+                    purpose = VerifyEmailRequest.Purpose.invite,
+                    email = testEmail
+                )
+            } coAnswers {
+                null
+            }
+
+            val resendEmailResponse = client.post(
+                "/organizations/$organizationId/invites/resend"
+            ) {
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                setBody(gson.toJson(ResendInviteRequest(testEmail)))
+            }
+            assertEquals(HttpStatusCode.NotFound, resendEmailResponse.status)
         }
     }
 }
