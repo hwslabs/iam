@@ -221,6 +221,36 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return true
     }
 
+    override suspend fun resendInvitePasscode(
+        orgId: String,
+        email: String,
+        principal: UserPrincipal
+    ): Boolean {
+        val record = passcodeRepo.getValidPasscodeByEmail(
+            organizationId = orgId,
+            purpose = Purpose.invite,
+            email = email
+        ) ?: throw EntityNotFoundException("No invite email found for $email")
+        val link = createPasscodeLink(record.id, email, Purpose.invite, orgId)
+
+        val invitingUser = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
+        if (!invitingUser.loginAccess) {
+            throw AuthorizationException("User does not have login access")
+        }
+        val organization =
+            organizationRepo.findById(orgId) ?: throw EntityNotFoundException("Organization id - $orgId not found")
+        val nameOfUser = invitingUser.name ?: invitingUser.preferredUsername ?: invitingUser.email
+        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name)
+        val emailRequest = SendTemplatedEmailRequest.builder()
+            .source(appConfig.app.senderEmailAddress)
+            .template(appConfig.app.inviteUserEmailTemplate)
+            .templateData(gson.toJson(templateData))
+            .destination(Destination.builder().toAddresses(email).build())
+            .build()
+        sesClient.sendTemplatedEmail(emailRequest)
+        return true
+    }
+
     override suspend fun listOrgPasscodes(
         organizationId: String,
         purpose: Purpose,
@@ -251,7 +281,7 @@ interface PasscodeService {
         purpose: Purpose,
         paginationContext: PaginationContext
     ): PasscodePaginatedResponse
-
+    suspend fun resendInvitePasscode(orgId: String, email: String, principal: UserPrincipal): Boolean
     suspend fun encryptMetadata(metadata: Map<String, Any>): String
     suspend fun decryptMetadata(metadata: String): Map<String, Any>
 }

@@ -3,6 +3,7 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.PaginationOptions
+import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
@@ -85,6 +86,24 @@ fun Route.passcodeApis() {
             val passcodes = passcodeService.listOrgPasscodes(organizationId, VerifyEmailRequest.Purpose.invite, context)
             call.respondText(
                 text = gson.toJson(passcodes),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
+
+    withPermission(
+        "resendInvite",
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+    ) {
+        post("/organizations/{organizationId}/invites/resend") {
+            val principal = context.principal<UserPrincipal>()!!
+            val organizationId = call.parameters["organizationId"]!!
+            val request = call.receive<ResendInviteRequest>().validate()
+
+            val passcode = passcodeService.resendInvitePasscode(organizationId, request.email, principal)
+            call.respondText(
+                text = gson.toJson(passcode),
                 contentType = ContentType.Application.Json,
                 status = HttpStatusCode.OK
             )

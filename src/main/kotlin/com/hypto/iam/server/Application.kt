@@ -177,7 +177,7 @@ fun Application.handleRequest() {
         passcodeAuth("signup-passcode-auth") {
             validate { tokenCredential: TokenCredential ->
                 tokenCredential.value?.let {
-                    passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.signup)?.let {
+                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.signup)?.let {
                         ApiPrincipal(tokenCredential, ROOT_ORG)
                     }
                 }
@@ -187,7 +187,7 @@ fun Application.handleRequest() {
             validate { tokenCredential: TokenCredential ->
                 val email = this.receive<ResetPasswordRequest>().validate().email
                 tokenCredential.value?.let {
-                    passcodeRepo.getValidPasscode(it, VerifyEmailRequest.Purpose.reset, email)?.let {
+                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.reset, email)?.let {
                         ApiPrincipal(tokenCredential, ROOT_ORG)
                     }
                 }
@@ -196,7 +196,7 @@ fun Application.handleRequest() {
         passcodeAuth("invite-passcode-auth") {
             validate { tokenCredential: TokenCredential ->
                 tokenCredential.value?.let { value ->
-                    passcodeRepo.getValidPasscode(value, VerifyEmailRequest.Purpose.invite)?.let {
+                    passcodeRepo.getValidPasscodeById(value, VerifyEmailRequest.Purpose.invite)?.let {
                         val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
                         return@validate UserPrincipal(
                             tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),

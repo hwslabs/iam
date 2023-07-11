@@ -21,6 +21,7 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.RootUser
@@ -162,6 +163,10 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     }
 
     return this
+}
+
+fun ResendInviteRequest.validate(): ResendInviteRequest {
+    return resendInviteRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun UsernamePasswordCredential.validate(): UsernamePasswordCredential {
@@ -442,6 +447,12 @@ val verifyEmailRequestValidation = Validation<VerifyEmailRequest> {
         run(organizationIdCheck)
     }
     VerifyEmailRequest::purpose required {}
+}
+
+val resendInviteRequestValidation = Validation<ResendInviteRequest> {
+    ResendInviteRequest::email required {
+        run(emailCheck)
+    }
 }
 
 val usernamePasswordCredentialValidation = Validation<UsernamePasswordCredential> {

@@ -68,7 +68,7 @@ fun Route.createUsersApi() {
             var policies: List<String>? = null
 
             if (principal.tokenCredential.type == TokenType.PASSCODE) {
-                val passcode = passcodeRepo.getValidPasscode(
+                val passcode = passcodeRepo.getValidPasscodeById(
                     principal.tokenCredential.value!!,
                     VerifyEmailRequest.Purpose.invite,
                     organizationId = organizationId
