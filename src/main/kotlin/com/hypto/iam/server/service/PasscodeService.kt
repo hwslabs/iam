@@ -233,13 +233,13 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         ) ?: throw EntityNotFoundException("No invite email found for $email")
         val link = createPasscodeLink(record.id, email, Purpose.invite, orgId)
 
-        val user = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
-        if (!user.loginAccess) {
+        val invitingUser = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
+        if (!invitingUser.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
         val organization =
             organizationRepo.findById(orgId) ?: throw EntityNotFoundException("Organization id - $orgId not found")
-        val nameOfUser = user.name ?: user.preferredUsername ?: user.email
+        val nameOfUser = invitingUser.name ?: invitingUser.preferredUsername ?: invitingUser.email
         val templateData = InviteUserTemplateData(link, nameOfUser, organization.name)
         val emailRequest = SendTemplatedEmailRequest.builder()
             .source(appConfig.app.senderEmailAddress)
