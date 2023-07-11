@@ -90,4 +90,22 @@ fun Route.passcodeApis() {
             )
         }
     }
+
+    withPermission(
+        "resendInvite",
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+    ) {
+        post("/organizations/{organizationId}/invites/resend") {
+            val principal = context.principal<UserPrincipal>()!!
+            val organizationId = call.parameters["organizationId"]!!
+            val email = call.parameters["email"]!!
+
+            val passcode = passcodeService.resendInvitePasscode(organizationId, email, principal)
+            call.respondText(
+                text = gson.toJson(passcode),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
 }

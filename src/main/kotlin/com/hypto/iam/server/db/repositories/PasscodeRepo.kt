@@ -47,13 +47,13 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             }
             .fetchOne(0, Int::class.java) ?: 0
 
-    suspend fun getValidPasscode(
+    suspend fun getValidPasscodeById(
         id: String,
         purpose: VerifyEmailRequest.Purpose,
         email: String? = null,
         organizationId: String? = null
     ): PasscodesRecord? {
-        return ctx("passcodes.getValid")
+        return ctx("passcodes.getValidPasscodeById")
             .selectFrom(PASSCODES)
             .where(
                 PASSCODES.ID.eq(id),
@@ -67,6 +67,22 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                     and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
                 }
             }
+            .fetchOne()
+    }
+
+    suspend fun getValidPasscodeByEmail(
+        organizationId: String,
+        purpose: VerifyEmailRequest.Purpose,
+        email: String
+    ): PasscodesRecord? {
+        return ctx("passcodes.getValidPasscodeByEmail")
+            .selectFrom(PASSCODES)
+            .where(
+                PASSCODES.EMAIL.eq(email),
+                PASSCODES.PURPOSE.eq(purpose.toString()),
+                PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()),
+                PASSCODES.ORGANIZATION_ID.eq(organizationId)
+            )
             .fetchOne()
     }
 

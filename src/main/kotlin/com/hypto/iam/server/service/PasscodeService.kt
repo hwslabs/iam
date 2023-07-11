@@ -221,6 +221,43 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return true
     }
 
+    override suspend fun resendInvitePasscode(
+        email: String,
+        orgId: String,
+        principal: UserPrincipal
+    ): Boolean {
+        try {
+            usersService.getUserByEmail(null, email)
+            throw EntityAlreadyExistsException("User with email $email already exists")
+        } catch (e: EntityNotFoundException) {
+            logger.info { "User with email $email does not exist" }
+        }
+
+        val record = passcodeRepo.getValidPasscodeByEmail(
+            organizationId = orgId,
+            purpose = Purpose.invite,
+            email = email
+        ) ?: throw EntityNotFoundException("No invite email found for $email")
+        val link = createPasscodeLink(record.id, email, Purpose.invite, orgId)
+
+        val user = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
+        if (!user.loginAccess) {
+            throw AuthorizationException("User does not have login access")
+        }
+        val organization =
+            organizationRepo.findById(orgId) ?: throw EntityNotFoundException("Organization id - $orgId not found")
+        val nameOfUser = user.name ?: user.preferredUsername ?: user.email
+        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name)
+        val emailRequest = SendTemplatedEmailRequest.builder()
+            .source(appConfig.app.senderEmailAddress)
+            .template(appConfig.app.inviteUserEmailTemplate)
+            .templateData(gson.toJson(templateData))
+            .destination(Destination.builder().toAddresses(email).build())
+            .build()
+        sesClient.sendTemplatedEmail(emailRequest)
+        return true
+    }
+
     override suspend fun listOrgPasscodes(
         organizationId: String,
         purpose: Purpose,
@@ -251,7 +288,7 @@ interface PasscodeService {
         purpose: Purpose,
         paginationContext: PaginationContext
     ): PasscodePaginatedResponse
-
+    suspend fun resendInvitePasscode(email: String, orgId: String, principal: UserPrincipal): Boolean
     suspend fun encryptMetadata(metadata: Map<String, Any>): String
     suspend fun decryptMetadata(metadata: String): Map<String, Any>
 }

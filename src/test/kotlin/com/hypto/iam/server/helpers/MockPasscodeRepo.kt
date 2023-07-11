@@ -18,7 +18,7 @@ fun KoinTest.mockPasscodeRepo(): PasscodeRepo {
             getValidPasscodeCount(any<String>(), any<VerifyEmailRequest.Purpose>())
         } returns 0
         coEvery {
-            getValidPasscode(
+            getValidPasscodeById(
                 any<String>(),
                 any<VerifyEmailRequest.Purpose>(),
                 any<String>()

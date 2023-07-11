@@ -147,7 +147,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
     fun `create organization with invalid root credentials`() {
         declareMock<PasscodeRepo> {
             coEvery {
-                getValidPasscode(
+                getValidPasscodeById(
                     any<String>(),
                     any<VerifyEmailRequest.Purpose>(),
                     any<String>()
@@ -264,7 +264,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             )
 
             coEvery {
-                passcodeRepo.getValidPasscode(any(), VerifyEmailRequest.Purpose.signup)
+                passcodeRepo.getValidPasscodeById(any(), VerifyEmailRequest.Purpose.signup)
             } coAnswers {
                 PasscodesRecord().apply {
                     this.id = testPasscode
