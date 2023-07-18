@@ -256,7 +256,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            false
+                            uniqueUsersAcrossOrganizations = false,
+                            strictPolicyStatementValidation = false
                         )
                     }
                 }
@@ -301,7 +302,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            true
+                            uniqueUsersAcrossOrganizations = true,
+                            strictPolicyStatementValidation = false
                         )
                     }
                 }
@@ -736,7 +738,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            false
+                            uniqueUsersAcrossOrganizations = false,
+                            strictPolicyStatementValidation = false
                         )
                     }
                 }
@@ -781,7 +784,8 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            true
+                            uniqueUsersAcrossOrganizations = true,
+                            strictPolicyStatementValidation = false
                         )
                     }
                 }

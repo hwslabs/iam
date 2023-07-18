@@ -194,9 +194,10 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         orgId: String,
         resource: Resource? = null,
         jwtToken: String,
+        action: String? = null
     ): Pair<Action, Resource> {
         val createdResource = resource ?: createResource(orgId, jwtToken)
-        val actionName = "test-action" + IdGenerator.randomId()
+        val actionName = action ?: ("test-action" + IdGenerator.randomId())
 
         val createActionCall =
             client.post("/organizations/$orgId/resources/${createdResource.name}/actions") {

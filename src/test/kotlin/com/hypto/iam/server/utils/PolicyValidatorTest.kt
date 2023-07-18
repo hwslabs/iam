@@ -13,7 +13,12 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
     @Test
     fun `Test policy- allow and deny for same permission, outcome- deny`() {
         val policyHrn = ResourceHrn("orgId", "alice", IamResources.POLICY, "policy1")
-        val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data1", "read")
+        val (resourceHrn, actionHrn) = DataSetupHelper.generateResourceActionHrn(
+            "orgId",
+            "alice",
+            "data1",
+            "read"
+        )
         val policy = PolicyBuilder(policyHrn)
             .withStatement(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.deny))
             .withStatement(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
@@ -67,9 +72,9 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
         val policyHrn = ResourceHrn("orgId", "alice", IamResources.POLICY, "policy1")
         val policyHrn2 = ResourceHrn("orgId", "bob", IamResources.POLICY, "policy1")
 
-        val (resourceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data1", "read")
-        val (resourceHrn2, actionHrn2) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data2", "read")
-        val (resourceHrn3, actionHrn3) = DataSetupHelper.createResourceActionHrn("orgId", "bob", "data1", "read")
+        val (resourceHrn1, actionHrn1) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data1", "read")
+        val (resourceHrn2, actionHrn2) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data2", "read")
+        val (resourceHrn3, actionHrn3) = DataSetupHelper.generateResourceActionHrn("orgId", "bob", "data1", "read")
         val policy = PolicyBuilder(policyHrn)
             .withStatement(PolicyStatement(resourceHrn1, actionHrn1, PolicyStatement.Effect.deny))
             .withStatement(PolicyStatement(resourceHrn2, actionHrn2, PolicyStatement.Effect.allow))
@@ -86,8 +91,8 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
     fun `Test policy- allow permission by exact match, outcome- allow`() {
         val policyHrn = ResourceHrn("orgId", "alice", IamResources.POLICY, "policy1")
 
-        val (resourceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data1", "read")
-        val (resourceHrn2, actionHrn2) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data2", "read")
+        val (resourceHrn1, actionHrn1) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data1", "read")
+        val (resourceHrn2, actionHrn2) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data2", "read")
 
         val policy = PolicyBuilder(policyHrn)
             .withStatement(PolicyStatement(resourceHrn1, actionHrn1, PolicyStatement.Effect.deny))
@@ -104,10 +109,10 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
     @Test
     fun `Test policy- allow permission by regex match of resource`() {
         val policyHrn = ResourceHrn("orgId", "alice", IamResources.POLICY, "policy1")
-        val (anyResourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "*", "read")
-        val (resourceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data1", "read")
-        val (resourceHrn2, actionHrn2) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data2", "read")
-        val (resourceHrn3, actionHrn3) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data3", "read")
+        val (anyResourceHrn, actionHrn) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "*", "read")
+        val (resourceHrn1, actionHrn1) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data1", "read")
+        val (resourceHrn2, actionHrn2) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data2", "read")
+        val (resourceHrn3, actionHrn3) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data3", "read")
         val policy = PolicyBuilder(policyHrn)
             .withStatement(PolicyStatement(anyResourceHrn, actionHrn, PolicyStatement.Effect.allow))
 
@@ -136,7 +141,7 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
     @Test
     fun `Test policy- allow permission by partial regex match of resource`() {
         val policyHrn = ResourceHrn("orgId", "alice", IamResources.POLICY, "policy1")
-        val (anyResourceInstanceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn(
+        val (anyResourceInstanceHrn, actionHrn) = DataSetupHelper.generateResourceActionHrn(
             "orgId",
             "alice",
             "resource1",
@@ -144,7 +149,7 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
             "*"
         )
 
-        val (resourceInstanceHrn1, actionHrn1) = DataSetupHelper.createResourceActionHrn(
+        val (resourceInstanceHrn1, actionHrn1) = DataSetupHelper.generateResourceActionHrn(
             "orgId",
             "alice",
             "resource1",
@@ -152,7 +157,7 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
             "instance1"
         )
 
-        val (resourceInstanceHrn2, actionHrn2) = DataSetupHelper.createResourceActionHrn(
+        val (resourceInstanceHrn2, actionHrn2) = DataSetupHelper.generateResourceActionHrn(
             "orgId",
             "alice",
             "resource1",
@@ -160,7 +165,7 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
             "instance2"
         )
 
-        val (resourceInstanceHrn3, actionHrn3) = DataSetupHelper.createResourceActionHrn(
+        val (resourceInstanceHrn3, actionHrn3) = DataSetupHelper.generateResourceActionHrn(
             "orgId",
             "alice",
             "resource1",
@@ -168,7 +173,7 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
             "instance3"
         )
 
-        val (resourceInstanceHrn4, actionHrn4) = DataSetupHelper.createResourceActionHrn(
+        val (resourceInstanceHrn4, actionHrn4) = DataSetupHelper.generateResourceActionHrn(
             "orgId",
             "alice",
             "resource2",
@@ -211,7 +216,7 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
     @Test
     fun `Test policy- allow permission by regex match of action`() {
         val policyHrn = ResourceHrn("orgId", "alice", IamResources.POLICY, "policy1")
-        val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "*", "read")
+        val (resourceHrn, actionHrn) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "*", "read")
         val actionHrn2 = ActionHrn("orgId", "alice", "data1", "write").toString()
         val actionHrn3 = ActionHrn("orgId", "alice", "data1", "update").toString()
         val policy = PolicyBuilder(policyHrn)
@@ -243,7 +248,7 @@ class PolicyValidatorTest : AbstractContainerBaseTest() {
     @Test
     fun `Test policy- allow permission by partial regex match of action`() {
         val policyHrn = ResourceHrn("orgId", "alice", IamResources.POLICY, "policy1")
-        val (resourceHrn, actionHrn) = DataSetupHelper.createResourceActionHrn("orgId", "alice", "data1", "prefix*")
+        val (resourceHrn, actionHrn) = DataSetupHelper.generateResourceActionHrn("orgId", "alice", "data1", "prefix*")
         val actionHrn1 = ActionHrn("orgId", "alice", "data1", "prefixread").toString()
         val actionHrn2 = ActionHrn("orgId", "alice", "data1", "prefixwrite").toString()
         val actionHrn3 = ActionHrn("orgId", "alice", "data1", "prefixupdate").toString()

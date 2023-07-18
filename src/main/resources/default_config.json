@@ -41,7 +41,8 @@
     "sign_up_email_template": "<placeholder for signup user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
     "invite_user_email_template": "<placeholder for invite user template name>",
-    "unique_users_across_organizations": false
+    "unique_users_across_organizations": false,
+    "strict_policy_statement_validation": false
   },
   "aws": {
     "region": "us-east-1",
