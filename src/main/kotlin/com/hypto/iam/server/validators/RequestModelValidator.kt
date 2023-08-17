@@ -351,7 +351,6 @@ val updateActionRequestValidation = Validation {
     }
 }
 
-@Suppress("MagicNumber")
 val createPolicyRequestValidation = Validation {
     CreatePolicyRequest::name required {
         run(resourceNameCheck)
@@ -371,7 +370,6 @@ val createPolicyRequestValidation = Validation {
     }
 }
 
-@Suppress("MagicNumber")
 val updatePolicyRequestValidation = Validation {
     UpdatePolicyRequest::description ifPresent {
         run(descriptionCheck)
