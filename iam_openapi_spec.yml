@@ -2025,6 +2025,7 @@ components:
       summary: sample create policy request
       value:
         name: policy_view_invoice
+        description: Allow viewing all invoices except 1
         statements:
           - resource: hrn:XlK5h64gND::invoice/1
             action: hrn:XlK5h64gND::invoice$view
@@ -2035,6 +2036,7 @@ components:
 
     UpdatePolicyRequest:
       summary: sample update policy request
+      description: Allow viewing all invoices except 1
       value:
         statements:
           - resource: hrn:XlK5h64gND::invoice/1
@@ -2372,6 +2374,7 @@ components:
       summary: A sample policy
       value:
         name: policy_viewer
+        description: Allow viewing invoices
         organizationId: XlK5h64gND
         version: 1
         statements:
@@ -2610,7 +2613,7 @@ components:
           maxLength: 500
 
     CreatePolicyRequest:
-      description: Payload to update action
+      description: Payload to create policy
       type: object
       additionalProperties: false
       required:
@@ -2620,18 +2623,22 @@ components:
         name:
           type: string
           maxLength: 50
+        description:
+          type: string
+          maxLength: 512
         statements:
           maxItems: 20
           items:
             $ref: '#/components/schemas/PolicyStatement'
 
     UpdatePolicyRequest:
-      description: Payload to update action
+      description: Payload to update policy
       type: object
       additionalProperties: false
-      required:
-        - statements
       properties:
+        description:
+          type: string
+          maxLength: 512
         statements:
           maxItems: 20
           items:
@@ -3114,6 +3121,9 @@ components:
           maxLength: 50
         hrn:
           type: string
+        description:
+          type: string
+          maxLength: 512
         version:
           type: integer
           maxLength: 5

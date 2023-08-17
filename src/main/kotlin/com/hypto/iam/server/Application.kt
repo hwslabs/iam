@@ -77,15 +77,12 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
-import io.ktor.util.AttributeKey
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.MeterBinder
 import java.time.Duration
 import kotlin.time.Duration.Companion.ZERO
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeMark
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -98,12 +95,6 @@ private const val ROOT_ORG = "hypto-root"
 
 private const val MAX_THREADS_WAITING_FOR_DB_CONNS = 100
 
-// we need a typed key for using call attributes
-// particular name and value in CallStartTime makes no big difference, just for better debugging and readability
-@OptIn(ExperimentalTime::class)
-val CALL_START_TIME = AttributeKey<TimeMark>("CallStartTime")
-
-@OptIn(ExperimentalTime::class)
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val appConfig: AppConfig by inject()

@@ -40,6 +40,7 @@ import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minItems
 import io.konform.validation.jsonschema.minLength
 import io.konform.validation.jsonschema.pattern
+import io.konform.validation.onEach
 
 // This file contains extension functions to validate input data given by clients
 
@@ -350,9 +351,13 @@ val updateActionRequestValidation = Validation<UpdateActionRequest> {
     }
 }
 
+@Suppress("MagicNumber")
 val createPolicyRequestValidation = Validation<CreatePolicyRequest> {
     CreatePolicyRequest::name required {
         run(resourceNameCheck)
+    }
+    CreatePolicyRequest::description ifPresent {
+        run(descriptionCheck)
     }
     CreatePolicyRequest::statements required {
         minItems(MIN_POLICY_STATEMENTS)
@@ -366,13 +371,19 @@ val createPolicyRequestValidation = Validation<CreatePolicyRequest> {
     }
 }
 
+@Suppress("MagicNumber")
 val updatePolicyRequestValidation = Validation<UpdatePolicyRequest> {
+    UpdatePolicyRequest::description ifPresent {
+        run(descriptionCheck)
+    }
     UpdatePolicyRequest::statements required {
         minItems(MIN_POLICY_STATEMENTS)
         maxItems(MAX_POLICY_STATEMENTS)
     }
-    UpdatePolicyRequest::statements onEach {
-        policyStatementValidation
+    UpdatePolicyRequest::statements ifPresent {
+        onEach {
+            policyStatementValidation
+        }
     }
 }
 

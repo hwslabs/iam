@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
 
-data class RawPolicyPayload(val hrn: ResourceHrn, val statements: String)
+data class RawPolicyPayload(val hrn: ResourceHrn, val description: String? = null, val statements: String)
 
 object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
 
@@ -43,9 +43,10 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
     suspend fun fetchByHrns(hrns: List<String>): List<PoliciesRecord> =
         ctx("policies.fetchByHrns").selectFrom(POLICIES).where(POLICIES.HRN.`in`(hrns)).fetch()
 
-    suspend fun create(hrn: ResourceHrn, statements: String): PoliciesRecord {
+    suspend fun create(hrn: ResourceHrn, description: String?, statements: String): PoliciesRecord {
         val record = PoliciesRecord()
             .setHrn(hrn.toString())
+            .setDescription(description)
             .setOrganizationId(hrn.organization)
             .setVersion(1)
             .setCreatedAt(LocalDateTime.now())
@@ -65,7 +66,8 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
                 1,
                 it.statements,
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                it.description
             )
         }
         return insertBatch("policies.batchCreate", policiesToCreate)
@@ -77,12 +79,18 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
         return record.delete() > 0
     }
 
-    suspend fun update(hrn: String, statements: String, version: Int? = null): PoliciesRecord? {
+    suspend fun update(
+        hrn: String,
+        description: String? = null,
+        statements: String? = null,
+        version: Int? = null
+    ): PoliciesRecord? {
         val condition = POLICIES.HRN.eq(hrn).also { it1 -> version?.let { it1.and(POLICIES.VERSION.eq(it)) } }
         return ctx("policies.update")
             .update(POLICIES)
-            .set(POLICIES.STATEMENTS, statements)
             .set(POLICIES.VERSION, POLICIES.VERSION.plus(1))
+            .let { i -> description?.let { i.set(POLICIES.DESCRIPTION, it) } ?: i }
+            .let { i -> statements?.let { i.set(POLICIES.STATEMENTS, it) } ?: i }
             .set(POLICIES.UPDATED_AT, LocalDateTime.now())
             .where(condition)
             .returning()

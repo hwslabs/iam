@@ -1,8 +1,10 @@
 package com.hypto.iam.server.service
 
 import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
+import com.hypto.iam.server.db.repositories.RawPolicyPayload
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.models.User
+import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import net.pwall.mustache.Template
 import net.pwall.mustache.parser.MustacheParserException
@@ -28,8 +30,11 @@ class PolicyTemplatesServiceImpl : KoinComponent, PolicyTemplatesService {
             } catch (e: MustacheParserException) {
                 throw IllegalStateException("Invalid template ${it.name} - ${e.localizedMessage}", e)
             }
-
-            it.name to template.processToString(templateVariablesMap)
+            RawPolicyPayload(
+                hrn = ResourceHrn(organizationId, "", IamResources.POLICY, it.name),
+                description = it.description,
+                statements = template.processToString(templateVariablesMap)
+            )
         }
 
         val policies = policyService.batchCreatePolicyRaw(organizationId, rawPolicyPayloadsList)

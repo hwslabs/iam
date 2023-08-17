@@ -87,7 +87,8 @@ class PolicyBuilderTest : AbstractContainerBaseTest() {
             1,
             policy1Statements,
             LocalDateTime.now(),
-            LocalDateTime.now()
+            LocalDateTime.now(),
+            null
         )
 
         val userHrn = ResourceHrn(orgId, "", IamResources.USER, "user1").toString()

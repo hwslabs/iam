@@ -44,7 +44,8 @@ fun Route.policyApi() {
                 throw AuthorizationException("Cross organization policy creation is not supported")
             }
 
-            val policy = policyService.createPolicy(organizationId, request.name, request.statements)
+            val policy =
+                policyService.createPolicy(organizationId, request.name, request.description, request.statements)
 
             call.respondText(
                 text = gson.toJson(policy),
@@ -161,7 +162,7 @@ fun Route.policyApi() {
                 ?: throw IllegalArgumentException("Required name to update the policy details")
             val request = call.receive<UpdatePolicyRequest>().validate()
 
-            val response = policyService.updatePolicy(organizationId, name, request.statements)
+            val response = policyService.updatePolicy(organizationId, name, request)
 
             call.respondText(
                 text = gson.toJson(response),
