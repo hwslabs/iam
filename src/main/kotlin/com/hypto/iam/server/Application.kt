@@ -46,22 +46,20 @@ import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.validators.InviteMetadata
 import com.hypto.iam.server.validators.validate
 import com.sksamuel.cohort.HealthCheckRegistry
-import com.sksamuel.cohort.db.DatabaseHealthCheck
+import com.sksamuel.cohort.db.DatabaseConnectionHealthCheck
 import com.sksamuel.cohort.hikari.HikariDataSourceManager
 import com.sksamuel.cohort.hikari.HikariPendingThreadsHealthCheck
 import com.sksamuel.cohort.ktor.Cohort
-import com.sksamuel.cohort.ktor.EngineShutdownHook
 import com.sksamuel.cohort.logback.LogbackManager
 import com.sksamuel.cohort.threads.ThreadDeadlockHealthCheck
 import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCallPipeline
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.basic
 import io.ktor.server.cio.CIO
+import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.addShutdownHook
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
@@ -76,7 +74,6 @@ import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.doublereceive.DoubleReceive
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
@@ -89,8 +86,8 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeMark
-import kotlin.time.TimeSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
@@ -98,8 +95,6 @@ import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-Id"
 private const val ROOT_ORG = "hypto-root"
-
-private val shutdownHook = EngineShutdownHook(prewait = 1.seconds, gracePeriod = 30.seconds, timeout = 45.seconds)
 
 private const val MAX_THREADS_WAITING_FOR_DB_CONNS = 100
 
@@ -119,23 +114,9 @@ fun Application.handleRequest() {
     val micrometerRegistry: MeterRegistry by inject()
     val micrometerBindings: List<MeterBinder> by inject()
 
-    intercept(ApplicationCallPipeline.Setup) {
-        // intercept before calling routing and mark every incoming call with a TimeMark
-        call.attributes.put(CALL_START_TIME, TimeSource.Monotonic.markNow())
-    }
     install(DefaultHeaders)
     install(CallLogging) {
         callIdMdc("call-id")
-        format { call ->
-            val time = when (val startTime = call.attributes.getOrNull(CALL_START_TIME)) {
-                null -> "" // just in case
-                else -> startTime.elapsedNow().toString()
-            }
-            val status = call.response.status()
-            val httpMethod = call.request.httpMethod.value
-            val userAgent = call.request.headers["User-Agent"]
-            "Status: $status, HTTP method: $httpMethod, User agent: $userAgent, time: $time"
-        }
     }
     install(CallId) {
         retrieveFromHeader(REQUEST_ID_HEADER)
@@ -310,12 +291,11 @@ fun Application.handleRequest() {
                     ZERO,
                     1.minutes
                 )
-                register("DatabaseHealthCheck", DatabaseHealthCheck(pool), ZERO, 1.minutes)
+                register("DatabaseHealthCheck", DatabaseConnectionHealthCheck(pool), ZERO, 1.minutes)
                 // TODO: Configure the below check based on infra set-up
                 // register(DiskSpaceHealthCheck(/*FileStore for root(/) */, 1.0)), 1.minutes)
             }
         )
-        onShutdown(shutdownHook)
     }
 }
 
@@ -341,7 +321,21 @@ fun main() {
             callGroupSize = appConfig.server.callGroupSize
         }
     ).apply {
-        shutdownHook.setEngine(this)
-        addShutdownHook { runBlocking { shutdownHook.run() } }
+        addShutdownHook {
+            runBlocking {
+                shutdown(this@apply)
+            }
+        }
     }.start(wait = true)
+}
+
+private val preWait = 1.seconds
+private val gracePeriod = 30.seconds
+private val timeout = 45.seconds
+private suspend fun shutdown(engine: ApplicationEngine) {
+    delay(preWait)
+    val log = engine.application.environment.log
+    log.info("Shutting down HTTP server...")
+    engine.stop(gracePeriod.inWholeMilliseconds, timeout.inWholeMilliseconds)
+    log.info("HTTP server shutdown!!")
 }

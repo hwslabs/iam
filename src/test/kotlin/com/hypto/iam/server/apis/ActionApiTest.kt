@@ -41,8 +41,8 @@ class ActionApiTest : AbstractContainerBaseTest() {
             }
             val (organizationResponse, _) = createOrganization()
 
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
             val resource = createResource(organization.id, rootUserToken)
             val response = client.post("/organizations/${organization.id}/resources/${resource.name}/actions") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -74,8 +74,8 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val (action, resource) = createAction(organization.id, null, rootUserToken)
 
@@ -106,12 +106,12 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse1, _) = createOrganization()
-            val organization1 = organizationResponse1.organization!!
-            val rootUserToken1 = organizationResponse1.rootUserToken!!
+            val organization1 = organizationResponse1.organization
+            val rootUserToken1 = organizationResponse1.rootUserToken
 
             val (organizationResponse2, _) = createOrganization()
-            val organization2 = organizationResponse2.organization!!
-            val rootUserToken2 = organizationResponse2.rootUserToken!!
+            val organization2 = organizationResponse2.organization
+            val rootUserToken2 = organizationResponse2.rootUserToken
 
             val (action, resource) = createAction(organization1.id, null, rootUserToken1)
 
@@ -138,8 +138,8 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val (action, resource) = createAction(organization.id, null, rootUserToken)
             var response = client.delete(
@@ -171,8 +171,8 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val (action1, resource) = createAction(organization.id, null, rootUserToken,)
             val (action2, _) = createAction(organization.id, resource, rootUserToken)
@@ -203,8 +203,8 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val (action, resource) = createAction(organization.id, null, rootUserToken)
             val newDescription = "new description"
