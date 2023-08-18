@@ -40,8 +40,8 @@ class KeyApiTest : AbstractContainerBaseTest() {
             val (organizationResponse, _) = createOrganization()
 
             val createTokenCall =
-                client.post("/organizations/${organizationResponse.organization?.id}/token") {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                client.post("/organizations/${organizationResponse.organization.id}/token") {
+                    header(HttpHeaders.ContentType, Json.toString())
                     header(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserToken}")
                 }
             val token = gson

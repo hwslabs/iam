@@ -173,7 +173,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
          *   If not provided, generated token will have the expiry of the token used for requesting.
          *   If a credential is used for requesting, expiry will be 24 hours from the time of requesting.
          */
-        val expiryDate = request.expiry?.let { Date.from(Instant.now().plusSeconds(it.toLong())) }
+        val expiryDate = request.expiry?.let { Date.from(Instant.now().plusSeconds(it)) }
             ?: requesterPrincipal.claims?.expiration
             ?: Date.from(Instant.now().plusSeconds(SECONDS_IN_DAY))
 

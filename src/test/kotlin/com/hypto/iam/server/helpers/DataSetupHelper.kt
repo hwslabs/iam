@@ -244,24 +244,22 @@ object DataSetupHelper : AutoCloseKoinTest() {
     }
 
     // This function is used for cleaning up all the data created during the test for the organization
-    fun deleteOrganization(orgId: String, engine: TestApplicationEngine) {
+    fun deleteOrganization(orgId: String) {
         runBlocking {
-            with(engine) {
-                // TODO: Optimize the queries to do it one query (CASCADE DELETE)
-                policyRepo.fetchByOrganizationId(orgId).forEach { policies ->
-                    principalPoliciesRepo.fetch(PRINCIPAL_POLICIES.POLICY_HRN, policies.hrn).forEach {
-                        principalPoliciesRepo.delete(it)
-                    }
-                    policyRepo.delete(policies)
+            // TODO: Optimize the queries to do it one query (CASCADE DELETE)
+            policyRepo.fetchByOrganizationId(orgId).forEach { policies ->
+                principalPoliciesRepo.fetch(PRINCIPAL_POLICIES.POLICY_HRN, policies.hrn).forEach {
+                    principalPoliciesRepo.delete(it)
                 }
-                resourceRepo.fetch(RESOURCES.ORGANIZATION_ID, orgId).forEach { resource ->
-                    actionRepo.fetch(ACTIONS.RESOURCE_HRN, resource.hrn).forEach {
-                        actionRepo.delete(it)
-                    }
-                    resourceRepo.delete(resource)
-                }
-                organizationRepo.deleteById(orgId)
+                policyRepo.delete(policies)
             }
+            resourceRepo.fetch(RESOURCES.ORGANIZATION_ID, orgId).forEach { resource ->
+                actionRepo.fetch(ACTIONS.RESOURCE_HRN, resource.hrn).forEach {
+                    actionRepo.delete(it)
+                }
+                resourceRepo.delete(resource)
+            }
+            organizationRepo.deleteById(orgId)
         }
     }
 }

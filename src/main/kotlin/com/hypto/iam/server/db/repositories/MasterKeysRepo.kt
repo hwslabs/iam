@@ -23,7 +23,7 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
 
     override suspend fun dao(): DAOImpl<MasterKeysRecord, MasterKeys, UUID> {
         return txMan.getDao(
-            com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS,
+            MASTER_KEYS,
             MasterKeys::class.java,
             idFun
         )
@@ -33,14 +33,14 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
      * Fetch a unique record that has `id = value`
      */
     suspend fun fetchById(value: String): MasterKeys? {
-        return fetchOne(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.ID, UUID.fromString(value))
+        return fetchOne(MASTER_KEYS.ID, UUID.fromString(value))
     }
 
     /**
      * Fetch a unique record that has `status = "SIGNING"`
      */
     suspend fun fetchForSigning(): MasterKeys? {
-        return fetchOne(com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS.STATUS, Status.SIGNING.value)
+        return fetchOne(MASTER_KEYS.STATUS, Status.SIGNING.value)
     }
 
     // TODO: #1 - [IMPORTANT] Encrypt private keys stored in database with a passphrase

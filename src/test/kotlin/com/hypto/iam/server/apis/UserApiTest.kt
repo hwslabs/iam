@@ -85,8 +85,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
@@ -146,8 +146,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
@@ -209,8 +209,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization(preferredUsername)
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 coEvery {
                     cognitoClient.adminCreateUser(any<AdminCreateUserRequest>())
@@ -255,8 +255,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
                 createResource(organization.id, rootUserToken)
 
                 val response = client.post("/organizations/${organization.id}/users") {
@@ -284,8 +284,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, rootUser) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 createResource(organization.id, rootUserToken)
 
@@ -332,8 +332,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, rootUser) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 createResource(organization.id, rootUserToken)
 
@@ -373,8 +373,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 // Create user
                 val (user1, _) = createUser(
@@ -432,8 +432,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 // Create user
                 val (user1, _) = createUser(
@@ -473,8 +473,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 // Create user
                 val (user1, _) = createUser(
@@ -553,8 +553,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
                 createResource(organization.id, rootUserToken)
 
                 // Create user1
@@ -599,8 +599,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
                 val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
 
                 val createUserRequest = CreateUserRequest(
@@ -657,8 +657,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, rootUser) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
                 val username = organizationResponse.organization.rootUser.username
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
@@ -688,8 +688,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, rootUser) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
                 val username = organizationResponse.organization.rootUser.username
 
                 coEvery {
@@ -723,8 +723,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
@@ -781,8 +781,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
@@ -851,8 +851,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, rootUser) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
                 val username = organizationResponse.organization.rootUser.username
 
                 val changePasswordRequest = ChangeUserPasswordRequest(
@@ -905,7 +905,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, createdUser) = createOrganization()
-                val organizationId = organizationResponse.organization!!.id
+                val organizationId = organizationResponse.organization.id
                 val testPasscode = "testPasscode"
 
                 val listUsersResponse =
@@ -985,8 +985,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
@@ -1064,8 +1064,8 @@ class UserApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",

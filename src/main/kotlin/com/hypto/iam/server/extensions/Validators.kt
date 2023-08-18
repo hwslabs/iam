@@ -68,7 +68,7 @@ fun ValidationBuilder<String>.noEndSpaces() = addConstraint("must not have space
 
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
 const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
-val nameCheck = Validation<String> {
+val nameCheck = Validation {
     minLength(MIN_LENGTH) hint "Minimum length expected is $MIN_LENGTH"
     maxLength(MAX_NAME_LENGTH) hint "Maximum length supported for name is $MAX_NAME_LENGTH characters"
     pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT

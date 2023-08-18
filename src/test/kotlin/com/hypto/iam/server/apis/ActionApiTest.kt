@@ -174,7 +174,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val (action1, resource) = createAction(organization.id, null, rootUserToken,)
+            val (action1, resource) = createAction(organization.id, null, rootUserToken)
             val (action2, _) = createAction(organization.id, resource, rootUserToken)
             val response = client.get(
                 "/organizations/${organization.id}/resources/${resource.name}/actions"

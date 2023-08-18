@@ -102,7 +102,7 @@ fun Route.actionApi() {
             val request = call.receive<UpdateActionRequest>().validate()
 
             val response =
-                actionService.updateAction(organizationId!!, resourceName!!, actionName!!, request.description ?: "")
+                actionService.updateAction(organizationId!!, resourceName!!, actionName!!, request.description)
 
             call.respondText(
                 text = gson.toJson(response),

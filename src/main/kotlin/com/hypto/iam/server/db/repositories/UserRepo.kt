@@ -16,7 +16,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
     private val idFun = fun(user: Users) = user.hrn
 
     override suspend fun dao(): DAOImpl<UsersRecord, Users, String> =
-        txMan.getDao(com.hypto.iam.server.db.tables.Users.USERS, Users::class.java, idFun)
+        txMan.getDao(USERS, Users::class.java, idFun)
 
     suspend fun insert(usersRecord: UsersRecord): UsersRecord? {
         return ctx("users.insert").insertInto(USERS).set(usersRecord).returning().fetchOne()
