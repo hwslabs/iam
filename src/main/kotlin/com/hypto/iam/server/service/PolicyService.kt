@@ -12,6 +12,7 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.Policy
 import com.hypto.iam.server.models.PolicyPaginatedResponse
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
@@ -23,7 +24,12 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     private val policyRepo: PoliciesRepo by inject()
     private val principalPolicyRepo: PrincipalPoliciesRepo by inject()
 
-    override suspend fun createPolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
+    override suspend fun createPolicy(
+        organizationId: String,
+        name: String,
+        description: String?,
+        statements: List<PolicyStatement>
+    ): Policy {
         val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, name)
         if (policyRepo.existsById(policyHrn.toString())) {
             throw EntityAlreadyExistsException("Policy with name [$name] already exists")
@@ -33,30 +39,21 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         val newPolicyBuilder = PolicyBuilder(policyHrn)
         statements.forEach { newPolicyBuilder.withStatement(it) }
 
-        val policyRecord = policyRepo.create(policyHrn, newPolicyBuilder.build())
+        val policyRecord = policyRepo.create(policyHrn, description, newPolicyBuilder.build())
         return Policy.from(policyRecord)
     }
 
-    /**
-     * example of rawPolicyPayloadsList:
-     *   [[policy_name_1, <policy_1_statements as string>], [policy_name_2, <policy_2_statements as string>]]
-     */
     override suspend fun batchCreatePolicyRaw(
         organizationId: String,
-        rawPolicyPayloadsList: List<Pair<String, String>>
+        rawPolicyPayloadsList: List<RawPolicyPayload>
     ): List<PoliciesRecord> {
-        val policyHrnStrings = mutableListOf<String>()
-        val rawPolicyPayloads = rawPolicyPayloadsList.map {
-            val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, it.first)
-            policyHrnStrings.add(policyHrn.toString())
-            RawPolicyPayload(policyHrn, it.second)
-        }
+        val policyHrnStrings = rawPolicyPayloadsList.map { it.hrn.toString() }
 
         if (policyRepo.fetchByHrns(policyHrnStrings).isNotEmpty()) {
             throw EntityAlreadyExistsException("One or more policies already exists")
         }
 
-        return policyRepo.batchCreate(rawPolicyPayloads)
+        return policyRepo.batchCreate(rawPolicyPayloadsList)
     }
 
     override suspend fun getPolicy(organizationId: String, name: String): Policy {
@@ -66,17 +63,28 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         return Policy.from(policyRecord)
     }
 
-    override suspend fun updatePolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy {
+    override suspend fun updatePolicy(
+        organizationId: String,
+        name: String,
+        updatePolicyRequest: UpdatePolicyRequest
+    ): Policy {
         val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, name)
         val policyHrnStr = policyHrn.toString()
 
-        // TODO: Validate policy statements (actions and resourceTypes)
-        val newPolicyBuilder = PolicyBuilder(policyHrn)
-        statements.forEach { newPolicyBuilder.withStatement(it) }
+        val policyString = if (updatePolicyRequest.statements != null) {
+            // TODO: Validate policy statements (actions and resourceTypes)
+            PolicyBuilder(policyHrn).let { builder ->
+                updatePolicyRequest.statements.forEach { builder.withStatement(it) }
+                builder.build()
+            }
+        } else {
+            null
+        }
 
         val policyRecord = policyRepo.update(
             policyHrnStr,
-            newPolicyBuilder.build()
+            description = updatePolicyRequest.description,
+            statements = policyString
         )
         policyRecord ?: throw EntityNotFoundException("cannot find policy: $name")
         return Policy.from(policyRecord)
@@ -113,9 +121,14 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 }
 
 interface PolicyService {
-    suspend fun createPolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy
+    suspend fun createPolicy(
+        organizationId: String,
+        name: String,
+        description: String?,
+        statements: List<PolicyStatement>
+    ): Policy
     suspend fun getPolicy(organizationId: String, name: String): Policy
-    suspend fun updatePolicy(organizationId: String, name: String, statements: List<PolicyStatement>): Policy
+    suspend fun updatePolicy(organizationId: String, name: String, updatePolicyRequest: UpdatePolicyRequest): Policy
     suspend fun deletePolicy(organizationId: String, name: String): BaseSuccessResponse
     suspend fun getPoliciesByUser(
         organizationId: String,
@@ -126,6 +139,6 @@ interface PolicyService {
     suspend fun listPolicies(organizationId: String, context: PaginationContext): PolicyPaginatedResponse
     suspend fun batchCreatePolicyRaw(
         organizationId: String,
-        rawPolicyPayloadsList: List<Pair<String, String>>
+        rawPolicyPayloadsList: List<RawPolicyPayload>
     ): List<PoliciesRecord>
 }

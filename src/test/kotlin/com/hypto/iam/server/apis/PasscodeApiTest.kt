@@ -160,7 +160,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organizationId = organizationResponse.organization!!.id
+            val organizationId = organizationResponse.organization.id
 
             val requestBody = VerifyEmailRequest(
                 email = "unknownuser@email.com",
@@ -180,7 +180,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 response.contentType()
             )
 
-            deleteOrganization(organizationId,)
+            deleteOrganization(organizationId)
         }
     }
 

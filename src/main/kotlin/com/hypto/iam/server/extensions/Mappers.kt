@@ -104,6 +104,7 @@ fun Policy.Companion.from(record: PoliciesRecord): Policy {
     require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
         name = hrn.resourceInstance!!,
+        description = record.description,
         organizationId = hrn.organization,
         version = record.version,
         hrn = hrn.toString(),
@@ -116,6 +117,7 @@ fun Policy.Companion.from(record: Policies): Policy {
     require(hrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return Policy(
         name = hrn.resourceInstance!!,
+        description = record.description,
         organizationId = hrn.organization,
         version = record.version,
         hrn = hrn.toString(),

@@ -41,8 +41,8 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val resourceName = "resource-name"
 
@@ -70,8 +70,8 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val resourceName = "resource-name"
             createResource(organization.id, rootUserToken, resourceName)
@@ -96,12 +96,12 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse1, _) = createOrganization()
-            val organization1 = organizationResponse1.organization!!
-            val rootUserToken1 = organizationResponse1.rootUserToken!!
+            val organization1 = organizationResponse1.organization
+            val rootUserToken1 = organizationResponse1.rootUserToken
 
             val (organizationResponse2, _) = createOrganization()
-            val organization2 = organizationResponse2.organization!!
-            val rootUserToken2 = organizationResponse2.rootUserToken!!
+            val organization2 = organizationResponse2.organization
+            val rootUserToken2 = organizationResponse2.rootUserToken
 
             val resource = createResource(organization1.id, rootUserToken1)
 
@@ -123,8 +123,8 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val resource = createResource(organization.id, rootUserToken)
 
@@ -153,8 +153,8 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val resource1 = createResource(organization.id, rootUserToken)
             val resource2 = createResource(organization.id, rootUserToken)
@@ -182,8 +182,8 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val (organizationResponse, _) = createOrganization()
-            val organization = organizationResponse.organization!!
-            val rootUserToken = organizationResponse.rootUserToken!!
+            val organization = organizationResponse.organization
+            val rootUserToken = organizationResponse.rootUserToken
 
             val resource = createResource(organization.id, rootUserToken)
             val newDescription = "new description"

@@ -53,8 +53,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganizationResponse, _) = createOrganization()
 
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
 
                 val policyName = "test-policy"
 
@@ -112,7 +112,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
                 // Arrange
                 val (createOrganizationResponse, _) = createOrganization()
-                val createdOrganization = createOrganizationResponse.organization!!
+                val createdOrganization = createOrganizationResponse.organization
 
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
@@ -126,7 +126,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 client.post(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -138,7 +138,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.post(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -168,7 +168,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, listOf())
 
                 val response = client.post(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -204,7 +204,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 )
 
                 val response = client.post(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -229,8 +229,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganizationResponse, _) = createOrganization()
 
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
 
                 val policyName = "testPolicy"
 
@@ -257,7 +257,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     response.contentType()
                 )
 
-                deleteOrganization(createdOrganization.id,)
+                deleteOrganization(createdOrganization.id)
             }
         }
     }
@@ -273,7 +273,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
                 // Arrange
                 val (createOrganizationResponse, _) = createOrganization()
-                val createdOrganization = createOrganizationResponse.organization!!
+                val createdOrganization = createOrganizationResponse.organization
 
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
@@ -287,7 +287,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall = client.post(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -301,7 +301,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/${createdPolicy.name}"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/${createdPolicy.name}"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -317,10 +317,10 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 )
 
                 val responseBody = gson.fromJson(response.bodyAsText(), Policy::class.java)
-                Assertions.assertEquals(createOrganizationResponse.organization?.id, responseBody.organizationId)
+                Assertions.assertEquals(createOrganizationResponse.organization.id, responseBody.organizationId)
 
                 val expectedPolicyHrn = ResourceHrn(
-                    organization = createOrganizationResponse.organization?.id!!,
+                    organization = createOrganizationResponse.organization.id,
                     resource = IamResources.POLICY,
                     account = null,
                     resourceInstance = policyName
@@ -344,7 +344,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -373,7 +373,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
                 // Arrange
                 val (createOrganizationResponse, _) = createOrganization()
-                val createdOrganization = createOrganizationResponse.organization!!
+                val createdOrganization = createOrganizationResponse.organization
 
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) = createResourceActionHrn(
@@ -388,7 +388,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // So, list API must return 3 policies in total.
                 (1..2).forEach {
                     client.post(
-                        "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                        "/organizations/${createOrganizationResponse.organization.id}/policies"
                     ) {
                         val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -402,7 +402,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val actResponse = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies?pageSize=2"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies?pageSize=2"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -426,7 +426,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - Last page
 
                 val lastPageResponse = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies?" +
+                    "/organizations/${createOrganizationResponse.organization.id}/policies?" +
                         "pageSize=3&nextToken=${responseBody.nextToken}"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -454,7 +454,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - Empty page
 
                 val emptyPageResponse = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies?" +
+                    "/organizations/${createOrganizationResponse.organization.id}/policies?" +
                         "pageSize=2&nextToken=${responseBody2.nextToken}"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -492,7 +492,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val actResponse = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies?pageSize=2"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies?pageSize=2"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -516,7 +516,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - Empty page
 
                 val emptyPageResponse = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies?" +
+                    "/organizations/${createOrganizationResponse.organization.id}/policies?" +
                         "pageSize=2&nextToken=${responseBody.nextToken}"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -557,7 +557,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val (createdOrganizationResponse, _) = createOrganization()
 
                 // Create a policy
-                val createdOrganization = createdOrganizationResponse.organization!!
+                val createdOrganization = createdOrganizationResponse.organization
 
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
@@ -589,11 +589,12 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Update the created policy
 
                 val updatePolicyRequest = UpdatePolicyRequest(
+                    "new description",
                     listOf(
                         PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow)
                     )
                 )
-                val updatedAndCreatedPolicyResponse = client.patch(
+                val updatedCreatedPolicyResponse = client.patch(
                     "/organizations/${createdOrganization.id}/policies/$policyName"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -605,13 +606,14 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     setBody(gson.toJson(updatePolicyRequest))
                 }
                 // Assert
-                Assertions.assertEquals(HttpStatusCode.OK, updatedAndCreatedPolicyResponse.status)
+                Assertions.assertEquals(HttpStatusCode.OK, updatedCreatedPolicyResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    updatedAndCreatedPolicyResponse.contentType()
+                    updatedCreatedPolicyResponse.contentType()
                 )
 
-                val results = gson.fromJson(updatedAndCreatedPolicyResponse.bodyAsText(), Policy::class.java)
+                val results = gson.fromJson(updatedCreatedPolicyResponse.bodyAsText(), Policy::class.java)
+                Assertions.assertEquals(results.description, updatePolicyRequest.description)
                 Assertions.assertEquals(results.statements, updatePolicyRequest.statements)
             }
         }
@@ -628,7 +630,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Act
 
                 // Update the created policy
-                val createdOrganization = createdOrganizationResponse.organization!!
+                val createdOrganization = createdOrganizationResponse.organization
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) = createResourceActionHrn(
                     createdOrganization.id,
@@ -638,6 +640,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 )
 
                 val updatePolicyRequest = UpdatePolicyRequest(
+                    null,
                     listOf(
                         PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow)
                     )
@@ -675,7 +678,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Arrange
                 val (createOrganizationResponse, _) = createOrganization()
 
-                val createdOrganization = createOrganizationResponse.organization!!
+                val createdOrganization = createOrganizationResponse.organization
 
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
@@ -690,7 +693,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall = client.post(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -704,7 +707,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.delete(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/${createdPolicy.name}"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/${createdPolicy.name}"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -732,7 +735,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.delete(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existent+policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existent+policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -761,7 +764,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 }
                 // Arrange
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
+                val createdOrganization = createdOrganizationResponse.organization
                 val username = createdOrganizationResponse.organization.rootUser.username
 
                 (1..2).forEach {
@@ -896,8 +899,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",
@@ -959,8 +962,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (organizationResponse, _) = createOrganization()
-                val organization = organizationResponse.organization!!
-                val rootUserToken = organizationResponse.rootUserToken!!
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
 
                 val createUser1Request = CreateUserRequest(
                     preferredUsername = "testUserName1",

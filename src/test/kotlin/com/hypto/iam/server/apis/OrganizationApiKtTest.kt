@@ -426,7 +426,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val createdOrganization =
                 gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
-            val response = client.get("/organizations/${createdOrganization.organization!!.id}") {
+            val response = client.get("/organizations/${createdOrganization.organization.id}") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
             }
@@ -525,7 +525,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
             val updatedOrgName = "updated-org" + IdGenerator.randomId()
-            val response = client.patch("/organizations/${createdOrganization.organization!!.id}") {
+            val response = client.patch("/organizations/${createdOrganization.organization.id}") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
                 setBody(

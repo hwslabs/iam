@@ -102,7 +102,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     tokenResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization?.id,
+                    createdOrganization.organization.id,
                     tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
@@ -119,12 +119,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                 listOf(
                                     ResourceAction(
                                         ResourceHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             resourceInstance = username
                                         ).toString(),
                                         ActionHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             action = "createCredentials"
                                         ).toString()
@@ -140,7 +140,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     validateResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization?.id,
+                    createdOrganization.organization.id,
                     validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val validationResponseBody = gson.fromJson(
@@ -176,7 +176,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     tokenResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization!!.id,
+                    createdOrganization.organization.id,
                     tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val responseBody = tokenResponse.bodyAsText()
@@ -193,12 +193,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                 listOf(
                                     ResourceAction(
                                         ResourceHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             resourceInstance = username
                                         ).toString(),
                                         ActionHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             action = "createCredentials"
                                         ).toString()
@@ -214,7 +214,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     validateResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization!!.id,
+                    createdOrganization.organization.id,
                     validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val validationResponseBody = gson.fromJson(
@@ -334,7 +334,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         tokenResponse.contentType()
                     )
                     Assertions.assertEquals(
-                        createdOrganization.organization?.id,
+                        createdOrganization.organization.id,
                         tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
                     )
                     val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
@@ -581,7 +581,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     loginResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization?.id,
+                    createdOrganization.organization.id,
                     loginResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val responseBody = gson.fromJson(loginResponse.bodyAsText(), TokenResponse::class.java)
@@ -598,12 +598,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                 listOf(
                                     ResourceAction(
                                         ResourceHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             resourceInstance = username
                                         ).toString(),
                                         ActionHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             action = "createCredentials"
                                         ).toString()
@@ -620,7 +620,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     validateResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization?.id,
+                    createdOrganization.organization.id,
                     validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val validationResponseBody = gson.fromJson(
@@ -656,7 +656,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     loginResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization!!.id,
+                    createdOrganization.organization.id,
                     loginResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val responseBody = loginResponse.bodyAsText()
@@ -673,12 +673,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                 listOf(
                                     ResourceAction(
                                         ResourceHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             resourceInstance = username
                                         ).toString(),
                                         ActionHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             action = "createCredentials"
                                         ).toString()
@@ -694,7 +694,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     validateResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization!!.id,
+                    createdOrganization.organization.id,
                     validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val validationResponseBody = gson.fromJson(
@@ -814,7 +814,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         loginResponse.contentType()
                     )
                     Assertions.assertEquals(
-                        createdOrganization.organization?.id,
+                        createdOrganization.organization.id,
                         loginResponse.headers[Constants.X_ORGANIZATION_HEADER]
                     )
                     val responseBody = gson.fromJson(loginResponse.bodyAsText(), TokenResponse::class.java)
@@ -1016,7 +1016,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val (createdOrganization, createdUser) = createOrganization()
                 val username = createdOrganization.organization.rootUser.username
                 val tokenResponse = client.post(
-                    "/organizations/${createdOrganization.organization?.id}/token"
+                    "/organizations/${createdOrganization.organization.id}/token"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1030,7 +1030,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     tokenResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization?.id,
+                    createdOrganization.organization.id,
                     tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
@@ -1047,12 +1047,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                 listOf(
                                     ResourceAction(
                                         ResourceHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             resourceInstance = username
                                         ).toString(),
                                         ActionHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             action = "createCredentials"
                                         ).toString()
@@ -1068,7 +1068,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     validateResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization?.id,
+                    createdOrganization.organization.id,
                     validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val validationResponseBody = gson.fromJson(
@@ -1119,7 +1119,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val username = createdOrganization.organization.rootUser.username
 
                 val tokenResponse = client.post(
-                    "/organizations/${createdOrganization.organization?.id}/token"
+                    "/organizations/${createdOrganization.organization.id}/token"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1133,7 +1133,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     tokenResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization?.id,
+                    createdOrganization.organization.id,
                     tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
@@ -1156,12 +1156,12 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                 listOf(
                                     ResourceAction(
                                         ResourceHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             resourceInstance = username
                                         ).toString(),
                                         ActionHrn(
-                                            organization = createdOrganization.organization!!.id,
+                                            organization = createdOrganization.organization.id,
                                             resource = IamResources.USER,
                                             action = "createCredentials"
                                         ).toString()
@@ -1177,7 +1177,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     validateResponse.contentType()
                 )
                 Assertions.assertEquals(
-                    createdOrganization.organization!!.id,
+                    createdOrganization.organization.id,
                     validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
                 )
                 val validationResponseBody = gson.fromJson(
@@ -1203,11 +1203,11 @@ class TokenApiTest : AbstractContainerBaseTest() {
             issuedAt: Date = Date(),
             issuer: String = TokenServiceImpl.ISSUER,
             userHrn: String = ResourceHrn(
-                organization = createdOrganizationResponse.organization!!.id,
+                organization = createdOrganizationResponse.organization.id,
                 resource = IamResources.USER,
                 resourceInstance = createdOrganizationResponse.organization.rootUser.username
             ).toString(),
-            organization: String? = createdOrganizationResponse.organization!!.name,
+            organization: String? = createdOrganizationResponse.organization.name,
             expiration: Date = Date.from(Instant.now().plusSeconds(100)),
             version: String? = TokenServiceImpl.VERSION_NUM
         ): String {
@@ -1244,7 +1244,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1272,7 +1272,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1300,7 +1300,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1327,7 +1327,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1355,7 +1355,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1384,7 +1384,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization?.id}/policies/non_existing_policy"
+                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1422,7 +1422,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val createPolictRequest = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall = client.post(
-                    "/organizations/${createdOrganization.organization?.id}/policies"
+                    "/organizations/${createdOrganization.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1509,7 +1509,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val createPolictRequest = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall = client.post(
-                    "/organizations/${createdOrganization.organization?.id}/policies"
+                    "/organizations/${createdOrganization.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
@@ -1571,7 +1571,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val createPolicyRequest = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall = client.post(
-                    "/organizations/${createdOrganization.organization?.id}/policies"
+                    "/organizations/${createdOrganization.organization.id}/policies"
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(

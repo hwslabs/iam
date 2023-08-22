@@ -49,8 +49,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
 
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 // Actual test
@@ -85,8 +85,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 // Actual test
@@ -126,8 +126,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 // Actual test
@@ -167,8 +167,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, _) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
 
                 val expiry = LocalDateTime.now().plusDays(1)
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
@@ -199,8 +199,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val createCredentialCall = client.post(
@@ -253,8 +253,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val nonExistentCredentialId = UUID.randomUUID().toString()
@@ -283,11 +283,11 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val (organizationResponse2, _) = createOrganization()
                 val user1Name = organizationResponse1.organization.rootUser.username
 
-                val organization1 = organizationResponse1.organization!!
-                val rootUserToken1 = organizationResponse1.rootUserToken!!
+                val organization1 = organizationResponse1.organization
+                val rootUserToken1 = organizationResponse1.rootUserToken
                 val credential1 = createCredential(organization1.id, user1Name, rootUserToken1)
 
-                val rootUserToken2 = organizationResponse2.rootUserToken!!
+                val rootUserToken2 = organizationResponse2.rootUserToken
 
                 // Delete Credential
                 val response = client.delete(
@@ -299,7 +299,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(HttpStatusCode.Forbidden, response.status)
                 Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
                 deleteOrganization(organization1.id)
-                deleteOrganization(organizationResponse2.organization!!.id)
+                deleteOrganization(organizationResponse2.organization.id)
             }
         }
     }
@@ -314,8 +314,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val createdCredentials = createCredential(createdOrganization.id, userName, rootUserToken)
@@ -345,8 +345,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
                 val nonExistentCredentialId = UUID.randomUUID().toString()
 
@@ -370,8 +370,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val response = client.get(
@@ -397,8 +397,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val credential1 =
@@ -429,8 +429,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, _) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
@@ -454,8 +454,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createdOrganizationResponse, createdUser) = createOrganization()
-                val createdOrganization = createdOrganizationResponse.organization!!
-                val rootUserToken = createdOrganizationResponse.rootUserToken!!
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val response = client.get(
