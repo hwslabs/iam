@@ -48,16 +48,16 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
     private val httpClient: OkHttpClient by inject()
+    private val appConfig: AppConfig by inject()
 
     override suspend fun createOrganization(
         request: CreateOrganizationRequest
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
+        val identityGroup = appConfig.cognito
         val username = idGenerator.username()
         val logTimestamp = LocalDateTime.now()
-
         val rootUserFromRequest = request.rootUser
-        val identityGroup = identityProvider.createIdentityGroup(organizationId)
 
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -117,7 +117,6 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         } catch (e: Exception) {
             logger.error(e) { "Exception when creating organization. Rolling back..." }
 
-            identityProvider.deleteIdentityGroup(identityGroup)
             throw e.cause ?: e
         }
     }

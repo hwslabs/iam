@@ -32,7 +32,6 @@ import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
-import io.mockk.verify
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -43,7 +42,6 @@ import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
 import org.testcontainers.junit.jupiter.Testcontainers
-import software.amazon.awssdk.services.cognitoidentityprovider.model.DeleteUserPoolRequest
 
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
@@ -340,9 +338,6 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 setBody(gson.toJson(requestBody))
             }
             val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
-            verify {
-                cognitoClient.deleteUserPool(any<DeleteUserPoolRequest>())
-            }
         }
     }
 

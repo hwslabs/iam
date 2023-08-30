@@ -1,5 +1,6 @@
 package com.hypto.iam.server.configs
 
+import com.hypto.iam.server.idp.IdentityGroup
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.sources.EnvironmentVariablesPropertySource
 
@@ -10,7 +11,8 @@ data class AppConfig(
     val newrelic: Newrelic,
     val aws: Aws,
     val postHook: PostHook,
-    val onboardRoutes: OnboardRoutes
+    val onboardRoutes: OnboardRoutes,
+    val cognito: IdentityGroup
 ) {
     /**
      * Environment variables should be in Snake case.
