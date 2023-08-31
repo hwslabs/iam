@@ -8,6 +8,7 @@ import com.google.gson.JsonSerializer
 import com.hypto.iam.server.MicrometerConfigs
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
+import com.hypto.iam.server.db.repositories.AuthProviderRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
@@ -22,6 +23,8 @@ import com.hypto.iam.server.idp.CognitoIdentityProviderImpl
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.service.ActionService
 import com.hypto.iam.server.service.ActionServiceImpl
+import com.hypto.iam.server.service.AuthProviderService
+import com.hypto.iam.server.service.AuthProviderServiceImpl
 import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.service.CredentialServiceImpl
 import com.hypto.iam.server.service.MasterKeyCache
@@ -80,6 +83,7 @@ val repositoryModule = module {
     single { PasscodeRepo }
     single { UserRepo }
     single { PolicyTemplatesRepo }
+    single { AuthProviderRepo }
 }
 
 val controllerModule = module {
@@ -95,6 +99,7 @@ val controllerModule = module {
     single { UserPrincipalServiceImpl() } bind UserPrincipalService::class
     single { PasscodeServiceImpl() } bind PasscodeService::class
     single { PolicyTemplatesServiceImpl() } bind PolicyTemplatesService::class
+    single { AuthProviderServiceImpl() } bind AuthProviderService::class
 }
 
 val applicationModule = module {

@@ -1,5 +1,7 @@
 package com.hypto.iam.server.extensions
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.hypto.iam.server.db.tables.pojos.Actions
 import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.db.tables.pojos.Credentials
@@ -7,6 +9,7 @@ import com.hypto.iam.server.db.tables.pojos.Policies
 import com.hypto.iam.server.db.tables.pojos.PrincipalPolicies
 import com.hypto.iam.server.db.tables.pojos.Resources
 import com.hypto.iam.server.db.tables.records.ActionsRecord
+import com.hypto.iam.server.db.tables.records.AuthProviderRecord
 import com.hypto.iam.server.db.tables.records.CredentialsRecord
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
@@ -14,6 +17,7 @@ import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.Action
+import com.hypto.iam.server.models.AuthProvider
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.CredentialWithoutSecret
@@ -34,6 +38,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 val hrnFactory = getKoinInstance<HrnFactory>()
+val scopeListTypeToken = object : TypeToken<List<String>>() {}.type
+private val gson: Gson = getKoinInstance()
 
 fun Credential.Companion.from(record: CredentialsRecord): Credential {
     return Credential(
@@ -237,5 +243,15 @@ fun Passcode.Companion.from(
         record.purpose,
         record.createdAt.toUTCOffset(),
         record.validUntil.toUTCOffset()
+    )
+}
+
+fun AuthProvider.Companion.from(record: AuthProviderRecord): AuthProvider {
+    return AuthProvider(
+        record.authUrl,
+        gson.fromJson(record.scopes.data(), scopeListTypeToken),
+        record.clientId,
+        record.grantType,
+        record.provider
     )
 }

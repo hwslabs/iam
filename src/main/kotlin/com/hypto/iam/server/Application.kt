@@ -4,6 +4,7 @@ package com.hypto.iam.server
 
 import com.hypto.iam.server.Constants.Companion.SECRET_PREFIX
 import com.hypto.iam.server.apis.actionApi
+import com.hypto.iam.server.apis.authProviderApi
 import com.hypto.iam.server.apis.createOrganizationApi
 import com.hypto.iam.server.apis.createPasscodeApi
 import com.hypto.iam.server.apis.createUsersApi
@@ -259,6 +260,7 @@ fun Application.handleRequest() {
         tokenApi() // Authentication handled along with API definitions
         loginApi()
         keyApi()
+        authProviderApi()
 
         authenticate("optional-bearer-auth") {
             createPasscodeApi()

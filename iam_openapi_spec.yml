@@ -81,6 +81,8 @@ tags:
     externalDocs:
       description: "docs"
       url: "https://github.com/hwslabs/iam/blob/main/docs/api_reference/Apis/PasscodeManagement.md"
+  - name: "Auth Provider"
+    description: "APIs for auth providers"
 
 paths:
   # organization
@@ -1206,6 +1208,30 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /auth_providers:
+    get:
+      tags:
+        - Auth Providers
+      summary: List auth providers
+      description: List all available auth providers. This is a paginated api which returns the list of auth providers with a next page token.
+      operationId: listAuthProviders
+      parameters:
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+      responses:
+        '201':
+          $ref: '#/components/responses/AuthProviderPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 security:
   - bearerAuth: [ ]
 
@@ -1939,6 +1965,13 @@ components:
           examples:
             KeyResponse:
               $ref: '#/components/examples/KeyResponse'
+
+    AuthProviderPaginatedResponse:
+      description: Response for list auth providers request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AuthProviderPaginatedResponse'
 
   examples:
     # Request examples
@@ -3226,6 +3259,43 @@ components:
           enum:
             - asc
             - desc
+
+    AuthProviderPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthProvider'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
+
+    AuthProvider:
+      type: object
+      additionalProperties: false
+      required:
+        - authUrl
+        - scopes
+        - clientId
+        - grantType
+        - provider
+      properties:
+        authUrl:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        clientId:
+          type: string
+        grantType:
+          type: string
+        provider:
+          type: string
+
 
 externalDocs:
   description: Find out more about IAM
