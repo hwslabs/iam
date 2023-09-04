@@ -41,7 +41,8 @@ enum class TokenType(val type: String) {
     CREDENTIAL("credential"),
     JWT("jwt"),
     BASIC("basic"),
-    PASSCODE("passcode")
+    PASSCODE("passcode"),
+    OAUTH("oauth")
 }
 
 /** Class which stores the token credentials sent by the client */
@@ -147,6 +148,18 @@ fun AuthenticationConfig.passcodeAuth(name: String? = null, configure: TokenAuth
 fun AuthenticationConfig.bearer(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
     val provider = TokenAuthenticationProvider(
         TokenAuthenticationProvider.Config(name, AUTHORIZATION_HEADER, authSchemeExists = true).apply(configure)
+    )
+    register(provider)
+}
+
+fun AuthenticationConfig.oauth(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
+    val provider = TokenAuthenticationProvider(
+        TokenAuthenticationProvider.Config(
+            name,
+            AUTHORIZATION_HEADER,
+            authSchemeExists = true,
+            tokenType = TokenType.OAUTH
+        ).apply(configure)
     )
     register(provider)
 }

@@ -37,6 +37,7 @@ import com.hypto.iam.server.security.UsernamePasswordCredential
 import com.hypto.iam.server.security.apiKeyAuth
 import com.hypto.iam.server.security.bearer
 import com.hypto.iam.server.security.bearerAuthValidation
+import com.hypto.iam.server.security.oauth
 import com.hypto.iam.server.security.optionalBearer
 import com.hypto.iam.server.security.passcodeAuth
 import com.hypto.iam.server.service.DatabaseFactory.pool
@@ -87,6 +88,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
@@ -96,6 +99,7 @@ private const val ROOT_ORG = "hypto-root"
 
 private const val MAX_THREADS_WAITING_FOR_DB_CONNS = 100
 
+@Suppress("ThrowsCount")
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val appConfig: AppConfig by inject()
@@ -138,6 +142,29 @@ fun Application.handleRequest() {
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
     install(Compression, applicationCompressionConfiguration()) // see http://ktor.io/features/compression.html
     install(Authentication) {
+        oauth("oauth") {
+            validate {
+                when (this.request.headers["issuer"]) {
+                    "google" -> {
+                        val httpClient = OkHttpClient()
+                        val requestBuilder = Request.Builder()
+                            .url("https://www.googleapis.com/oauth2/v3/userinfo?access_token=${it.value}")
+                            .method("GET", null)
+                            .addHeader("Content-Type", "application/json")
+                            .addHeader("Connection", "keep-alive")
+                        val request = requestBuilder.build()
+                        val response = httpClient.newCall(request).execute()
+                        if (!response.isSuccessful) {
+                            throw BadRequestException("Invalid token")
+                        }
+                        ApiPrincipal(it, ROOT_ORG)
+                    }
+                    else -> {
+                        throw BadRequestException("Invalid issuer")
+                    }
+                }
+            }
+        }
         apiKeyAuth("hypto-iam-root-auth") {
             val secretKey = SECRET_PREFIX + appConfig.app.secretKey
             validate { tokenCredential: TokenCredential ->
@@ -230,7 +257,7 @@ fun Application.handleRequest() {
     install(IgnoreTrailingSlash) {}
 
     install(Routing) {
-        authenticate("hypto-iam-root-auth", "signup-passcode-auth") {
+        authenticate("hypto-iam-root-auth", "signup-passcode-auth", "oauth") {
             createOrganizationApi()
         }
 

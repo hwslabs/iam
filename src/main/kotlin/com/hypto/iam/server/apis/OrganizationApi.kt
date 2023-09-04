@@ -8,6 +8,7 @@ import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.OrganizationsService
@@ -28,11 +29,14 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.koin.ktor.ext.inject
 
 /**
  * API to create organization in IAM.
  */
+@Suppress("ThrowsCount")
 fun Route.createOrganizationApi() {
     val organizationService: OrganizationsService by inject()
     val passcodeRepo: PasscodeRepo by inject()
@@ -40,6 +44,41 @@ fun Route.createOrganizationApi() {
     val gson: Gson by inject()
 
     post("/organizations") {
+        val type = call.principal<ApiPrincipal>()?.tokenCredential?.type!!
+        if (type == TokenType.OAUTH) {
+            val token = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
+            val (organization, tokenResponse) = when (call.request.headers["issuer"]!!) {
+                "google" -> {
+                    val httpClient = OkHttpClient()
+                    val requestBuilder = Request.Builder()
+                        .url("https://www.googleapis.com/oauth2/v3/userinfo?access_token=$token")
+                        .method("GET", null)
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Connection", "keep-alive")
+                    val request = requestBuilder.build()
+                    val response = httpClient.newCall(request).execute()
+                    if (!response.isSuccessful) {
+                        throw BadRequestException("Invalid token")
+                    }
+                    val responseBody = response.body?.let { String(it.bytes()) }
+                    val googleUser = gson.fromJson(responseBody, GoogleUser::class.java)
+                    organizationService.createOauthOrganization(
+                        companyName = googleUser.hd ?: "",
+                        name = googleUser.name,
+                        email = googleUser.email
+                    )
+                }
+                else -> {
+                    throw BadRequestException("Invalid issuer")
+                }
+            }
+
+            call.respondText(
+                text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.Created
+            )
+        }
         val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
 
         val apiRequest = kotlin.runCatching { call.receiveNullable<CreateOrganizationRequest>() }.getOrNull()
@@ -65,9 +104,7 @@ fun Route.createOrganizationApi() {
         )
         request.validate()
 
-        val (organization, tokenResponse) = organizationService.createOrganization(
-            request = request
-        )
+        val (organization, tokenResponse) = organizationService.createOrganization(request = request)
         call.respondText(
             text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
             contentType = ContentType.Application.Json,
@@ -139,3 +176,9 @@ fun Route.getAndUpdateOrganizationApi() {
         }
     }
 }
+
+data class GoogleUser(
+    val email: String,
+    val name: String,
+    val hd: String? = null
+)

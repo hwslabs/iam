@@ -1,6 +1,7 @@
 package com.hypto.iam.server.service
 
 import com.google.gson.Gson
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
@@ -19,9 +20,14 @@ import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.txman.TxMan
+import io.ktor.server.plugins.BadRequestException
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
 import mu.KotlinLogging
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.JSONB
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -109,6 +115,84 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         }
     }
 
+    override suspend fun createOauthOrganization(
+        companyName: String,
+        name: String,
+        email: String
+    ): Pair<Organization, TokenResponse> {
+        val organizationId = idGenerator.organizationId()
+        val username = idGenerator.username()
+
+        @Suppress("TooGenericExceptionCaught")
+        try {
+            return txMan.wrap {
+                // Create Organization
+                organizationRepo.insert(
+                    Organizations(
+                        organizationId,
+                        companyName,
+                        "",
+                        ResourceHrn(
+                            organization = organizationId,
+                            resource = IamResources.USER,
+                            resourceInstance = username
+                        ).toString(),
+                        null,
+                        LocalDateTime.now(),
+                        LocalDateTime.now()
+                    )
+                )
+
+                // Create root user for the organization
+                val rootUser = usersService.createOauthUser(
+                    organizationId = organizationId,
+                    username = username,
+                    preferredUsername = null,
+                    name = name,
+                    email = email,
+                    createdBy = "iam-system",
+                    verified = true,
+                    loginAccess = true
+                )
+
+                val policyHrns = policyTemplatesService
+                    .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
+                    .map { ResourceHrn(it.hrn) }
+
+                // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
+                val organization = getOrganization(organizationId)
+                val userHrn = hrnFactory.getHrn(rootUser.hrn)
+
+                if (policyHrns.isNotEmpty()) {
+                    principalPolicyService.attachPoliciesToUser(userHrn, policyHrns)
+                }
+
+                val token = tokenService.generateJwtToken(userHrn)
+
+                if (AppConfig.configuration.postHook.signUp != null) {
+                    val body = gson.toJson(mapOf("organization" to organization))
+                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+                    val httpClient = OkHttpClient()
+                    val requestBuilder = Request.Builder()
+                        .url(AppConfig.configuration.postHook.signUp)
+                        .method("POST", body)
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Connection", "keep-alive")
+                    val request = requestBuilder.build()
+                    val response = httpClient.newCall(request).execute()
+                    if (!response.isSuccessful) {
+                        throw BadRequestException("Post hook failed")
+                    }
+                }
+
+                return@wrap Pair(organization, token)
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Exception when creating organization. Rolling back..." }
+            throw e.cause ?: e
+        }
+    }
+
     @Timed("organization.get") // TODO: Make this work
     override suspend fun getOrganization(id: String): Organization {
         val response = organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
@@ -158,6 +242,12 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 interface OrganizationsService {
     suspend fun createOrganization(
         request: CreateOrganizationRequest
+    ): Pair<Organization, TokenResponse>
+
+    suspend fun createOauthOrganization(
+        companyName: String,
+        name: String,
+        email: String
     ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization

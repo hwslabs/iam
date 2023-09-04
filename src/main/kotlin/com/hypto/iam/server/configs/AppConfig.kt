@@ -3,7 +3,14 @@ package com.hypto.iam.server.configs
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.sources.EnvironmentVariablesPropertySource
 
-data class AppConfig(val app: App, val server: Server, val database: Database, val newrelic: Newrelic, val aws: Aws) {
+data class AppConfig(
+    val app: App,
+    val server: Server,
+    val database: Database,
+    val newrelic: Newrelic,
+    val aws: Aws,
+    val postHook: PostHook
+) {
     /**
      * Environment variables should be in Snake case.
      * E.g. env, token_validity
@@ -91,6 +98,8 @@ data class AppConfig(val app: App, val server: Server, val database: Database, v
     data class Newrelic(val apiKey: String, val publishInterval: Long)
 
     data class Aws(val region: String, val accessKey: String, val secretKey: String)
+
+    data class PostHook(val signUp: String)
 
     companion object {
         val configuration: AppConfig = ConfigLoaderBuilder.default()
