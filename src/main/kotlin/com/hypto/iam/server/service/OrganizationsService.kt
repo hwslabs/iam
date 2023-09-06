@@ -20,7 +20,6 @@ import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.txman.TxMan
-import io.ktor.server.plugins.BadRequestException
 import io.micrometer.core.annotation.Timed
 import java.time.LocalDateTime
 import mu.KotlinLogging
@@ -52,10 +51,12 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOrganization(
         request: CreateOrganizationRequest
     ): Pair<Organization, TokenResponse> {
-        val rootUserFromRequest = request.rootUser
         val organizationId = idGenerator.organizationId()
-        val identityGroup = identityProvider.createIdentityGroup(organizationId)
         val username = idGenerator.username()
+        val logTimestamp = LocalDateTime.now()
+
+        val rootUserFromRequest = request.rootUser
+        val identityGroup = identityProvider.createIdentityGroup(organizationId)
 
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -73,8 +74,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                             resourceInstance = username
                         ).toString(),
                         JSONB.jsonb(gson.toJson(identityGroup)),
-                        LocalDateTime.now(),
-                        LocalDateTime.now()
+                        logTimestamp,
+                        logTimestamp
                     )
                 )
 
@@ -96,7 +97,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
                     .map { ResourceHrn(it.hrn) }
 
-                // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
+                // TODO: Avoid this duplicate call by returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
                 val userHrn = hrnFactory.getHrn(rootUser.hrn)
 
@@ -122,6 +123,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
         val username = idGenerator.username()
+        val logTimestamp = LocalDateTime.now()
 
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -138,8 +140,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                             resourceInstance = username
                         ).toString(),
                         null,
-                        LocalDateTime.now(),
-                        LocalDateTime.now()
+                        logTimestamp,
+                        logTimestamp
                     )
                 )
 
@@ -159,7 +161,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
                     .map { ResourceHrn(it.hrn) }
 
-                // TODO: Avoid this duplicate call be returning the created organization from `organizationRepo.insert`
+                // TODO: Avoid this duplicate call by returning the created organization from `organizationRepo.insert`
                 val organization = getOrganization(organizationId)
                 val userHrn = hrnFactory.getHrn(rootUser.hrn)
 
@@ -181,7 +183,9 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     val request = requestBuilder.build()
                     val response = httpClient.newCall(request).execute()
                     if (!response.isSuccessful) {
-                        throw BadRequestException("Post hook failed")
+                        logger.error { "Post hook failed with status code ${response.code}" }
+                        logger.error { "Post hook failed with response ${response.body?.string()} " }
+                        throw InternalException("Post hook failed")
                     }
                 }
 

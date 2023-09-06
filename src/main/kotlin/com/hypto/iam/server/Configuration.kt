@@ -2,11 +2,36 @@ package com.hypto.iam.server
 
 // Use this file to hold package-level internal functions that return receiver object passed to the `install` method.
 
+import com.hypto.iam.server.authProviders.AuthProviderRegistry
 import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.di.getKoinInstance
+import com.hypto.iam.server.models.ResetPasswordRequest
+import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.TokenCredential
+import com.hypto.iam.server.security.TokenType
+import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.security.UsernamePasswordCredential
+import com.hypto.iam.server.security.apiKeyAuth
+import com.hypto.iam.server.security.bearer
+import com.hypto.iam.server.security.bearerAuthValidation
+import com.hypto.iam.server.security.oauth
+import com.hypto.iam.server.security.optionalBearer
+import com.hypto.iam.server.security.passcodeAuth
+import com.hypto.iam.server.service.PasscodeService
+import com.hypto.iam.server.service.PrincipalPolicyService
+import com.hypto.iam.server.service.UserPrincipalService
+import com.hypto.iam.server.validators.InviteMetadata
+import com.hypto.iam.server.validators.validate
 import com.newrelic.telemetry.micrometer.NewRelicRegistry
 import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.OAuthServerSettings
+import io.ktor.server.auth.basic
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.compression.CompressionConfig
 import io.ktor.server.plugins.compression.deflate
@@ -14,6 +39,7 @@ import io.ktor.server.plugins.compression.gzip
 import io.ktor.server.plugins.compression.minimumSize
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.hsts.HSTSConfig
+import io.ktor.server.request.receive
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.binder.MeterBinder
@@ -25,6 +51,7 @@ import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.util.NamedThreadFactory
 import java.net.InetAddress
 import java.time.Duration
+import org.koin.ktor.ext.inject
 
 /**
  * Application block for [HSTS] configuration.
@@ -61,6 +88,101 @@ internal fun applicationCompressionConfiguration(): CompressionConfig.() -> Unit
         deflate {
             priority = 10.0
             minimumSize(1024) // condition
+        }
+    }
+}
+
+fun Application.applicationAuthenticationConfiguration() {
+    val appConfig: AppConfig by inject()
+    val passcodeRepo: PasscodeRepo by inject()
+    val passcodeService: PasscodeService by inject()
+    val principalPolicyService: PrincipalPolicyService by inject()
+    val userPrincipalService: UserPrincipalService by inject()
+
+    install(Authentication) {
+        oauth("oauth") {
+            validate {
+                val issuer = this.request.headers["x-issuer"] ?: throw BadRequestException("x-issuer header not found")
+                AuthProviderRegistry.getProvider(issuer)?.getProfileDetails(it)
+            }
+        }
+        apiKeyAuth("hypto-iam-root-auth") {
+            val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
+            validate { tokenCredential: TokenCredential ->
+                when (tokenCredential.value) {
+                    secretKey -> ApiPrincipal(tokenCredential, ROOT_ORG)
+                    else -> null
+                }
+            }
+        }
+        passcodeAuth("signup-passcode-auth") {
+            validate { tokenCredential: TokenCredential ->
+                tokenCredential.value?.let {
+                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.signup)?.let {
+                        ApiPrincipal(tokenCredential, ROOT_ORG)
+                    }
+                }
+            }
+        }
+        passcodeAuth("reset-passcode-auth") {
+            validate { tokenCredential: TokenCredential ->
+                val email = this.receive<ResetPasswordRequest>().validate().email
+                tokenCredential.value?.let {
+                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.reset, email)?.let {
+                        ApiPrincipal(tokenCredential, ROOT_ORG)
+                    }
+                }
+            }
+        }
+        passcodeAuth("invite-passcode-auth") {
+            validate { tokenCredential: TokenCredential ->
+                tokenCredential.value?.let { value ->
+                    passcodeRepo.getValidPasscodeById(value, VerifyEmailRequest.Purpose.invite)?.let {
+                        val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
+                        return@validate UserPrincipal(
+                            tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),
+                            hrnStr = metadata.inviterUserHrn,
+                            policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
+                        )
+                    }
+                }
+            }
+        }
+        basic("basic-auth") {
+            validate { credentials ->
+                val organizationId = this.parameters["organization_id"]!!
+                val principal = userPrincipalService.getUserPrincipalByCredentials(
+                    organizationId,
+                    credentials.name.lowercase(),
+                    credentials.password
+                )
+                if (principal != null) {
+                    response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
+                }
+                return@validate principal
+            }
+        }
+        bearer("bearer-auth") {
+            validate(bearerAuthValidation(userPrincipalService))
+        }
+        basic("unique-basic-auth") {
+            validate { credentials ->
+                if (!appConfig.app.uniqueUsersAcrossOrganizations) {
+                    throw BadRequestException(
+                        "Email not unique across organizations. " +
+                            "Please use Token APIs with organization ID"
+                    )
+                }
+
+                val principal = userPrincipalService.getUserPrincipalByCredentials(
+                    UsernamePasswordCredential(credentials.name.lowercase(), credentials.password)
+                )
+                response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
+                return@validate principal
+            }
+        }
+        optionalBearer("optional-bearer-auth") {
+            validate(bearerAuthValidation(userPrincipalService))
         }
     }
 }

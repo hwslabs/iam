@@ -59,6 +59,11 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
+import java.util.concurrent.TimeUnit
+import mu.KotlinLogging
+import okhttp3.ConnectionPool
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.dsl.bind
@@ -69,6 +74,10 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import software.amazon.awssdk.services.ses.SesClient
+
+private val log = KotlinLogging.logger { }
+const val MAX_IDLE_CONNECTIONS = 50
+const val KEEP_ALIVE_DURATION = 5L
 
 // DI module to get repositories
 val repositoryModule = module {
@@ -124,6 +133,22 @@ val applicationModule = module {
     single { getCognitoIdentityProviderClient(get<AppConfig>().aws.region, get()) }
     single { getSesClient(get<AppConfig>().aws.region, get()) }
     single { TxMan(com.hypto.iam.server.service.DatabaseFactory.getConfiguration()) }
+    single {
+        OkHttpClient().newBuilder().apply {
+            if (get<AppConfig>().app.isDevelopment || log.isDebugEnabled) {
+                this.addInterceptor(
+                    HttpLoggingInterceptor {
+                        if (log.isDebugEnabled) {
+                            log.debug { it }
+                        } else {
+                            log.info { it }
+                        }
+                    }.setLevel(HttpLoggingInterceptor.Level.BODY)
+                )
+            }
+        }.connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION, TimeUnit.MINUTES))
+    }
+    single { get<OkHttpClient.Builder>().build() }
 }
 
 fun getCognitoIdentityProviderClient(

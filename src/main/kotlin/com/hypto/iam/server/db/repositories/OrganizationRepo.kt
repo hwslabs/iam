@@ -34,4 +34,13 @@ object OrganizationRepo : BaseRepo<OrganizationsRecord, Organizations, String>()
     suspend fun findById(id: String): Organizations? = dao().findById(id)
 
     suspend fun deleteById(id: String) = dao().deleteById(id)
+
+    suspend fun create(organization: Organizations) {
+        dao()
+            .ctx()
+            .insertInto(ORGANIZATIONS)
+            .values(organization)
+            .returning(ORGANIZATIONS.ID)
+            .fetch()
+    }
 }

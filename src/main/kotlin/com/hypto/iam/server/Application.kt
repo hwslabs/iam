@@ -2,7 +2,6 @@
 
 package com.hypto.iam.server
 
-import com.hypto.iam.server.Constants.Companion.SECRET_PREFIX
 import com.hypto.iam.server.apis.actionApi
 import com.hypto.iam.server.apis.authProviderApi
 import com.hypto.iam.server.apis.createOrganizationApi
@@ -22,31 +21,12 @@ import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.apis.validationApi
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
-import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.di.applicationModule
 import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.repositoryModule
-import com.hypto.iam.server.models.ResetPasswordRequest
-import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.Authorization
-import com.hypto.iam.server.security.TokenCredential
-import com.hypto.iam.server.security.TokenType
-import com.hypto.iam.server.security.UserPrincipal
-import com.hypto.iam.server.security.UsernamePasswordCredential
-import com.hypto.iam.server.security.apiKeyAuth
-import com.hypto.iam.server.security.bearer
-import com.hypto.iam.server.security.bearerAuthValidation
-import com.hypto.iam.server.security.oauth
-import com.hypto.iam.server.security.optionalBearer
-import com.hypto.iam.server.security.passcodeAuth
 import com.hypto.iam.server.service.DatabaseFactory.pool
-import com.hypto.iam.server.service.PasscodeService
-import com.hypto.iam.server.service.PrincipalPolicyService
-import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.ApplicationIdUtil
-import com.hypto.iam.server.validators.InviteMetadata
-import com.hypto.iam.server.validators.validate
 import com.sksamuel.cohort.HealthCheckRegistry
 import com.sksamuel.cohort.db.DatabaseConnectionHealthCheck
 import com.sksamuel.cohort.hikari.HikariDataSourceManager
@@ -57,15 +37,12 @@ import com.sksamuel.cohort.threads.ThreadDeadlockHealthCheck
 import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
-import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.basic
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.addShutdownHook
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
-import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
@@ -76,7 +53,6 @@ import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.doublereceive.DoubleReceive
 import io.ktor.server.plugins.hsts.HSTS
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.receive
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
 import io.micrometer.core.instrument.MeterRegistry
@@ -88,25 +64,18 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
 
 private const val REQUEST_ID_HEADER = "X-Request-Id"
-private const val ROOT_ORG = "hypto-root"
+const val ROOT_ORG = "hypto-root"
 
 private const val MAX_THREADS_WAITING_FOR_DB_CONNS = 100
 
 @Suppress("ThrowsCount")
 fun Application.handleRequest() {
     val idGenerator: ApplicationIdUtil.Generator by inject()
-    val appConfig: AppConfig by inject()
-    val passcodeRepo: PasscodeRepo by inject()
-    val passcodeService: PasscodeService by inject()
-    val principalPolicyService: PrincipalPolicyService by inject()
-    val userPrincipalService: UserPrincipalService by inject()
     val micrometerRegistry: MeterRegistry by inject()
     val micrometerBindings: List<MeterBinder> by inject()
 
@@ -141,109 +110,7 @@ fun Application.handleRequest() {
     install(AutoHeadResponse) // see http://ktor.io/features/autoheadresponse.html
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
     install(Compression, applicationCompressionConfiguration()) // see http://ktor.io/features/compression.html
-    install(Authentication) {
-        oauth("oauth") {
-            validate {
-                when (this.request.headers["issuer"]) {
-                    "google" -> {
-                        val httpClient = OkHttpClient()
-                        val requestBuilder = Request.Builder()
-                            .url("https://www.googleapis.com/oauth2/v3/userinfo?access_token=${it.value}")
-                            .method("GET", null)
-                            .addHeader("Content-Type", "application/json")
-                            .addHeader("Connection", "keep-alive")
-                        val request = requestBuilder.build()
-                        val response = httpClient.newCall(request).execute()
-                        if (!response.isSuccessful) {
-                            throw BadRequestException("Invalid token")
-                        }
-                        ApiPrincipal(it, ROOT_ORG)
-                    }
-                    else -> {
-                        throw BadRequestException("Invalid issuer")
-                    }
-                }
-            }
-        }
-        apiKeyAuth("hypto-iam-root-auth") {
-            val secretKey = SECRET_PREFIX + appConfig.app.secretKey
-            validate { tokenCredential: TokenCredential ->
-                when (tokenCredential.value) {
-                    secretKey -> ApiPrincipal(tokenCredential, ROOT_ORG)
-                    else -> null
-                }
-            }
-        }
-        passcodeAuth("signup-passcode-auth") {
-            validate { tokenCredential: TokenCredential ->
-                tokenCredential.value?.let {
-                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.signup)?.let {
-                        ApiPrincipal(tokenCredential, ROOT_ORG)
-                    }
-                }
-            }
-        }
-        passcodeAuth("reset-passcode-auth") {
-            validate { tokenCredential: TokenCredential ->
-                val email = this.receive<ResetPasswordRequest>().validate().email
-                tokenCredential.value?.let {
-                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.reset, email)?.let {
-                        ApiPrincipal(tokenCredential, ROOT_ORG)
-                    }
-                }
-            }
-        }
-        passcodeAuth("invite-passcode-auth") {
-            validate { tokenCredential: TokenCredential ->
-                tokenCredential.value?.let { value ->
-                    passcodeRepo.getValidPasscodeById(value, VerifyEmailRequest.Purpose.invite)?.let {
-                        val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
-                        return@validate UserPrincipal(
-                            tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),
-                            hrnStr = metadata.inviterUserHrn,
-                            policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
-                        )
-                    }
-                }
-            }
-        }
-        basic("basic-auth") {
-            validate { credentials ->
-                val organizationId = this.parameters["organization_id"]!!
-                val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    organizationId,
-                    credentials.name.lowercase(),
-                    credentials.password
-                )
-                if (principal != null) {
-                    response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
-                }
-                return@validate principal
-            }
-        }
-        bearer("bearer-auth") {
-            validate(bearerAuthValidation(userPrincipalService))
-        }
-        basic("unique-basic-auth") {
-            validate { credentials ->
-                if (!appConfig.app.uniqueUsersAcrossOrganizations) {
-                    throw BadRequestException(
-                        "Email not unique across organizations. " +
-                            "Please use Token APIs with organization ID"
-                    )
-                }
-
-                val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    UsernamePasswordCredential(credentials.name.lowercase(), credentials.password)
-                )
-                response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
-                return@validate principal
-            }
-        }
-        optionalBearer("optional-bearer-auth") {
-            validate(bearerAuthValidation(userPrincipalService))
-        }
-    }
+    applicationAuthenticationConfiguration()
 
     // Create a signing Master key pair in case one doesn't exist
     val masterKeysRepo: MasterKeysRepo by inject()

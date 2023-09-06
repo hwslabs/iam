@@ -248,10 +248,8 @@ fun Passcode.Companion.from(
 
 fun AuthProvider.Companion.from(record: AuthProviderRecord): AuthProvider {
     return AuthProvider(
-        record.authUrl,
-        gson.fromJson(record.scopes.data(), scopeListTypeToken),
-        record.clientId,
-        record.grantType,
-        record.provider
+        providerName = record.providerName,
+        authUrl = record.authUrl,
+        clientId = record.clientId
     )
 }

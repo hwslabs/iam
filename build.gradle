@@ -20,11 +20,10 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://jitpack.io' }
     }
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.github.jengelman.gradle.plugins:shadow:$shadow_version"
-
-
     }
 
     configurations['classpath'].resolutionStrategy.eachDependency {

@@ -73,6 +73,15 @@ data class UserPrincipal(
     override val organization: String = hrn.organization
 }
 
+/** Class to store the Principal authenticated using Oauth auth **/
+data class OAuthUserPrincipal(
+    override val tokenCredential: TokenCredential,
+    override val organization: String,
+    val email: String,
+    val name: String,
+    val companyName: String
+) : IamPrincipal()
+
 class TokenAuthenticationProvider internal constructor(
     config: Config
 ) : AuthenticationProvider(config) {

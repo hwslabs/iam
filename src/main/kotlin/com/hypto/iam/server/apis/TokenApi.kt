@@ -5,7 +5,7 @@ import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.TokenResponse
-import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
@@ -23,8 +23,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import okhttp3.OkHttpClient
-import okhttp3.Request
 
 private val tokenService: TokenService = getKoinInstance()
 private val gson: Gson = getKoinInstance()
@@ -56,31 +54,10 @@ suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
 
 @Suppress("ThrowsCount")
 suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) {
-    val principal = context.principal<ApiPrincipal>()!!
+    val principal = context.principal<OAuthUserPrincipal>()!!
     val responseContentType = context.request.accept()
-    val token = principal.tokenCredential?.value!!
-    val response = when (call.request.headers["issuer"]!!) {
-        "google" -> {
-            val httpClient = OkHttpClient()
-            val requestBuilder = Request.Builder()
-                .url("https://www.googleapis.com/oauth2/v3/userinfo?access_token=$token")
-                .method("GET", null)
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Connection", "keep-alive")
-            val request = requestBuilder.build()
-            val response = httpClient.newCall(request).execute()
-            if (!response.isSuccessful) {
-                throw BadRequestException("Invalid token")
-            }
-            val responseBody = response.body?.let { String(it.bytes()) }
-            val googleUser = gson.fromJson(responseBody, GoogleUser::class.java)
-            val user = UserRepo.findByEmail(googleUser.email) ?: throw BadRequestException("User not signed up")
-            tokenService.generateJwtToken(ResourceHrn(user.hrn))
-        }
-        else -> {
-            throw BadRequestException("Invalid issuer")
-        }
-    }
+    val user = UserRepo.findByEmail(principal.email) ?: throw BadRequestException("User has not signed up yet")
+    val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 
     when (responseContentType) {
         ContentType.Text.Plain.toString() -> call.respondText(
@@ -142,8 +119,8 @@ fun Route.tokenApi() {
 fun Route.loginApi() {
     authenticate("unique-basic-auth", "bearer-auth", "oauth") {
         post("/login") {
-            val principal = context.principal<UserPrincipal>()
-            if (principal == null) {
+            val oAuthUserPrincipal = context.principal<OAuthUserPrincipal>()
+            if (oAuthUserPrincipal != null) {
                 generateTokenOauth(call, context)
             } else {
                 generateToken(call, context)

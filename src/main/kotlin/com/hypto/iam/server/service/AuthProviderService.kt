@@ -13,7 +13,7 @@ class AuthProviderServiceImpl : KoinComponent, AuthProviderService {
 
     override suspend fun listAuthProvider(context: PaginationContext): AuthProviderPaginatedResponse {
         val authProviders = authProviderRepo.fetchAuthProvidersPaginated(context)
-        val newContext = PaginationContext.from(authProviders.lastOrNull()?.createdAt.toString(), context)
+        val newContext = PaginationContext.from(authProviders.lastOrNull()?.providerName, context)
         return AuthProviderPaginatedResponse(
             authProviders.map { AuthProvider.from(it) },
             newContext.nextToken,
