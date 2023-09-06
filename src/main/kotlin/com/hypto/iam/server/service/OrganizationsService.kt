@@ -47,6 +47,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
+    private val httpClient: OkHttpClient by inject()
 
     override suspend fun createOrganization(
         request: CreateOrganizationRequest
@@ -146,12 +147,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 )
 
                 // Create root user for the organization
-                val rootUser = usersService.createOauthUser(
+                val rootUser = usersService.createUser(
                     organizationId = organizationId,
                     username = username,
                     preferredUsername = null,
                     name = name,
                     email = email,
+                    phoneNumber = null,
+                    password = null,
                     createdBy = "iam-system",
                     verified = true,
                     loginAccess = true
@@ -174,12 +177,10 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 if (AppConfig.configuration.postHook.signUp != null) {
                     val body = gson.toJson(mapOf("organization" to organization))
                         .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-                    val httpClient = OkHttpClient()
                     val requestBuilder = Request.Builder()
                         .url(AppConfig.configuration.postHook.signUp)
                         .method("POST", body)
                         .addHeader("Content-Type", "application/json")
-                        .addHeader("Connection", "keep-alive")
                     val request = requestBuilder.build()
                     val response = httpClient.newCall(request).execute()
                     if (!response.isSuccessful) {

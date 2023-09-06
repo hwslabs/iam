@@ -45,6 +45,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val appConfig: AppConfig by inject()
     private val passcodeRepo: PasscodeRepo by inject()
 
+    @Suppress("CyclomaticComplexMethod")
     override suspend fun createUser(
         organizationId: String,
         loginAccess: Boolean,
@@ -76,7 +77,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         }
 
         return txMan.wrap {
-            if (loginAccess) {
+            if (password != null && loginAccess) {
                 val passwordCredentials = PasswordCredentials(
                     username = username,
                     preferredUsername = preferredUsername,
@@ -120,65 +121,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     policies.map { hrnFactory.getHrn(it) }
                 )
             }
-            email?.let {
-                passcodeRepo.deleteByEmailAndPurpose(email, VerifyEmailRequest.Purpose.invite)
-            }
-            getUser(userHrn, userRecord)
-        }
-    }
-
-    override suspend fun createOauthUser(
-        organizationId: String,
-        loginAccess: Boolean,
-        username: String,
-        preferredUsername: String?,
-        name: String?,
-        email: String?,
-        createdBy: String?,
-        verified: Boolean,
-        policies: List<String>?
-    ): User {
-        organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id. Unable to create a user")
-
-        if (userRepo.existsByAliasUsername(
-                preferredUsername,
-                email,
-                organizationId,
-                appConfig.app.uniqueUsersAcrossOrganizations
-            )
-        ) {
-            throw UserAlreadyExistException(
-                email?.let { "Email - $email" }.orEmpty() +
-                    preferredUsername?.let { "Username - $preferredUsername" }.orEmpty() +
-                    " already registered. Unable to create user"
-            )
-        }
-
-        return txMan.wrap {
-            val userHrn = ResourceHrn(organizationId, "", IamResources.USER, username)
-            val userRecord = userRepo.insert(
-                UsersRecord().apply {
-                    this.hrn = userHrn.toString()
-                    this.organizationId = organizationId
-                    this.email = email
-                    this.status = User.Status.enabled.value
-                    this.verified = verified
-                    this.deleted = false
-                    this.createdAt = LocalDateTime.now()
-                    this.updatedAt = LocalDateTime.now()
-                    this.preferredUsername = preferredUsername
-                    this.loginAccess = loginAccess
-                    this.name = name
-                    this.createdBy = createdBy
+            if (password != null) {
+                email?.let {
+                    passcodeRepo.deleteByEmailAndPurpose(email, VerifyEmailRequest.Purpose.invite)
                 }
-            ) ?: throw InternalException("Unable to create user")
-
-            policies?.let {
-                principalPolicyService.attachPoliciesToUser(
-                    ResourceHrn(userHrn.toString()),
-                    policies.map { hrnFactory.getHrn(it) }
-                )
             }
             getUser(userHrn, userRecord)
         }
@@ -384,7 +330,6 @@ class UsersServiceImpl : KoinComponent, UsersService {
 /**
  * Service which holds logic related to User operations
  */
-@Suppress("TooManyFunctions")
 interface UsersService {
     suspend fun createUser(
         organizationId: String,
@@ -395,18 +340,6 @@ interface UsersService {
         email: String?,
         phoneNumber: String?,
         password: String?,
-        createdBy: String?,
-        verified: Boolean,
-        policies: List<String>? = null
-    ): User
-
-    suspend fun createOauthUser(
-        organizationId: String,
-        loginAccess: Boolean,
-        username: String,
-        preferredUsername: String?,
-        name: String?,
-        email: String?,
         createdBy: String?,
         verified: Boolean,
         policies: List<String>? = null
