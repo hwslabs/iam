@@ -8,8 +8,6 @@ import com.hypto.iam.server.Constants.Companion.PAGINATION_MAX_PAGE_SIZE
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PaginationOptions.SortOrder
-import io.ktor.server.plugins.BadRequestException
-import java.lang.NullPointerException
 import java.util.Base64
 import org.jooq.Record
 import org.jooq.SelectConditionStep
@@ -54,14 +52,8 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
 
         @Suppress("SwallowedException")
         fun from(nextToken: String): PaginationContext {
-            val jsonObject = try {
-                val jsonString = String(Base64.getDecoder().decode(nextToken))
-                gson.fromJson(jsonString, JsonElement::class.java).asJsonObject
-            } catch (_: IllegalArgumentException) {
-                throw BadRequestException("Invalid next token")
-            } catch (_: NullPointerException) {
-                throw BadRequestException("Next token should not be empty")
-            }
+            val jsonString = String(Base64.getMimeDecoder().decode(nextToken))
+            val jsonObject = gson.fromJson(jsonString, JsonElement::class.java).asJsonObject
 
             return PaginationContext(
                 jsonObject.get(PaginationContext::lastItemId.name).asString,
@@ -75,7 +67,7 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
                 "Page Size must be less than or equal to $PAGINATION_MAX_PAGE_SIZE"
             }
 
-            if (nextToken != null) {
+            if (nextToken?.isNotBlank() == true) {
                 return from(nextToken)
             }
             return PaginationContext(
