@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
-import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
@@ -65,21 +64,20 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             return txMan.wrap {
                 passcodeRepo.deleteByEmailAndPurpose(rootUserFromRequest.email, VerifyEmailRequest.Purpose.signup)
                 // Create Organization
-                organizationRepo.insert(
-                    Organizations(
-                        organizationId,
-                        request.name,
-                        request.description ?: "",
-                        ResourceHrn(
-                            organization = organizationId,
-                            resource = IamResources.USER,
-                            resourceInstance = username
-                        ).toString(),
-                        JSONB.jsonb(gson.toJson(identityGroup)),
-                        logTimestamp,
-                        logTimestamp
-                    )
+                val organizationsRecord = OrganizationsRecord(
+                    organizationId,
+                    request.name,
+                    request.description ?: "",
+                    ResourceHrn(
+                        organization = organizationId,
+                        resource = IamResources.USER,
+                        resourceInstance = username
+                    ).toString(),
+                    JSONB.jsonb(gson.toJson(identityGroup)),
+                    logTimestamp,
+                    logTimestamp
                 )
+                organizationRepo.store(organizationsRecord)
 
                 // Create root user for the organization
                 val rootUser = usersService.createUser(
@@ -99,8 +97,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
                     .map { ResourceHrn(it.hrn) }
 
-                // TODO: Avoid this duplicate call by returning the created organization from `organizationRepo.insert`
-                val organization = getOrganization(organizationId)
+                val organization = Organization(
+                    id = organizationsRecord.id,
+                    name = organizationsRecord.name,
+                    description = organizationsRecord.description,
+                    rootUser = rootUser,
+                    createdAt = organizationsRecord.createdAt.toUTCOffset(),
+                    updatedAt = organizationsRecord.updatedAt.toUTCOffset()
+                )
                 val userHrn = hrnFactory.getHrn(rootUser.hrn)
 
                 if (policyHrns.isNotEmpty()) {
@@ -164,8 +168,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                     .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
                     .map { ResourceHrn(it.hrn) }
 
-                // TODO: Avoid this duplicate call by returning the created organization from `organizationRepo.insert`
-                val organization = getOrganization(organizationId)
+                val organization = Organization(
+                    id = organizationsRecord.id,
+                    name = organizationsRecord.name,
+                    description = organizationsRecord.description,
+                    rootUser = rootUser,
+                    createdAt = organizationsRecord.createdAt.toUTCOffset(),
+                    updatedAt = organizationsRecord.updatedAt.toUTCOffset()
+                )
                 val userHrn = hrnFactory.getHrn(rootUser.hrn)
 
                 if (policyHrns.isNotEmpty()) {

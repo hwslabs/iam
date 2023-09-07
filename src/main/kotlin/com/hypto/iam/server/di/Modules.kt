@@ -149,7 +149,7 @@ val applicationModule = module {
             }
         }.connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION, TimeUnit.MINUTES))
     }
-    single(named("OkHttpClient")) { get<OkHttpClient.Builder>().build() }
+    single(named("AuthProvider")) { get<OkHttpClient.Builder>().build() }
 }
 
 fun getCognitoIdentityProviderClient(
