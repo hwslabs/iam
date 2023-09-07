@@ -26,9 +26,6 @@ import com.hypto.iam.server.validators.InviteMetadata
 import com.hypto.iam.server.validators.validate
 import com.newrelic.telemetry.micrometer.NewRelicRegistry
 import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.OAuthServerSettings
 import io.ktor.server.auth.basic
@@ -52,7 +49,6 @@ import io.micrometer.core.instrument.logging.LoggingMeterRegistry
 import io.micrometer.core.instrument.util.NamedThreadFactory
 import java.net.InetAddress
 import java.time.Duration
-import org.koin.ktor.ext.inject
 
 /**
  * Application block for [HSTS] configuration.
