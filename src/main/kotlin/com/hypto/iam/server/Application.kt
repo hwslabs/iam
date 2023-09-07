@@ -37,6 +37,7 @@ import com.sksamuel.cohort.threads.ThreadDeadlockHealthCheck
 import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.ApplicationEngine
@@ -110,7 +111,7 @@ fun Application.handleRequest() {
     install(AutoHeadResponse) // see http://ktor.io/features/autoheadresponse.html
     install(HSTS, applicationHstsConfiguration()) // see http://ktor.io/features/hsts.html
     install(Compression, applicationCompressionConfiguration()) // see http://ktor.io/features/compression.html
-    applicationAuthenticationConfiguration()
+    install(Authentication, applicationAuthenticationConfiguration())
 
     // Create a signing Master key pair in case one doesn't exist
     val masterKeysRepo: MasterKeysRepo by inject()

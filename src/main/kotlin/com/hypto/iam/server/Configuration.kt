@@ -29,6 +29,7 @@ import com.newrelic.telemetry.micrometer.NewRelicRegistryConfig
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.OAuthServerSettings
 import io.ktor.server.auth.basic
 import io.ktor.server.plugins.BadRequestException
@@ -93,99 +94,97 @@ internal fun applicationCompressionConfiguration(): CompressionConfig.() -> Unit
 }
 
 @Suppress("ThrowsCount")
-fun Application.applicationAuthenticationConfiguration() {
-    val appConfig: AppConfig by inject()
-    val passcodeRepo: PasscodeRepo by inject()
-    val passcodeService: PasscodeService by inject()
-    val principalPolicyService: PrincipalPolicyService by inject()
-    val userPrincipalService: UserPrincipalService by inject()
+internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -> Unit = {
+    val appConfig = getKoinInstance<AppConfig>()
+    val passcodeRepo = getKoinInstance<PasscodeRepo>()
+    val passcodeService = getKoinInstance<PasscodeService>()
+    val principalPolicyService = getKoinInstance<PrincipalPolicyService>()
+    val userPrincipalService = getKoinInstance<UserPrincipalService>()
 
-    install(Authentication) {
-        oauth("oauth") {
-            validate {
-                val issuer = this.request.headers["x-issuer"] ?: throw BadRequestException("x-issuer header not found")
-                AuthProviderRegistry.getProvider(issuer)?.getProfileDetails(it)
-                    ?: throw BadRequestException("No auth provider found for issuer $issuer")
+    oauth("oauth") {
+        validate {
+            val issuer = this.request.headers["x-issuer"] ?: throw BadRequestException("x-issuer header not found")
+            AuthProviderRegistry.getProvider(issuer)?.getProfileDetails(it)
+                ?: throw BadRequestException("No auth provider found for issuer $issuer")
+        }
+    }
+    apiKeyAuth("hypto-iam-root-auth") {
+        val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
+        validate { tokenCredential: TokenCredential ->
+            when (tokenCredential.value) {
+                secretKey -> ApiPrincipal(tokenCredential, ROOT_ORG)
+                else -> null
             }
         }
-        apiKeyAuth("hypto-iam-root-auth") {
-            val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
-            validate { tokenCredential: TokenCredential ->
-                when (tokenCredential.value) {
-                    secretKey -> ApiPrincipal(tokenCredential, ROOT_ORG)
-                    else -> null
+    }
+    passcodeAuth("signup-passcode-auth") {
+        validate { tokenCredential: TokenCredential ->
+            tokenCredential.value?.let {
+                passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.signup)?.let {
+                    ApiPrincipal(tokenCredential, ROOT_ORG)
                 }
             }
         }
-        passcodeAuth("signup-passcode-auth") {
-            validate { tokenCredential: TokenCredential ->
-                tokenCredential.value?.let {
-                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.signup)?.let {
-                        ApiPrincipal(tokenCredential, ROOT_ORG)
-                    }
+    }
+    passcodeAuth("reset-passcode-auth") {
+        validate { tokenCredential: TokenCredential ->
+            val email = this.receive<ResetPasswordRequest>().validate().email
+            tokenCredential.value?.let {
+                passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.reset, email)?.let {
+                    ApiPrincipal(tokenCredential, ROOT_ORG)
                 }
             }
         }
-        passcodeAuth("reset-passcode-auth") {
-            validate { tokenCredential: TokenCredential ->
-                val email = this.receive<ResetPasswordRequest>().validate().email
-                tokenCredential.value?.let {
-                    passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.reset, email)?.let {
-                        ApiPrincipal(tokenCredential, ROOT_ORG)
-                    }
-                }
-            }
-        }
-        passcodeAuth("invite-passcode-auth") {
-            validate { tokenCredential: TokenCredential ->
-                tokenCredential.value?.let { value ->
-                    passcodeRepo.getValidPasscodeById(value, VerifyEmailRequest.Purpose.invite)?.let {
-                        val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
-                        return@validate UserPrincipal(
-                            tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),
-                            hrnStr = metadata.inviterUserHrn,
-                            policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
-                        )
-                    }
-                }
-            }
-        }
-        basic("basic-auth") {
-            validate { credentials ->
-                val organizationId = this.parameters["organization_id"]!!
-                val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    organizationId,
-                    credentials.name.lowercase(),
-                    credentials.password
-                )
-                if (principal != null) {
-                    response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
-                }
-                return@validate principal
-            }
-        }
-        bearer("bearer-auth") {
-            validate(bearerAuthValidation(userPrincipalService))
-        }
-        basic("unique-basic-auth") {
-            validate { credentials ->
-                if (!appConfig.app.uniqueUsersAcrossOrganizations) {
-                    throw BadRequestException(
-                        "Email not unique across organizations. " +
-                            "Please use Token APIs with organization ID"
+    }
+    passcodeAuth("invite-passcode-auth") {
+        validate { tokenCredential: TokenCredential ->
+            tokenCredential.value?.let { value ->
+                passcodeRepo.getValidPasscodeById(value, VerifyEmailRequest.Purpose.invite)?.let {
+                    val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
+                    return@validate UserPrincipal(
+                        tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),
+                        hrnStr = metadata.inviterUserHrn,
+                        policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
                     )
                 }
-
-                val principal = userPrincipalService.getUserPrincipalByCredentials(
-                    UsernamePasswordCredential(credentials.name.lowercase(), credentials.password)
-                )
-                response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
-                return@validate principal
             }
         }
-        optionalBearer("optional-bearer-auth") {
-            validate(bearerAuthValidation(userPrincipalService))
+    }
+    basic("basic-auth") {
+        validate { credentials ->
+            val organizationId = this.parameters["organization_id"]!!
+            val principal = userPrincipalService.getUserPrincipalByCredentials(
+                organizationId,
+                credentials.name.lowercase(),
+                credentials.password
+            )
+            if (principal != null) {
+                response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
+            }
+            return@validate principal
         }
+    }
+    bearer("bearer-auth") {
+        validate(bearerAuthValidation(userPrincipalService))
+    }
+    basic("unique-basic-auth") {
+        validate { credentials ->
+            if (!appConfig.app.uniqueUsersAcrossOrganizations) {
+                throw BadRequestException(
+                    "Email not unique across organizations. " +
+                        "Please use Token APIs with organization ID"
+                )
+            }
+
+            val principal = userPrincipalService.getUserPrincipalByCredentials(
+                UsernamePasswordCredential(credentials.name.lowercase(), credentials.password)
+            )
+            response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
+            return@validate principal
+        }
+    }
+    optionalBearer("optional-bearer-auth") {
+        validate(bearerAuthValidation(userPrincipalService))
     }
 }
 
