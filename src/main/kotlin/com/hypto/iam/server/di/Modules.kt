@@ -66,6 +66,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -148,7 +149,7 @@ val applicationModule = module {
             }
         }.connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION, TimeUnit.MINUTES))
     }
-    single { get<OkHttpClient.Builder>().build() }
+    single(named("OkHttpClient")) { get<OkHttpClient.Builder>().build() }
 }
 
 fun getCognitoIdentityProviderClient(

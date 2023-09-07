@@ -2281,7 +2281,6 @@ components:
       value:
         data:
           - providerName: Google
-            grantType: CODE_AUTHORIZATION
             authUrl: https://accounts.google.com/o/oauth2/v2/auth
             clientId: 47561438579695-akjfgtakgau678362awrhfaur763.apps.googleusercontent.com
         nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
@@ -3255,7 +3254,6 @@ components:
       additionalProperties: false
       required:
         - providerName
-        - grantType
         - authUrl
         - clientId
       properties:

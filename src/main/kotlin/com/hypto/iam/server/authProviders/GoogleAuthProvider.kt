@@ -15,9 +15,11 @@ import org.koin.core.component.inject
 
 const val PROFILE_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 const val ACCESS_TOKEN_KEY = "access_token"
-object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
+object GoogleAuthProvider : BaseAuthProvider(), KoinComponent {
     val gson: Gson by inject()
     private val httpClient: OkHttpClient by inject()
+
+    override fun getProviderName() = "google"
 
     override fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal {
         val requestBuilder = Request.Builder()
@@ -33,8 +35,7 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
             }
             throw UnknownException("Unable to fetch user details")
         }
-        val responseBody = response.body?.let { String(it.bytes()) }
-        val googleUser = this.gson.fromJson(responseBody, GoogleUser::class.java)
+        val googleUser = response.body?.string()?.let { this.gson.fromJson(it, GoogleUser::class.java) }!!
         return OAuthUserPrincipal(
             tokenCredential,
             ROOT_ORG,

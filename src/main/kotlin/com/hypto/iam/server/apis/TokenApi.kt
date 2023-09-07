@@ -5,6 +5,7 @@ import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.TokenResponse
+import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
@@ -17,7 +18,6 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
-import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.accept
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
@@ -56,7 +56,7 @@ suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
 suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) {
     val principal = context.principal<OAuthUserPrincipal>()!!
     val responseContentType = context.request.accept()
-    val user = UserRepo.findByEmail(principal.email) ?: throw BadRequestException("User has not signed up yet")
+    val user = UserRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
     val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 
     when (responseContentType) {
@@ -119,12 +119,9 @@ fun Route.tokenApi() {
 fun Route.loginApi() {
     authenticate("unique-basic-auth", "bearer-auth", "oauth") {
         post("/login") {
-            val oAuthUserPrincipal = context.principal<OAuthUserPrincipal>()
-            if (oAuthUserPrincipal != null) {
+            context.principal<OAuthUserPrincipal>()?.let {
                 generateTokenOauth(call, context)
-            } else {
-                generateToken(call, context)
-            }
+            } ?: generateToken(call, context)
         }
     }
 }

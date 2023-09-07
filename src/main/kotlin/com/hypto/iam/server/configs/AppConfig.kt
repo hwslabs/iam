@@ -9,7 +9,8 @@ data class AppConfig(
     val database: Database,
     val newrelic: Newrelic,
     val aws: Aws,
-    val postHook: PostHook
+    val postHook: PostHook,
+    val onboardRoutes: OnboardRoutes
 ) {
     /**
      * Environment variables should be in Snake case.
@@ -99,7 +100,9 @@ data class AppConfig(
 
     data class Aws(val region: String, val accessKey: String, val secretKey: String)
 
-    data class PostHook(val signUp: String)
+    data class PostHook(val signup: String)
+
+    data class OnboardRoutes(val signup: String, val reset: String, val invite: String)
 
     companion object {
         val configuration: AppConfig = ConfigLoaderBuilder.default()

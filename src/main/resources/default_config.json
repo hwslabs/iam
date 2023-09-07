@@ -50,6 +50,11 @@
   },
   "postHook": {
     "signUp": "<post signUp action URL>"
+  },
+  "onboardRoutes": {
+    "signup": "/signup",
+    "reset": "/organizations/users/resetPassword",
+    "invite": "/organizations/users/verifyUser"
   }
 }
 

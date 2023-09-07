@@ -5,6 +5,7 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
+import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.toUTCOffset
@@ -130,21 +131,20 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         try {
             return txMan.wrap {
                 // Create Organization
-                organizationRepo.insert(
-                    Organizations(
-                        organizationId,
-                        companyName,
-                        "",
-                        ResourceHrn(
-                            organization = organizationId,
-                            resource = IamResources.USER,
-                            resourceInstance = username
-                        ).toString(),
-                        null,
-                        logTimestamp,
-                        logTimestamp
-                    )
+                val organizationsRecord = OrganizationsRecord(
+                    organizationId,
+                    companyName,
+                    "",
+                    ResourceHrn(
+                        organization = organizationId,
+                        resource = IamResources.USER,
+                        resourceInstance = username
+                    ).toString(),
+                    null,
+                    logTimestamp,
+                    logTimestamp
                 )
+                organizationRepo.store(organizationsRecord)
 
                 // Create root user for the organization
                 val rootUser = usersService.createUser(
@@ -174,11 +174,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
                 val token = tokenService.generateJwtToken(userHrn)
 
-                if (AppConfig.configuration.postHook.signUp != null) {
+                if (AppConfig.configuration.postHook.signup != null) {
                     val body = gson.toJson(mapOf("organization" to organization))
                         .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
                     val requestBuilder = Request.Builder()
-                        .url(AppConfig.configuration.postHook.signUp)
+                        .url(AppConfig.configuration.postHook.signup)
                         .method("POST", body)
                         .addHeader("Content-Type", "application/json")
                     val request = requestBuilder.build()

@@ -42,8 +42,7 @@ fun Route.createOrganizationApi() {
     val gson: Gson by inject()
 
     post("/organizations") {
-        val oAuthUserPrincipal = call.principal<OAuthUserPrincipal>()
-        if (oAuthUserPrincipal != null) {
+        call.principal<OAuthUserPrincipal>()?.let { oAuthUserPrincipal ->
             val (organization, tokenResponse) = organizationService.createOauthOrganization(
                 companyName = oAuthUserPrincipal.companyName,
                 name = oAuthUserPrincipal.name,

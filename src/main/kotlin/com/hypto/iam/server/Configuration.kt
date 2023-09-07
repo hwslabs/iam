@@ -92,6 +92,7 @@ internal fun applicationCompressionConfiguration(): CompressionConfig.() -> Unit
     }
 }
 
+@Suppress("ThrowsCount")
 fun Application.applicationAuthenticationConfiguration() {
     val appConfig: AppConfig by inject()
     val passcodeRepo: PasscodeRepo by inject()
@@ -104,6 +105,7 @@ fun Application.applicationAuthenticationConfiguration() {
             validate {
                 val issuer = this.request.headers["x-issuer"] ?: throw BadRequestException("x-issuer header not found")
                 AuthProviderRegistry.getProvider(issuer)?.getProfileDetails(it)
+                    ?: throw BadRequestException("No auth provider found for issuer $issuer")
             }
         }
         apiKeyAuth("hypto-iam-root-auth") {
