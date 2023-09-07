@@ -49,7 +49,7 @@
     "secretKey": "<placeholder for aws secret key>"
   },
   "postHook": {
-    "signUp": "<post signUp action URL>"
+    "signup": "<post signup action URL>"
   },
   "onboardRoutes": {
     "signup": "/signup",
@@ -57,4 +57,3 @@
     "invite": "/organizations/users/verifyUser"
   }
 }
-
