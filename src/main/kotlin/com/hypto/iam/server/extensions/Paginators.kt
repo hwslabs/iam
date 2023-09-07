@@ -49,8 +49,10 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
         /**
          * nextToken= Base64Encoded({"lastItemId": "string", "pageSize": 123, "sortOrder": "asc"})
          */
+
+        @Suppress("SwallowedException")
         fun from(nextToken: String): PaginationContext {
-            val jsonString = String(Base64.getDecoder().decode(nextToken))
+            val jsonString = String(Base64.getMimeDecoder().decode(nextToken))
             val jsonObject = gson.fromJson(jsonString, JsonElement::class.java).asJsonObject
 
             return PaginationContext(
@@ -65,7 +67,7 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
                 "Page Size must be less than or equal to $PAGINATION_MAX_PAGE_SIZE"
             }
 
-            if (nextToken != null) {
+            if (nextToken?.isNotBlank() == true) {
                 return from(nextToken)
             }
             return PaginationContext(

@@ -47,5 +47,13 @@
     "region": "us-east-1",
     "accessKey": "<placeholder for aws access key>",
     "secretKey": "<placeholder for aws secret key>"
+  },
+  "postHook": {
+    "signup": "<post signup action URL>"
+  },
+  "onboardRoutes": {
+    "signup": "/signup",
+    "reset": "/organizations/users/resetPassword",
+    "invite": "/organizations/users/verifyUser"
   }
 }

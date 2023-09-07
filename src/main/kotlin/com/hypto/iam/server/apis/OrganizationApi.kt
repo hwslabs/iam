@@ -8,6 +8,7 @@ import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.OrganizationsService
@@ -33,6 +34,7 @@ import org.koin.ktor.ext.inject
 /**
  * API to create organization in IAM.
  */
+@Suppress("ThrowsCount")
 fun Route.createOrganizationApi() {
     val organizationService: OrganizationsService by inject()
     val passcodeRepo: PasscodeRepo by inject()
@@ -40,6 +42,19 @@ fun Route.createOrganizationApi() {
     val gson: Gson by inject()
 
     post("/organizations") {
+        call.principal<OAuthUserPrincipal>()?.let { oAuthUserPrincipal ->
+            val (organization, tokenResponse) = organizationService.createOauthOrganization(
+                companyName = oAuthUserPrincipal.companyName,
+                name = oAuthUserPrincipal.name,
+                email = oAuthUserPrincipal.email
+            )
+            call.respondText(
+                text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.Created
+            )
+        }
+
         val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
 
         val apiRequest = kotlin.runCatching { call.receiveNullable<CreateOrganizationRequest>() }.getOrNull()
@@ -65,9 +80,7 @@ fun Route.createOrganizationApi() {
         )
         request.validate()
 
-        val (organization, tokenResponse) = organizationService.createOrganization(
-            request = request
-        )
+        val (organization, tokenResponse) = organizationService.createOrganization(request = request)
         call.respondText(
             text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
             contentType = ContentType.Application.Json,

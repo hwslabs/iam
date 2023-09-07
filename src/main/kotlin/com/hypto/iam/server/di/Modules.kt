@@ -8,6 +8,7 @@ import com.google.gson.JsonSerializer
 import com.hypto.iam.server.MicrometerConfigs
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
+import com.hypto.iam.server.db.repositories.AuthProviderRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
@@ -22,6 +23,8 @@ import com.hypto.iam.server.idp.CognitoIdentityProviderImpl
 import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.service.ActionService
 import com.hypto.iam.server.service.ActionServiceImpl
+import com.hypto.iam.server.service.AuthProviderService
+import com.hypto.iam.server.service.AuthProviderServiceImpl
 import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.service.CredentialServiceImpl
 import com.hypto.iam.server.service.MasterKeyCache
@@ -56,8 +59,14 @@ import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
+import java.util.concurrent.TimeUnit
+import mu.KotlinLogging
+import okhttp3.ConnectionPool
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
@@ -66,6 +75,10 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import software.amazon.awssdk.services.ses.SesClient
+
+private val log = KotlinLogging.logger { }
+const val MAX_IDLE_CONNECTIONS = 50
+const val KEEP_ALIVE_DURATION = 5L
 
 // DI module to get repositories
 val repositoryModule = module {
@@ -80,6 +93,7 @@ val repositoryModule = module {
     single { PasscodeRepo }
     single { UserRepo }
     single { PolicyTemplatesRepo }
+    single { AuthProviderRepo }
 }
 
 val controllerModule = module {
@@ -95,6 +109,7 @@ val controllerModule = module {
     single { UserPrincipalServiceImpl() } bind UserPrincipalService::class
     single { PasscodeServiceImpl() } bind PasscodeService::class
     single { PolicyTemplatesServiceImpl() } bind PolicyTemplatesService::class
+    single { AuthProviderServiceImpl() } bind AuthProviderService::class
 }
 
 val applicationModule = module {
@@ -119,6 +134,22 @@ val applicationModule = module {
     single { getCognitoIdentityProviderClient(get<AppConfig>().aws.region, get()) }
     single { getSesClient(get<AppConfig>().aws.region, get()) }
     single { TxMan(com.hypto.iam.server.service.DatabaseFactory.getConfiguration()) }
+    single {
+        OkHttpClient().newBuilder().apply {
+            if (get<AppConfig>().app.isDevelopment || log.isDebugEnabled) {
+                this.addInterceptor(
+                    HttpLoggingInterceptor {
+                        if (log.isDebugEnabled) {
+                            log.debug { it }
+                        } else {
+                            log.info { it }
+                        }
+                    }.setLevel(HttpLoggingInterceptor.Level.BODY)
+                )
+            }
+        }.connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION, TimeUnit.MINUTES))
+    }
+    single(named("AuthProvider")) { get<OkHttpClient.Builder>().build() }
 }
 
 fun getCognitoIdentityProviderClient(

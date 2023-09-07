@@ -20,6 +20,7 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
         maven { url 'https://jitpack.io' }
     }
+
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "com.github.jengelman.gradle.plugins:shadow:$shadow_version"
@@ -430,6 +431,10 @@ dependencies {
 
     //Mustache Template
     implementation("net.pwall.mustache:kotlin-mustache:0.10")
+
+    // OkHttp Client
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
 
     // Test dependencies
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")

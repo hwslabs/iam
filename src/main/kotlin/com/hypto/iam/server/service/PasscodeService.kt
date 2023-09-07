@@ -137,13 +137,14 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             .setHost(appConfig.app.baseUrl)
 
         link.path = when (purpose) {
-            Purpose.signup -> "/signup"
-            Purpose.reset -> "/organizations/${organizationId!!}/users/resetPassword"
-            Purpose.invite -> "/organizations/${organizationId!!}/users/verifyUser"
+            Purpose.signup -> AppConfig.configuration.onboardRoutes.signup
+            Purpose.reset -> AppConfig.configuration.onboardRoutes.reset
+            Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
         }
 
         return link.setParameter("passcode", passcode)
             .setParameter("email", Base64.getEncoder().encodeToString(email.toByteArray()))
+            .setParameter("organizationId", organizationId)
             .build()
             .toString()
     }

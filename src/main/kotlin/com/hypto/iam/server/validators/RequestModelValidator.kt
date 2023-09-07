@@ -298,10 +298,10 @@ val credentialPasswordCheck = Validation {
 
 val createOrganizationRequestValidation = Validation {
     // Name is mandatory parameter and max length should be 50
-    CreateOrganizationRequest::name required {
+    CreateOrganizationRequest::name ifPresent {
         run(orgNameCheck)
     }
-    CreateOrganizationRequest::rootUser required {
+    CreateOrganizationRequest::rootUser ifPresent {
         run(rootUserRequestValidation)
     }
 }
