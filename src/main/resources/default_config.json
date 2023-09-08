@@ -55,5 +55,13 @@
     "signup": "/signup",
     "reset": "/organizations/users/resetPassword",
     "invite": "/organizations/users/verifyUser"
+  },
+  "cognito": {
+    "id": "<user pool id>",
+    "name": "<user pool name>",
+    "metadata": {
+      "iam-client-id": "<placeholder for IAM client id>"
+    },
+    "identitySource": "AWS_COGNITO"
   }
 }

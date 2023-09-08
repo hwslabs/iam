@@ -7,6 +7,8 @@ import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createResourceActionHrn
+import com.hypto.iam.server.idp.IdentityGroup
+import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
@@ -302,6 +304,14 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
                             true
+                        )
+                    }
+                    every { this@declareMock.cognito } answers {
+                        IdentityGroup(
+                            id = "us-east-1_id",
+                            name = "user-pool-name",
+                            identitySource = IdentityProvider.IdentitySource.AWS_COGNITO,
+                            metadata = mapOf("iam-client-id" to "id")
                         )
                     }
                 }
@@ -782,6 +792,14 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
                             true
+                        )
+                    }
+                    every { this@declareMock.cognito } answers {
+                        IdentityGroup(
+                            id = "us-east-1_id",
+                            name = "user-pool-name",
+                            identitySource = IdentityProvider.IdentitySource.AWS_COGNITO,
+                            metadata = mapOf("iam-client-id" to "id")
                         )
                     }
                 }
