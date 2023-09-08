@@ -142,11 +142,14 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
         }
 
-        return link.setParameter("passcode", passcode)
-            .setParameter("email", Base64.getEncoder().encodeToString(email.toByteArray()))
-            .setParameter("organizationId", organizationId)
-            .build()
-            .toString()
+        link.setParameter("passcode", passcode)
+        link.setParameter("email", Base64.getEncoder().encodeToString(email.toByteArray()))
+
+        organizationId?.let {
+            link.setParameter("organizationId", it)
+        }
+
+        return link.build().toString()
     }
 
     private fun sendSignupPasscode(email: String, passcode: String): Boolean {
