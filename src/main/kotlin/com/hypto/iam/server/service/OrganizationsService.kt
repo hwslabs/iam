@@ -30,6 +30,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.JSONB
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
 class OrganizationAlreadyExistException(message: String) : Exception(message)
 
@@ -47,7 +48,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
-    private val httpClient: OkHttpClient by inject()
+    private val httpClient: OkHttpClient by inject(named("AuthProvider"))
     private val appConfig: AppConfig by inject()
 
     override suspend fun createOrganization(
@@ -221,10 +222,17 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         )
     }
 
-    override suspend fun updateOrganization(id: String, name: String?, description: String?): Organization {
+    override suspend fun updateOrganization(
+        id: String,
+        name: String?,
+        description: String?,
+        identityGroup: IdentityGroup?
+    ): Organization {
         organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
         val updatedOrgRecord =
-            organizationRepo.update(id, name, description) ?: throw InternalException("Internal service failure")
+            organizationRepo.update(id, name, description, identityGroup) ?: throw InternalException(
+                "Internal service failure"
+            )
         val rootUser = usersService.getUser(
             updatedOrgRecord.id,
             ResourceHrn(updatedOrgRecord.rootUserHrn).resourceInstance!!
@@ -265,6 +273,11 @@ interface OrganizationsService {
     ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization
-    suspend fun updateOrganization(id: String, name: String?, description: String?): Organization
+    suspend fun updateOrganization(
+        id: String,
+        name: String?,
+        description: String?,
+        identityGroup: IdentityGroup?
+    ): Organization
     suspend fun deleteOrganization(id: String): BaseSuccessResponse
 }

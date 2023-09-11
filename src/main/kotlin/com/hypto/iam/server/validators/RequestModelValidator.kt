@@ -17,6 +17,7 @@ import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
@@ -138,6 +139,10 @@ fun UpdateUserRequest.validate(): UpdateUserRequest {
 
 fun ChangeUserPasswordRequest.validate(): ChangeUserPasswordRequest {
     return changeUserPasswordRequestValidation.validateAndThrowOnFailure(this)
+}
+
+fun CreateUserPasswordRequest.validate(): CreateUserPasswordRequest {
+    return createUserPasswordRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun ResetPasswordRequest.validate(): ResetPasswordRequest {
@@ -444,6 +449,12 @@ val changeUserPasswordRequestValidation = Validation {
         run(passwordCheck)
     }
     ChangeUserPasswordRequest::newPassword required {
+        run(passwordCheck)
+    }
+}
+
+val createUserPasswordRequestValidation = Validation {
+    CreateUserPasswordRequest::password required {
         run(passwordCheck)
     }
 }

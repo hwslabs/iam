@@ -6,6 +6,8 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import com.hypto.iam.server.MicrometerConfigs
+import com.hypto.iam.server.authProviders.AuthProviderRegistry
+import com.hypto.iam.server.authProviders.GoogleAuthProvider
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.AuthProviderRepo
@@ -150,6 +152,8 @@ val applicationModule = module {
         }.connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION, TimeUnit.MINUTES))
     }
     single(named("AuthProvider")) { get<OkHttpClient.Builder>().build() }
+    single { AuthProviderRegistry }
+    single(null, true) { GoogleAuthProvider }
 }
 
 fun getCognitoIdentityProviderClient(

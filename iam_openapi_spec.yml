@@ -345,6 +345,34 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/users/{user_name}/create_password:
+    post:
+      tags:
+        - User Management
+      summary: Create password for a user
+      description: Create password for a user
+      operationId: createPassword
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUserPasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /organizations/{organization_id}/users/resetPassword:
     post:
       tags:
@@ -1439,6 +1467,17 @@ components:
             ChangeUserPasswordRequest:
               $ref: '#/components/examples/ChangeUserPasswordRequest'
 
+    CreateUserPasswordRequest:
+      description: Payload to set user password
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateUserPasswordRequest'
+          examples:
+            CreateUserPasswordRequest:
+              $ref: '#/components/examples/CreateUserPasswordRequest'
+
     ResetPasswordRequest:
       description: Payload to reset password
       required: true
@@ -2024,6 +2063,11 @@ components:
         oldPassword: Old@Password123
         newPassword: New@Password123
 
+    CreateUserPasswordRequest:
+      summary: sample set user password request
+      value:
+        password: Password@123
+
     ResetPasswordRequest:
       summary: sample reset password request
       value:
@@ -2569,6 +2613,17 @@ components:
           type: string
           maxLength: 100
         newPassword:
+          type: string
+          maxLength: 100
+
+    CreateUserPasswordRequest:
+      description: Payload to set user password
+      type: object
+      additionalProperties: false
+      required:
+        - password
+      properties:
+        password:
           type: string
           maxLength: 100
 

@@ -55,37 +55,39 @@ fun Route.createOrganizationApi() {
             )
         }
 
-        val passcodeStr = call.principal<ApiPrincipal>()?.tokenCredential?.value!!
+        call.principal<ApiPrincipal>()?.let { apiPrincipal ->
+            val passcodeStr = apiPrincipal.tokenCredential?.value!!
 
-        val apiRequest = kotlin.runCatching { call.receiveNullable<CreateOrganizationRequest>() }.getOrNull()
-        val passcode = passcodeRepo.getValidPasscodeById(passcodeStr, VerifyEmailRequest.Purpose.signup)
-        val passcodeMetadata = passcode?.metadata
-        if (passcodeMetadata != null && apiRequest != null) {
-            throw BadRequestException(
-                "Organization and Admin user details are provided " +
-                    "both during passcode creation time and sign-up request."
+            val apiRequest = kotlin.runCatching { call.receiveNullable<CreateOrganizationRequest>() }.getOrNull()
+            val passcode = passcodeRepo.getValidPasscodeById(passcodeStr, VerifyEmailRequest.Purpose.signup)
+            val passcodeMetadata = passcode?.metadata
+            if (passcodeMetadata != null && apiRequest != null) {
+                throw BadRequestException(
+                    "Organization and Admin user details are provided " +
+                        "both during passcode creation time and sign-up request."
+                )
+            }
+            if (passcodeMetadata == null && apiRequest == null) {
+                throw BadRequestException("Organization and Admin user details are missing")
+            }
+
+            val request = apiRequest?.copy(
+                rootUser = apiRequest.rootUser.copy(
+                    email = apiRequest.rootUser.email.lowercase()
+                )
+            ) ?: CreateOrganizationRequest.from(
+                passcodeService.decryptMetadata(passcodeMetadata!!),
+                passcode.email.lowercase()
+            )
+            request.validate()
+
+            val (organization, tokenResponse) = organizationService.createOrganization(request = request)
+            call.respondText(
+                text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.Created
             )
         }
-        if (passcodeMetadata == null && apiRequest == null) {
-            throw BadRequestException("Organization and Admin user details are missing")
-        }
-
-        val request = apiRequest?.copy(
-            rootUser = apiRequest.rootUser.copy(
-                email = apiRequest.rootUser.email.lowercase()
-            )
-        ) ?: CreateOrganizationRequest.from(
-            passcodeService.decryptMetadata(passcodeMetadata!!),
-            passcode.email.lowercase()
-        )
-        request.validate()
-
-        val (organization, tokenResponse) = organizationService.createOrganization(request = request)
-        call.respondText(
-            text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.Created
-        )
     }
 }
 
@@ -142,7 +144,12 @@ fun Route.getAndUpdateOrganizationApi() {
                 val id = call.parameters["id"]!!
                 val request = call.receive<UpdateOrganizationRequest>().validate()
                 val response =
-                    service.updateOrganization(id = id, name = request.name, description = request.description)
+                    service.updateOrganization(
+                        id = id,
+                        name = request.name,
+                        description = request.description,
+                        identityGroup = null
+                    )
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
