@@ -107,9 +107,20 @@ data class AppConfig(
     data class OnboardRoutes(val signup: String, val reset: String, val invite: String)
 
     companion object {
-        val configuration: AppConfig = ConfigLoaderBuilder.default()
-            .addPropertySource(
-                EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true)
-            ).withReport().build().loadConfigOrThrow("/default_config.json")
+        val configuration: AppConfig = with(
+            ConfigLoaderBuilder.default()
+                .addPropertySource(
+                    EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true)
+                ).withReport().build().loadConfigOrThrow<AppConfig>("/default_config.json")
+        ) {
+            // Convert cognito metadata keys from snake case to hyphenated because terraform doesn't support snake case as per Karuppiah's comment
+            copy(
+                cognito = cognito.copy(
+                    metadata = cognito.metadata.entries.associate {
+                        it.key.split("_").joinToString(separator = "-") to it.value
+                    }
+                )
+            )
+        }
     }
 }
