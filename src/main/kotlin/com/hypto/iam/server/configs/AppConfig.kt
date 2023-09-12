@@ -113,7 +113,8 @@ data class AppConfig(
                     EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true)
                 ).withReport().build().loadConfigOrThrow<AppConfig>("/default_config.json")
         ) {
-            // Convert cognito metadata keys from snake case to hyphenated because terraform doesn't support snake case as per Karuppiah's comment
+            // Convert cognito metadata keys from snake case to hyphenated
+            // because terraform doesn't support snake case as per Karuppiah's comment
             copy(
                 cognito = cognito.copy(
                     metadata = cognito.metadata.entries.associate {
