@@ -12,12 +12,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
 const val PROFILE_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 const val ACCESS_TOKEN_KEY = "access_token"
 object GoogleAuthProvider : BaseAuthProvider(), KoinComponent {
     val gson: Gson by inject()
-    private val httpClient: OkHttpClient by inject()
+    private val httpClient: OkHttpClient by inject(named("AuthProvider"))
 
     override fun getProviderName() = "google"
 

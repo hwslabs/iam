@@ -3,9 +3,11 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
+import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.PaginationOptions
@@ -109,6 +111,7 @@ fun Route.usersApi() {
     val gson: Gson by inject()
     val hrnFactory: HrnFactory by inject()
     val usersService: UsersService by inject()
+    val appConfig: AppConfig by inject()
 
     // **** User Management api ****//
 
@@ -221,6 +224,28 @@ fun Route.usersApi() {
         }
     }
 
+    withPermission(
+        "createPassword",
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+    ) {
+        post("/organizations/{organization_id}/users/{user_id}/create_password") {
+            val organizationId = call.parameters["organization_id"]!!
+            val userId = call.parameters["user_id"]!!
+            val request = call.receive<CreateUserPasswordRequest>().validate()
+            val response = usersService.createUserPassword(
+                organizationId,
+                userId,
+                request.password
+            )
+
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK
+            )
+        }
+    }
+
     // **** User policy management apis ****//
 
     // Detach policy
@@ -278,7 +303,7 @@ fun Route.resetPasswordApi() {
         val passcodeStr = call.principal<ApiPrincipal>()!!.tokenCredential.value!!
         val request = call.receive<ResetPasswordRequest>().validate()
         val user = usersService.getUserByEmail(organizationId!!, request.email)
-        val response = usersService.setUserPassword(organizationId, user, request.password, passcodeStr)
+        val response = usersService.setUserPassword(organizationId, user, request.password)
 
         call.respondText(
             text = gson.toJson(response),

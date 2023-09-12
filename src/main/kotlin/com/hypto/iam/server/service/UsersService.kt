@@ -39,6 +39,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val hrnFactory: HrnFactory by inject()
     private val userRepo: UserRepo by inject()
     private val organizationRepo: OrganizationRepo by inject()
+    private val organizationService: OrganizationsService by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
@@ -59,9 +60,6 @@ class UsersServiceImpl : KoinComponent, UsersService {
         verified: Boolean,
         policies: List<String>?
     ): User {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id. Unable to create a user")
-
         if (userRepo.existsByAliasUsername(
                 preferredUsername,
                 email,
@@ -78,23 +76,16 @@ class UsersServiceImpl : KoinComponent, UsersService {
 
         return txMan.wrap {
             if (password != null && loginAccess) {
-                val passwordCredentials = PasswordCredentials(
-                    username = username,
-                    preferredUsername = preferredUsername,
-                    name = name,
-                    email = email ?: throw BadRequestException("Email is required"),
-                    phoneNumber = phoneNumber ?: "",
-                    password = password ?: throw BadRequestException("Password is required"),
-                )
-                val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-                identityProvider.createUser(
-                    RequestContext(
-                        organizationId = organizationId,
-                        requestedPrincipal = createdBy ?: "unknown user",
-                        verified
-                    ),
-                    identityGroup,
-                    passwordCredentials
+                createUserInIdentityProvider(
+                    username,
+                    preferredUsername,
+                    name,
+                    email,
+                    phoneNumber,
+                    password,
+                    organizationId,
+                    createdBy,
+                    verified
                 )
             }
             val userHrn = ResourceHrn(organizationId, "", IamResources.USER, username)
@@ -128,6 +119,41 @@ class UsersServiceImpl : KoinComponent, UsersService {
             }
             getUser(userHrn, userRecord)
         }
+    }
+
+    @Suppress("ThrowsCount")
+    private suspend fun createUserInIdentityProvider(
+        username: String,
+        preferredUsername: String?,
+        name: String?,
+        email: String?,
+        phoneNumber: String?,
+        password: String?,
+        organizationId: String,
+        createdBy: String?,
+        verified: Boolean
+    ) {
+        val org = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id")
+
+        val passwordCredentials = PasswordCredentials(
+            username = username,
+            preferredUsername = preferredUsername,
+            name = name,
+            email = email ?: throw BadRequestException("Email is required"),
+            phoneNumber = phoneNumber ?: "",
+            password = password ?: throw BadRequestException("Password is required"),
+        )
+
+        identityProvider.createUser(
+            RequestContext(
+                organizationId = organizationId,
+                requestedPrincipal = createdBy ?: "unknown user",
+                verified
+            ),
+            gson.fromJson(org.metadata.data(), IdentityGroup::class.java),
+            passwordCredentials
+        )
     }
 
     override suspend fun getUser(organizationId: String, userName: String): User {
@@ -182,8 +208,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun setUserPassword(
         organizationId: String,
         user: User,
-        password: String,
-        passcodeStr: String
+        password: String
     ): BaseSuccessResponse {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to set user password")
@@ -198,6 +223,33 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.setUserPassword(identityGroup, user.username, password)
         passcodeRepo.deleteByEmailAndPurpose(user.email!!, VerifyEmailRequest.Purpose.reset)
+        return BaseSuccessResponse(true)
+    }
+
+    override suspend fun createUserPassword(
+        organizationId: String,
+        userId: String,
+        password: String
+    ): BaseSuccessResponse {
+        val user = getUser(organizationId, userId)
+        val cognito = appConfig.cognito
+        val organization = organizationRepo.findById(organizationId)
+            ?: throw EntityNotFoundException("Invalid organization id name. Unable to create user")
+        if (organization.metadata != null) {
+            throw BadRequestException("Organization already has password access")
+        }
+        organizationService.updateOrganization(organizationId, null, null, cognito)
+        createUserInIdentityProvider(
+            user.username,
+            user.preferredUsername,
+            user.name,
+            user.email,
+            user.phone,
+            password,
+            organizationId,
+            user.createdBy,
+            user.verified
+        )
         return BaseSuccessResponse(true)
     }
 
@@ -320,6 +372,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw BadRequestException("User - $username does not have login access")
         }
 
+        if (org.metadata == null) {
+            throw AuthenticationException("User - $username does not have password access")
+        }
+
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         val user = identityProvider.authenticate(identityGroup, username, password)
         val userHrn = ResourceHrn(userRecord.organizationId, "", IamResources.USER, user.username)
@@ -330,6 +386,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
 /**
  * Service which holds logic related to User operations
  */
+@Suppress("TooManyFunctions")
 interface UsersService {
     suspend fun createUser(
         organizationId: String,
@@ -365,8 +422,13 @@ interface UsersService {
     suspend fun setUserPassword(
         organizationId: String,
         user: User,
-        password: String,
-        passcodeStr: String
+        password: String
+    ): BaseSuccessResponse
+
+    suspend fun createUserPassword(
+        organizationId: String,
+        userId: String,
+        password: String
     ): BaseSuccessResponse
 
     suspend fun changeUserPassword(
