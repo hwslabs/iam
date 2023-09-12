@@ -8,6 +8,7 @@ import com.hypto.iam.server.di.controllerModule
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.di.repositoryModule
 import io.mockk.mockkClass
+import okhttp3.OkHttpClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.junit5.AutoCloseKoinTest
@@ -21,6 +22,7 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
     protected lateinit var cognitoClient: CognitoIdentityProviderClient
     protected lateinit var passcodeRepo: PasscodeRepo
     protected lateinit var sesClient: SesClient
+    protected lateinit var okHttpClient: OkHttpClient
 
     @JvmField
     @RegisterExtension
@@ -38,6 +40,7 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
         passcodeRepo = mockPasscodeRepo()
         cognitoClient = mockCognitoClient()
         sesClient = mockSesClient()
+        okHttpClient = mockOkHttpClient()
     }
 
     init {
