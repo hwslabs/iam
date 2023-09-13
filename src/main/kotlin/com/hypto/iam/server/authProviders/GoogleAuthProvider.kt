@@ -40,6 +40,7 @@ object GoogleAuthProvider : BaseAuthProvider(), KoinComponent {
         return OAuthUserPrincipal(
             tokenCredential,
             ROOT_ORG,
+            "google",
             googleUser.email,
             googleUser.name,
             googleUser.hd ?: ""

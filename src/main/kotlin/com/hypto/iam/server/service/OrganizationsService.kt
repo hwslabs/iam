@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
+import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
@@ -50,9 +51,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     private val txMan: TxMan by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
     private val appConfig: AppConfig by inject()
+    private val userAuthRepo: UserAuthRepo by inject()
 
     override suspend fun createOrganization(
-        request: CreateOrganizationRequest
+        request: CreateOrganizationRequest,
+        issuer: String
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
         val identityGroup = appConfig.cognito
@@ -115,6 +118,12 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 val token = tokenService.generateJwtToken(userHrn)
                 executePostHook(organization)
 
+                userAuthRepo.create(
+                    hrn = userHrn.toString(),
+                    providerName = issuer,
+                    authMetadata = null
+                )
+
                 return@wrap Pair(organization, token)
             }
         } catch (e: Exception) {
@@ -127,7 +136,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     override suspend fun createOauthOrganization(
         companyName: String,
         name: String,
-        email: String
+        email: String,
+        issuer: String
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
         val username = idGenerator.username()
@@ -186,6 +196,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
                 val token = tokenService.generateJwtToken(userHrn)
                 executePostHook(organization)
+                userAuthRepo.create(
+                    hrn = userHrn.toString(),
+                    providerName = issuer,
+                    authMetadata = null
+                )
 
                 return@wrap Pair(organization, token)
             }
@@ -266,13 +281,15 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
  */
 interface OrganizationsService {
     suspend fun createOrganization(
-        request: CreateOrganizationRequest
+        request: CreateOrganizationRequest,
+        issuer: String
     ): Pair<Organization, TokenResponse>
 
     suspend fun createOauthOrganization(
         companyName: String,
         name: String,
-        email: String
+        email: String,
+        issuer: String
     ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization

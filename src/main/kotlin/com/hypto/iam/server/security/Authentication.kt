@@ -8,6 +8,7 @@ import com.hypto.iam.server.Constants.Companion.AUTHORIZATION_HEADER
 import com.hypto.iam.server.Constants.Companion.X_API_KEY_HEADER
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.MagicNumber
+import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
@@ -48,8 +49,9 @@ enum class TokenType(val type: String) {
 /** Class which stores the token credentials sent by the client */
 data class TokenCredential(val value: String?, val type: TokenType?) : Credential
 abstract class IamPrincipal : Principal {
-    abstract val organization: String
     abstract val tokenCredential: TokenCredential
+    abstract val organization: String
+    abstract val issuer: String
 }
 
 /** Class which stores email and password authenticated using Unique Basic Auth */
@@ -59,12 +61,14 @@ data class UsernamePasswordCredential(val username: String, val password: String
 data class ApiPrincipal(
     override val tokenCredential: TokenCredential,
     override val organization: String,
+    override val issuer: String,
     val policies: PolicyBuilder? = null
 ) : IamPrincipal()
 
 /** Class to store the Principal authenticated using Bearer auth **/
 data class UserPrincipal(
     override val tokenCredential: TokenCredential,
+    override val issuer: String,
     val hrnStr: String,
     val claims: Claims? = null,
     val policies: PolicyBuilder
@@ -77,6 +81,7 @@ data class UserPrincipal(
 data class OAuthUserPrincipal(
     override val tokenCredential: TokenCredential,
     override val organization: String,
+    override val issuer: String,
     val email: String,
     val name: String,
     val companyName: String
@@ -277,7 +282,10 @@ fun bearerAuthValidation(
         }
         try {
             when (tokenCredential.type) {
-                TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(tokenCredential)
+                TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(
+                    tokenCredential,
+                    TokenServiceImpl.ISSUER
+                )
                 TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
                 else -> null
             }

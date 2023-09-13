@@ -20,6 +20,7 @@ import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
+import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.idp.CognitoIdentityProviderImpl
 import com.hypto.iam.server.idp.IdentityProvider
@@ -96,6 +97,7 @@ val repositoryModule = module {
     single { UserRepo }
     single { PolicyTemplatesRepo }
     single { AuthProviderRepo }
+    single { UserAuthRepo }
 }
 
 val controllerModule = module {
