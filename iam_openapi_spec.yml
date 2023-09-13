@@ -488,6 +488,32 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/users/{user_name}/auth_methods:
+    get:
+      tags:
+        - User Authorization Methods Management
+      summary: Gets authorization methods of a user entity associated with the organization
+      description: Get authorization methods of a User
+      operationId: getUserAuthMethods
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/UserAuthMethodsPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   # credential
   /organizations/{organization_id}/users/{user_name}/credentials:
     post:
@@ -1941,6 +1967,22 @@ components:
             UserPaginatedResponse:
               $ref: '#/components/examples/UserPaginatedResponse'
 
+    UserAuthMethodsPaginatedResponse:
+      description: Response for list user auth methods request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserAuthMethodsPaginatedResponse'
+          examples:
+            UserPaginatedResponse:
+              $ref: '#/components/examples/UserAuthMethodsPaginatedResponse'
+
     PolicyPaginatedResponse:
       description: Response for list policies request and list policies for user request
       headers:
@@ -2268,6 +2310,15 @@ components:
         context:
           pageSize: 10
           sortOrder: asc
+
+    UserAuthMethodsPaginatedResponse:
+      value:
+          data:
+            - providerName: google
+          nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
+          context:
+            pageSize: 10
+            sortOrder: asc
 
     PolicyPaginatedResponse:
       value:
@@ -2936,6 +2987,19 @@ components:
         context:
           $ref: '#/components/schemas/PaginationOptions'
 
+    UserAuthMethodsPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserAuthMethod'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
+
     PolicyPaginatedResponse:
       type: object
       additionalProperties: false
@@ -3089,6 +3153,19 @@ components:
           format: date-time
         verified:
           type: boolean
+
+    UserAuthMethod:
+      description: User auth method details
+      type: object
+      additionalProperties: false
+      required:
+          - providerName
+          - metadata
+      properties:
+          providerName:
+            description: Name of the authorization method
+            type: string
+            maxLength: 50
 
     CreateUserResponse:
       type: object

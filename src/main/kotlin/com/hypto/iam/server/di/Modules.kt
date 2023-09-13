@@ -45,6 +45,8 @@ import com.hypto.iam.server.service.ResourceService
 import com.hypto.iam.server.service.ResourceServiceImpl
 import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
+import com.hypto.iam.server.service.UserAuthService
+import com.hypto.iam.server.service.UserAuthServiceImpl
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.service.UserPrincipalServiceImpl
 import com.hypto.iam.server.service.UsersService
@@ -98,6 +100,7 @@ val repositoryModule = module {
     single { PolicyTemplatesRepo }
     single { AuthProviderRepo }
     single { UserAuthRepo }
+    single { UserAuthRepo }
 }
 
 val controllerModule = module {
@@ -114,6 +117,7 @@ val controllerModule = module {
     single { PasscodeServiceImpl() } bind PasscodeService::class
     single { PolicyTemplatesServiceImpl() } bind PolicyTemplatesService::class
     single { AuthProviderServiceImpl() } bind AuthProviderService::class
+    single { UserAuthServiceImpl() } bind UserAuthService::class
 }
 
 val applicationModule = module {
