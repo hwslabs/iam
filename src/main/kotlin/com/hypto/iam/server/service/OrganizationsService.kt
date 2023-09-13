@@ -113,6 +113,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 }
 
                 val token = tokenService.generateJwtToken(userHrn)
+                executePostHook(organization)
+
                 return@wrap Pair(organization, token)
             }
         } catch (e: Exception) {
@@ -183,28 +185,29 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 }
 
                 val token = tokenService.generateJwtToken(userHrn)
-
-                if (AppConfig.configuration.postHook.signup != null) {
-                    val body = gson.toJson(mapOf("organization" to organization))
-                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-                    val requestBuilder = Request.Builder()
-                        .url(AppConfig.configuration.postHook.signup)
-                        .method("POST", body)
-                        .addHeader("Content-Type", "application/json")
-                    val request = requestBuilder.build()
-                    val response = httpClient.newCall(request).execute()
-                    if (!response.isSuccessful) {
-                        logger.error { "Post hook failed with status code ${response.code}" }
-                        logger.error { "Post hook failed with response ${response.body?.string()} " }
-                        throw InternalException("Post hook failed")
-                    }
-                }
+                executePostHook(organization)
 
                 return@wrap Pair(organization, token)
             }
         } catch (e: Exception) {
             logger.error(e) { "Exception when creating organization. Rolling back..." }
             throw e.cause ?: e
+        }
+    }
+
+    private fun executePostHook(organization: Organization) {
+        val body = gson.toJson(mapOf("organization" to organization))
+            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val requestBuilder = Request.Builder()
+            .url(AppConfig.configuration.postHook.signup)
+            .method("POST", body)
+            .addHeader("Content-Type", "application/json")
+        val request = requestBuilder.build()
+        val response = httpClient.newCall(request).execute()
+        if (!response.isSuccessful) {
+            logger.error { "Post hook failed with status code ${response.code}" }
+            logger.error { "Post hook failed with response ${response.body?.string()} " }
+            throw InternalException("Post hook failed")
         }
     }
 
