@@ -500,7 +500,7 @@ paths:
         - $ref: '#/components/parameters/organization_id'
       responses:
         '200':
-          $ref: '#/components/responses/UserAuthMethodsPaginatedResponse'
+          $ref: '#/components/responses/UserAuthMethodsResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '401':
@@ -1967,7 +1967,7 @@ components:
             UserPaginatedResponse:
               $ref: '#/components/examples/UserPaginatedResponse'
 
-    UserAuthMethodsPaginatedResponse:
+    UserAuthMethodsResponse:
       description: Response for list user auth methods request
       headers:
         X-Iam-User-Organization:
@@ -1978,10 +1978,10 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/UserAuthMethodsPaginatedResponse'
+            $ref: '#/components/schemas/UserAuthMethodsResponse'
           examples:
             UserPaginatedResponse:
-              $ref: '#/components/examples/UserAuthMethodsPaginatedResponse'
+              $ref: '#/components/examples/UserAuthMethodsResponse'
 
     PolicyPaginatedResponse:
       description: Response for list policies request and list policies for user request
@@ -2311,14 +2311,11 @@ components:
           pageSize: 10
           sortOrder: asc
 
-    UserAuthMethodsPaginatedResponse:
+    UserAuthMethodsResponse:
       value:
           data:
             - providerName: google
-          nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
-          context:
-            pageSize: 10
-            sortOrder: asc
+            - providerName: iam
 
     PolicyPaginatedResponse:
       value:
@@ -2987,7 +2984,7 @@ components:
         context:
           $ref: '#/components/schemas/PaginationOptions'
 
-    UserAuthMethodsPaginatedResponse:
+    UserAuthMethodsResponse:
       type: object
       additionalProperties: false
       properties:
@@ -2995,10 +2992,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserAuthMethod'
-        nextToken:
-          type: string
-        context:
-          $ref: '#/components/schemas/PaginationOptions'
 
     PolicyPaginatedResponse:
       type: object

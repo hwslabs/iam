@@ -48,10 +48,11 @@ enum class TokenType(val type: String) {
 
 /** Class which stores the token credentials sent by the client */
 data class TokenCredential(val value: String?, val type: TokenType?) : Credential
-abstract class IamPrincipal : Principal {
-    abstract val tokenCredential: TokenCredential
-    abstract val organization: String
-    abstract val issuer: String
+interface IamPrincipal : Principal {
+    val tokenCredential: TokenCredential
+    val organization: String
+    val issuer: String
+        get() = TokenServiceImpl.ISSUER
 }
 
 /** Class which stores email and password authenticated using Unique Basic Auth */
@@ -61,18 +62,16 @@ data class UsernamePasswordCredential(val username: String, val password: String
 data class ApiPrincipal(
     override val tokenCredential: TokenCredential,
     override val organization: String,
-    override val issuer: String,
     val policies: PolicyBuilder? = null
-) : IamPrincipal()
+) : IamPrincipal
 
 /** Class to store the Principal authenticated using Bearer auth **/
 data class UserPrincipal(
     override val tokenCredential: TokenCredential,
-    override val issuer: String,
     val hrnStr: String,
     val claims: Claims? = null,
     val policies: PolicyBuilder
-) : IamPrincipal() {
+) : IamPrincipal {
     val hrn: Hrn = HrnFactory.getHrn(hrnStr)
     override val organization: String = hrn.organization
 }
@@ -81,11 +80,11 @@ data class UserPrincipal(
 data class OAuthUserPrincipal(
     override val tokenCredential: TokenCredential,
     override val organization: String,
-    override val issuer: String,
     val email: String,
     val name: String,
-    val companyName: String
-) : IamPrincipal()
+    val companyName: String,
+    override val issuer: String
+) : IamPrincipal
 
 class TokenAuthenticationProvider internal constructor(
     config: Config
@@ -283,8 +282,7 @@ fun bearerAuthValidation(
         try {
             when (tokenCredential.type) {
                 TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(
-                    tokenCredential,
-                    TokenServiceImpl.ISSUER
+                    tokenCredential
                 )
                 TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
                 else -> null

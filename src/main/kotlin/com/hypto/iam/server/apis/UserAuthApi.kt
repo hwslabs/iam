@@ -1,8 +1,6 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.extensions.PaginationContext
-import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.UserAuthService
@@ -25,16 +23,7 @@ fun Route.userAuthApi() {
         get("/organizations/{organization_id}/users/{id}/auth_methods") {
             val organizationId = call.parameters["organization_id"]!!
             val userId = call.parameters["id"]!!
-            val nextToken = call.request.queryParameters["next_token"]
-            val pageSize = call.request.queryParameters["page_size"]
-            val sortOrder = call.request.queryParameters["sortOrder"]
-
-            val paginationContext = PaginationContext.from(
-                nextToken,
-                pageSize?.toInt(),
-                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-            )
-            val response = userAuthService.listUserAuth(organizationId, userId, paginationContext)
+            val response = userAuthService.listUserAuth(organizationId, userId)
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,

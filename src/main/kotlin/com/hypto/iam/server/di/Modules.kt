@@ -100,7 +100,6 @@ val repositoryModule = module {
     single { PolicyTemplatesRepo }
     single { AuthProviderRepo }
     single { UserAuthRepo }
-    single { UserAuthRepo }
 }
 
 val controllerModule = module {

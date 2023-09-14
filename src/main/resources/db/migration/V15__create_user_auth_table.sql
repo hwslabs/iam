@@ -16,5 +16,3 @@ COMMENT ON COLUMN user_auth.provider_name
 IS 'OAuth Provider Name (e.g. Google, Microsoft)';
 COMMENT ON COLUMN user_auth.auth_metadata
 IS 'OAuth Authorization Metadata (e.g. access_token, refresh_token, token_type, expires_in, scope)';
-
-CREATE INDEX user_auth_idx_user_hrn ON user_auth(user_hrn);

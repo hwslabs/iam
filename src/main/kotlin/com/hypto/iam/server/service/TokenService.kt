@@ -80,7 +80,6 @@ class TokenServiceImpl : KoinComponent, TokenService {
         const val KEY_ID = "kid"
         const val VERSION_NUM = "1.0"
         const val ON_BEHALF_CLAIM = "obof"
-        const val ISSUER_CLAIM = "iss"
     }
 
     /**

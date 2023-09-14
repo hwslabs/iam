@@ -3,8 +3,6 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.Tables.USER_AUTH
 import com.hypto.iam.server.db.tables.pojos.UserAuth
 import com.hypto.iam.server.db.tables.records.UserAuthRecord
-import com.hypto.iam.server.extensions.PaginationContext
-import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.utils.Hrn
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -56,13 +54,11 @@ object UserAuthRepo : BaseRepo<UserAuthRecord, UserAuth, UserAuthPk>() {
         return record
     }
 
-    suspend fun fetchUserAuthPaginated(
-        userHrn: Hrn,
-        paginationContext: PaginationContext
+    suspend fun fetchUserAuth(
+        userHrn: Hrn
     ): List<UserAuthRecord> {
-        return ctx("userAuth.fetchUserAuthPaginated").selectFrom(USER_AUTH)
+        return ctx("userAuth.fetchUserAuth").selectFrom(USER_AUTH)
             .where(USER_AUTH.USER_HRN.eq(userHrn.toString()))
-            .paginate(USER_AUTH.PROVIDER_NAME, paginationContext)
             .fetch()
     }
 }

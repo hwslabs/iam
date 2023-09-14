@@ -1,6 +1,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.GetDelegateTokenRequest
@@ -26,6 +27,7 @@ import io.ktor.server.routing.post
 
 private val tokenService: TokenService = getKoinInstance()
 private val gson: Gson = getKoinInstance()
+private val userAuthRepo = getKoinInstance<UserAuthRepo>()
 
 @Suppress("ThrowsCount")
 suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
@@ -58,6 +60,10 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
     val responseContentType = context.request.accept()
     val user = UserRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
     val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
+
+    if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer) == null) {
+        userAuthRepo.create(user.hrn, principal.issuer, null)
+    }
 
     when (responseContentType) {
         ContentType.Text.Plain.toString() -> call.respondText(

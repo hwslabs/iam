@@ -21,7 +21,6 @@ import com.hypto.iam.server.security.optionalBearer
 import com.hypto.iam.server.security.passcodeAuth
 import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.service.PrincipalPolicyService
-import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.validators.InviteMetadata
 import com.hypto.iam.server.validators.validate
@@ -109,7 +108,7 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
         val secretKey = Constants.SECRET_PREFIX + appConfig.app.secretKey
         validate { tokenCredential: TokenCredential ->
             when (tokenCredential.value) {
-                secretKey -> ApiPrincipal(tokenCredential, ROOT_ORG, TokenServiceImpl.ISSUER)
+                secretKey -> ApiPrincipal(tokenCredential, ROOT_ORG)
                 else -> null
             }
         }
@@ -118,7 +117,7 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
         validate { tokenCredential: TokenCredential ->
             tokenCredential.value?.let {
                 passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.signup)?.let {
-                    ApiPrincipal(tokenCredential, ROOT_ORG, TokenServiceImpl.ISSUER)
+                    ApiPrincipal(tokenCredential, ROOT_ORG)
                 }
             }
         }
@@ -128,7 +127,7 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
             val email = this.receive<ResetPasswordRequest>().validate().email
             tokenCredential.value?.let {
                 passcodeRepo.getValidPasscodeById(it, VerifyEmailRequest.Purpose.reset, email)?.let {
-                    ApiPrincipal(tokenCredential, ROOT_ORG, TokenServiceImpl.ISSUER)
+                    ApiPrincipal(tokenCredential, ROOT_ORG)
                 }
             }
         }
@@ -140,7 +139,6 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
                     val metadata = InviteMetadata(passcodeService.decryptMetadata(it.metadata!!))
                     return@validate UserPrincipal(
                         tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),
-                        issuer = TokenServiceImpl.ISSUER,
                         hrnStr = metadata.inviterUserHrn,
                         policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
                     )
@@ -154,8 +152,7 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
             val principal = userPrincipalService.getUserPrincipalByCredentials(
                 organizationId,
                 credentials.name.lowercase(),
-                credentials.password,
-                TokenServiceImpl.ISSUER
+                credentials.password
             )
             if (principal != null) {
                 response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
@@ -176,8 +173,7 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
             }
 
             val principal = userPrincipalService.getUserPrincipalByCredentials(
-                UsernamePasswordCredential(credentials.name.lowercase(), credentials.password),
-                TokenServiceImpl.ISSUER
+                UsernamePasswordCredential(credentials.name.lowercase(), credentials.password)
             )
             response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
             return@validate principal
