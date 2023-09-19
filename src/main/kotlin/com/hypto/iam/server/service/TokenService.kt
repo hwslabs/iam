@@ -71,7 +71,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
     private val policiesRepo: PoliciesRepo by inject()
 
     companion object {
-        const val ISSUER = "iam"
+        const val ISSUER = "https://iam.hypto.com"
 
         const val VERSION_CLAIM = "ver"
         const val USER_CLAIM = "usr"
