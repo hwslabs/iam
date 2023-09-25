@@ -17,6 +17,7 @@ import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resetPasswordApi
 import com.hypto.iam.server.apis.resourceApi
 import com.hypto.iam.server.apis.tokenApi
+import com.hypto.iam.server.apis.userAuthApi
 import com.hypto.iam.server.apis.usersApi
 import com.hypto.iam.server.apis.validationApi
 import com.hypto.iam.server.configs.AppConfig
@@ -144,6 +145,7 @@ fun Application.handleRequest() {
             policyApi()
             resourceApi()
             usersApi()
+            userAuthApi()
             validationApi()
             passcodeApis()
         }

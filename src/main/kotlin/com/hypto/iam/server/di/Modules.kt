@@ -7,7 +7,6 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import com.hypto.iam.server.MicrometerConfigs
 import com.hypto.iam.server.authProviders.AuthProviderRegistry
-import com.hypto.iam.server.authProviders.GoogleAuthProvider
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.AuthProviderRepo
@@ -20,6 +19,7 @@ import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
+import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.idp.CognitoIdentityProviderImpl
 import com.hypto.iam.server.idp.IdentityProvider
@@ -44,6 +44,8 @@ import com.hypto.iam.server.service.ResourceService
 import com.hypto.iam.server.service.ResourceServiceImpl
 import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
+import com.hypto.iam.server.service.UserAuthService
+import com.hypto.iam.server.service.UserAuthServiceImpl
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.service.UserPrincipalServiceImpl
 import com.hypto.iam.server.service.UsersService
@@ -96,6 +98,7 @@ val repositoryModule = module {
     single { UserRepo }
     single { PolicyTemplatesRepo }
     single { AuthProviderRepo }
+    single { UserAuthRepo }
 }
 
 val controllerModule = module {
@@ -112,6 +115,7 @@ val controllerModule = module {
     single { PasscodeServiceImpl() } bind PasscodeService::class
     single { PolicyTemplatesServiceImpl() } bind PolicyTemplatesService::class
     single { AuthProviderServiceImpl() } bind AuthProviderService::class
+    single { UserAuthServiceImpl() } bind UserAuthService::class
 }
 
 val applicationModule = module {
@@ -153,7 +157,6 @@ val applicationModule = module {
     }
     single(named("AuthProvider")) { get<OkHttpClient.Builder>().build() }
     single { AuthProviderRegistry }
-    single(null, true) { GoogleAuthProvider }
 }
 
 fun getCognitoIdentityProviderClient(

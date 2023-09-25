@@ -5,6 +5,7 @@ import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.service.OrganizationsService
+import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -25,7 +26,7 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
     @Test
     fun `StatusPage - Respond to server side errors with custom error message`() {
         declareMock<OrganizationsService> {
-            coEvery { this@declareMock.createOrganization(any()) } coAnswers {
+            coEvery { this@declareMock.createOrganization(any(), TokenServiceImpl.ISSUER) } coAnswers {
                 @Suppress("TooGenericExceptionThrown")
                 throw RuntimeException()
             }

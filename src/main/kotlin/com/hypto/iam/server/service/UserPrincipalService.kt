@@ -19,7 +19,9 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     private val tokenService: TokenService by inject()
     private val usersService: UsersService by inject()
 
-    override suspend fun getUserPrincipalByRefreshToken(tokenCredential: TokenCredential): UserPrincipal? {
+    override suspend fun getUserPrincipalByRefreshToken(
+        tokenCredential: TokenCredential
+    ): UserPrincipal? {
         return credentialsRepo.fetchByRefreshToken(tokenCredential.value!!)?.let { credential ->
             UserPrincipal(
                 tokenCredential = tokenCredential,
@@ -49,7 +51,11 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         )
     }
 
-    override suspend fun getUserPrincipalByCredentials(organizationId: String, userName: String, password: String):
+    override suspend fun getUserPrincipalByCredentials(
+        organizationId: String,
+        userName: String,
+        password: String
+    ):
         UserPrincipal = measureTimedValue("TokenService.getUserPrincipalByCredentials", logger) {
         val user = usersService.authenticate(organizationId, userName, password)
         return UserPrincipal(
@@ -59,7 +65,9 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         )
     }
 
-    override suspend fun getUserPrincipalByCredentials(credentials: UsernamePasswordCredential): UserPrincipal {
+    override suspend fun getUserPrincipalByCredentials(
+        credentials: UsernamePasswordCredential
+    ): UserPrincipal {
         val validCredentials = credentials.validate()
         val user = usersService.authenticate(validCredentials.username, validCredentials.password)
         return UserPrincipal(
@@ -73,7 +81,11 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
 interface UserPrincipalService {
     suspend fun getUserPrincipalByRefreshToken(tokenCredential: TokenCredential): UserPrincipal?
     suspend fun getUserPrincipalByJwtToken(tokenCredential: TokenCredential, deepCheck: Boolean = false): UserPrincipal?
-    suspend fun getUserPrincipalByCredentials(organizationId: String, userName: String, password: String):
+    suspend fun getUserPrincipalByCredentials(
+        organizationId: String,
+        userName: String,
+        password: String
+    ):
         UserPrincipal?
 
     suspend fun getUserPrincipalByCredentials(credentials: UsernamePasswordCredential): UserPrincipal

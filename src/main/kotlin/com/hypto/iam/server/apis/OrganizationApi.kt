@@ -46,7 +46,8 @@ fun Route.createOrganizationApi() {
             val (organization, tokenResponse) = organizationService.createOauthOrganization(
                 companyName = oAuthUserPrincipal.companyName,
                 name = oAuthUserPrincipal.name,
-                email = oAuthUserPrincipal.email
+                email = oAuthUserPrincipal.email,
+                issuer = oAuthUserPrincipal.issuer
             )
             call.respondText(
                 text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
@@ -81,7 +82,10 @@ fun Route.createOrganizationApi() {
             )
             request.validate()
 
-            val (organization, tokenResponse) = organizationService.createOrganization(request = request)
+            val (organization, tokenResponse) = organizationService.createOrganization(
+                request = request,
+                issuer = apiPrincipal.issuer
+            )
             call.respondText(
                 text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
                 contentType = ContentType.Application.Json,

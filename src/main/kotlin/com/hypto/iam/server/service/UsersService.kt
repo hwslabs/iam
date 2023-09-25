@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
+import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
@@ -45,6 +46,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val txMan: TxMan by inject()
     private val appConfig: AppConfig by inject()
     private val passcodeRepo: PasscodeRepo by inject()
+    private val userAuthRepo: UserAuthRepo by inject()
 
     @Suppress("CyclomaticComplexMethod")
     override suspend fun createUser(
@@ -233,9 +235,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): BaseSuccessResponse {
         val user = getUser(organizationId, userId)
         val cognito = appConfig.cognito
-        val organization = organizationRepo.findById(organizationId)
+        organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to create user")
-        if (organization.metadata != null) {
+        if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, TokenServiceImpl.ISSUER) != null) {
             throw BadRequestException("Organization already has password access")
         }
         organizationService.updateOrganization(organizationId, null, null, cognito)
@@ -249,6 +251,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
             organizationId,
             user.createdBy,
             user.verified
+        )
+        userAuthRepo.create(
+            hrn = user.hrn,
+            providerName = TokenServiceImpl.ISSUER,
+            authMetadata = null
         )
         return BaseSuccessResponse(true)
     }
@@ -372,7 +379,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw BadRequestException("User - $username does not have login access")
         }
 
-        if (org.metadata == null) {
+        if (userAuthRepo.fetchByUserHrnAndProviderName(userRecord.hrn, TokenServiceImpl.ISSUER) == null) {
             throw AuthenticationException("User - $username does not have password access")
         }
 

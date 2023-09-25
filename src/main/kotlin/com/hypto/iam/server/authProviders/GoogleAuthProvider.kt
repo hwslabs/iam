@@ -16,7 +16,7 @@ import org.koin.core.qualifier.named
 
 const val PROFILE_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 const val ACCESS_TOKEN_KEY = "access_token"
-object GoogleAuthProvider : BaseAuthProvider(), KoinComponent {
+object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
     val gson: Gson by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
 
@@ -42,7 +42,8 @@ object GoogleAuthProvider : BaseAuthProvider(), KoinComponent {
             ROOT_ORG,
             googleUser.email,
             googleUser.name,
-            googleUser.hd ?: ""
+            googleUser.hd ?: "",
+            getProviderName()
         )
     }
 }
