@@ -110,7 +110,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       security:
-        - apiKeyAuth: [ hypto-internal-secret-key, passcode ]
+        - apiKeyAuth: []
 
   /organizations/{organization_id}:
     get:
@@ -187,7 +187,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       security:
-        - apiKeyAuth: [ hypto-internal-secret-key ]
+        - apiKeyAuth: []
 
   # user
   /organizations/{organization_id}/users:
@@ -226,7 +226,7 @@ paths:
         - $ref: '#/components/parameters/next_token'
         - $ref: '#/components/parameters/page_size'
       responses:
-        '201':
+        '200':
           $ref: '#/components/responses/UserPaginatedResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
@@ -400,7 +400,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
       security:
-        - apiKeyAuth: [ passcode ]
+        - apiKeyAuth: []
 
   /organizations/{organization_id}/users/{user_name}/policies:
     get:
@@ -553,7 +553,7 @@ paths:
         - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
       responses:
-        '201':
+        '200':
           $ref: '#/components/responses/ListCredentialResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
@@ -690,7 +690,7 @@ paths:
         - $ref: '#/components/parameters/page_size'
         - $ref: '#/components/parameters/sort_order'
       responses:
-        '201':
+        '200':
           $ref: '#/components/responses/ResourcePaginatedResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
@@ -960,7 +960,7 @@ paths:
         - $ref: '#/components/parameters/page_size'
         - $ref: '#/components/parameters/sort_order'
       responses:
-        '201':
+        '200':
           $ref: '#/components/responses/PolicyPaginatedResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
@@ -1193,7 +1193,6 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-      security: [ ]
 
   /verifyEmail:
     post:
@@ -1215,7 +1214,6 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-      security: [ ]
 
   /organization/{organization_id}/invites:
     get:
@@ -1237,9 +1235,8 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
-      security: [ ]
 
-  /organizations/{organizationId}/invites/resend:
+  /organizations/{organization_id}/invites/resend:
     post:
       tags:
         - User Verification
@@ -1361,7 +1358,7 @@ components:
           schema:
             type: string
             maxLength: 10
-            pattern: ^[A-Z]{10}$
+            pattern: ^[A-Za-z0-9]{10}$
             example: "XlK5h64gND"
 
     credential_id:
@@ -1899,22 +1896,6 @@ components:
             Policy:
               $ref: '#/components/examples/Policy'
 
-    GetUserPoliciesResponse:
-      description: Response for list user policy API
-      headers:
-        X-Iam-User-Organization:
-          schema:
-            type: string
-          description: Organization Id of the authenticated user
-          example: XlK5h64gND
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/GetUserPoliciesResponse'
-          examples:
-            GetUserPoliciesResponse:
-              $ref: '#/components/examples/GetUserPoliciesResponse'
-
     TokenResponse:
       description: Response with token
       headers:
@@ -1980,7 +1961,7 @@ components:
           schema:
             $ref: '#/components/schemas/UserAuthMethodsResponse'
           examples:
-            UserPaginatedResponse:
+            UserAuthMethodsResponse:
               $ref: '#/components/examples/UserAuthMethodsResponse'
 
     PolicyPaginatedResponse:
@@ -2076,8 +2057,6 @@ components:
       value:
         name: ACME Enterprise
         description: Updated Brief description about ACME
-        userConfiguration: null
-        # TODO: Fill userConfiguration
 
     CreateUserRequest:
       summary: A sample create user request
@@ -2181,12 +2160,6 @@ components:
           - resource: hrn:XlK5h64gND::invoice/2
             action: hrn:XlK5h64gND::invoice$view
 
-    LoginRequest:
-      value:
-        # TODO: Verify if this should be name or email
-        username: Bob
-        salterPassword: wnr1782qbt52igbiuwbcgeuyiy==egryg123iuoh1109877t2i313489rge
-
     VerifyEmailRequestReset:
       value:
         email: abcd@abcd.in
@@ -2255,20 +2228,14 @@ components:
             organizationId: XlK5h64gND
             email: bob@acme.com
             status: enabled
+            verified: true
             phone: "+1234071628"
             loginAccess: true
+            createdAt: 2020-01-01T00:00:00.000Z
             createdBy: ''
           updatedAt: 2020-01-01T00:00:00.000Z
           createdAt: 2020-01-01T00:00:00.000Z
         rootUserToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
-
-    GetUserPoliciesResponse:
-      value:
-        policies:
-          - name: policy_viewer
-            organizationId: XlK5h64gND
-          - name: policy_editor
-            organizationId: XlK5h64gND
 
     TokenResponse:
       value:
@@ -2306,6 +2273,7 @@ components:
             phone: "+1234071628"
             loginAccess: true
             createdBy: hrn:Xghfdksd::iam-user/johnny314
+            createdAt: 2020-01-01T00:00:00.000Z
         nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
         context:
           pageSize: 10
@@ -2322,6 +2290,7 @@ components:
         data:
           - name: policy_viewer
             organizationId: XlK5h64gND
+            hrn: hrn:XlK5h64gND::iam-policy/policy_viewer
             version: 1
             statements:
               - resource: hrn:XlK5h64gND::invoice/1
@@ -2364,11 +2333,6 @@ components:
         format: der
         key: MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEKv36cup5G6xfHOtllBjsymgQ6CHQUxCRieycapq8UZL3oCpbatU7lg8Tv+eGAhFsF/JYoDWcHOhAHhMm8Ae+lA==
 
-    PaginationOptions:
-      value:
-        pageSize: 10
-        sortOrder: asc
-
     AuthProviderPaginatedResponse:
       value:
         data:
@@ -2396,7 +2360,9 @@ components:
           status: enabled
           phone: "+1234071628"
           loginAccess: true
+          verified: true
           createdBy: ""
+          createdAt: 2020-01-01T00:00:00.000Z
         rootUserHrn: "hrn:XlK5h64gND::iam-user/root-user-name"
         createdAt: 2020-01-01T00:00:00.000Z
         updatedAt: 2020-01-01T00:00:00.000Z
@@ -2414,6 +2380,7 @@ components:
           phone: "+1234071628"
           loginAccess: true
           createdBy: hrn:Xghfdksd::iam-user/johnny314
+          createdAt: 2020-01-01T00:00:00Z
         userToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
     User:
@@ -2429,44 +2396,7 @@ components:
         phone: "+1234071628"
         loginAccess: true
         createdBy: hrn:Xghfdksd::iam-user/johnny314
-
-    UserConfiguration:
-      value:
-        passwordPolicy:
-        federatedIdentities:
-          - identityProviderName: Google
-            clientId: <google - clientId>
-            clientSecret: <google - clientSecret>
-            scopes:
-              - <scope1>
-              - <scope2>
-            attributeMap:
-              OIDCAttributeKey: <value>
-              IdentityProviderAttributeKey: <value>
-
-    FederatedIdentityProvider:
-      value:
-        identityProviderName: Google
-        clientId: <google - clientId>
-        clientSecret: <google - clientSecret>
-        scopes:
-          - <scope1>
-          - <scope2>
-        attributeMap:
-          OIDCAttributeKey: <value>
-          IdentityProviderAttributeKey: <value>
-
-    PasswordPolicyRules:
-      value:
-        lengthMinimum: 8
-        oneSpecialChar: true
-        oneNumeric: false
-        oneUppercase: true
-        oneLowercase: true
-
-    PasswordPolicyRegex:
-      value:
-        regexPattern: ^\S{8,}$
+        createdAt: 2020-01-01T00:00:00Z
 
     Credential:
       summary: A sample credential
@@ -2504,17 +2434,13 @@ components:
         hrn: hrn:XlK5h64gND::invoice$view
         description: View invoice action
 
-    UserPolicy:
-      value:
-        name: policy_viewer
-        organizationId: XlK5h64gND
-
     Policy:
       summary: A sample policy
       value:
         name: policy_viewer
         description: Allow viewing invoices
         organizationId: XlK5h64gND
+        hrn: hrn:XlK5h64gND::iam-policy/policy_viewer
         version: 1
         statements:
           - resource: hrn:XlK5h64gND::invoice/1
@@ -2523,12 +2449,6 @@ components:
           - resource: hrn:XlK5h64gND::invoice/*
             action: hrn:XlK5h64gND::invoice$view
             effect: allow
-
-    PolicyStatement:
-      value:
-        - resource: hrn:XlK5h64gND::invoice/1
-          action: hrn:XlK5h64gND::invoice$view
-          effect: allow
 
   schemas:
     # Requests
@@ -2568,7 +2488,6 @@ components:
       description: Root user details for the organization
       additionalProperties: false
       required:
-        - username
         - password
         - email
       properties:
@@ -2913,20 +2832,9 @@ components:
           description: error description
           maxLength: 500
 
-    GetUserPoliciesResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - policies
-      properties:
-        policies:
-          type: array
-          maxItems: 50
-          items:
-            $ref: '#/components/schemas/UserPolicy'
-
     TokenResponse:
       type: object
+      additionalProperties: false
       required:
         - token
       properties:
@@ -2977,6 +2885,8 @@ components:
       properties:
         data:
           type: array
+          minItems: 0
+          maxItems: 100
           items:
             $ref: '#/components/schemas/User'
         nextToken:
@@ -2990,6 +2900,8 @@ components:
       properties:
         data:
           type: array
+          minItems: 0
+          maxItems: 100
           items:
             $ref: '#/components/schemas/UserAuthMethod'
 
@@ -2999,6 +2911,8 @@ components:
       properties:
         data:
           type: array
+          minItems: 0
+          maxItems: 100
           items:
             $ref: '#/components/schemas/Policy'
         nextToken:
@@ -3012,6 +2926,8 @@ components:
       properties:
         data:
           type: array
+          minItems: 0
+          maxItems: 100
           items:
             $ref: '#/components/schemas/Resource'
         nextToken:
@@ -3025,6 +2941,8 @@ components:
       properties:
         data:
           type: array
+          minItems: 0
+          maxItems: 100
           items:
             $ref: '#/components/schemas/Action'
         nextToken:
@@ -3062,6 +2980,8 @@ components:
         data:
           description: List of auth providers
           type: array
+          minItems: 0
+          maxItems: 100
           items:
             $ref: '#/components/schemas/AuthProvider'
         nextToken:
@@ -3153,7 +3073,6 @@ components:
       additionalProperties: false
       required:
           - providerName
-          - metadata
       properties:
           providerName:
             description: Name of the authorization method
@@ -3277,6 +3196,7 @@ components:
           type: string
           maxLength: 500
 
+    # UserPolicy is unreferenced in spec but used in app
     UserPolicy:
       type: object
       additionalProperties: false
@@ -3290,6 +3210,7 @@ components:
         organizationId:
           type: string
           maxLength: 50
+
     Policy:
       type: object
       additionalProperties: false
@@ -3313,7 +3234,7 @@ components:
           maxLength: 512
         version:
           type: integer
-          maxLength: 5
+          maximum: 999
         statements:
           type: array
           maxItems: 20
@@ -3366,6 +3287,8 @@ components:
       properties:
         data:
           type: array
+          minItems: 0
+          maxItems: 100
           items:
             $ref: '#/components/schemas/Passcode'
         nextToken:
@@ -3395,6 +3318,7 @@ components:
     # Others
     ResourceAction:
       type: object
+      additionalProperties: false
       required:
         - resource
         - action
@@ -3406,6 +3330,7 @@ components:
 
     ResourceActionEffect:
       type: object
+      additionalProperties: false
       required:
         - resource
         - action
