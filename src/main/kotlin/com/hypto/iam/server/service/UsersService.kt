@@ -311,7 +311,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             ?: throw EntityNotFoundException("User not found")
 
         val userStatus = status?.toUserStatus()
-        if (userRecord.loginAccess == true) {
+        if (userRecord.loginAccess == true && org.metadata != null) {
             val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
 
             identityProvider.updateUser(
