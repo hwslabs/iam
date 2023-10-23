@@ -269,8 +269,10 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         val org = organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
         organizationRepo.deleteById(id)
 
-        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        identityProvider.deleteIdentityGroup(identityGroup)
+        if (org.metadata != null) {
+            val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+            if (identityGroup != appConfig.cognito) identityProvider.deleteIdentityGroup(identityGroup)
+        }
 
         return BaseSuccessResponse(true)
     }

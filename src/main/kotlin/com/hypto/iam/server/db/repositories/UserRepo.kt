@@ -34,6 +34,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
     ): List<UsersRecord> {
         return ctx("users.fetchMany").selectFrom(USERS)
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
+            .and(USERS.DELETED.eq(false))
             .paginate(USERS.CREATED_AT, paginationContext)
             .fetch()
     }

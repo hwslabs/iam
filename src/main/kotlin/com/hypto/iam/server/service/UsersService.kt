@@ -4,6 +4,7 @@ package com.hypto.iam.server.service
 
 import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
@@ -47,6 +48,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val appConfig: AppConfig by inject()
     private val passcodeRepo: PasscodeRepo by inject()
     private val userAuthRepo: UserAuthRepo by inject()
+    private val credentialRepo: CredentialsRepo by inject()
 
     @Suppress("CyclomaticComplexMethod")
     override suspend fun createUser(
@@ -147,13 +149,25 @@ class UsersServiceImpl : KoinComponent, UsersService {
             password = password ?: throw BadRequestException("Password is required"),
         )
 
+        val identityGroup = if (org.metadata != null) {
+            gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        } else {
+            organizationRepo.update(
+                organizationId,
+                null,
+                null,
+                appConfig.cognito
+            )
+            appConfig.cognito
+        }
+
         identityProvider.createUser(
             RequestContext(
                 organizationId = organizationId,
                 requestedPrincipal = createdBy ?: "unknown user",
                 verified
             ),
-            gson.fromJson(org.metadata.data(), IdentityGroup::class.java),
+            identityGroup,
             passwordCredentials
         )
     }
@@ -201,6 +215,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw BadRequestException("User - $userName does not have login access")
         }
 
+        if (userAuthRepo.fetchByUserHrnAndProviderName(userHrn.toString(), TokenServiceImpl.ISSUER) == null) {
+            throw BadRequestException("User does not have password access")
+        }
+
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
         identityProvider.authenticate(identityGroup, userName, oldPassword)
         identityProvider.setUserPassword(identityGroup, userName, newPassword)
@@ -222,7 +240,18 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw BadRequestException("User - ${userHrn.resourceInstance} does not have login access")
         }
 
-        val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        val identityGroup = if (org.metadata != null) {
+            gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+        } else {
+            organizationRepo.update(
+                organizationId,
+                null,
+                null,
+                appConfig.cognito
+            )
+            appConfig.cognito
+        }
+
         identityProvider.setUserPassword(identityGroup, user.username, password)
         passcodeRepo.deleteByEmailAndPurpose(user.email!!, VerifyEmailRequest.Purpose.reset)
         return BaseSuccessResponse(true)
@@ -311,7 +340,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
             ?: throw EntityNotFoundException("User not found")
 
         val userStatus = status?.toUserStatus()
-        if (userRecord.loginAccess == true && org.metadata != null) {
+        if (userRecord.loginAccess == true &&
+            org.metadata != null &&
+            userAuthRepo.fetchByUserHrnAndProviderName(userHrn.toString(), TokenServiceImpl.ISSUER) != null
+        ) {
             val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
 
             identityProvider.updateUser(
@@ -340,11 +372,17 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("User not found")
 
-        if (userRecord.loginAccess == true) {
+        if (userRecord.loginAccess == true &&
+            org.metadata != null &&
+            userAuthRepo.fetchByUserHrnAndProviderName(userHrn.toString(), TokenServiceImpl.ISSUER) != null
+        ) {
             val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
             identityProvider.deleteUser(identityGroup, userName)
         }
-        userRepo.delete(userHrn.toString())
+        txMan.wrap {
+            credentialRepo.updateStatusForUser(userHrn.toString())
+            userRepo.delete(userHrn.toString())
+        }
 
         return BaseSuccessResponse(true)
     }
@@ -357,6 +395,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
             ?: throw EntityNotFoundException("User not found")
         if (userRecord.loginAccess != true) {
             throw BadRequestException("User - $userName does not have login access")
+        }
+
+        if (userAuthRepo.fetchByUserHrnAndProviderName(userRecord.hrn, TokenServiceImpl.ISSUER) == null) {
+            throw AuthenticationException("User - $userName does not have password access")
         }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
