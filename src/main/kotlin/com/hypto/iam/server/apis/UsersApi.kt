@@ -5,6 +5,7 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.PasscodeRepo
+import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
@@ -25,6 +26,7 @@ import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.service.PrincipalPolicyService
 import com.hypto.iam.server.service.TokenService
+import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
@@ -52,6 +54,7 @@ fun Route.createUsersApi() {
     val passcodeService: PasscodeService by inject()
     val idGenerator: ApplicationIdUtil.Generator by inject()
     val tokenService: TokenService by inject()
+    val userAuthRepo: UserAuthRepo by inject()
 
     // **** Create User api ****//
 
@@ -94,6 +97,11 @@ fun Route.createUsersApi() {
                 verified = verified,
                 loginAccess = loginAccess,
                 policies = policies
+            )
+            userAuthRepo.create(
+                hrn = user.hrn,
+                providerName = TokenServiceImpl.ISSUER,
+                authMetadata = null
             )
 
             val token = tokenService.generateJwtToken(ResourceHrn(user.hrn))

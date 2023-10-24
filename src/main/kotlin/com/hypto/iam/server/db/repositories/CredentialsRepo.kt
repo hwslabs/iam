@@ -31,12 +31,26 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
     }
 
     /**
-     * Fetch records that have `user_hrn = value`
+     * Fetch records that matches the `id` and `user_hrn`
      */
     suspend fun fetchByIdAndUserHrn(id: UUID, value: String): CredentialsRecord? {
         return ctx("credentials.fetch_by_id").selectFrom(CREDENTIALS)
             .where(CREDENTIALS.ID.eq(id).and(CREDENTIALS.USER_HRN.eq(value)))
             .fetchOne()
+    }
+
+    /**
+     * Updates status to `inactive` for users with `userHrn`
+     * @return true on successful update. false otherwise.
+     */
+    suspend fun updateStatusForUser(userHrn: String, status: Credential.Status = Credential.Status.inactive): Boolean {
+        val count = ctx("credentials.update_status_for_user")
+            .update(CREDENTIALS)
+            .set(CREDENTIALS.STATUS, status.value)
+            .set(CREDENTIALS.UPDATED_AT, LocalDateTime.now())
+            .where(CREDENTIALS.USER_HRN.eq(userHrn))
+            .execute()
+        return count > 0
     }
 
     /**
