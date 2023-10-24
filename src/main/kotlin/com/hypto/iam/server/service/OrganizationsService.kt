@@ -271,7 +271,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
         if (org.metadata != null) {
             val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-            if (identityGroup != appConfig.cognito) identityProvider.deleteIdentityGroup(identityGroup)
+            identityProvider.deleteIdentityGroup(identityGroup)
         }
 
         return BaseSuccessResponse(true)

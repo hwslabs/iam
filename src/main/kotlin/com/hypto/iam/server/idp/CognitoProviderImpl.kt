@@ -2,6 +2,7 @@
 
 package com.hypto.iam.server.idp
 
+import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.idp.CognitoConstants.ACTION_SUPPRESS
@@ -69,6 +70,7 @@ object CognitoConstants {
 class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     private val cognitoClient: CognitoIdentityProviderClient by inject()
     private val aliasAttributeTypes = mutableListOf(AliasAttributeType.EMAIL, AliasAttributeType.PREFERRED_USERNAME)
+    private val appConfig: AppConfig by inject()
 
     override suspend fun createIdentityGroup(name: String, configuration: Configuration): IdentityGroup {
         try {
@@ -121,6 +123,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
 
     override suspend fun deleteIdentityGroup(identityGroup: IdentityGroup) {
         try {
+            if (identityGroup == appConfig.cognito) return
             val deletePoolRequest = DeleteUserPoolRequest.builder().userPoolId(identityGroup.id).build()
             cognitoClient.deleteUserPool(deletePoolRequest)
         } catch (e: Exception) {
