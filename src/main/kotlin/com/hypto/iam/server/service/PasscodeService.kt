@@ -7,6 +7,7 @@ import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
+import com.hypto.iam.server.exceptions.DbExceptionHandler
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.PasscodeLimitExceededException
@@ -21,12 +22,14 @@ import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.EncryptUtil
 import com.hypto.iam.server.validators.InviteMetadata
+import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.util.logging.error
 import java.time.LocalDateTime
 import java.util.Base64
 import mu.KotlinLogging
 import org.apache.http.client.utils.URIBuilder
+import org.jooq.exception.DataAccessException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import software.amazon.awssdk.services.ses.SesClient
@@ -62,6 +65,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
     private val passcodeRepo: PasscodeRepo by inject()
     private val gson: Gson by inject()
     private val encryptUtil: EncryptUtil by inject()
+    private val txMan: TxMan by inject()
 
     override suspend fun encryptMetadata(metadata: Map<String, Any>): String {
         val metadataJson = gson.toJson(metadata)
@@ -102,26 +106,32 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         }
 
         val validUntil = LocalDateTime.now().plusSeconds(appConfig.app.passcodeValiditySeconds)
-
-        val passcodeRecord = PasscodesRecord().apply {
-            this.id = idGenerator.passcodeId()
-            this.email = email
-            this.organizationId = if (purpose == Purpose.signup) null else organizationId
-            this.validUntil = validUntil
-            this.purpose = purpose.toString()
-            this.createdAt = LocalDateTime.now()
-            this.metadata = metadata?.let { encryptMetadata(it) }
-        }
-        val passcode = passcodeRepo.createPasscode(passcodeRecord)
-        val response = when (purpose) {
-            Purpose.signup -> sendSignupPasscode(email, passcode.id)
-            Purpose.reset -> sendResetPassword(email, organizationId, passcode.id)
-            Purpose.invite -> sendInviteUserPasscode(
-                email,
-                organizationId!!,
-                passcode.id,
-                principal ?: throw AuthorizationException("User is not authorized")
-            )
+        val response = try {
+            txMan.wrap {
+                val passcodeRecord = PasscodesRecord().apply {
+                    this.id = idGenerator.passcodeId()
+                    this.email = email
+                    this.organizationId = if (purpose == Purpose.signup) null else organizationId
+                    this.validUntil = validUntil
+                    this.purpose = purpose.toString()
+                    this.createdAt = LocalDateTime.now()
+                    this.metadata = metadata?.let { encryptMetadata(it) }
+                }
+                val passcode = passcodeRepo.createPasscode(passcodeRecord)
+                when (purpose) {
+                    Purpose.signup -> sendSignupPasscode(email, passcode.id)
+                    Purpose.reset -> sendResetPassword(email, organizationId, passcode.id)
+                    Purpose.invite -> sendInviteUserPasscode(
+                        email,
+                        organizationId!!,
+                        passcode.id,
+                        principal ?: throw AuthorizationException("User is not authorized")
+                    )
+                }
+            }
+        } catch (e: DataAccessException) {
+            logger.error { "Error occurred while creating passcode record: $e" }
+            throw DbExceptionHandler.mapToApplicationException(e)
         }
         return BaseSuccessResponse(response)
     }
