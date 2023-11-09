@@ -12,6 +12,7 @@ import org.jooq.impl.DAOImpl
 
 data class RawPolicyPayload(val hrn: ResourceHrn, val description: String? = null, val statements: String)
 
+@Suppress("TooManyFunctions")
 object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
 
     private val idFun = fun (policy: Policies) = policy.hrn
@@ -103,5 +104,13 @@ object PoliciesRepo : BaseRepo<PoliciesRecord, Policies, String>() {
             .from(POLICIES)
             .where(POLICIES.HRN.`in`(hrns))
             .fetchOne(0, Int::class.java) == hrns.size
+    }
+
+    suspend fun deleteByOrganizationId(organizationId: String): Boolean {
+        val count = ctx("policies.delete_by_organization_id")
+            .deleteFrom(POLICIES)
+            .where(POLICIES.ORGANIZATION_ID.eq(organizationId))
+            .execute()
+        return count > 0
     }
 }

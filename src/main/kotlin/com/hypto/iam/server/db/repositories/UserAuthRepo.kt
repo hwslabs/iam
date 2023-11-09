@@ -61,4 +61,12 @@ object UserAuthRepo : BaseRepo<UserAuthRecord, UserAuth, UserAuthPk>() {
             .where(USER_AUTH.USER_HRN.eq(userHrn.toString()))
             .fetch()
     }
+
+    suspend fun deleteByUserHrn(userHrn: String): Boolean {
+        val count = ctx("userAuth.deleteByUserHrn")
+            .deleteFrom(USER_AUTH)
+            .where(USER_AUTH.USER_HRN.eq(userHrn))
+            .execute()
+        return count > 0
+    }
 }

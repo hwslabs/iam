@@ -106,4 +106,12 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
         val count = record.delete()
         return count > 0
     }
+
+    suspend fun deleteByUserHrn(userHrn: String): Boolean {
+        val count = ctx("credentials.delete_by_user_hrn")
+            .deleteFrom(CREDENTIALS)
+            .where(CREDENTIALS.USER_HRN.like("%$userHrn%"))
+            .execute()
+        return count > 0
+    }
 }

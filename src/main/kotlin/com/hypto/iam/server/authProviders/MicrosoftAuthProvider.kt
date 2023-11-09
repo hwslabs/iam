@@ -14,20 +14,20 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 
-object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
-    private const val PROFILE_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
-    private const val ACCESS_TOKEN_KEY = "access_token"
+object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
+    private const val PROFILE_URL = "https://graph.microsoft.com/v1.0/me"
 
     val gson: Gson by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
 
-    override fun getProviderName() = "google"
+    override fun getProviderName() = "microsoft"
 
     override fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal {
         val requestBuilder = Request.Builder()
-            .url("$PROFILE_URL?$ACCESS_TOKEN_KEY=${tokenCredential.value}")
+            .url(PROFILE_URL)
             .method("GET", null)
             .addHeader("Content-Type", "application/json")
+            .addHeader("Authorization", "Bearer ${tokenCredential.value}")
         val request = requestBuilder.build()
         val response = httpClient.newCall(request).execute()
         if (!response.isSuccessful) {
@@ -37,20 +37,22 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
             }
             throw UnknownException("Unable to fetch user details")
         }
-        val googleUser = response.body?.string()?.let { this.gson.fromJson(it, GoogleUser::class.java) }!!
+        val microsoftUser = response.body?.string()?.let { this.gson.fromJson(it, MicrosoftUser::class.java) }!!
+        if (microsoftUser.mail == null) {
+            throw AuthenticationException("Email not associated with Microsoft profile")
+        }
         return OAuthUserPrincipal(
             tokenCredential,
             ROOT_ORG,
-            googleUser.email,
-            googleUser.name,
-            googleUser.hd ?: "",
+            microsoftUser.mail,
+            microsoftUser.displayName,
+            "",
             getProviderName()
         )
     }
 }
 
-data class GoogleUser(
-    val email: String,
-    val name: String,
-    val hd: String? = null
+data class MicrosoftUser(
+    val mail: String? = null,
+    val displayName: String
 )

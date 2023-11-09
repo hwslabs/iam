@@ -102,6 +102,13 @@ class TokenAuthenticationProvider internal constructor(
             if (!authSchemeExists) {
                 return@tokenAuthenticationCredentials it
             }
+            if (call.request.headers.contains("x-issuer")) {
+                if (!it.startsWith("Bearer")) {
+                    throw AuthenticationException("Invalid token")
+                } else {
+                    return@tokenAuthenticationCredentials it.substringAfter("Bearer ")
+                }
+            }
             @Suppress("TooGenericExceptionCaught")
             try {
                 val result = when (val header = parseAuthorizationHeader(it)) {
