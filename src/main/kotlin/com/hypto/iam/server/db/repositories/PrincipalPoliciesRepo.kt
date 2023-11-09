@@ -66,4 +66,9 @@ object PrincipalPoliciesRepo : BaseRepo<PrincipalPoliciesRecord, PrincipalPolici
         .deleteFrom(PRINCIPAL_POLICIES)
         .where(PRINCIPAL_POLICIES.PRINCIPAL_HRN.eq(userHrn.toString()), PRINCIPAL_POLICIES.POLICY_HRN.`in`(policies))
         .execute() > 0
+
+    suspend fun deleteByPrincipalHrn(principalHrn: String): Boolean = ctx("principalPolicies.deleteByPrincipalHrn")
+        .deleteFrom(PRINCIPAL_POLICIES)
+        .where(PRINCIPAL_POLICIES.PRINCIPAL_HRN.like("%$principalHrn%"))
+        .execute() > 0
 }

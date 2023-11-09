@@ -123,4 +123,12 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .execute()
         return count > 0
     }
+
+    suspend fun deleteByOrganizationId(organizationId: String): Boolean {
+        val count = ctx("passcodes.delete_by_organization_id")
+            .deleteFrom(PASSCODES)
+            .where(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+            .execute()
+        return count > 0
+    }
 }

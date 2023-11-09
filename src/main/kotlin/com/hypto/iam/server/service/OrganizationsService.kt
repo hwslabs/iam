@@ -2,15 +2,18 @@ package com.hypto.iam.server.service
 
 import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
+import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
+import com.hypto.iam.server.db.repositories.PoliciesRepo
+import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
+import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.toUTCOffset
 import com.hypto.iam.server.idp.IdentityGroup
-import com.hypto.iam.server.idp.IdentityProvider
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Organization
@@ -38,20 +41,23 @@ class OrganizationAlreadyExistException(message: String) : Exception(message)
 private val logger = KotlinLogging.logger { }
 
 class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
-    private val organizationRepo: OrganizationRepo by inject()
-    private val passcodeRepo: PasscodeRepo by inject()
     private val usersService: UsersService by inject()
     private val tokenService: TokenService by inject()
     private val hrnFactory: HrnFactory by inject()
     private val principalPolicyService: PrincipalPolicyService by inject()
     private val policyTemplatesService: PolicyTemplatesService by inject()
     private val idGenerator: ApplicationIdUtil.Generator by inject()
-    private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
     private val appConfig: AppConfig by inject()
+    private val credentialsRepo: CredentialsRepo by inject()
+    private val principalPolicyRepo: PrincipalPoliciesRepo by inject()
+    private val policyRepo: PoliciesRepo by inject()
     private val userAuthRepo: UserAuthRepo by inject()
+    private val usersRepo: UserRepo by inject()
+    private val passcodeRepo: PasscodeRepo by inject()
+    private val organizationRepo: OrganizationRepo by inject()
 
     override suspend fun createOrganization(
         request: CreateOrganizationRequest,
@@ -266,12 +272,17 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     }
 
     override suspend fun deleteOrganization(id: String): BaseSuccessResponse {
-        val org = organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
-        organizationRepo.deleteById(id)
+        organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
 
-        if (org.metadata != null) {
-            val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-            identityProvider.deleteIdentityGroup(identityGroup)
+        // TODO: Delete all resources associated with the organization on Cognito
+        txMan.wrap {
+            credentialsRepo.deleteByUserHrn(id)
+            principalPolicyRepo.deleteByPrincipalHrn(id)
+            policyRepo.deleteByOrganizationId(id)
+            userAuthRepo.deleteByUserHrn(id)
+            usersRepo.deleteByOrganizationId(id)
+            passcodeRepo.deleteByOrganizationId(id)
+            organizationRepo.deleteById(id)
         }
 
         return BaseSuccessResponse(true)

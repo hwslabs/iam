@@ -108,4 +108,12 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .and(USERS.VERIFIED.eq(true))
             .fetchOne()
     }
+
+    suspend fun deleteByOrganizationId(organizationId: String): Boolean {
+        val count = ctx("users.delete_by_organization_id")
+            .deleteFrom(USERS)
+            .where(USERS.ORGANIZATION_ID.eq(organizationId))
+            .execute()
+        return count > 0
+    }
 }
