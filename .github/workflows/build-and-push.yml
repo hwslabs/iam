@@ -1,0 +1,14 @@
+name: Build and Push Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-publish:
+    uses: TogaiHQ/github-action-workflows/.github/workflows/kotlin-build-and-push-image.yml@debug/action
+    with:
+      ec2-instance-type: t3a.large
+      java-version: '11'
+    secrets: inherit
