@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-publish:
-    uses: TogaiHQ/github-action-workflows/.github/workflows/kotlin-build-and-push-image.yml@debug/action
+    uses: TogaiHQ/github-action-workflows/.github/workflows/kotlin-build-and-push-image.yml@main
     with:
       ec2-instance-type: t3a.large
       java-version: '11'
