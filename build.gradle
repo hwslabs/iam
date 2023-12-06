@@ -369,6 +369,7 @@ dependencies {
 
 
     implementation('ch.qos.logback:logback-classic:1.4.7')
+    implementation('org.codehaus.janino:janino:3.1.8')
     implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
     implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
     implementation("org.postgresql:postgresql:$postgres_jdbc_driver") // DB JDBC driver
