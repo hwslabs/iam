@@ -9,6 +9,6 @@ jobs:
   build-and-publish:
     uses: TogaiHQ/github-action-workflows/.github/workflows/kotlin-build-and-push-image.yml@main
     with:
-      ec2-instance-type: t3a.large
+      ec2-instance-type: t4g.large
       java-version: '11'
     secrets: inherit

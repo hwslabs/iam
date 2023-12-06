@@ -42,9 +42,16 @@
 
     <root level="info">
         <appender-ref ref="STDOUT"/>
-        <appender-ref ref="FILE"/>
 <!--        <appender-ref ref="AUDIT-FILE"/>-->
     </root>
+
+    <if condition="${LOG_TO_FILE:-false} == true">
+        <then>
+            <root level="${app__logging_level:-INFO}">
+                <appender-ref ref="FILE"/>
+            </root>
+        </then>
+    </if>
 
     <logger name="org.eclipse.jetty" level="${app__logging_level:-INFO}"/>
     <logger name="io.netty" level="${app__logging_level:-INFO}"/>
