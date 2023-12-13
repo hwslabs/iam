@@ -98,10 +98,10 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
             .fetch()
     }
 
-    suspend fun delete(organizationId: String, userId: String, id: UUID): Boolean {
+    suspend fun delete(organizationId: String, subOrganizationId: String?, userId: String, id: UUID): Boolean {
         val record = CredentialsRecord()
             .setId(id)
-            .setUserHrn(ResourceHrn(organizationId, "", IamResources.USER, userId).toString())
+            .setUserHrn(ResourceHrn(organizationId, subOrganizationId, IamResources.USER, userId).toString())
         record.attach(dao().configuration())
         val count = record.delete()
         return count > 0

@@ -91,7 +91,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val expectedPolicyHrn = ResourceHrn(
                     organization = createdOrganization.id,
                     resource = IamResources.POLICY,
-                    account = null,
+                    subOrganization = null,
                     resourceInstance = policyName
                 )
 
@@ -322,7 +322,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val expectedPolicyHrn = ResourceHrn(
                     organization = createOrganizationResponse.organization.id,
                     resource = IamResources.POLICY,
-                    account = null,
+                    subOrganization = null,
                     resourceInstance = policyName
                 )
 
@@ -939,7 +939,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     username = user2.username,
                     bearerToken = rootUserToken,
                     policyName = "test-policy",
-                    accountId = null,
+                    subOrgId = null,
                     resourceName = IamResources.USER,
                     actionName = "getUserPolicy",
                     resourceInstance = user2.username
@@ -1001,7 +1001,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     username = user2.username,
                     bearerToken = rootUserToken,
                     policyName = "test-policy",
-                    accountId = null,
+                    subOrgId = null,
                     resourceName = IamResources.USER,
                     actionName = "getUserPolicy",
                     resourceInstance = user1.username

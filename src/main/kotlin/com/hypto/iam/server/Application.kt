@@ -16,6 +16,7 @@ import com.hypto.iam.server.apis.passcodeApis
 import com.hypto.iam.server.apis.policyApi
 import com.hypto.iam.server.apis.resetPasswordApi
 import com.hypto.iam.server.apis.resourceApi
+import com.hypto.iam.server.apis.subOrganizationsApi
 import com.hypto.iam.server.apis.tokenApi
 import com.hypto.iam.server.apis.userAuthApi
 import com.hypto.iam.server.apis.usersApi
@@ -148,6 +149,7 @@ fun Application.handleRequest() {
             userAuthApi()
             validationApi()
             passcodeApis()
+            subOrganizationsApi()
         }
 
         authenticate("reset-passcode-auth") {

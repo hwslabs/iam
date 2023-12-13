@@ -7,6 +7,10 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.delete
+import com.hypto.iam.server.extensions.get
+import com.hypto.iam.server.extensions.patch
+import com.hypto.iam.server.extensions.post
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
@@ -18,6 +22,7 @@ import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.AuthenticationException
+import com.hypto.iam.server.security.HrnTemplateInput
 import com.hypto.iam.server.security.IamPrincipal
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
@@ -41,10 +46,6 @@ import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
 fun Route.createUsersApi() {
@@ -61,11 +62,31 @@ fun Route.createUsersApi() {
     // Create user
     withPermission(
         "createUser",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users",
+                    resourceNameIndex = 0,
+                    resourceInstanceIndex = 1,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        post("/organizations/{organization_id}/users") {
+        post(
+            "/organizations/{organization_id}/users",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users"
+        ) {
             val principal = context.principal<IamPrincipal>() ?: throw AuthenticationException("User not authenticated")
             val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val request = call.receive<CreateUserRequest>().validate()
 
             var verified: Boolean = request.verified ?: false
@@ -87,6 +108,7 @@ fun Route.createUsersApi() {
             val username = idGenerator.username()
             val user = usersService.createUser(
                 organizationId = organizationId,
+                subOrganizationId = subOrganizationId,
                 username = username,
                 preferredUsername = request.preferredUsername,
                 name = request.name,
@@ -126,12 +148,33 @@ fun Route.usersApi() {
     // Get user
     withPermission(
         "getUser",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users/{id}",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                        "/{id}",
+                    resourceNameIndex = 4,
+                    resourceInstanceIndex = 5,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        get("/organizations/{organization_id}/users/{id}") {
+        get(
+            "/organizations/{organization_id}/users/{id}",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{id}",
+        ) {
             val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val userId = call.parameters["id"]!!
-            val user = usersService.getUser(organizationId, userId)
+            val user = usersService.getUser(organizationId, subOrganizationId, userId)
             call.respondText(
                 text = gson.toJson(user),
                 contentType = ContentType.Application.Json,
@@ -143,10 +186,30 @@ fun Route.usersApi() {
     // List user
     withPermission(
         "listUser",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users",
+                    resourceNameIndex = 0,
+                    resourceInstanceIndex = 1,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        get("/organizations/{organization_id}/users") {
+        get(
+            "/organizations/{organization_id}/users",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users"
+        ) {
             val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val nextToken = call.request.queryParameters["next_token"]
             val pageSize = call.request.queryParameters["page_size"]
             val sortOrder = call.request.queryParameters["sortOrder"]
@@ -157,7 +220,7 @@ fun Route.usersApi() {
                 sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
             )
 
-            val response = usersService.listUsers(organizationId, paginationContext)
+            val response = usersService.listUsers(organizationId, subOrganizationId, paginationContext)
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
@@ -169,12 +232,32 @@ fun Route.usersApi() {
     // Delete user
     withPermission(
         "deleteUser",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users/{user_id}",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}",
+                    resourceNameIndex = 4,
+                    resourceInstanceIndex = 5,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        delete("/organizations/{organization_id}/users/{user_id}") {
+        delete(
+            "/organizations/{organization_id}/users/{user_id}",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}"
+        ) {
             val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val userId = call.parameters["user_id"]!!
-            val response = usersService.deleteUser(organizationId, userId)
+            val response = usersService.deleteUser(organizationId, subOrganizationId, userId)
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
@@ -186,16 +269,36 @@ fun Route.usersApi() {
     // Update user
     withPermission(
         "updateUser",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users/{user_id}",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}",
+                    resourceNameIndex = 4,
+                    resourceInstanceIndex = 5,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        patch("/organizations/{organization_id}/users/{user_id}") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("Required organization_id to update user")
+        patch(
+            "/organizations/{organization_id}/users/{user_id}",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}"
+        ) {
+            val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val userId = call.parameters["user_id"]!!
             val request = call.receive<UpdateUserRequest>().validate()
             val user =
                 usersService.updateUser(
                     organizationId,
+                    subOrganizationId,
                     userId,
                     request.name,
                     request.phone ?: "",
@@ -212,14 +315,36 @@ fun Route.usersApi() {
 
     withPermission(
         "changePassword",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users/{user_id}/change_password",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}" +
+                        "/change_password",
+                    resourceNameIndex = 4,
+                    resourceInstanceIndex = 5,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        post("/organizations/{organization_id}/users/{user_id}/change_password") {
+        post(
+            "/organizations/{organization_id}/users/{user_id}/change_password",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}/change_password"
+        ) {
             val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val userId = call.parameters["user_id"]!!
             val request = call.receive<ChangeUserPasswordRequest>().validate()
             val response = usersService.changeUserPassword(
                 organizationId,
+                subOrganizationId,
                 userId,
                 request.oldPassword,
                 request.newPassword
@@ -234,14 +359,37 @@ fun Route.usersApi() {
 
     withPermission(
         "createPassword",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users/{user_id}/create_password",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}" +
+                        "/create_password",
+                    resourceNameIndex = 4,
+                    resourceInstanceIndex = 5,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
+
     ) {
-        post("/organizations/{organization_id}/users/{user_id}/create_password") {
+        post(
+            "/organizations/{organization_id}/users/{user_id}/create_password",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}/create_password"
+        ) {
             val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val userId = call.parameters["user_id"]!!
             val request = call.receive<CreateUserPasswordRequest>().validate()
             val response = usersService.createUserPassword(
                 organizationId,
+                subOrganizationId,
                 userId,
                 request.password
             )
@@ -259,16 +407,37 @@ fun Route.usersApi() {
     // Detach policy
     withPermission(
         "detachPolicies",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users/{user_id}/detach_policies",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}" +
+                        "/detach_policies",
+                    resourceNameIndex = 4,
+                    resourceInstanceIndex = 5,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        patch("/organizations/{organization_id}/users/{user_id}/detach_policies") {
-            val organizationId = call.parameters["organization_id"]
+        patch(
+            "/organizations/{organization_id}/users/{user_id}/detach_policies",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}/detach_policies"
+        ) {
+            val organizationId = call.parameters["organization_id"]!!
+            val subOrganizationId = call.parameters["sub_organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to detach policies")
             val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to detach policies")
             val request = call.receive<PolicyAssociationRequest>().validate()
 
             val response = principalPolicyService.detachPoliciesToUser(
-                ResourceHrn(organizationId, "", IamResources.USER, userId),
+                ResourceHrn(organizationId, subOrganizationId ?: "", IamResources.USER, userId),
                 request.policies.map { hrnFactory.getHrn(it) }
             )
             call.respondText(
@@ -282,15 +451,36 @@ fun Route.usersApi() {
     // Attach policy
     withPermission(
         "attachPolicies",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(
+            listOf(
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/users/{user_id}/attach_policies",
+                    resourceNameIndex = 2,
+                    resourceInstanceIndex = 3,
+                    organizationIdIndex = 1
+                ),
+                HrnTemplateInput(
+                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}" +
+                        "/attach_policies",
+                    resourceNameIndex = 4,
+                    resourceInstanceIndex = 5,
+                    organizationIdIndex = 1,
+                    subOrganizationIdIndex = 3
+                )
+            )
+        )
     ) {
-        patch("/organizations/{organization_id}/users/{user_id}/attach_policies") {
+        patch(
+            "/organizations/{organization_id}/users/{user_id}/attach_policies",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{user_id}/attach_policies"
+        ) {
             val organizationId = call.parameters["organization_id"]
                 ?: throw IllegalArgumentException("Required organization_id to attach policies")
+            val subOrganizationId = call.parameters["sub_organization_id"]
             val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to attach policies")
             val request = call.receive<PolicyAssociationRequest>().validate()
             val response = principalPolicyService.attachPoliciesToUser(
-                ResourceHrn(organizationId, "", IamResources.USER, userId),
+                ResourceHrn(organizationId, subOrganizationId ?: "", IamResources.USER, userId),
                 request.policies.map { hrnFactory.getHrn(it) }
             )
             call.respondText(
@@ -306,12 +496,16 @@ fun Route.resetPasswordApi() {
     val gson: Gson by inject()
     val usersService: UsersService by inject()
 
-    post("/organizations/{organization_id}/users/resetPassword") {
+    post(
+        "/organizations/{organization_id}/users/resetPassword",
+        "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/resetPassword"
+    ) {
         val organizationId = call.parameters["organization_id"]
+        val subOrganizationId = call.parameters["sub_organization_id"]
         val passcodeStr = call.principal<ApiPrincipal>()!!.tokenCredential.value!!
         val request = call.receive<ResetPasswordRequest>().validate()
-        val user = usersService.getUserByEmail(organizationId!!, request.email)
-        val response = usersService.setUserPassword(organizationId, user, request.password)
+        val user = usersService.getUserByEmail(organizationId!!, subOrganizationId, request.email)
+        val response = usersService.setUserPassword(organizationId, subOrganizationId, user, request.password)
 
         call.respondText(
             text = gson.toJson(response),

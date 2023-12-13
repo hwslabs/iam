@@ -17,6 +17,7 @@ import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.CreateSubOrganizationRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
@@ -131,6 +132,11 @@ fun PolicyAssociationRequest.validate(): PolicyAssociationRequest {
 
 fun CreateUserRequest.validate(): CreateUserRequest {
     return createUserRequestValidation.validateAndThrowOnFailure(this)
+}
+
+fun CreateSubOrganizationRequest.validate(): CreateSubOrganizationRequest {
+    // TODO: Add validation for sub organization
+    return this
 }
 
 fun UpdateUserRequest.validate(): UpdateUserRequest {
@@ -406,11 +412,10 @@ val createUserRequestValidation = Validation<CreateUserRequest> {
             )
     }
 
-    addConstraint("Email and password is not required for Users without loginAccess") {
+    addConstraint("Password is not required for Users without loginAccess") {
         return@addConstraint (
             (
-                !(it.loginAccess ?: false) && it.email.isNullOrEmpty() &&
-                    it.password.isNullOrEmpty()
+                !(it.loginAccess ?: false) && it.password.isNullOrEmpty()
                 ) || (it.loginAccess == true)
             )
     }

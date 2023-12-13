@@ -30,22 +30,25 @@ abstract class Hrn {
 class ResourceHrn : Hrn {
     override val organization: String
     override val resource: String?
-    val account: String?
+    val subOrganization: String?
     val resourceInstance: String?
 
     companion object {
         val RESOURCE_HRN_REGEX =
-            """^hrn:(?<organization>[^:\n]+):(?<accountId>[^:\n]*):(?<resource>[^:/\n]*)/{0,1}(?<resourceInstance>[^/\n:]*)""".toRegex()
+            (
+                "^hrn:(?<organization>[^:\n]+):" +
+                    "(?<subOrganization>[^:\n]*):(?<resource>[^:/\n]*)/?(?<resourceInstance>[^/\n:]*)"
+                ).trimMargin().toRegex()
     }
 
     constructor(
         organization: String,
-        account: String? = null,
+        subOrganization: String? = null,
         resource: String,
         resourceInstance: String?
     ) {
         this.organization = organization
-        this.account = account
+        this.subOrganization = subOrganization
         if (resource == "") {
             // Resource Hrn must have a resource
             throw HrnParseException("Null resource for resource hrn")
@@ -58,7 +61,7 @@ class ResourceHrn : Hrn {
         val result = RESOURCE_HRN_REGEX.matchEntire(hrnString)
             ?: throw HrnParseException("Not a valid hrn string format")
         organization = result.groups["organization"]!!.value
-        account = result.groups["accountId"]?.value
+        subOrganization = result.groups["subOrganization"]?.value
         resource = result.groups["resource"]?.value
         resourceInstance = result.groups["resourceInstance"]?.value
     }
@@ -66,15 +69,15 @@ class ResourceHrn : Hrn {
     override fun toString(): String {
         // Valid Hrn Strings
         // 1. hrn:<organizationId>
-        // 2. hrn:<organizationId>:<accountId>
+        // 2. hrn:<organizationId>:<subOrganizationId>
         // 3. hrn:<organizationId>::<resourceType>/<resourceInstance>
-        // 4. hrn:<organizationId>:<accountId>:<resourceType>/<resourceInstance>
+        // 4. hrn:<organizationId>:<subOrganizationId>:<resourceType>/<resourceInstance>
 
         var hrnString = HRN_PREFIX + organization
-        if (account.isNullOrEmpty() && resource.isNullOrEmpty()) {
+        if (subOrganization.isNullOrEmpty() && resource.isNullOrEmpty()) {
             return hrnString
         }
-        hrnString += HRN_DELIMITER + (account ?: "")
+        hrnString += HRN_DELIMITER + (subOrganization ?: "")
         if (!resource.isNullOrEmpty()) {
             hrnString += HRN_DELIMITER + resource
             if (!resourceInstance.isNullOrEmpty()) {
@@ -86,23 +89,23 @@ class ResourceHrn : Hrn {
 }
 
 /**
- * Class representing GlobalHrn
+ * Class representing ActionHrn
  */
 class ActionHrn : Hrn {
     override val organization: String
-    val account: String?
+    val subOrganization: String?
     override val resource: String?
     val action: String?
 
     companion object {
         val ACTION_HRN_REGEX =
-            """^hrn:(?<organization>[^:\n]+):(?<accountId>[^:\n]*):(?<resource>[^:/\n]*)\$(?<action>[^/\n:]*)"""
+            """^hrn:(?<organization>[^:\n]+):(?<subOrganization>[^:\n]*):(?<resource>[^:/\n]*)\$(?<action>[^/\n:]*)"""
                 .toRegex()
     }
 
-    constructor(organization: String, account: String? = null, resource: String?, action: String?) {
+    constructor(organization: String, subOrganization: String? = null, resource: String?, action: String?) {
         this.organization = organization
-        this.account = account
+        this.subOrganization = subOrganization
         this.resource = resource
         this.action = action
     }
@@ -112,14 +115,14 @@ class ActionHrn : Hrn {
             ?: throw HrnParseException("Not a valid hrn action string format")
         organization = result.groups["organization"]!!.value
         resource = result.groups["resource"]?.value
-        account = result.groups["accountId"]?.value
+        subOrganization = result.groups["subOrganization"]?.value
         action = result.groups["action"]?.value
     }
 
     override fun toString(): String {
         var hrnString = HRN_PREFIX + organization + HRN_DELIMITER
-        if (!account.isNullOrEmpty()) {
-            hrnString += account
+        if (!subOrganization.isNullOrEmpty()) {
+            hrnString += subOrganization
         }
         hrnString += HRN_DELIMITER + resource
         if (!action.isNullOrEmpty()) {

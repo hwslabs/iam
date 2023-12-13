@@ -157,17 +157,61 @@ private fun Route.authorizedRoute(
 fun getResourceHrnFunc(
     resourceNameIndex: Int,
     resourceInstanceIndex: Int,
-    organizationIdIndex: Int
+    organizationIdIndex: Int,
+    subOrganizationIdIndex: Int? = null
 ): (ApplicationRequest) -> ResourceHrn {
     return { request ->
         val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
         ResourceHrn(
             pathSegments[organizationIdIndex],
-            null,
+            subOrganizationIdIndex?.let { pathSegments[it] },
             IamResources.resourceMap[pathSegments[resourceNameIndex]]!!,
             pathSegments[resourceInstanceIndex]
         )
     }
+}
+
+data class HrnTemplateInput(
+    val pathTemplate: String,
+    val resourceNameIndex: Int,
+    val resourceInstanceIndex: Int,
+    val organizationIdIndex: Int,
+    val subOrganizationIdIndex: Int? = null,
+)
+
+fun getResourceHrnFunc(templateInputs: List<HrnTemplateInput>): (ApplicationRequest) -> ResourceHrn {
+    return { request ->
+        val templateInput = templateInputs.firstOrNull { doesUriMatchTemplate(request.path(), it.pathTemplate) }
+            ?: throw IllegalArgumentException("No matching template found for ${request.path()}")
+        val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
+        ResourceHrn(
+            pathSegments[templateInput.organizationIdIndex],
+            templateInput.subOrganizationIdIndex?.let { pathSegments[it] },
+            IamResources.resourceMap[pathSegments[templateInput.resourceNameIndex]]!!,
+            pathSegments[templateInput.resourceInstanceIndex]
+        )
+    }
+}
+
+@Suppress("ReturnCount")
+private fun doesUriMatchTemplate(uri: String, template: String): Boolean {
+    val uriSegments = uri.split(URL_SEPARATOR)
+    val templateSegments = template.split(URL_SEPARATOR)
+
+    if (uriSegments.size != templateSegments.size) {
+        return false
+    }
+
+    for ((uriSegment, templateSegment) in uriSegments.zip(templateSegments)) {
+        if (templateSegment.startsWith('{') && templateSegment.endsWith('}')) {
+            // It's a variable, we can ignore it
+            continue
+        }
+        if (uriSegment != templateSegment) {
+            return false
+        }
+    }
+    return true
 }
 
 fun Route.withPermission(

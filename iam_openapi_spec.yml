@@ -189,6 +189,134 @@ paths:
       security:
         - apiKeyAuth: []
 
+  # sub organizations
+  /organizations/{organization_id}/sub_organizations:
+    post:
+      tags:
+        - Sub Organization Management
+      summary: Create a sub organization under an organization. Sub organization provides a way to create a hierarchy of organizations to easily manage resources at each levels.
+      description: Create a sub organization under an organization.
+      operationId: createSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateSubOrganizationRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateSubOrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    get:
+      tags:
+        - Sub Organization Management
+      summary: List sub organizations under an organization.
+      description: List all sub organizations under an organization.
+      operationId: listSubOrganizations
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ListSubOrganizationsResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_id}:
+    get:
+      tags:
+        - Sub Organization Management
+      summary: Get a sub organization
+      description: Get a sub organization and the metadata for the given sub organization.
+      operationId: getSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/SubOrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    patch:
+      tags:
+        - Sub Organization Management
+      summary: Update a sub organization
+      description: Update a sub organization
+      operationId: updateSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateSubOrganizationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SubOrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      tags:
+          - Sub Organization Management
+      summary: Delete a sub organization
+      description: Delete a sub organization. This is a privileged api and only internal application will have access to delete sub organization.
+      operationId: deleteSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   # user
   /organizations/{organization_id}/users:
     post:
@@ -1361,6 +1489,16 @@ components:
             pattern: ^[A-Za-z0-9]{10}$
             example: "XlK5h64gND"
 
+    sub_organization_id:
+      in: path
+      name: sub_organization_id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            example: "customer_1"
+
     credential_id:
       in: path
       name: credential_id
@@ -1455,6 +1593,28 @@ components:
           examples:
             UpdateOrganizationRequest:
               $ref: '#/components/examples/UpdateOrganizationRequest'
+
+    CreateSubOrganizationRequest:
+      description: Payload to create sub organization
+      required: false
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateSubOrganizationRequest'
+          examples:
+            CreateSubOrganizationRequest:
+              $ref: '#/components/examples/CreateSubOrganizationRequest'
+
+    UpdateSubOrganizationRequest:
+      description: Payload to update sub organization
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateSubOrganizationRequest'
+          examples:
+            UpdateSubOrganizationRequest:
+              $ref: '#/components/examples/UpdateSubOrganizationRequest'
 
     CreateUserRequest:
       description: Payload to create user
@@ -1719,6 +1879,22 @@ components:
             Organization:
               $ref: '#/components/examples/CreateOrganizationResponse'
 
+    CreateSubOrganizationResponse:
+      description: Response for Create Sub Organization request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateSubOrganizationResponse'
+          examples:
+            Organization:
+              $ref: '#/components/examples/CreateSubOrganizationResponse'
+
     OrganizationResponse:
       description: Response for Get and Update Organization requests
       headers:
@@ -1734,6 +1910,38 @@ components:
           examples:
             Organization:
               $ref: '#/components/examples/Organization'
+
+    SubOrganizationResponse:
+      description: Response for Get and Update Sub Organization requests
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SubOrganization'
+          examples:
+            Organization:
+              $ref: '#/components/examples/SubOrganization'
+
+    ListSubOrganizationsResponse:
+      description: Response for list sub organization under an organization request.
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SubOrganizationsPaginatedResponse'
+          examples:
+            Organization:
+              $ref: '#/components/examples/SubOrganizationsPaginatedResponse'
 
     CreateUserResponse:
       description: Response for CreateUserRequest
@@ -2058,6 +2266,18 @@ components:
         name: ACME Enterprise
         description: Updated Brief description about ACME
 
+    CreateSubOrganizationRequest:
+      summary: A sample CreateSubOrganizationRequest
+      value:
+        name: ACME Enterprise
+        description: Brief description about ACME
+        id: "Customer - 1"
+
+    UpdateSubOrganizationRequest:
+      summary: A sample UpdateSubOrganizationRequest
+      value:
+        name: ACME Enterprise
+
     CreateUserRequest:
       summary: A sample create user request
       value:
@@ -2237,6 +2457,27 @@ components:
           createdAt: 2020-01-01T00:00:00.000Z
         rootUserToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
+    CreateSubOrganizationResponse:
+      value:
+        subOrganization:
+          id: hrn:XlK5h64gND:cus_123
+          name: ACME Enterprise - Customer 123
+          description: Brief description about ACME
+          updatedAt: 2020-01-01T00:00:00.000Z
+          createdAt: 2020-01-01T00:00:00.000Z
+
+    SubOrganizationsPaginatedResponse:
+      value:
+        data:
+          - id: XlK5h64gND
+            name: invoice
+            createdAt: 2020-01-01T00:00:00.000Z
+            updatedAt: 2020-01-01T00:00:00.000Z
+        nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
+        context:
+          pageSize: 10
+          sortOrder: asc
+
     TokenResponse:
       value:
         token: XlK5h64gNDBfMXAPKKGRmWjaxmXJJzDKIJNWqSWj
@@ -2364,6 +2605,14 @@ components:
           createdBy: ""
           createdAt: 2020-01-01T00:00:00.000Z
         rootUserHrn: "hrn:XlK5h64gND::iam-user/root-user-name"
+        createdAt: 2020-01-01T00:00:00.000Z
+        updatedAt: 2020-01-01T00:00:00.000Z
+
+    SubOrganization:
+      summary: A sample SubOrganization
+      value:
+        id: XlK5h64gND
+        name: ACME Enterprise
         createdAt: 2020-01-01T00:00:00.000Z
         updatedAt: 2020-01-01T00:00:00.000Z
 
@@ -2509,6 +2758,32 @@ components:
           type: string
           maxLength: 30
 
+    CreateSubOrganizationRequest:
+      description: Payload to create sub organization
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - id
+      properties:
+        name:
+          type: string
+          description: Name of the sub organization
+        id:
+          type: string
+          description: Unique identifier representing the sub organization.
+        description:
+          type: string
+          maxLength: 500
+
+    UpdateSubOrganizationRequest:
+      description: Payload to update sub organization
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: Name of the sub organization
 
     CreateUserRequest:
       description: Payload to create ledger account
@@ -2752,6 +3027,8 @@ components:
           type: string
         organizationId:
           type: string
+        subOrganizationId:
+          type: string
         purpose:
           type: string
           enum:
@@ -2866,6 +3143,30 @@ components:
         rootUserToken:
           description: JWT token of the root user
           type: string
+
+    CreateSubOrganizationResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - subOrganization
+      properties:
+        subOrganization:
+          $ref: "#/components/schemas/SubOrganization"
+
+    SubOrganizationsPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SubOrganization'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
 
     ListCredentialResponse:
       type: object
@@ -3011,6 +3312,36 @@ components:
           maxLength: 500
         rootUser:
           $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SubOrganization:
+      type: object
+      description: Sub organization details
+      additionalProperties: false
+      required:
+        - name
+        - id
+        - organizationId
+        - createdAt
+        - updatedAt
+      properties:
+        name:
+          type: string
+          description: Sub organization name
+        id:
+          type: string
+          description: Sub organization id in HRN format
+        organizationId:
+          type: string
+          description: Organization id where this sub organization belongs to
+        description:
+          type: string
+          description: Any description related to sub organization
         createdAt:
           type: string
           format: date-time

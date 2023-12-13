@@ -53,11 +53,12 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
 
     override suspend fun getUserPrincipalByCredentials(
         organizationId: String,
+        subOrganizationId: String?,
         userName: String,
         password: String
     ):
         UserPrincipal = measureTimedValue("TokenService.getUserPrincipalByCredentials", logger) {
-        val user = usersService.authenticate(organizationId, userName, password)
+        val user = usersService.authenticate(organizationId, subOrganizationId, userName, password)
         return UserPrincipal(
             tokenCredential = TokenCredential(userName, TokenType.BASIC),
             hrnStr = user.hrn,
@@ -69,7 +70,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
         credentials: UsernamePasswordCredential
     ): UserPrincipal {
         val validCredentials = credentials.validate()
-        val user = usersService.authenticate(validCredentials.username, validCredentials.password)
+        val user = usersService.authenticate(null, validCredentials.username, validCredentials.password)
         return UserPrincipal(
             tokenCredential = TokenCredential(validCredentials.username, TokenType.BASIC),
             hrnStr = user.hrn,
@@ -83,6 +84,7 @@ interface UserPrincipalService {
     suspend fun getUserPrincipalByJwtToken(tokenCredential: TokenCredential, deepCheck: Boolean = false): UserPrincipal?
     suspend fun getUserPrincipalByCredentials(
         organizationId: String,
+        subOrganizationId: String?,
         userName: String,
         password: String
     ):
