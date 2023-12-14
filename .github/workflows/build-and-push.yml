@@ -6,9 +6,116 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-publish:
-    uses: TogaiHQ/github-action-workflows/.github/workflows/kotlin-build-and-push-image.yml@main
-    with:
-      ec2-instance-type: t4g.large
-      java-version: '11'
-    secrets: inherit
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Run Postgres
+        run: |
+          docker-compose -f docker-compose.yml up -d pg
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: build
+      - name: Upload JaCoCo coverage report as a workflow artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: build/jacoco/test/jacocoTestReport.csv
+
+      - name: Install and configure AWS CLI
+        if: ${{ !startsWith(github.ref, 'refs/pull/') }}
+        shell: bash
+        env:
+          aws_access_key_id: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.STAGING_AWS_REGION }}
+        run: |
+          sudo apt-get update && sudo apt-get -y install awscli
+          aws configure set aws_access_key_id $aws_access_key_id
+          aws configure set aws_secret_access_key $aws_secret_access_key
+          aws configure set default.region $aws_region
+
+      - name: Build Fat Jar
+        if: ${{ steps.check-commit-already-built-and-pushed.outputs.count == 0 && !startsWith(github.ref, 'refs/pull/') }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: shadowJar
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag and push docker image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ github.repository }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          repository=$(echo $REPOSITORY | cut -d '/' -f2)
+          docker build -t $REGISTRY/$repository:$IMAGE_TAG -f kubernetes/Dockerfile .
+          docker tag $REGISTRY/$repository:$IMAGE_TAG $REGISTRY/$repository:latest
+          docker push $REGISTRY/$repository:$IMAGE_TAG
+          docker push $REGISTRY/$repository:latest
+
+  commit-badge:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Extract branch name
+        shell: bash
+        run: |
+          TMP_PULL_HEAD_REF="${{ github.head_ref }}"
+          TMP_GITHUB_REF="${GITHUB_REF#refs/heads/}"
+          EXPORT_VALUE=""
+          if [ "${TMP_PULL_HEAD_REF}" != "" ]
+          then
+              EXPORT_VALUE="${TMP_PULL_HEAD_REF}"
+          else
+              EXPORT_VALUE="${TMP_GITHUB_REF}"
+          fi
+          echo "##[set-output name=branch;]${EXPORT_VALUE}"
+        id: extract_branch
+      - uses: actions/checkout@v3
+        with:
+          ref: badges
+          path: badges
+      - uses: actions/download-artifact@v3
+        with:
+          name: jacoco-report
+      - name: Generate JaCoCo badge
+        id: jacoco
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          jacoco-csv-file: jacocoTestReport.csv
+          badges-directory: badges/${{ steps.extract_branch.outputs.branch }}
+          generate-branches-badge: true
+      - name: Log coverage percentages to workflow output
+        run: |
+          echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
+          echo "branches = ${{ steps.jacoco.outputs.branches }}"
+      - name: Commit badge
+        env:
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        run: |
+          pushd badges
+           git config --local user.email "action@github.com"
+           git config --local user.name "GitHub Action"
+           git add "${BRANCH}"
+          
+           # Will give error if badge did not changed
+           git commit -m "Add/Update badge" || true
+          popd
+      - name: Push badge commit
+        uses: ad-m/github-push-action@master
+        if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: badges
+          force: true
+          directory: badges
