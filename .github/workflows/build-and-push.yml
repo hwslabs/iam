@@ -58,7 +58,7 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           repository=$(echo $REPOSITORY | cut -d '/' -f2)
-          docker build -t $REGISTRY/$repository:$IMAGE_TAG -f kubernetes/Dockerfile .
+          docker buildx build -t $REGISTRY/$repository:$IMAGE_TAG --platform linux/arm64 -f kubernetes/Dockerfile .
           docker tag $REGISTRY/$repository:$IMAGE_TAG $REGISTRY/$repository:latest
           docker push $REGISTRY/$repository:$IMAGE_TAG
           docker push $REGISTRY/$repository:latest
