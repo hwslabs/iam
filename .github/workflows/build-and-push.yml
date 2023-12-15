@@ -5,6 +5,11 @@ on:
   push:
     branches: [ "main" ]
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.ECR_AWS_REGION }}
+
 jobs:
   start-runner:
     name: Start self-hosted EC2 runner
