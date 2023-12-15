@@ -1,0 +1,22 @@
+# This file is for CI only. This file is used to run all the components required for building and/running the service.
+
+version: '3.8'
+
+services:
+  pg:
+    image: postgres:14.1
+    ports:
+      - "4921:5432"
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=iam
+      - TZ=Asia/Kolkata
+    volumes:
+      - ./docker/iam-pg/data:/var/lib/postgresql/data
+    command: ["-c", "max_connections=500"]
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "iam", "-U", "root" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
