@@ -54,7 +54,7 @@ jobs:
         run: |
           FILE="ci-docker-compose.yml"
           if test -f "$FILE"; then
-            docker compose up --detach --wait --wait-timeout 60
+            docker compose -f $FILE up --detach --wait --wait-timeout 60
           else
             echo "$FILE not found. Assuming there are no components to run"
           fi
