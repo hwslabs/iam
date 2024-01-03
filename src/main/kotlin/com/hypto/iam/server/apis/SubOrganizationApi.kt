@@ -25,11 +25,11 @@ import org.koin.ktor.ext.inject
 
 /**
  * SubOrganizations provides hierarchy structure for organizations. Under an organizations, there can be multiple sub
- * organizations can be created and resources like users, groups, roles can be attached to sub organizations to
+ * organizations and resources like users, groups, roles can be attached to sub organizations to
  * control access.
  *
  * This controller class provides APIs to create, update, delete and get sub organizations under an org.
- * NOTE: Today there is only one level of sub-organization under an organization is supported today.
+ * NOTE: Currently just one level of sub-organization can be created under an organization.
  */
 
 fun Route.subOrganizationsApi() {

@@ -1596,7 +1596,7 @@ components:
 
     CreateSubOrganizationRequest:
       description: Payload to create sub organization
-      required: false
+      required: true
       content:
         application/json:
           schema:
@@ -2470,7 +2470,7 @@ components:
       value:
         data:
           - id: XlK5h64gND
-            name: invoice
+            name: ACME sub Organization
             createdAt: 2020-01-01T00:00:00.000Z
             updatedAt: 2020-01-01T00:00:00.000Z
         nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==

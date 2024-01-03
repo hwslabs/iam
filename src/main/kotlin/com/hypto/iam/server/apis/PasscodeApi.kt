@@ -2,15 +2,15 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.RouteOption
 import com.hypto.iam.server.extensions.get
+import com.hypto.iam.server.extensions.getWithPermission
 import com.hypto.iam.server.extensions.post
+import com.hypto.iam.server.extensions.postWithPermission
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
-import com.hypto.iam.server.security.HrnTemplateInput
 import com.hypto.iam.server.security.UserPrincipal
-import com.hypto.iam.server.security.getResourceHrnFunc
-import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.validators.InviteMetadata
 import com.hypto.iam.server.validators.validate
@@ -68,97 +68,83 @@ fun Route.passcodeApis() {
     val passcodeService: PasscodeService by inject()
     val gson: Gson by inject()
 
-    withPermission(
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organizationId}/invites",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1,
+                subOrganizationIdIndex = 3
+            )
+        ),
         "listInvites",
-        getResourceHrnFunc(
-            listOf(
-                HrnTemplateInput(
-                    "/organizations/{organizationId}/invites",
-                    resourceNameIndex = 0,
-                    resourceInstanceIndex = 1,
-                    organizationIdIndex = 1
-                ),
-                HrnTemplateInput(
-                    "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites",
-                    resourceNameIndex = 2,
-                    resourceInstanceIndex = 3,
-                    organizationIdIndex = 1,
-                    subOrganizationIdIndex = 3
-                )
-            )
-        )
     ) {
-        get(
-            "/organizations/{organizationId}/invites",
-            "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites"
-        ) {
-            val organizationId = call.parameters["organizationId"]!!
-            val subOrganizationId = call.parameters["sub_organization_id"]
+        val organizationId = call.parameters["organizationId"]!!
+        val subOrganizationId = call.parameters["sub_organization_id"]
 
-            val nextToken = call.request.queryParameters["next_token"]
-            val pageSize = call.request.queryParameters["page_size"]
-            val sortOrder = call.request.queryParameters["sort_order"]
+        val nextToken = call.request.queryParameters["next_token"]
+        val pageSize = call.request.queryParameters["page_size"]
+        val sortOrder = call.request.queryParameters["sort_order"]
 
-            val context = PaginationContext.from(
-                nextToken,
-                pageSize?.toInt(),
-                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-            )
+        val context = PaginationContext.from(
+            nextToken,
+            pageSize?.toInt(),
+            sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
+        )
 
-            val passcodes = passcodeService.listOrgPasscodes(
-                organizationId,
-                subOrganizationId,
-                VerifyEmailRequest.Purpose.invite,
-                context
-            )
-            call.respondText(
-                text = gson.toJson(passcodes),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
-        }
+        val passcodes = passcodeService.listOrgPasscodes(
+            organizationId,
+            subOrganizationId,
+            VerifyEmailRequest.Purpose.invite,
+            context
+        )
+        call.respondText(
+            text = gson.toJson(passcodes),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    withPermission(
+    postWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organizationId}/invites/resend",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites/resend",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1,
+                subOrganizationIdIndex = 3
+            )
+        ),
         "resendInvite",
-        getResourceHrnFunc(
-            listOf(
-                HrnTemplateInput(
-                    "/organizations/{organizationId}/invites/resend",
-                    resourceNameIndex = 0,
-                    resourceInstanceIndex = 1,
-                    organizationIdIndex = 1
-                ),
-                HrnTemplateInput(
-                    "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites/resend",
-                    resourceNameIndex = 2,
-                    resourceInstanceIndex = 3,
-                    organizationIdIndex = 1,
-                    subOrganizationIdIndex = 3
-                )
-            )
-        )
     ) {
-        post(
-            "/organizations/{organizationId}/invites/resend",
-            "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites/resend"
-        ) {
-            val principal = context.principal<UserPrincipal>()!!
-            val organizationId = call.parameters["organizationId"]!!
-            val subOrganizationId = call.parameters["sub_organization_id"]
-            val request = call.receive<ResendInviteRequest>().validate()
+        val principal = context.principal<UserPrincipal>()!!
+        val organizationId = call.parameters["organizationId"]!!
+        val subOrganizationId = call.parameters["sub_organization_id"]
+        val request = call.receive<ResendInviteRequest>().validate()
 
-            val passcode = passcodeService.resendInvitePasscode(
-                organizationId,
-                subOrganizationId,
-                request.email,
-                principal
-            )
-            call.respondText(
-                text = gson.toJson(passcode),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
-        }
+        val passcode = passcodeService.resendInvitePasscode(
+            organizationId,
+            subOrganizationId,
+            request.email,
+            principal
+        )
+        call.respondText(
+            text = gson.toJson(passcode),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 }

@@ -1,5 +1,6 @@
 package com.hypto.iam.server.security
 
+import com.hypto.iam.server.extensions.RouteOption
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
@@ -171,15 +172,7 @@ fun getResourceHrnFunc(
     }
 }
 
-data class HrnTemplateInput(
-    val pathTemplate: String,
-    val resourceNameIndex: Int,
-    val resourceInstanceIndex: Int,
-    val organizationIdIndex: Int,
-    val subOrganizationIdIndex: Int? = null,
-)
-
-fun getResourceHrnFunc(templateInputs: List<HrnTemplateInput>): (ApplicationRequest) -> ResourceHrn {
+fun getResourceHrnFunc(templateInputs: List<RouteOption>): (ApplicationRequest) -> ResourceHrn {
     return { request ->
         val templateInput = templateInputs.firstOrNull { doesUriMatchTemplate(request.path(), it.pathTemplate) }
             ?: throw IllegalArgumentException("No matching template found for ${request.path()}")

@@ -3,15 +3,13 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
-import com.hypto.iam.server.extensions.delete
-import com.hypto.iam.server.extensions.get
-import com.hypto.iam.server.extensions.patch
-import com.hypto.iam.server.extensions.post
+import com.hypto.iam.server.extensions.RouteOption
+import com.hypto.iam.server.extensions.deleteWithPermission
+import com.hypto.iam.server.extensions.getWithPermission
+import com.hypto.iam.server.extensions.patchWithPermission
+import com.hypto.iam.server.extensions.postWithPermission
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
-import com.hypto.iam.server.security.HrnTemplateInput
-import com.hypto.iam.server.security.getResourceHrnFunc
-import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.CredentialService
 import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
@@ -27,220 +25,186 @@ fun Route.credentialApi() {
     val gson: Gson by inject()
     val credentialService: CredentialService by inject()
 
-    withPermission(
-        "createCredential",
-        getResourceHrnFunc(
-            listOf(
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/users/{userId}/credentials",
-                    resourceNameIndex = 2,
-                    resourceInstanceIndex = 3,
-                    organizationIdIndex = 1
-                ),
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}" +
-                        "/users/{userId}/credentials",
-                    resourceNameIndex = 4,
-                    resourceInstanceIndex = 5,
-                    organizationIdIndex = 1,
-                    subOrganizationIdIndex = 3
-                )
+    postWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/users/{userId}/credentials",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}" +
+                    "/users/{userId}/credentials",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1,
+                subOrganizationIdIndex = 3
             )
-        )
+        ),
+        "createCredential"
     ) {
-        post(
-            "/organizations/{organization_id}/users/{userId}/credentials",
-            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{userId}/credentials"
-        ) {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
-            val subOrganizationId = call.parameters["sub_organization_id"]
-            val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
-            val request = call.receive<CreateCredentialRequest>().validate()
+        val organizationId = call.parameters["organization_id"]
+            ?: throw IllegalArgumentException("organization_id required")
+        val subOrganizationId = call.parameters["sub_organization_id"]
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
+        val request = call.receive<CreateCredentialRequest>().validate()
 
-            val response = credentialService.createCredential(
-                organizationId,
-                subOrganizationId,
-                userId,
-                request
-                    .validUntil
-            )
+        val response = credentialService.createCredential(
+            organizationId,
+            subOrganizationId,
+            userId,
+            request
+                .validUntil
+        )
 
-            call.respondText(
-                text = gson.toJson(response),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.Created
-            )
-        }
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created
+        )
     }
 
-    withPermission(
+    deleteWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/" +
+                    "{userId}/credentials/{id}",
+                resourceNameIndex = 6,
+                resourceInstanceIndex = 7,
+                organizationIdIndex = 1,
+                subOrganizationIdIndex = 3
+            )
+        ),
         "deleteCredential",
-        getResourceHrnFunc(
-            listOf(
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                    resourceNameIndex = 4,
-                    resourceInstanceIndex = 5,
-                    organizationIdIndex = 1
-                ),
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/" +
-                        "{userId}/credentials/{id}",
-                    resourceNameIndex = 6,
-                    resourceInstanceIndex = 7,
-                    organizationIdIndex = 1,
-                    subOrganizationIdIndex = 3
-                )
-            )
-        )
     ) {
-        delete(
-            "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{userId}/credentials/{id}"
-        ) {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
-            val subOrganizationId = call.parameters["sub_organization_id"]
-            val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
-            val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
+        val organizationId = call.parameters["organization_id"]
+            ?: throw IllegalArgumentException("organization_id required")
+        val subOrganizationId = call.parameters["sub_organization_id"]
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
+        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
 
-            val response = credentialService.deleteCredential(organizationId, subOrganizationId, userId, id)
+        val response = credentialService.deleteCredential(organizationId, subOrganizationId, userId, id)
 
-            call.respondText(
-                text = gson.toJson(response),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
-        }
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    withPermission(
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/" +
+                    "{userId}/credentials/{id}",
+                resourceNameIndex = 6,
+                resourceInstanceIndex = 7,
+                organizationIdIndex = 1,
+                subOrganizationIdIndex = 3
+            )
+        ),
         "getCredential",
-        getResourceHrnFunc(
-            listOf(
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                    resourceNameIndex = 4,
-                    resourceInstanceIndex = 5,
-                    organizationIdIndex = 1
-                ),
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/" +
-                        "{userId}/credentials/{id}",
-                    resourceNameIndex = 6,
-                    resourceInstanceIndex = 7,
-                    organizationIdIndex = 1,
-                    subOrganizationIdIndex = 3
-                )
-            )
-        )
     ) {
-        get(
-            "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{userId}/credentials/{id}"
-        ) {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
-            val subOrganizationId = call.parameters["sub_organization_id"]
-            val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
-            val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
+        val organizationId = call.parameters["organization_id"]
+            ?: throw IllegalArgumentException("organization_id required")
+        val subOrganizationId = call.parameters["sub_organization_id"]
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
+        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
 
-            val credential = credentialService.getCredentialWithoutSecret(organizationId, subOrganizationId, userId, id)
+        val credential = credentialService.getCredentialWithoutSecret(organizationId, subOrganizationId, userId, id)
 
-            call.respondText(
-                text = gson.toJson(credential),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
-        }
+        call.respondText(
+            text = gson.toJson(credential),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    withPermission(
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/users/{userId}/credentials",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/" +
+                    "{userId}/credentials",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1,
+                subOrganizationIdIndex = 3
+            )
+        ),
         "listCredential",
-        getResourceHrnFunc(
-            listOf(
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/users/{userId}/credentials",
-                    resourceNameIndex = 2,
-                    resourceInstanceIndex = 3,
-                    organizationIdIndex = 1
-                ),
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}" +
-                        "/users/{userId}/credentials",
-                    resourceNameIndex = 4,
-                    resourceInstanceIndex = 5,
-                    organizationIdIndex = 1,
-                    subOrganizationIdIndex = 3
-                )
-            )
-        )
+
     ) {
-        get(
-            "/organizations/{organization_id}/users/{userId}/credentials",
-            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{userId}/credentials"
-        ) {
-            val organizationId = call.parameters["organization_id"]!!
-            val subOrganizationId = call.parameters["sub_organization_id"]
-            val userId = call.parameters["userId"]!!
+        val organizationId = call.parameters["organization_id"]!!
+        val subOrganizationId = call.parameters["sub_organization_id"]
+        val userId = call.parameters["userId"]!!
 
-            val credentials = credentialService.listCredentials(organizationId, subOrganizationId, userId)
+        val credentials = credentialService.listCredentials(organizationId, subOrganizationId, userId)
 
-            call.respondText(
-                text = gson.toJson(credentials),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
-        }
+        call.respondText(
+            text = gson.toJson(credentials),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 
-    withPermission(
-        "updateCredential",
-        getResourceHrnFunc(
-            listOf(
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                    resourceNameIndex = 4,
-                    resourceInstanceIndex = 5,
-                    organizationIdIndex = 1
-                ),
-                HrnTemplateInput(
-                    "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/" +
-                        "{userId}/credentials/{id}",
-                    resourceNameIndex = 6,
-                    resourceInstanceIndex = 7,
-                    organizationIdIndex = 1,
-                    subOrganizationIdIndex = 3
-                )
+    patchWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/" +
+                    "{userId}/credentials/{id}",
+                resourceNameIndex = 6,
+                resourceInstanceIndex = 7,
+                organizationIdIndex = 1,
+                subOrganizationIdIndex = 3
             )
-        )
+        ),
+        "updateCredential"
     ) {
-        patch(
-            "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/{userId}/credentials/{id}"
-        ) {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
-            val subOrganizationId = call.parameters["sub_organization_id"]
-            val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
-            val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
-            val request = call.receive<UpdateCredentialRequest>().validate()
+        val organizationId = call.parameters["organization_id"]
+            ?: throw IllegalArgumentException("organization_id required")
+        val subOrganizationId = call.parameters["sub_organization_id"]
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
+        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
+        val request = call.receive<UpdateCredentialRequest>().validate()
 
-            val response = credentialService.updateCredentialAndGetWithoutSecret(
-                organizationId,
-                subOrganizationId,
-                userId,
-                id,
-                request.status,
-                request.validUntil
-            )
+        val response = credentialService.updateCredentialAndGetWithoutSecret(
+            organizationId,
+            subOrganizationId,
+            userId,
+            id,
+            request.status,
+            request.validUntil
+        )
 
-            call.respondText(
-                text = gson.toJson(response),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
-        }
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
     }
 }
