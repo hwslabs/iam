@@ -143,7 +143,8 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         companyName: String,
         name: String,
         email: String,
-        issuer: String
+        issuer: String,
+        metadata: Map<String, Any>?
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
         val username = idGenerator.username()
@@ -205,7 +206,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 userAuthRepo.create(
                     hrn = userHrn.toString(),
                     providerName = issuer,
-                    authMetadata = null
+                    authMetadata = metadata?.let { JSONB.jsonb(gson.toJson(it)) }
                 )
 
                 return@wrap Pair(organization, token)
@@ -302,7 +303,8 @@ interface OrganizationsService {
         companyName: String,
         name: String,
         email: String,
-        issuer: String
+        issuer: String,
+        metadata: Map<String, Any>? = null
     ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization
