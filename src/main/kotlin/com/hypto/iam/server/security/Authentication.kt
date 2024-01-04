@@ -83,7 +83,8 @@ data class OAuthUserPrincipal(
     val email: String,
     val name: String,
     val companyName: String,
-    override val issuer: String
+    override val issuer: String,
+    val metadata: Map<String, Any>? = null
 ) : IamPrincipal
 
 class TokenAuthenticationProvider internal constructor(

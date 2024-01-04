@@ -69,4 +69,10 @@ object UserAuthRepo : BaseRepo<UserAuthRecord, UserAuth, UserAuthPk>() {
             .execute()
         return count > 0
     }
+
+    fun updateAuthMetadata(userAuth: UserAuthRecord, authMetadata: Map<String, Any>?): UserAuthRecord {
+        userAuth.authMetadata = JSONB.valueOf(authMetadata.toString())
+        userAuth.update()
+        return userAuth
+    }
 }

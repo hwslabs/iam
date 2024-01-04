@@ -47,12 +47,16 @@ object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
             microsoftUser.mail,
             microsoftUser.displayName,
             "",
-            getProviderName()
+            getProviderName(),
+            mapOf(
+                "id" to microsoftUser.id,
+            )
         )
     }
 }
 
 data class MicrosoftUser(
+    val id: String,
     val mail: String? = null,
     val displayName: String
 )
