@@ -172,10 +172,8 @@ fun getResourceHrnFunc(
     }
 }
 
-fun getResourceHrnFunc(templateInputs: List<RouteOption>): (ApplicationRequest) -> ResourceHrn {
+fun getResourceHrnFunc(templateInput: RouteOption): (ApplicationRequest) -> ResourceHrn {
     return { request ->
-        val templateInput = templateInputs.firstOrNull { doesUriMatchTemplate(request.path(), it.pathTemplate) }
-            ?: throw IllegalArgumentException("No matching template found for ${request.path()}")
         val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
         ResourceHrn(
             pathSegments[templateInput.organizationIdIndex],
@@ -184,27 +182,6 @@ fun getResourceHrnFunc(templateInputs: List<RouteOption>): (ApplicationRequest) 
             pathSegments[templateInput.resourceInstanceIndex]
         )
     }
-}
-
-@Suppress("ReturnCount")
-private fun doesUriMatchTemplate(uri: String, template: String): Boolean {
-    val uriSegments = uri.split(URL_SEPARATOR)
-    val templateSegments = template.split(URL_SEPARATOR)
-
-    if (uriSegments.size != templateSegments.size) {
-        return false
-    }
-
-    for ((uriSegment, templateSegment) in uriSegments.zip(templateSegments)) {
-        if (templateSegment.startsWith('{') && templateSegment.endsWith('}')) {
-            // It's a variable, we can ignore it
-            continue
-        }
-        if (uriSegment != templateSegment) {
-            return false
-        }
-    }
-    return true
 }
 
 fun Route.withPermission(

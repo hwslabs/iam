@@ -57,9 +57,7 @@ fun Route.getWithPermission(
         withPermission(
             action,
             getResourceHrnFunc(
-                listOf(
-                    routeOption
-                )
+                routeOption
             )
         ) {
             get(routeOption.pathTemplate, body)
@@ -76,9 +74,7 @@ fun Route.patchWithPermission(
         withPermission(
             action,
             getResourceHrnFunc(
-                listOf(
-                    routeOption
-                )
+                routeOption
             )
         ) {
             patch(routeOption.pathTemplate, body)
@@ -95,9 +91,7 @@ fun Route.postWithPermission(
         withPermission(
             action,
             getResourceHrnFunc(
-                listOf(
-                    routeOption
-                )
+                routeOption
             )
         ) {
             post(routeOption.pathTemplate, body)
@@ -114,9 +108,7 @@ fun Route.deleteWithPermission(
         withPermission(
             action,
             getResourceHrnFunc(
-                listOf(
-                    routeOption
-                )
+                routeOption
             )
         ) {
             delete(routeOption.pathTemplate, body)
