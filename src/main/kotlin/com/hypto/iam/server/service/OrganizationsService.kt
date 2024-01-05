@@ -19,6 +19,7 @@ import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
@@ -144,7 +145,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         name: String,
         email: String,
         issuer: String,
-        metadata: Map<String, Any>?
+        metadata: AuthMetadata?
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
         val username = idGenerator.username()
@@ -206,7 +207,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 userAuthRepo.create(
                     hrn = userHrn.toString(),
                     providerName = issuer,
-                    authMetadata = metadata?.let { JSONB.jsonb(gson.toJson(it)) }
+                    authMetadata = metadata?.let { AuthMetadata.toJsonB(it) }
                 )
 
                 return@wrap Pair(organization, token)
@@ -304,7 +305,7 @@ interface OrganizationsService {
         name: String,
         email: String,
         issuer: String,
-        metadata: Map<String, Any>? = null
+        metadata: AuthMetadata?
     ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization

@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.ROOT_ORG
 import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.logger
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenCredential
@@ -48,10 +49,15 @@ object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
             microsoftUser.displayName,
             "",
             getProviderName(),
-            mapOf(
-                "id" to microsoftUser.id,
-            )
+            AuthMetadata(id = microsoftUser.id)
         )
+    }
+
+    override fun authenticate(principalMetadata: AuthMetadata?, authMetadata: AuthMetadata) {
+        // Reason to use id instead of email is because email can be changed in Microsoft profile (https://0x8.in/blog/2021/04/30/mip-oid-sub/)
+        if (principalMetadata?.id == null || principalMetadata.id != authMetadata.id) {
+            throw AuthenticationException("User is not authenticated with Microsoft")
+        }
     }
 }
 

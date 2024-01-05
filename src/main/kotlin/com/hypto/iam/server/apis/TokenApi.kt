@@ -1,11 +1,13 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.authProviders.AuthProviderRegistry
 import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.TokenResponse
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
@@ -24,7 +26,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import org.jooq.JSONB
 
 private val tokenService: TokenService = getKoinInstance()
 private val gson: Gson = getKoinInstance()
@@ -64,13 +65,14 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
         ?: throw AuthenticationException("User has not signed up yet")
     val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 
-    if (principal.metadata != null) {
-        if (userAuth.authMetadata == null) {
-            userAuthRepo.updateAuthMetadata(userAuth, principal.metadata)
-        } else if (userAuth.authMetadata != JSONB.valueOf(principal.metadata.toString())) {
-            throw AuthenticationException("User has is not authorized to login")
-        }
+    if (principal.metadata != null && userAuth.authMetadata == null) {
+        userAuthRepo.updateAuthMetadata(userAuth, principal.metadata)
     }
+
+    val authProvider = AuthProviderRegistry.getProvider(principal.issuer) ?: throw AuthenticationException(
+        "Invalid issuer"
+    )
+    authProvider.authenticate(principal.metadata, AuthMetadata.from(userAuth.authMetadata))
 
     if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer) == null) {
         userAuthRepo.create(user.hrn, principal.issuer, null)

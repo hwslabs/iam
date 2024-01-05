@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.ROOT_ORG
 import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.logger
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenCredential
@@ -46,6 +47,10 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
             googleUser.hd ?: "",
             getProviderName()
         )
+    }
+
+    override fun authenticate(principalMetadata: AuthMetadata?, authMetadata: AuthMetadata) {
+        return
     }
 }
 

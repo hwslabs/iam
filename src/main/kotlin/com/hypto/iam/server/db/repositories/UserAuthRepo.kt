@@ -3,6 +3,7 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.Tables.USER_AUTH
 import com.hypto.iam.server.db.tables.pojos.UserAuth
 import com.hypto.iam.server.db.tables.records.UserAuthRecord
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.utils.Hrn
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -70,8 +71,8 @@ object UserAuthRepo : BaseRepo<UserAuthRecord, UserAuth, UserAuthPk>() {
         return count > 0
     }
 
-    fun updateAuthMetadata(userAuth: UserAuthRecord, authMetadata: Map<String, Any>?): UserAuthRecord {
-        userAuth.authMetadata = JSONB.valueOf(authMetadata.toString())
+    fun updateAuthMetadata(userAuth: UserAuthRecord, authMetadata: AuthMetadata): UserAuthRecord {
+        userAuth.authMetadata = AuthMetadata.toJsonB(authMetadata)
         userAuth.update()
         return userAuth
     }
