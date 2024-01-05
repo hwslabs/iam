@@ -179,7 +179,7 @@ fun getResourceHrnFunc(templateInputs: List<RouteOption>): (ApplicationRequest) 
         val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
         ResourceHrn(
             pathSegments[templateInput.organizationIdIndex],
-            templateInput.subOrganizationIdIndex?.let { pathSegments[it] },
+            templateInput.subOrganizationNameIndex?.let { pathSegments[it] },
             IamResources.resourceMap[pathSegments[templateInput.resourceNameIndex]]!!,
             pathSegments[templateInput.resourceInstanceIndex]
         )

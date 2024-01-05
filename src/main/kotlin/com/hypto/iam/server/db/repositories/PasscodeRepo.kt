@@ -29,7 +29,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
         email: String,
         purpose: VerifyEmailRequest.Purpose,
         organizationId: String? = null,
-        subOrganizationId: String? = null,
+        subOrganizationName: String? = null,
     ): Int =
         ctx("passcodes.getValidCount")
             .selectCount()
@@ -47,8 +47,8 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 }
             }
             .apply {
-                subOrganizationId?.let {
-                    and(PASSCODES.SUB_ORGANIZATION_ID.eq(subOrganizationId))
+                subOrganizationName?.let {
+                    and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
                 }
             }
             .fetchOne(0, Int::class.java) ?: 0
@@ -78,7 +78,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
 
     suspend fun getValidPasscodeByEmail(
         organizationId: String,
-        subOrganizationId: String?,
+        subOrganizationName: String?,
         purpose: VerifyEmailRequest.Purpose,
         email: String
     ): PasscodesRecord? {
@@ -91,8 +91,8 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 PASSCODES.ORGANIZATION_ID.eq(organizationId)
             )
             .apply {
-                subOrganizationId?.let {
-                    and(PASSCODES.SUB_ORGANIZATION_ID.eq(subOrganizationId))
+                subOrganizationName?.let {
+                    and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
                 }
             }
             .fetchOne()
@@ -100,7 +100,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
 
     suspend fun listPasscodes(
         organizationId: String,
-        subOrganizationId: String?,
+        subOrganizationName: String?,
         purpose: VerifyEmailRequest.Purpose? = null,
         paginationContext: PaginationContext
     ): List<PasscodesRecord> {
@@ -113,8 +113,8 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 }
             }
             .apply {
-                subOrganizationId?.let {
-                    and(PASSCODES.SUB_ORGANIZATION_ID.eq(subOrganizationId))
+                subOrganizationName?.let {
+                    and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
                 }
             }
             .and(PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()))

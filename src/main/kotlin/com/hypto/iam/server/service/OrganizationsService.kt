@@ -92,7 +92,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 // Create root user for the organization
                 val rootUser = usersService.createUser(
                     organizationId = organizationId,
-                    subOrganizationId = null,
+                    subOrganizationName = null,
                     username = username,
                     preferredUsername = rootUserFromRequest.preferredUsername,
                     name = rootUserFromRequest.name,
@@ -172,7 +172,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 // Create root user for the organization
                 val rootUser = usersService.createUser(
                     organizationId = organizationId,
-                    subOrganizationId = null,
+                    subOrganizationName = null,
                     username = username,
                     preferredUsername = null,
                     name = name,

@@ -67,11 +67,11 @@ fun Route.createUsersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users",
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "createUser",
@@ -79,7 +79,7 @@ fun Route.createUsersApi() {
     ) {
         val principal = context.principal<IamPrincipal>() ?: throw AuthenticationException("User not authenticated")
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val request = call.receive<CreateUserRequest>().validate()
 
         var verified: Boolean = request.verified ?: false
@@ -101,7 +101,7 @@ fun Route.createUsersApi() {
         val username = idGenerator.username()
         val user = usersService.createUser(
             organizationId = organizationId,
-            subOrganizationId = subOrganizationId,
+            subOrganizationName = subOrganizationName,
             username = username,
             preferredUsername = request.preferredUsername,
             name = request.name,
@@ -146,21 +146,21 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
                     "/{id}",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "getUser",
 
     ) {
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["id"]!!
-        val user = usersService.getUser(organizationId, subOrganizationId, userId)
+        val user = usersService.getUser(organizationId, subOrganizationName, userId)
         call.respondText(
             text = gson.toJson(user),
             contentType = ContentType.Application.Json,
@@ -178,17 +178,17 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users",
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "listUser",
     ) {
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val nextToken = call.request.queryParameters["next_token"]
         val pageSize = call.request.queryParameters["page_size"]
         val sortOrder = call.request.queryParameters["sortOrder"]
@@ -199,7 +199,7 @@ fun Route.usersApi() {
             sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
         )
 
-        val response = usersService.listUsers(organizationId, subOrganizationId, paginationContext)
+        val response = usersService.listUsers(organizationId, subOrganizationName, paginationContext)
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
@@ -217,21 +217,21 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
                     "/{user_id}",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "deleteUser",
 
     ) {
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["user_id"]!!
-        val response = usersService.deleteUser(organizationId, subOrganizationId, userId)
+        val response = usersService.deleteUser(organizationId, subOrganizationName, userId)
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
@@ -249,24 +249,24 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
                     "/{user_id}",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "updateUser",
     ) {
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["user_id"]!!
         val request = call.receive<UpdateUserRequest>().validate()
         val user =
             usersService.updateUser(
                 organizationId,
-                subOrganizationId,
+                subOrganizationName,
                 userId,
                 request.name,
                 request.phone ?: "",
@@ -289,24 +289,24 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
                     "/{user_id}/change_password",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "changePassword",
 
     ) {
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["user_id"]!!
         val request = call.receive<ChangeUserPasswordRequest>().validate()
         val response = usersService.changeUserPassword(
             organizationId,
-            subOrganizationId,
+            subOrganizationName,
             userId,
             request.oldPassword,
             request.newPassword
@@ -327,23 +327,23 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
                     "/{user_id}/create_password",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "createPassword",
     ) {
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["user_id"]!!
         val request = call.receive<CreateUserPasswordRequest>().validate()
         val response = usersService.createUserPassword(
             organizationId,
-            subOrganizationId,
+            subOrganizationName,
             userId,
             request.password
         )
@@ -367,24 +367,24 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
                     "/{user_id}/detach_policies",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "detachPolicies"
     ) {
         val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
             ?: throw IllegalArgumentException("Required organization_id to detach policies")
         val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to detach policies")
         val request = call.receive<PolicyAssociationRequest>().validate()
 
         val response = principalPolicyService.detachPoliciesToUser(
-            ResourceHrn(organizationId, subOrganizationId ?: "", IamResources.USER, userId),
+            ResourceHrn(organizationId, subOrganizationName ?: "", IamResources.USER, userId),
             request.policies.map { hrnFactory.getHrn(it) }
         )
         call.respondText(
@@ -404,23 +404,23 @@ fun Route.usersApi() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users" +
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
                     "/{user_id}/attach_policies",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "attachPolicies",
     ) {
         val organizationId = call.parameters["organization_id"]
             ?: throw IllegalArgumentException("Required organization_id to attach policies")
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required id to attach policies")
         val request = call.receive<PolicyAssociationRequest>().validate()
         val response = principalPolicyService.attachPoliciesToUser(
-            ResourceHrn(organizationId, subOrganizationId ?: "", IamResources.USER, userId),
+            ResourceHrn(organizationId, subOrganizationName ?: "", IamResources.USER, userId),
             request.policies.map { hrnFactory.getHrn(it) }
         )
         call.respondText(
@@ -437,14 +437,14 @@ fun Route.resetPasswordApi() {
 
     post(
         "/organizations/{organization_id}/users/resetPassword",
-        "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/users/resetPassword"
+        "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/resetPassword"
     ) {
         val organizationId = call.parameters["organization_id"]
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val passcodeStr = call.principal<ApiPrincipal>()!!.tokenCredential.value!!
         val request = call.receive<ResetPasswordRequest>().validate()
-        val user = usersService.getUserByEmail(organizationId!!, subOrganizationId, request.email)
-        val response = usersService.setUserPassword(organizationId, subOrganizationId, user, request.password)
+        val user = usersService.getUserByEmail(organizationId!!, subOrganizationName, request.email)
+        val response = usersService.setUserPassword(organizationId, subOrganizationName, user, request.password)
 
         call.respondText(
             text = gson.toJson(response),

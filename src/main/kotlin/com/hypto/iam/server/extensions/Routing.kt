@@ -129,5 +129,5 @@ data class RouteOption(
     val resourceNameIndex: Int,
     val resourceInstanceIndex: Int,
     val organizationIdIndex: Int,
-    val subOrganizationIdIndex: Int? = null
+    val subOrganizationNameIndex: Int? = null
 )

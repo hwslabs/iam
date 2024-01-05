@@ -351,11 +351,11 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                     .value(credentials.name).build()
             )
         }
-        if (!context.subOrganizationId.isNullOrEmpty()) {
+        if (!context.subOrganizationName.isNullOrEmpty()) {
             optionalUserAttrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_SUB_ORGANIZATION_ID)
-                    .value(context.subOrganizationId).build()
+                    .value(context.subOrganizationName).build()
             )
         }
 

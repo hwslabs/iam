@@ -30,12 +30,12 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
     suspend fun fetchUsers(
         organizationId: String,
-        subOrganizationId: String?,
+        subOrganizationName: String?,
         paginationContext: PaginationContext
     ): List<UsersRecord> {
         return ctx("users.fetchMany").selectFrom(USERS)
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
-            .apply { subOrganizationId?.let { and(USERS.SUB_ORGANIZATION_ID.eq(it)) } }
+            .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
             .and(USERS.DELETED.eq(false))
             .paginate(USERS.CREATED_AT, paginationContext)
             .fetch()
@@ -45,7 +45,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         preferredUsername: String?,
         email: String?,
         organizationId: String,
-        subOrganizationId: String?,
+        subOrganizationName: String?,
         uniqueCheck: Boolean = false
     ): Boolean {
         val conditions = mutableListOf<Condition>()
@@ -73,7 +73,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         } else {
             // Check all verified and unverified users within the organization
             builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
-                .apply { subOrganizationId?.let { and(USERS.SUB_ORGANIZATION_ID.eq(it)) } }
+                .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
         }
 
         return ctx("users.existsByAliasUsername").fetchExists(builder)
@@ -95,14 +95,14 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         .where(USERS.HRN.eq(hrn))
         .returning().fetchOne()
 
-    suspend fun findByEmail(email: String, organizationId: String? = null, subOrganizationId: String? = null):
+    suspend fun findByEmail(email: String, organizationId: String? = null, subOrganizationName: String? = null):
         UsersRecord? {
         val builder = ctx("users.findByEmail")
             .selectFrom(USERS)
             .where(USERS.EMAIL.equalIgnoreCase(email))
             .and(USERS.DELETED.eq(false))
             .and(USERS.VERIFIED.eq(true))
-            .apply { subOrganizationId?.let { and(USERS.SUB_ORGANIZATION_ID.eq(it)) } }
+            .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
             .apply { organizationId?.let { and(USERS.ORGANIZATION_ID.eq(it)) } }
 //        if (!organizationId.isNullOrEmpty()) {
 //            builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))

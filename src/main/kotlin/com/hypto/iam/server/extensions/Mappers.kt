@@ -182,7 +182,7 @@ fun Action.Companion.from(record: Actions): Action {
 fun SubOrganization.Companion.from(record: SubOrganizationsRecord): SubOrganization {
     return SubOrganization(
         record.name,
-        record.id.toString(),
+        "hrn:${record.organizationId}:${record.name}",
         record.organizationId.toString(),
         record.createdAt.toUTCOffset(),
         record.updatedAt.toUTCOffset(),

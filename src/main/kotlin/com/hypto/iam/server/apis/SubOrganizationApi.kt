@@ -74,8 +74,7 @@ fun Route.subOrganizationsApi() {
                 val request = call.receive<CreateSubOrganizationRequest>().validate()
                 val subOrganization = service.createSubOrganization(
                     organizationId = organizationId,
-                    id = request.id,
-                    name = request.name,
+                    subOrganizationName = request.name,
                     description = request.description
                 )
                 call.respondText(
@@ -87,7 +86,7 @@ fun Route.subOrganizationsApi() {
         }
     }
 
-    route("/organizations/{org_id}/sub_organizations/{id}") {
+    route("/organizations/{org_id}/sub_organizations/{sub_organization_name}") {
         withPermission(
             "deleteSubOrganization",
             getResourceHrnFunc(
@@ -99,8 +98,8 @@ fun Route.subOrganizationsApi() {
         ) {
             delete {
                 val orgId = call.parameters["org_id"]!!
-                val id = call.parameters["id"]!!
-                val response = service.deleteSubOrganization(orgId, id)
+                val subOrgName = call.parameters["sub_organization_name"]!!
+                val response = service.deleteSubOrganization(orgId, subOrgName)
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
@@ -119,9 +118,9 @@ fun Route.subOrganizationsApi() {
             )
         ) {
             get {
-                val id = call.parameters["id"]!!
+                val name = call.parameters["sub_organization_name"]!!
                 val orgId = call.parameters["org_id"]!!
-                val response = service.getSubOrganization(orgId, id)
+                val response = service.getSubOrganization(orgId, name)
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
@@ -140,14 +139,13 @@ fun Route.subOrganizationsApi() {
             )
         ) {
             patch {
-                val id = call.parameters["id"]!!
+                val subOrgName = call.parameters["sub_organization_name"]!!
                 val orgId = call.parameters["org_id"]!!
                 val request = call.receive<UpdateOrganizationRequest>().validate()
                 val response =
                     service.updateSubOrganization(
                         organizationId = orgId,
-                        id = id,
-                        updatedName = request.name,
+                        subOrganizationName = subOrgName,
                         updatedDescription = request.description,
                     )
                 call.respondText(

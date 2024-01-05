@@ -89,7 +89,7 @@ data class AccessTokenCredentials(
 
 data class RequestContext(
     val organizationId: String,
-    val subOrganizationId: String?,
+    val subOrganizationName: String?,
     val requestedPrincipal: String,
     val verified: Boolean
 )

@@ -939,7 +939,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     username = user2.username,
                     bearerToken = rootUserToken,
                     policyName = "test-policy",
-                    subOrgId = null,
+                    subOrgName = null,
                     resourceName = IamResources.USER,
                     actionName = "getUserPolicy",
                     resourceInstance = user2.username
@@ -1001,7 +1001,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     username = user2.username,
                     bearerToken = rootUserToken,
                     policyName = "test-policy",
-                    subOrgId = null,
+                    subOrgName = null,
                     resourceName = IamResources.USER,
                     actionName = "getUserPolicy",
                     resourceInstance = user1.username

@@ -294,7 +294,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             coEvery {
                 passcodeRepo.getValidPasscodeByEmail(
                     organizationId = organizationId,
-                    subOrganizationId = null,
+                    subOrganizationName = null,
                     purpose = VerifyEmailRequest.Purpose.invite,
                     email = testEmail
                 )

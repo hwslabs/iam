@@ -249,7 +249,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         username: String?,
         bearerToken: String,
         policyName: String,
-        subOrgId: String?,
+        subOrgName: String?,
         resourceName: String,
         actionName: String,
         resourceInstance: String,
@@ -257,7 +257,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
     ): Policy {
         val (resourceHrn, actionHrn) = createResourceActionHrn(
             orgId,
-            subOrgId,
+            subOrgName,
             resourceName,
             actionName,
             resourceInstance
@@ -276,10 +276,10 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         val policy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
 
         if (username != null) {
-            val url = if (subOrgId == null) {
+            val url = if (subOrgName == null) {
                 "/organizations/$orgId/users/$username/attach_policies"
             } else {
-                "/organizations/$orgId/sub_organizations/$subOrgId/users/$username/attach_policies"
+                "/organizations/$orgId/sub_organizations/$subOrgName/users/$username/attach_policies"
             }
             client.patch(
                 url
@@ -340,12 +340,12 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
 
     fun ApplicationTestBuilder.createResourceActionHrn(
         orgId: String,
-        subOrgId: String?,
+        subOrgName: String?,
         resourceName: String,
         actionName: String,
         resourceInstance: String? = null
     ): Pair<String, String> {
-        val resourceHrn = ResourceHrn(orgId, subOrgId, resourceName, resourceInstance).toString()
+        val resourceHrn = ResourceHrn(orgId, subOrgName, resourceName, resourceInstance).toString()
         // Today we dont support any sub org specific action, so passing empty string
         val actionHrn = ActionHrn(orgId, "", resourceName, actionName).toStringEscape()
         return Pair(resourceHrn, actionHrn)
@@ -368,7 +368,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
                 resourceRepo.delete(resource)
             }
             subOrganizationRepo.fetchByOrganizationId(orgId).forEach { subOrg ->
-                subOrg?.let { subOrganizationRepo.delete(orgId, it.id) }
+                subOrg?.let { subOrganizationRepo.delete(orgId, it.name) }
             }
             organizationRepo.deleteById(orgId)
         }

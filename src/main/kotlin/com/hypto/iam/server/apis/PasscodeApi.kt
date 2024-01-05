@@ -3,7 +3,6 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.RouteOption
-import com.hypto.iam.server.extensions.get
 import com.hypto.iam.server.extensions.getWithPermission
 import com.hypto.iam.server.extensions.post
 import com.hypto.iam.server.extensions.postWithPermission
@@ -52,7 +51,7 @@ fun Route.createPasscodeApi() {
             lowerCaseEmail,
             request.purpose,
             request.organizationId,
-            request.subOrganizationId,
+            request.subOrganizationName,
             request.metadata,
             principal
         )
@@ -77,17 +76,17 @@ fun Route.passcodeApis() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites",
+                "/organizations/{organizationId}/sub_organizations/{sub_organization_name}/invites",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "listInvites",
     ) {
         val organizationId = call.parameters["organizationId"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
 
         val nextToken = call.request.queryParameters["next_token"]
         val pageSize = call.request.queryParameters["page_size"]
@@ -101,7 +100,7 @@ fun Route.passcodeApis() {
 
         val passcodes = passcodeService.listOrgPasscodes(
             organizationId,
-            subOrganizationId,
+            subOrganizationName,
             VerifyEmailRequest.Purpose.invite,
             context
         )
@@ -121,23 +120,23 @@ fun Route.passcodeApis() {
                 organizationIdIndex = 1
             ),
             RouteOption(
-                "/organizations/{organizationId}/sub_organizations/{sub_organization_id}/invites/resend",
+                "/organizations/{organizationId}/sub_organizations/{sub_organization_name}/invites/resend",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
+                subOrganizationNameIndex = 3
             )
         ),
         "resendInvite",
     ) {
         val principal = context.principal<UserPrincipal>()!!
         val organizationId = call.parameters["organizationId"]!!
-        val subOrganizationId = call.parameters["sub_organization_id"]
+        val subOrganizationName = call.parameters["sub_organization_name"]
         val request = call.receive<ResendInviteRequest>().validate()
 
         val passcode = passcodeService.resendInvitePasscode(
             organizationId,
-            subOrganizationId,
+            subOrganizationName,
             request.email,
             principal
         )

@@ -3,6 +3,7 @@ package com.hypto.iam.server.validators
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.Constants.Companion.MAX_POLICY_ASSOCIATIONS_PER_REQUEST
 import com.hypto.iam.server.Constants.Companion.MAX_POLICY_STATEMENTS
+import com.hypto.iam.server.Constants.Companion.MAX_SUB_ORG_LENGTH
 import com.hypto.iam.server.Constants.Companion.MIN_POLICY_STATEMENTS
 import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.extensions.TimeNature
@@ -136,7 +137,7 @@ fun CreateUserRequest.validate(): CreateUserRequest {
 
 fun CreateSubOrganizationRequest.validate(): CreateSubOrganizationRequest {
     // TODO: Add validation for sub organization
-    return this
+    return createSubOrganizationRequest.validateAndThrowOnFailure(this)
 }
 
 fun UpdateUserRequest.validate(): UpdateUserRequest {
@@ -446,6 +447,17 @@ val updateUserRequestValidation = Validation {
     }
     UpdateUserRequest::phone ifPresent {
         run(phoneNumberCheck)
+    }
+}
+
+val createSubOrganizationRequest = Validation {
+    CreateSubOrganizationRequest::name required {
+        maxLength(MAX_SUB_ORG_LENGTH) hint "Maximum length supported for" +
+            "name is $MAX_SUB_ORG_LENGTH characters"
+        noEndSpaces()
+    }
+    CreateSubOrganizationRequest::description ifPresent {
+        run(descriptionCheck)
     }
 }
 

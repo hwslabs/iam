@@ -16,9 +16,9 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
     private fun getIdFun(dsl: DSLContext): (SubOrganization) -> SubOrganizationPk {
         return fun (subOrganization: SubOrganization): SubOrganizationPk {
             return dsl.newRecord(
-                Tables.SUB_ORGANIZATIONS.ID,
+                Tables.SUB_ORGANIZATIONS.NAME,
                 Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID
-            ).values(subOrganization.id, subOrganization.organizationId)
+            ).values(subOrganization.name, subOrganization.organizationId)
         }
     }
 
@@ -32,15 +32,13 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
 
     suspend fun create(
         organizationId: String,
-        id: String,
-        name: String,
+        subOrganizationName: String,
         description: String?
     ): SubOrganizationsRecord {
         val logTimestamp = LocalDateTime.now()
         val record = SubOrganizationsRecord()
             .setOrganizationId(organizationId)
-            .setId(id)
-            .setName(name)
+            .setName(subOrganizationName)
             .setDescription(description)
             .setCreatedAt(logTimestamp)
             .setUpdatedAt(logTimestamp)
@@ -49,11 +47,16 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
         return record
     }
 
-    suspend fun fetchById(organizationId: String, id: String): SubOrganizationsRecord? {
+    suspend fun fetchById(organizationId: String, subOrgName: String): SubOrganizationsRecord? {
         return SubOrganizationRepo
             .ctx("subOrganization.fetchById")
             .selectFrom(Tables.SUB_ORGANIZATIONS)
-            .where(Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(Tables.SUB_ORGANIZATIONS.ID.eq(id)))
+            .where(
+                Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(
+                    Tables.SUB_ORGANIZATIONS.NAME.eq
+                    (subOrgName)
+                )
+            )
             .fetchOne()
     }
 
@@ -63,7 +66,7 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
             .ctx("subOrganization.fetchPaginated")
             .selectFrom(Tables.SUB_ORGANIZATIONS)
             .where(Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId))
-            .paginate(Tables.SUB_ORGANIZATIONS.ID, context)
+            .paginate(Tables.SUB_ORGANIZATIONS.NAME, context)
             .fetch()
     }
 
@@ -77,18 +80,21 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
 
     suspend fun update(
         organizationId: String,
-        id: String,
-        updatedName: String?,
+        subOrganizationName: String,
         updatedDescription: String?
     ): SubOrganizationsRecord? {
         val logTimestamp = LocalDateTime.now()
         return SubOrganizationRepo
             .ctx("subOrganization.update")
             .update(Tables.SUB_ORGANIZATIONS)
-            .apply { updatedName?.let { set(Tables.SUB_ORGANIZATIONS.NAME, updatedName) } }
             .apply { updatedDescription?.let { set(Tables.SUB_ORGANIZATIONS.DESCRIPTION, updatedDescription) } }
             .set(Tables.SUB_ORGANIZATIONS.UPDATED_AT, logTimestamp)
-            .where(Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(Tables.SUB_ORGANIZATIONS.ID.eq(id)))
+            .where(
+                Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(
+                    Tables.SUB_ORGANIZATIONS.NAME.eq
+                    (subOrganizationName)
+                )
+            )
             .returning()
             .fetchOne()
     }
@@ -97,7 +103,9 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
         SubOrganizationRepo
             .ctx("subOrganization.delete")
             .deleteFrom(Tables.SUB_ORGANIZATIONS)
-            .where(Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(Tables.SUB_ORGANIZATIONS.ID.eq(id)))
+            .where(
+                Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(Tables.SUB_ORGANIZATIONS.NAME.eq(id))
+            )
             .execute()
     }
 }

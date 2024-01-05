@@ -15,19 +15,18 @@ class SubOrganizationServiceImpl : KoinComponent, SubOrganizationService {
 
     override suspend fun createSubOrganization(
         organizationId: String,
-        id: String,
-        name: String,
+        subOrganizationName: String,
         description: String?
     ): SubOrganization {
-        val subOrganizationRecord = subOrganizationRepo.create(organizationId, id, name, description)
+        val subOrganizationRecord = subOrganizationRepo.create(organizationId, subOrganizationName, description)
         return SubOrganization.from(subOrganizationRecord)
     }
 
-    override suspend fun getSubOrganization(organizationId: String, id: String): SubOrganization {
+    override suspend fun getSubOrganization(organizationId: String, subOrganizationName: String): SubOrganization {
         val subOrganizationRecord =
-            subOrganizationRepo.fetchById(organizationId, id) ?: throw EntityNotFoundException(
+            subOrganizationRepo.fetchById(organizationId, subOrganizationName) ?: throw EntityNotFoundException(
                 "SubOrganization with " +
-                    "id [$id] not found"
+                    "name [$subOrganizationName] not found"
             )
         return SubOrganization.from(subOrganizationRecord)
     }
@@ -37,7 +36,7 @@ class SubOrganizationServiceImpl : KoinComponent, SubOrganizationService {
         context: PaginationContext
     ): SubOrganizationsPaginatedResponse {
         val subOrganizationsRecord = subOrganizationRepo.fetchSubOrganizationsPaginated(organizationId, context)
-        val newContext = PaginationContext.from(subOrganizationsRecord.lastOrNull()?.id, context)
+        val newContext = PaginationContext.from(subOrganizationsRecord.lastOrNull()?.name, context)
         return SubOrganizationsPaginatedResponse(
             subOrganizationsRecord.map { SubOrganization.from(it) },
             newContext.nextToken,
@@ -47,18 +46,20 @@ class SubOrganizationServiceImpl : KoinComponent, SubOrganizationService {
 
     override suspend fun updateSubOrganization(
         organizationId: String,
-        id: String,
-        updatedName: String?,
+        subOrganizationName: String,
         updatedDescription: String?
     ): SubOrganization {
         val subOrganizationRecord = subOrganizationRepo
-            .update(organizationId, id, updatedName, updatedDescription)
-            ?: throw EntityNotFoundException("SubOrganization with id [$id] not found")
+            .update(organizationId, subOrganizationName, updatedDescription)
+            ?: throw EntityNotFoundException("SubOrganization with id [$subOrganizationName] not found")
         return SubOrganization.from(subOrganizationRecord)
     }
 
-    override suspend fun deleteSubOrganization(organizationId: String, id: String): BaseSuccessResponse {
-        subOrganizationRepo.delete(organizationId, id)
+    override suspend fun deleteSubOrganization(
+        organizationId: String,
+        subOrganizationName: String
+    ): BaseSuccessResponse {
+        subOrganizationRepo.delete(organizationId, subOrganizationName)
         return BaseSuccessResponse(true)
     }
 }
@@ -66,20 +67,18 @@ class SubOrganizationServiceImpl : KoinComponent, SubOrganizationService {
 interface SubOrganizationService {
     suspend fun createSubOrganization(
         organizationId: String,
-        id: String,
-        name: String,
+        subOrganizationName: String,
         description: String?
     ): SubOrganization
-    suspend fun getSubOrganization(organizationId: String, id: String): SubOrganization
+    suspend fun getSubOrganization(organizationId: String, subOrganizationName: String): SubOrganization
     suspend fun listSubOrganizations(
         organizationId: String,
         context: PaginationContext
     ): SubOrganizationsPaginatedResponse
     suspend fun updateSubOrganization(
         organizationId: String,
-        id: String,
-        updatedName: String?,
+        subOrganizationName: String,
         updatedDescription: String?
     ): SubOrganization
-    suspend fun deleteSubOrganization(organizationId: String, id: String): BaseSuccessResponse
+    suspend fun deleteSubOrganization(organizationId: String, subOrganizationName: String): BaseSuccessResponse
 }

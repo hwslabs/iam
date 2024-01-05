@@ -44,14 +44,12 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val subOrgName = "test-sub-org" + IdGenerator.randomId()
-            val subOrgId = IdGenerator.randomId()
             val (organizationResponse, _) = createOrganization()
             val orgId = organizationResponse.organization.id
             val token = organizationResponse.rootUserToken
 
             val requestBody = CreateSubOrganizationRequest(
                 subOrgName,
-                subOrgId
             )
             val response = client.post("/organizations/$orgId/sub_organizations") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -64,7 +62,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-            assertEquals(subOrgId, responseBody.subOrganization.id, "Sub organization id should match")
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
                 orgId,
@@ -84,14 +81,11 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val subOrgName = "test-sub-org" + IdGenerator.randomId()
-            val subOrgId = IdGenerator.randomId()
             val (organizationResponse, _) = createOrganization()
             val orgId = organizationResponse.organization.id
-            val token = organizationResponse.rootUserToken
 
             val requestBody = CreateSubOrganizationRequest(
                 subOrgName,
-                subOrgId
             )
             val response = client.post("/organizations/$orgId/sub_organizations") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -113,7 +107,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val subOrgName = "test-sub-org" + IdGenerator.randomId()
-            val subOrgId = IdGenerator.randomId()
             val (organizationResponse, _) = createOrganization()
             val orgId = organizationResponse.organization.id
             val token = organizationResponse.rootUserToken
@@ -121,7 +114,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateSubOrganizationRequest(
                 subOrgName,
-                subOrgId,
                 subOrgDescription
             )
             val response = client.post("/organizations/$orgId/sub_organizations") {
@@ -135,7 +127,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-            assertEquals(subOrgId, responseBody.subOrganization.id, "Sub organization id should match")
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
                 orgId,
@@ -145,14 +136,13 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             )
 
             // Get sub organization
-            val getSubOrganizationResponse = client.get("/organizations/$orgId/sub_organizations/$subOrgId") {
+            val getSubOrganizationResponse = client.get("/organizations/$orgId/sub_organizations/$subOrgName") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header("Authorization", "Bearer $token")
             }
             assertEquals(HttpStatusCode.OK, getSubOrganizationResponse.status)
             val subOrganization =
                 gson.fromJson(getSubOrganizationResponse.bodyAsText(), SubOrganization::class.java)
-            assertEquals(subOrgId, subOrganization.id, "Sub organization id should match")
             assertEquals(subOrgName, subOrganization.name, "Sub organization name should match")
             assertEquals(subOrgDescription, subOrganization.description, "Sub organization description should match")
             deleteOrganization(orgId)
@@ -166,7 +156,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val subOrgName = "test-sub-org" + IdGenerator.randomId()
-            val subOrgId = IdGenerator.randomId()
             val (organizationResponse, _) = createOrganization()
             val orgId = organizationResponse.organization.id
             val token = organizationResponse.rootUserToken
@@ -183,13 +172,12 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
     }
 
     @Test
-    fun `update sub organization name success`() {
+    fun `update sub organization desc success`() {
         testApplication {
             environment {
                 config = ApplicationConfig("application-custom.conf")
             }
             val subOrgName = "test-sub-org" + IdGenerator.randomId()
-            val subOrgId = IdGenerator.randomId()
             val (organizationResponse, _) = createOrganization()
             val orgId = organizationResponse.organization.id
             val token = organizationResponse.rootUserToken
@@ -197,7 +185,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateSubOrganizationRequest(
                 subOrgName,
-                subOrgId,
                 subOrgDescription
             )
             val response = client.post("/organizations/$orgId/sub_organizations") {
@@ -211,7 +198,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-            assertEquals(subOrgId, responseBody.subOrganization.id, "Sub organization id should match")
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
                 orgId,
@@ -222,24 +208,19 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Update sub organization name
             val updateSubOrganizationNameRequest = UpdateSubOrganizationRequest(
-                "updated-sub-org-name",
+                "updated-sub-org-desc",
             )
-            val updateSubOrganizationNameResponse = client.patch("/organizations/$orgId/sub_organizations/$subOrgId") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-                setBody(gson.toJson(updateSubOrganizationNameRequest))
-            }
+            val updateSubOrganizationNameResponse = client
+                .patch("/organizations/$orgId/sub_organizations/$subOrgName") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                    setBody(gson.toJson(updateSubOrganizationNameRequest))
+                }
             assertEquals(HttpStatusCode.OK, updateSubOrganizationNameResponse.status)
             val updatedSubOrganization =
                 gson.fromJson(updateSubOrganizationNameResponse.bodyAsText(), SubOrganization::class.java)
-            assertEquals(subOrgId, updatedSubOrganization.id, "Sub organization id should match")
             assertEquals(
-                "updated-sub-org-name",
-                updatedSubOrganization.name,
-                "Sub organization name should match"
-            )
-            assertEquals(
-                subOrgDescription,
+                "updated-sub-org-desc",
                 updatedSubOrganization.description,
                 "Sub organization description should match"
             )
@@ -254,7 +235,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val subOrgName = "test-sub-org" + IdGenerator.randomId()
-            val subOrgId = IdGenerator.randomId()
             val (organizationResponse, _) = createOrganization()
             val orgId = organizationResponse.organization.id
             val token = organizationResponse.rootUserToken
@@ -262,7 +242,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val requestBody = CreateSubOrganizationRequest(
                 subOrgName,
-                subOrgId,
                 subOrgDescription
             )
             val response = client.post("/organizations/$orgId/sub_organizations") {
@@ -276,7 +255,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-            assertEquals(subOrgId, responseBody.subOrganization.id, "Sub organization id should match")
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
                 orgId,
@@ -286,14 +264,14 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             )
 
             // Delete sub organization
-            val deleteSubOrganizationResponse = client.delete("/organizations/$orgId/sub_organizations/$subOrgId") {
+            val deleteSubOrganizationResponse = client.delete("/organizations/$orgId/sub_organizations/$subOrgName") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header("Authorization", "Bearer $token")
             }
             assertEquals(HttpStatusCode.OK, deleteSubOrganizationResponse.status)
 
             // Get sub organization
-            val getSubOrganizationResponse = client.get("/organizations/$orgId/sub_organizations/$subOrgId") {
+            val getSubOrganizationResponse = client.get("/organizations/$orgId/sub_organizations/$subOrgName") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 header("Authorization", "Bearer $token")
             }
@@ -316,11 +294,9 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val originalSubOrgList = mutableListOf<SubOrganization>()
             repeat(subOrgCount) {
                 val subOrgName = "test-sub-org" + IdGenerator.randomId() + "$it"
-                val subOrgId = IdGenerator.randomId() + "$it"
                 val subOrgDescription = "test-sub-org-desc$it"
                 val requestBody = CreateSubOrganizationRequest(
                     subOrgName,
-                    subOrgId,
                     subOrgDescription
                 )
                 val response = client.post("/organizations/$orgId/sub_organizations") {
@@ -334,7 +310,6 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
-                assertEquals(subOrgId, responseBody.subOrganization.id, "Sub organization id should match")
                 assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
                 assertEquals(
                     orgId,

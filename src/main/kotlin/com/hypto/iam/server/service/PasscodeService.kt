@@ -268,13 +268,13 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
 
     override suspend fun resendInvitePasscode(
         orgId: String,
-        subOrgId: String?,
+        subOrgName: String?,
         email: String,
         principal: UserPrincipal
     ): Boolean {
         val record = passcodeRepo.getValidPasscodeByEmail(
             organizationId = orgId,
-            subOrganizationId = subOrgId,
+            subOrganizationName = subOrgName,
             purpose = Purpose.invite,
             email = email
         ) ?: throw EntityNotFoundException("No invite email found for $email")
@@ -287,7 +287,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val organization =
             organizationRepo.findById(orgId) ?: throw EntityNotFoundException("Organization id - $orgId not found")
         val nameOfUser = invitingUser.name ?: invitingUser.preferredUsername ?: invitingUser.email
-        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name, subOrgId)
+        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name, subOrgName)
         val emailRequest = SendTemplatedEmailRequest.builder()
             .source(appConfig.app.senderEmailAddress)
             .template(appConfig.app.inviteUserEmailTemplate)

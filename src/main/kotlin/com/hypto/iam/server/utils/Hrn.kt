@@ -30,7 +30,7 @@ abstract class Hrn {
 class ResourceHrn : Hrn {
     override val organization: String
     override val resource: String?
-    val subOrganization: String?
+    private val subOrganization: String?
     val resourceInstance: String?
 
     companion object {
