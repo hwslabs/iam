@@ -54,7 +54,8 @@ object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
     }
 
     override fun authenticate(principalMetadata: AuthMetadata?, authMetadata: AuthMetadata) {
-        // Reason to use id instead of email is because email can be changed in Microsoft profile (https://0x8.in/blog/2021/04/30/mip-oid-sub/)
+        // Reason to use id instead of email is because email can be changed in Microsoft profile
+        // Blog: https://0x8.in/blog/2021/04/30/mip-oid-sub/
         if (principalMetadata?.id == null || principalMetadata.id != authMetadata.id) {
             throw AuthenticationException("User is not authenticated with Microsoft")
         }

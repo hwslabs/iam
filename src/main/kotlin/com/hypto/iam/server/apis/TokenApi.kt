@@ -61,9 +61,12 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
     val principal = context.principal<OAuthUserPrincipal>()!!
     val responseContentType = context.request.accept()
     val user = UserRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
+
+    if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer) == null) {
+        userAuthRepo.create(user.hrn, principal.issuer, null)
+    }
     val userAuth = UserAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer)
         ?: throw AuthenticationException("User has not signed up yet")
-    val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 
     if (principal.metadata != null && userAuth.authMetadata == null) {
         userAuthRepo.updateAuthMetadata(userAuth, principal.metadata)
@@ -74,9 +77,7 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
     )
     authProvider.authenticate(principal.metadata, AuthMetadata.from(userAuth.authMetadata))
 
-    if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer) == null) {
-        userAuthRepo.create(user.hrn, principal.issuer, null)
-    }
+    val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 
     when (responseContentType) {
         ContentType.Text.Plain.toString() -> call.respondText(
