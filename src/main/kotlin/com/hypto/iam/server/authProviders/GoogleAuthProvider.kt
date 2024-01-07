@@ -49,7 +49,7 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
         )
     }
 
-    override fun authenticate(principalMetadata: AuthMetadata?, authMetadata: AuthMetadata) {
+    override fun authenticate(principalMetadata: AuthMetadata?, authMetadata: AuthMetadata?) {
         return
     }
 }

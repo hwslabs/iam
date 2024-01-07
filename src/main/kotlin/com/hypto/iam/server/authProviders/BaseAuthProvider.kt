@@ -7,5 +7,5 @@ import com.hypto.iam.server.security.TokenCredential
 interface BaseAuthProvider {
     fun getProviderName(): String
     fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal
-    fun authenticate(principalMetadata: AuthMetadata? = null, authMetadata: AuthMetadata)
+    fun authenticate(principalMetadata: AuthMetadata? = null, authMetadata: AuthMetadata? = null)
 }

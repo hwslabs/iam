@@ -75,7 +75,9 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
     val authProvider = AuthProviderRegistry.getProvider(principal.issuer) ?: throw AuthenticationException(
         "Invalid issuer"
     )
-    authProvider.authenticate(principal.metadata, AuthMetadata.from(userAuth.authMetadata))
+    userAuth.authMetadata?.let {
+        authProvider.authenticate(principal.metadata, AuthMetadata.from(it))
+    }
 
     val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 
