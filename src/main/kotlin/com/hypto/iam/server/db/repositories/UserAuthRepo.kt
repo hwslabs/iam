@@ -71,6 +71,19 @@ object UserAuthRepo : BaseRepo<UserAuthRecord, UserAuth, UserAuthPk>() {
         return count > 0
     }
 
+    suspend fun alreadyExists(metadata: AuthMetadata): Boolean {
+        val count = ctx("userAuth.alreadyExists")
+            .selectCount()
+            .from(USER_AUTH)
+            .where(USER_AUTH.AUTH_METADATA.eq(AuthMetadata.toJsonB(metadata)))
+            .fetchOne(0, Int::class.java)
+        return if (count != null) {
+            count > 0
+        } else {
+            false
+        }
+    }
+
     fun updateAuthMetadata(userAuth: UserAuthRecord, authMetadata: AuthMetadata): UserAuthRecord {
         userAuth.authMetadata = AuthMetadata.toJsonB(authMetadata)
         userAuth.update()

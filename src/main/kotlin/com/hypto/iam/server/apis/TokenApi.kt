@@ -63,7 +63,10 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
     val user = UserRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
 
     if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer) == null) {
-        userAuthRepo.create(user.hrn, principal.issuer, null)
+        val alreadyExists = principal.metadata?.let { userAuthRepo.alreadyExists(it) }
+        if (alreadyExists == true) throw AuthenticationException("Already signed up with another account")
+        val metadata = principal.metadata?.let { AuthMetadata.toJsonB(it) }
+        userAuthRepo.create(user.hrn, principal.issuer, metadata)
     }
     val userAuth = UserAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer)
         ?: throw AuthenticationException("User has not signed up yet")
