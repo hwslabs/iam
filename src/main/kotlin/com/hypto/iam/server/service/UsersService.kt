@@ -159,12 +159,15 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ) {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id")
+        val encodedEmail = email?.let {
+            getEmail(organizationId, subOrganizationName, email)
+        } ?: throw BadRequestException("Email is required")
 
         val passwordCredentials = PasswordCredentials(
             username = username,
             preferredUsername = preferredUsername,
             name = name,
-            email = email ?: throw BadRequestException("Email is required"),
+            email = encodedEmail,
             phoneNumber = phoneNumber ?: "",
             password = password ?: throw BadRequestException("Password is required"),
         )
@@ -210,6 +213,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userRecord = userRepo.findByHrn(userHrn.toString())
             ?: throw EntityNotFoundException("Unable to find user")
         return getUser(userHrn, userRecord)
+    }
+
+    override suspend fun getUser(userHrn: ResourceHrn): User {
+        val userName = userHrn.resourceInstance ?: throw BadRequestException("Invalid user HRN")
+        return getUser(userHrn.organization, userHrn.subOrganization, userName)
     }
 
     override suspend fun getUserByEmail(
@@ -322,6 +330,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             providerName = TokenServiceImpl.ISSUER,
             authMetadata = null
         )
+        userRepo.updateLoginAccessStatus(user.hrn, true)
         return BaseSuccessResponse(true)
     }
 
@@ -369,7 +378,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         name: String?,
         phone: String?,
         status: UpdateUserRequest.Status?,
-        verified: Boolean?
+        verified: Boolean?,
     ): User {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
@@ -517,6 +526,7 @@ interface UsersService {
     ): User
 
     suspend fun getUser(organizationId: String, subOrganizationName: String?, userName: String): User
+    suspend fun getUser(userHrn: ResourceHrn): User
     suspend fun listUsers(organizationId: String, subOrganizationName: String?, paginationContext: PaginationContext):
         UserPaginatedResponse
 

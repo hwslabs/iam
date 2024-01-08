@@ -113,12 +113,13 @@ fun Route.createUsersApi() {
             loginAccess = loginAccess,
             policies = policies
         )
-        userAuthRepo.create(
-            hrn = user.hrn,
-            providerName = TokenServiceImpl.ISSUER,
-            authMetadata = null
-        )
-
+        if (loginAccess) {
+            userAuthRepo.create(
+                hrn = user.hrn,
+                providerName = TokenServiceImpl.ISSUER,
+                authMetadata = null
+            )
+        }
         val token = tokenService.generateJwtToken(ResourceHrn(user.hrn))
         call.respondText(
             text = gson.toJson(CreateUserResponse(user, token.token)),
@@ -318,43 +319,6 @@ fun Route.usersApi() {
         )
     }
 
-    postWithPermission(
-        listOf(
-            RouteOption(
-                "/organizations/{organization_id}/users/{user_id}/create_password",
-                resourceNameIndex = 2,
-                resourceInstanceIndex = 3,
-                organizationIdIndex = 1
-            ),
-            RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
-                    "/{user_id}/create_password",
-                resourceNameIndex = 4,
-                resourceInstanceIndex = 5,
-                organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
-        ),
-        "createPassword",
-    ) {
-        val organizationId = call.parameters["organization_id"]!!
-        val subOrganizationName = call.parameters["sub_organization_name"]
-        val userId = call.parameters["user_id"]!!
-        val request = call.receive<CreateUserPasswordRequest>().validate()
-        val response = usersService.createUserPassword(
-            organizationId,
-            subOrganizationName,
-            userId,
-            request.password
-        )
-
-        call.respondText(
-            text = gson.toJson(response),
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
-        )
-    }
-
     // **** User policy management apis ****//
 
     // Detach policy
@@ -445,6 +409,65 @@ fun Route.resetPasswordApi() {
         val request = call.receive<ResetPasswordRequest>().validate()
         val user = usersService.getUserByEmail(organizationId!!, subOrganizationName, request.email)
         val response = usersService.setUserPassword(organizationId, subOrganizationName, user, request.password)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK
+        )
+    }
+}
+
+fun Route.createUserPasswordApi() {
+    val usersService: UsersService by inject()
+    val passcodeRepo: PasscodeRepo by inject()
+    val gson: Gson by inject()
+
+    postWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/users/{user_id}/create_password",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
+                    "/{user_id}/create_password",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1,
+                subOrganizationNameIndex = 3
+            )
+        ),
+        "createPassword",
+    ) {
+        val organizationId = call.parameters["organization_id"]!!
+        val subOrganizationName = call.parameters["sub_organization_name"]
+        val userId = call.parameters["user_id"]!!
+        val principal = call.principal<UserPrincipal>()
+        require(principal?.hrn?.organization == organizationId) {
+            "Organization id in path and token are not matching. Invalid token"
+        }
+        val request = call.receive<CreateUserPasswordRequest>().validate()
+        val inviteeHrn = ResourceHrn(organizationId, subOrganizationName ?: "", IamResources.USER, userId)
+        val inviteeUser = usersService.getUser(inviteeHrn)
+
+        if (principal?.tokenCredential?.type == TokenType.PASSCODE) {
+            val passcode = passcodeRepo.getValidPasscodeById(
+                principal.tokenCredential.value!!,
+                VerifyEmailRequest.Purpose.invite,
+                organizationId = organizationId
+            ) ?: throw AuthenticationException("Invalid passcode")
+            require(passcode.email == inviteeUser.email) { "Email in passcode does not match email in request" }
+        }
+
+        val response = usersService.createUserPassword(
+            organizationId,
+            subOrganizationName,
+            userId,
+            request.password
+        )
 
         call.respondText(
             text = gson.toJson(response),

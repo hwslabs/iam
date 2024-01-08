@@ -14,6 +14,7 @@ import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
+import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.PolicyAssociationRequest
@@ -1088,6 +1089,149 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
                     response.contentType()
                 )
+                deleteOrganization(organization.id)
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Create password for sub org user API tests")
+    inner class CreatePasswordForSubOrganizationUserTest {
+        @Test
+        fun `create password for sub org user - success`() {
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
+                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val (subOrgUser, _) = createSubOrganizationUser(
+                    organization.id,
+                    subOrganizationResponse.subOrganization.name,
+                    rootUserToken,
+                    cognitoClient,
+                    false
+                )
+
+                createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = subOrgUser.username,
+                    bearerToken = rootUserToken,
+                    policyName = "user1-policy",
+                    subOrgName = subOrganizationResponse.subOrganization.name,
+                    resourceName = IamResources.USER,
+                    actionName = "createPassword",
+                    resourceInstance = subOrgUser.username,
+                )
+
+                // Create password for sub org user
+                val response = client.post(
+                    "/organizations/${organization .id}" +
+                        "/sub_organizations/${subOrganizationResponse.subOrganization .name}" +
+                        "/users/${subOrgUser.username}/create_password"
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
+                }.apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        contentType()
+                    )
+                }
+
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType()
+                )
+
+                // Check if password is created by logging in
+                coEvery {
+                    cognitoClient.adminGetUser(any<AdminGetUserRequest>())
+                } returns AdminGetUserResponse.builder()
+                    .enabled(true)
+                    .username(subOrgUser.username)
+                    .userAttributes(
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                            .value(subOrgUser.email).build(),
+                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                            .value(subOrgUser.username).build()
+                    )
+                    .userCreateDate(Instant.now())
+                    .build()
+
+                val authString = "${subOrgUser.email}:testPassword@Hash1"
+                val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
+
+                val tokenResponse = client.post(
+                    "/organizations/${organization.id}" +
+                        "/sub_organizations/${subOrganizationResponse.subOrganization.name}/token"
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, authHeader)
+                }
+                assertEquals(HttpStatusCode.OK, tokenResponse.status)
+                assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    tokenResponse.contentType()
+                )
+                assertEquals(
+                    organization.id,
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                )
+                deleteOrganization(organization.id)
+            }
+        }
+
+        @Test
+        fun `create password for sub org user - failure`() {
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (organizationResponse, _) = createOrganization()
+                val organization = organizationResponse.organization
+                val rootUserToken = organizationResponse.rootUserToken
+                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val (subOrgUser, _) = createSubOrganizationUser(
+                    organization.id,
+                    subOrganizationResponse.subOrganization.name,
+                    rootUserToken,
+                    cognitoClient,
+                    false
+                )
+
+                createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = subOrgUser.username,
+                    bearerToken = rootUserToken,
+                    policyName = "user1-policy",
+                    subOrgName = subOrganizationResponse.subOrganization.name,
+                    resourceName = IamResources.USER,
+                    actionName = "createPassword",
+                    resourceInstance = subOrgUser.username,
+                )
+
+                // Create password for sub org user
+                val response = client.post(
+                    "/organizations/${organization .id}" +
+                        "/sub_organizations/dummySubOrg" +
+                        "/users/${subOrgUser.username}/create_password"
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
+                }.apply {
+                    assertEquals(HttpStatusCode.NotFound, status)
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        contentType()
+                    )
+                }
                 deleteOrganization(organization.id)
             }
         }

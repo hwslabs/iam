@@ -10,6 +10,7 @@ import com.hypto.iam.server.extensions.TimeNature
 import com.hypto.iam.server.extensions.dateTime
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.noEndSpaces
+import com.hypto.iam.server.extensions.oneOf
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
@@ -165,6 +166,12 @@ fun ResetPasswordRequest.validate(): ResetPasswordRequest {
 
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     verifyEmailRequestValidation.validateAndThrowOnFailure(this)
+    Validation {
+        (this::oneOf)(
+            this@validate,
+            listOf(VerifyEmailRequest::email, VerifyEmailRequest::userHrn)
+        )
+    }.validateAndThrowOnFailure(this)
 
     if (purpose == VerifyEmailRequest.Purpose.signup) {
         metadata?.let { validateSignupMetadata(metadata) }
@@ -482,6 +489,9 @@ val verifyEmailRequestValidation = Validation {
     }
     VerifyEmailRequest::organizationId ifPresent {
         run(organizationIdCheck)
+    }
+    VerifyEmailRequest::userHrn ifPresent {
+        run(hrnCheck)
     }
     VerifyEmailRequest::purpose required {}
 }

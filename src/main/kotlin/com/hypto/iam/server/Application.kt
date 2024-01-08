@@ -6,6 +6,7 @@ import com.hypto.iam.server.apis.actionApi
 import com.hypto.iam.server.apis.authProviderApi
 import com.hypto.iam.server.apis.createOrganizationApi
 import com.hypto.iam.server.apis.createPasscodeApi
+import com.hypto.iam.server.apis.createUserPasswordApi
 import com.hypto.iam.server.apis.createUsersApi
 import com.hypto.iam.server.apis.credentialApi
 import com.hypto.iam.server.apis.deleteOrganizationApi
@@ -137,6 +138,7 @@ fun Application.handleRequest() {
 
         authenticate("bearer-auth", "invite-passcode-auth") {
             createUsersApi()
+            createUserPasswordApi()
         }
 
         authenticate("bearer-auth") {
