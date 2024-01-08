@@ -27,11 +27,12 @@ fun Route.resourceApi() {
 
     withPermission(
         "createResource",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/resources") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val request = call.receive<CreateResourceRequest>().validate()
 
             val resource =
@@ -39,45 +40,48 @@ fun Route.resourceApi() {
             call.respondText(
                 text = gson.toJson(resource),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.Created
+                status = HttpStatusCode.Created,
             )
         }
     }
 
     withPermission(
         "listResource",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("Required organization_id to get user")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("Required organization_id to get user")
             val nextToken = call.request.queryParameters["next_token"]
             val pageSize = call.request.queryParameters["page_size"]
             val sortOrder = call.request.queryParameters["sort_order"]
 
-            val context = PaginationContext.from(
-                nextToken,
-                pageSize?.toInt(),
-                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-            )
+            val context =
+                PaginationContext.from(
+                    nextToken,
+                    pageSize?.toInt(),
+                    sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+                )
 
             val response = resourceService.listResources(organizationId, context)
 
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "deletePermission",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         delete("/organizations/{organization_id}/resources/{name}") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to delete a resource")
 
             val response = resourceService.deleteResource(organizationId, name)
@@ -85,18 +89,19 @@ fun Route.resourceApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "getResource",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources/{name}") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to get the resource")
 
             val response = resourceService.getResource(organizationId, name)
@@ -104,18 +109,19 @@ fun Route.resourceApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "updateResource",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         patch("/organizations/{organization_id}/resources/{name}") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to update a resource")
             val request = call.receive<UpdateResourceRequest>().validate()
 
@@ -124,7 +130,7 @@ fun Route.resourceApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }

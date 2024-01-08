@@ -24,35 +24,37 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.response.respondText
-import java.security.SignatureException
 import mu.KotlinLogging
 import org.jooq.exception.DataAccessException
+import java.security.SignatureException
 
 val logger = KotlinLogging.logger { }
+
 inline fun <reified T : Throwable> StatusPagesConfig.sendStatus(
     statusCode: HttpStatusCode,
     shouldThrowException: Boolean = false,
-    message: String? = null
+    message: String? = null,
 ) {
     exception<T> { call, cause ->
-        val response = ErrorResponse(
-            message
-                ?: if (
-                    statusCode.value < HttpStatusCode.InternalServerError.value &&
-                    cause.message != null
-                ) {
-                    cause.message!!
-                } else {
-                    "Unknown Error Occurred"
-                }
-        )
+        val response =
+            ErrorResponse(
+                message
+                    ?: if (
+                        statusCode.value < HttpStatusCode.InternalServerError.value &&
+                        cause.message != null
+                    ) {
+                        cause.message!!
+                    } else {
+                        "Unknown Error Occurred"
+                    },
+            )
         if (statusCode.value == HttpStatusCode.InternalServerError.value) {
             logger.error(cause) { "**** Attention: Internal Server Error ****" }
         }
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = statusCode
+            status = statusCode,
         )
         shouldThrowException && throw cause
     }

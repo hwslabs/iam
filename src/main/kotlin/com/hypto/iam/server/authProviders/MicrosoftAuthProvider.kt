@@ -23,11 +23,12 @@ object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
     override fun getProviderName() = "microsoft"
 
     override fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal {
-        val requestBuilder = Request.Builder()
-            .url(PROFILE_URL)
-            .method("GET", null)
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Authorization", "Bearer ${tokenCredential.value}")
+        val requestBuilder =
+            Request.Builder()
+                .url(PROFILE_URL)
+                .method("GET", null)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Bearer ${tokenCredential.value}")
         val request = requestBuilder.build()
         val response = httpClient.newCall(request).execute()
         if (!response.isSuccessful) {
@@ -47,12 +48,12 @@ object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
             microsoftUser.mail,
             microsoftUser.displayName,
             "",
-            getProviderName()
+            getProviderName(),
         )
     }
 }
 
 data class MicrosoftUser(
     val mail: String? = null,
-    val displayName: String
+    val displayName: String,
 )

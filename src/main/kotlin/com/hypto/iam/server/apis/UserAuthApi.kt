@@ -18,7 +18,7 @@ fun Route.userAuthApi() {
 
     withPermission(
         "getUserAuth",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/users/{id}/auth_methods") {
             val organizationId = call.parameters["organization_id"]!!
@@ -27,7 +27,7 @@ fun Route.userAuthApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }

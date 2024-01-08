@@ -2,16 +2,16 @@ package com.hypto.iam.server.utils
 
 import com.google.gson.Gson
 import com.hypto.iam.server.service.MasterKeyCache
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 data class EncryptedData(
     val data: String,
-    val keyId: String
+    val keyId: String,
 )
 
 object EncryptUtil : KoinComponent {
@@ -30,8 +30,8 @@ object EncryptUtil : KoinComponent {
         return gson.toJson(
             EncryptedData(
                 data = Base64.getEncoder().encodeToString(cipherText),
-                keyId = keyId
-            )
+                keyId = keyId,
+            ),
         )
     }
 

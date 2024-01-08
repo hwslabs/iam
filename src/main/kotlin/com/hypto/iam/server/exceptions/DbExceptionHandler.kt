@@ -1,22 +1,23 @@
 package com.hypto.iam.server.exceptions
 
 import io.ktor.server.plugins.BadRequestException
+import org.jooq.exception.DataAccessException
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
-import org.jooq.exception.DataAccessException
 
 object DbExceptionHandler {
     data class DbExceptionMap(
         val errorMessage: String,
         val constraintRegex: Regex,
-        val appExceptions: Map<String, Pair<KClass<out Exception>, String>>
+        val appExceptions: Map<String, Pair<KClass<out Exception>, String>>,
     )
 
-    private val customExceptions = setOf(
-        BadRequestException::class,
-        EntityNotFoundException::class,
-        EntityAlreadyExistsException::class
-    )
+    private val customExceptions =
+        setOf(
+            BadRequestException::class,
+            EntityNotFoundException::class,
+            EntityAlreadyExistsException::class,
+        )
     private val duplicateConstraintRegex = "\"(.*)?\"".toRegex()
     private val foreignKeyConstraintRegex = "foreign key constraint \"(.*)?\"".toRegex()
 
@@ -24,18 +25,19 @@ object DbExceptionHandler {
 
     private val foreignKeyExceptions = mapOf<String, Pair<KClass<out Exception>, String>>()
 
-    private val dbExceptionMap = listOf(
-        DbExceptionMap(
-            "duplicate key value violates unique constraint",
-            duplicateConstraintRegex,
-            duplicateExceptions
-        ),
-        DbExceptionMap(
-            "violates foreign key constraint",
-            foreignKeyConstraintRegex,
-            foreignKeyExceptions
+    private val dbExceptionMap =
+        listOf(
+            DbExceptionMap(
+                "duplicate key value violates unique constraint",
+                duplicateConstraintRegex,
+                duplicateExceptions,
+            ),
+            DbExceptionMap(
+                "violates foreign key constraint",
+                foreignKeyConstraintRegex,
+                foreignKeyExceptions,
+            ),
         )
-    )
 
     fun mapToApplicationException(e: DataAccessException): Exception {
         var finalException: Exception? = null

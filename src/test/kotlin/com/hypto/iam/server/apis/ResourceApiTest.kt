@@ -24,11 +24,11 @@ import io.ktor.http.contentType
 import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
-import kotlin.text.Charsets.UTF_8
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.testcontainers.junit.jupiter.Testcontainers
+import kotlin.text.Charsets.UTF_8
 
 @Testcontainers
 internal class ResourceApiTest : AbstractContainerBaseTest() {
@@ -46,11 +46,12 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
             val resourceName = "resource-name"
 
-            val response = client.post("/organizations/${organization.id}/resources") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                setBody(gson.toJson(CreateResourceRequest(name = resourceName)))
-            }
+            val response =
+                client.post("/organizations/${organization.id}/resources") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(CreateResourceRequest(name = resourceName)))
+                }
             val responseBody = gson.fromJson(response.bodyAsText(), Resource::class.java)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
@@ -76,9 +77,10 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
             val resourceName = "resource-name"
             createResource(organization.id, rootUserToken, resourceName)
 
-            val response = client.get("/organizations/${organization.id}/resources/$resourceName") {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            val response =
+                client.get("/organizations/${organization.id}/resources/$resourceName") {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
@@ -105,9 +107,10 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
             val resource = createResource(organization1.id, rootUserToken1)
 
-            val response = client.get("/organizations/${organization1.id}/resources/${resource.name}") {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
-            }
+            val response =
+                client.get("/organizations/${organization1.id}/resources/${resource.name}") {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
+                }
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 
@@ -128,18 +131,20 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
             val resource = createResource(organization.id, rootUserToken)
 
-            val response = client.delete("/organizations/${organization.id}/resources/${resource.name}") {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            val response =
+                client.delete("/organizations/${organization.id}/resources/${resource.name}") {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
             val responseBody = gson.fromJson(response.bodyAsText(), BaseSuccessResponse::class.java)
             assertEquals(true, responseBody.success)
 
             // Check that the resource is no longer available
-            val getResourceResponse = client.get("/organizations/${organization.id}/resources/${resource.name}") {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            val getResourceResponse =
+                client.get("/organizations/${organization.id}/resources/${resource.name}") {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
             assertEquals(HttpStatusCode.NotFound, getResourceResponse.status)
 
             deleteOrganization(organization.id)
@@ -159,9 +164,10 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
             val resource1 = createResource(organization.id, rootUserToken)
             val resource2 = createResource(organization.id, rootUserToken)
 
-            val response = client.get("/organizations/${organization.id}/resources") {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            val response =
+                client.get("/organizations/${organization.id}/resources") {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
 
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
@@ -188,11 +194,12 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
             val resource = createResource(organization.id, rootUserToken)
             val newDescription = "new description"
 
-            val response = client.patch("/organizations/${organization.id}/resources/${resource.name}") {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(gson.toJson(UpdateResourceRequest(description = "new description")))
-            }
+            val response =
+                client.patch("/organizations/${organization.id}/resources/${resource.name}") {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(UpdateResourceRequest(description = "new description")))
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
 

@@ -22,7 +22,7 @@ object PostgresInit {
         configuration.setDataSource(
             testContainer.jdbcUrl,
             testContainer.username,
-            testContainer.password
+            testContainer.password,
         )
         configuration.setLocations(Location("filesystem:src/main/resources/db/migration"))
         val flyway = Flyway(configuration)
@@ -34,7 +34,7 @@ object PostgresInit {
         System.setProperty("config.override.database.host", testContainer.host)
         System.setProperty(
             "config.override.database.port",
-            testContainer.firstMappedPort.toString()
+            testContainer.firstMappedPort.toString(),
         )
     }
 }

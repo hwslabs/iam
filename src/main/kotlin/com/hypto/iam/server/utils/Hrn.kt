@@ -45,7 +45,7 @@ class ResourceHrn : Hrn {
         organization: String,
         subOrganization: String? = null,
         resource: String,
-        resourceInstance: String?
+        resourceInstance: String?,
     ) {
         this.organization = organization
         this.subOrganization = subOrganization
@@ -58,8 +58,9 @@ class ResourceHrn : Hrn {
     }
 
     constructor(hrnString: String) {
-        val result = RESOURCE_HRN_REGEX.matchEntire(hrnString)
-            ?: throw HrnParseException("Not a valid hrn string format")
+        val result =
+            RESOURCE_HRN_REGEX.matchEntire(hrnString)
+                ?: throw HrnParseException("Not a valid hrn string format")
         organization = result.groups["organization"]!!.value
         subOrganization = result.groups["subOrganization"]?.value
         resource = result.groups["resource"]?.value
@@ -111,8 +112,9 @@ class ActionHrn : Hrn {
     }
 
     constructor(hrnString: String) {
-        val result = ACTION_HRN_REGEX.matchEntire(hrnString)
-            ?: throw HrnParseException("Not a valid hrn action string format")
+        val result =
+            ACTION_HRN_REGEX.matchEntire(hrnString)
+                ?: throw HrnParseException("Not a valid hrn action string format")
         organization = result.groups["organization"]!!.value
         resource = result.groups["resource"]?.value
         subOrganization = result.groups["subOrganization"]?.value

@@ -5,9 +5,11 @@ formatting:
 style:
   ForbiddenComment:
     allowedPatterns: 'TODO:'
+  MaxLineLength:
+    maxLineLength: 200
 
 complexity:
   LongMethod:
     active: false
   LongParameterList:
-    functionThreshold : 10
+    functionThreshold : 15

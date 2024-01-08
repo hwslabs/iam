@@ -4,7 +4,7 @@ buildscript {
     ext.kotlin_version = '1.8.10'
     ext.ktor_version = '2.2.4'
     ext.koin_version = '3.4.3'
-    ext.shadow_version = '5.2.0'
+    ext.shadow_version = '8.1.1'
     ext.exposed_version = "0.37.3"
     ext.jooq_version = '3.16.15'
     ext.hikari_cp_version = "5.0.1"
@@ -12,7 +12,7 @@ buildscript {
     ext.flyway_version = '9.16.0'
     ext.casbin_version = '1.32.2'
     ext.postgres_jdbc_driver = '42.5.4'
-    ext.detekt_version = '1.22.0'
+    ext.detekt_version = '1.19.0'
     ext.cohort_version = '1.7.3'
 
     repositories {
@@ -23,7 +23,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.github.jengelman.gradle.plugins:shadow:$shadow_version"
+        classpath "com.github.johnrengelman:shadow:$shadow_version"
     }
 
     configurations['classpath'].resolutionStrategy.eachDependency {
@@ -37,7 +37,7 @@ plugins {
     id 'org.flywaydb.flyway' version "$flyway_version"
     id 'nu.studer.jooq' version '7.1'
     id "io.gitlab.arturbosch.detekt" version "$detekt_version"
-    id "org.jlleitschuh.gradle.ktlint" version "10.3.0"
+    id "org.jlleitschuh.gradle.ktlint" version "12.0.3"
     id "jacoco"
     id "org.openapi.generator" version "5.3.0"
     id "com.osacky.doctor" version "0.8.0"
@@ -47,7 +47,7 @@ group 'com.hypto'
 version '1.0.0'
 
 wrapper {
-    gradleVersion = '7.4.1'
+    gradleVersion = '8.5'
     distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
 }
 
@@ -59,7 +59,8 @@ apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply from: "./buildscripts/rootOrganization.gradle"
 
 mainClassName = "com.hypto.iam.server.ApplicationKt"
-sourceCompatibility = 11
+sourceCompatibility = 17
+apply plugin: "com.github.johnrengelman.shadow"
 
 sourceSets {
     main.java.srcDirs += "$rootDir/main/kotlin"
@@ -70,14 +71,15 @@ sourceSets {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "17"
 }
 
 test {
+    jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
     useJUnitPlatform()
     testLogging.showStandardStreams(true)
     finalizedBy jacocoTestReport // report is always generated after tests run
@@ -85,7 +87,7 @@ test {
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
     reports {
-        csv.enabled = true
+        csv.getRequired()
     }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
@@ -100,12 +102,12 @@ jacocoTestReport {
 }
 jacoco {
     toolVersion = "0.8.7"
-    reportsDir = file("$buildDir/jacoco")
+    reportsDirectory = file("$buildDir/jacoco")
 }
 
 shadowJar {
-    baseName = 'hypto-iam-server'
-    version = '1.0.0'
+    archiveBaseName.set('hypto-iam-server')
+    archiveVersion.set('1.0.0')
 }
 
 repositories {
@@ -172,6 +174,7 @@ jooq {
                         fluentSetters = true
                         relations = true
 //                        embeddablePrimaryKeys = true // Available only in paid version :(
+                        daos = false
                         daos = false
                         routines = false
                         indexes = false
@@ -308,40 +311,19 @@ detekt {
 //}
 
 ktlint {
-    version = "0.45.2"
-    debug = false
-    verbose = false
-    android = false
-    outputToConsole = true
-    outputColorName = "RED"
-    ignoreFailures = false
-    enableExperimentalRules = false
-    additionalEditorconfigFile = file(".editorconfig")
-    disabledRules = ["import-ordering"]
-//    baseline = file("my-project-ktlint-baseline.xml")
-//    reporters {
-//        reporter "plain"
-//        reporter "checkstyle"
-//        reporter "sarif"
-//    }
-//    kotlinScriptAdditionalPaths {
-//        include fileTree("scripts/")
-//    }
+    verbose.set(true)
+    outputToConsole.set(true)
+    coloredOutput.set(true)
     filter {
-//       Workaround to exclude directory from KtLint
-//       https://github.com/JLLeitschuh/ktlint-gradle/issues/579
-        exclude {
-            it.file.toString().contains("generated/")
+        exclude { entry ->
+            entry.file.toString().contains("generated")
+            entry.file.toString().contains("generated-src")
         }
-        exclude {
-            it.file.toString().contains("generated-src/")
-        }
-        include("**/kotlin/**")
     }
 }
 
 dependencies {
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detekt_version")
+//    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detekt_version")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     implementation("io.ktor:ktor-server-cio:$ktor_version")
     implementation("io.ktor:ktor-server-metrics:$ktor_version")
@@ -457,7 +439,8 @@ dependencies {
 tasks.named('generateJooq').configure {
     // ensure database schema has been prepared by Flyway before generating the jOOQ sources
     dependsOn tasks.named('flywayMigrate')
-
+    mustRunAfter tasks.named('runKtlintFormatOverMainSourceSet'), tasks.named('runKtlintFormatOverTestSourceSet'),
+            tasks.named('runKtlintCheckOverMainSourceSet'), tasks.named('runKtlintCheckOverTestSourceSet')
     // declare Flyway migration scripts as inputs on the jOOQ task
     inputs.files(fileTree('src/main/resources/db/migration'))
             .withPropertyName('migrations')

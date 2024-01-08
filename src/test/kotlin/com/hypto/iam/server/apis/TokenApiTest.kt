@@ -44,9 +44,6 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import java.time.Instant
-import java.util.Base64
-import java.util.Date
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -74,6 +71,9 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthoriz
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolClientType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
+import java.time.Instant
+import java.util.Base64
+import java.util.Date
 
 class TokenApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -89,66 +89,69 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganization, createdUser) = createOrganization()
                 val username = createdOrganization.organization.rootUser.username
-                val tokenResponse = client.post(
-                    "/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                }
+                val tokenResponse =
+                    client.post(
+                        "/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
                 Assertions.assertNotNull(responseBody.token)
 
-                val validateResponse = client.post(
-                    "/validate"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
-                    setBody(
-                        gson.toJson(
-                            ValidationRequest(
-                                listOf(
-                                    ResourceAction(
-                                        ResourceHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            resourceInstance = username
-                                        ).toString(),
-                                        ActionHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            action = "createCredentials"
-                                        ).toString()
-                                    )
-                                )
-                            )
+                val validateResponse =
+                    client.post(
+                        "/validate",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
+                        setBody(
+                            gson.toJson(
+                                ValidationRequest(
+                                    listOf(
+                                        ResourceAction(
+                                            ResourceHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                resourceInstance = username,
+                                            ).toString(),
+                                            ActionHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                action = "createCredentials",
+                                            ).toString(),
+                                        ),
+                                    ),
+                                ),
+                            ),
                         )
-                    )
-                }
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    validateResponse.contentType()
+                    validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
-                val validationResponseBody = gson.fromJson(
-                    validateResponse.bodyAsText(),
-                    ValidationResponse::class.java
-                )
+                val validationResponseBody =
+                    gson.fromJson(
+                        validateResponse.bodyAsText(),
+                        ValidationResponse::class.java,
+                    )
                 validationResponseBody.results.forEach {
                     Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
                 }
@@ -163,66 +166,69 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganization, createdUser) = createOrganization()
                 val username = createdOrganization.organization.rootUser.username
-                val tokenResponse = client.post(
-                    "/token"
-                ) {
-                    header(HttpHeaders.Accept, ContentType.Text.Plain.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                }
+                val tokenResponse =
+                    client.post(
+                        "/token",
+                    ) {
+                        header(HttpHeaders.Accept, ContentType.Text.Plain.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Text.Plain.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 val responseBody = tokenResponse.bodyAsText()
                 Assertions.assertNotNull(responseBody)
 
-                val validateResponse = client.post(
-                    "/validate"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $responseBody")
-                    setBody(
-                        gson.toJson(
-                            ValidationRequest(
-                                listOf(
-                                    ResourceAction(
-                                        ResourceHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            resourceInstance = username
-                                        ).toString(),
-                                        ActionHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            action = "createCredentials"
-                                        ).toString()
-                                    )
-                                )
-                            )
+                val validateResponse =
+                    client.post(
+                        "/validate",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $responseBody")
+                        setBody(
+                            gson.toJson(
+                                ValidationRequest(
+                                    listOf(
+                                        ResourceAction(
+                                            ResourceHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                resourceInstance = username,
+                                            ).toString(),
+                                            ActionHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                action = "createCredentials",
+                                            ).toString(),
+                                        ),
+                                    ),
+                                ),
+                            ),
                         )
-                    )
-                }
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    validateResponse.contentType()
+                    validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
-                val validationResponseBody = gson.fromJson(
-                    validateResponse.bodyAsText(),
-                    ValidationResponse::class.java
-                )
+                val validationResponseBody =
+                    gson.fromJson(
+                        validateResponse.bodyAsText(),
+                        ValidationResponse::class.java,
+                    )
                 validationResponseBody.results.forEach {
                     Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
                 }
@@ -258,24 +264,25 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            false
+                            false,
                         )
                     }
                 }
 
-                val tokenResponse = client.post(
-                    "/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        authHeader
-                    )
-                }
+                val tokenResponse =
+                    client.post(
+                        "/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            authHeader,
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
             }
         }
@@ -303,7 +310,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            true
+                            true,
                         )
                     }
                     every { this@declareMock.cognito } answers {
@@ -311,7 +318,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             id = "us-east-1_id",
                             name = "user-pool-name",
                             identitySource = IdentityProvider.IdentitySource.AWS_COGNITO,
-                            metadata = mapOf("iam-client-id" to "id")
+                            metadata = mapOf("iam-client-id" to "id"),
                         )
                     }
                 }
@@ -328,24 +335,25 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "${createdUser.email}:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val tokenResponse = client.post(
-                        "/token"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val tokenResponse =
+                        client.post(
+                            "/token",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
 
                     Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        tokenResponse.contentType()
+                        tokenResponse.contentType(),
                     )
                     Assertions.assertEquals(
                         createdOrganization.organization.id,
-                        tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                        tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                     )
                     val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
                     Assertions.assertNotNull(responseBody.token)
@@ -364,20 +372,21 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "$email:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val tokenResponse = client.post(
-                        "/token"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val tokenResponse =
+                        client.post(
+                            "/token",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
 
                     Assertions.assertEquals(HttpStatusCode.BadRequest, tokenResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        tokenResponse.contentType()
+                        tokenResponse.contentType(),
                     )
                 }
             }
@@ -395,20 +404,21 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "$email:$password"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val tokenResponse = client.post(
-                        "/token"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val tokenResponse =
+                        client.post(
+                            "/token",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
 
                     Assertions.assertEquals(HttpStatusCode.BadRequest, tokenResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        tokenResponse.contentType()
+                        tokenResponse.contentType(),
                     )
                 }
             }
@@ -425,19 +435,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "$email:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val tokenResponse = client.post(
-                        "/token"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val tokenResponse =
+                        client.post(
+                            "/token",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, tokenResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        tokenResponse.contentType()
+                        tokenResponse.contentType(),
                     )
                 }
             }
@@ -448,10 +459,11 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 // Override the cognito mock to throw error for invalid username
                 declareMock<CognitoIdentityProviderClient> {
                     coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
-                        val result = CreateUserPoolResponse.builder()
-                            .userPool(
-                                UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build()
-                            ).build()
+                        val result =
+                            CreateUserPoolResponse.builder()
+                                .userPool(
+                                    UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build(),
+                                ).build()
                         result
                     }
                     coEvery { this@declareMock.adminCreateUser(any<AdminCreateUserRequest>()) } coAnswers {
@@ -461,7 +473,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                     .username(firstArg<AdminCreateUserRequest>().username())
                                     .userCreateDate(Instant.now())
                                     .attributes(firstArg<AdminCreateUserRequest>().userAttributes())
-                                    .build()
+                                    .build(),
                             )
                             .build()
                     }
@@ -469,16 +481,17 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         this@declareMock.adminInitiateAuth(
                             match<AdminInitiateAuthRequest> {
                                 it.authParameters()["PASSWORD"] == invalidPassword
-                            }
+                            },
                         )
-                    } throws NotAuthorizedException.builder()
-                        .message("Invalid username and password combination").build()
+                    } throws
+                        NotAuthorizedException.builder()
+                            .message("Invalid username and password combination").build()
 
                     coEvery {
                         this@declareMock.adminInitiateAuth(
                             match<AdminInitiateAuthRequest> {
                                 it.authParameters()["PASSWORD"] != invalidPassword
-                            }
+                            },
                         )
                     } coAnswers {
                         AdminInitiateAuthResponse.builder()
@@ -491,7 +504,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                     coEvery {
                         this@declareMock.adminRespondToAuthChallenge(
-                            any<AdminRespondToAuthChallengeRequest>()
+                            any<AdminRespondToAuthChallengeRequest>(),
                         )
                     } returns mockk()
 
@@ -517,19 +530,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "${createdUser.email}:$invalidPassword"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val tokenResponse = client.post(
-                        "/token"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val tokenResponse =
+                        client.post(
+                            "/token",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, tokenResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        tokenResponse.contentType()
+                        tokenResponse.contentType(),
                     )
                 }
             }
@@ -549,20 +563,21 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val createdOrganization = createdOrganizationResponse.organization
                 val authString = "${createdUser.email.uppercase()}:${createdUser.password}"
                 val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
-                val response = client.post(
-                    "/organizations/${createdOrganization.id}/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, authHeader)
-                }
+                val response =
+                    client.post(
+                        "/organizations/${createdOrganization.id}/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, authHeader)
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.id,
-                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                    response.headers[Constants.X_ORGANIZATION_HEADER],
                 )
             }
         }
@@ -575,68 +590,71 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganization, createdUser) = createOrganization()
                 val username = createdOrganization.organization.rootUser.username
-                val loginResponse = client.post(
-                    "/login"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                }
+                val loginResponse =
+                    client.post(
+                        "/login",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                    }
 
                 Assertions.assertEquals(HttpStatusCode.OK, loginResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    loginResponse.contentType()
+                    loginResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    loginResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    loginResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 val responseBody = gson.fromJson(loginResponse.bodyAsText(), TokenResponse::class.java)
                 Assertions.assertNotNull(responseBody.token)
 
-                val validateResponse = client.post(
-                    "/validate"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
-                    setBody(
-                        gson.toJson(
-                            ValidationRequest(
-                                listOf(
-                                    ResourceAction(
-                                        ResourceHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            resourceInstance = username
-                                        ).toString(),
-                                        ActionHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            action = "createCredentials"
-                                        ).toString()
-                                    )
-                                )
-                            )
+                val validateResponse =
+                    client.post(
+                        "/validate",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
+                        setBody(
+                            gson.toJson(
+                                ValidationRequest(
+                                    listOf(
+                                        ResourceAction(
+                                            ResourceHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                resourceInstance = username,
+                                            ).toString(),
+                                            ActionHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                action = "createCredentials",
+                                            ).toString(),
+                                        ),
+                                    ),
+                                ),
+                            ),
                         )
-                    )
-                }
+                    }
 
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    validateResponse.contentType()
+                    validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
-                val validationResponseBody = gson.fromJson(
-                    validateResponse.bodyAsText(),
-                    ValidationResponse::class.java
-                )
+                val validationResponseBody =
+                    gson.fromJson(
+                        validateResponse.bodyAsText(),
+                        ValidationResponse::class.java,
+                    )
                 validationResponseBody.results.forEach {
                     Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
                 }
@@ -651,66 +669,69 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganization, createdUser) = createOrganization()
                 val username = createdOrganization.organization.rootUser.username
-                val loginResponse = client.post(
-                    "/login"
-                ) {
-                    header(HttpHeaders.Accept, ContentType.Text.Plain.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                }
+                val loginResponse =
+                    client.post(
+                        "/login",
+                    ) {
+                        header(HttpHeaders.Accept, ContentType.Text.Plain.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, loginResponse.status)
                 Assertions.assertEquals(
                     ContentType.Text.Plain.withCharset(Charsets.UTF_8),
-                    loginResponse.contentType()
+                    loginResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    loginResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    loginResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 val responseBody = loginResponse.bodyAsText()
                 Assertions.assertNotNull(responseBody)
 
-                val validateResponse = client.post(
-                    "/validate"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $responseBody")
-                    setBody(
-                        gson.toJson(
-                            ValidationRequest(
-                                listOf(
-                                    ResourceAction(
-                                        ResourceHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            resourceInstance = username
-                                        ).toString(),
-                                        ActionHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            action = "createCredentials"
-                                        ).toString()
-                                    )
-                                )
-                            )
+                val validateResponse =
+                    client.post(
+                        "/validate",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $responseBody")
+                        setBody(
+                            gson.toJson(
+                                ValidationRequest(
+                                    listOf(
+                                        ResourceAction(
+                                            ResourceHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                resourceInstance = username,
+                                            ).toString(),
+                                            ActionHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                action = "createCredentials",
+                                            ).toString(),
+                                        ),
+                                    ),
+                                ),
+                            ),
                         )
-                    )
-                }
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    validateResponse.contentType()
+                    validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
-                val validationResponseBody = gson.fromJson(
-                    validateResponse.bodyAsText(),
-                    ValidationResponse::class.java
-                )
+                val validationResponseBody =
+                    gson.fromJson(
+                        validateResponse.bodyAsText(),
+                        ValidationResponse::class.java,
+                    )
                 validationResponseBody.results.forEach {
                     Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
                 }
@@ -746,24 +767,25 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            false
+                            false,
                         )
                     }
                 }
 
-                val loginResponse = client.post(
-                    "/login"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        authHeader
-                    )
-                }
+                val loginResponse =
+                    client.post(
+                        "/login",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            authHeader,
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, loginResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    loginResponse.contentType()
+                    loginResponse.contentType(),
                 )
             }
         }
@@ -791,7 +813,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
-                            true
+                            true,
                         )
                     }
                     every { this@declareMock.cognito } answers {
@@ -799,7 +821,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             id = "us-east-1_id",
                             name = "user-pool-name",
                             identitySource = IdentityProvider.IdentitySource.AWS_COGNITO,
-                            metadata = mapOf("iam-client-id" to "id")
+                            metadata = mapOf("iam-client-id" to "id"),
                         )
                     }
                 }
@@ -816,24 +838,25 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "${createdUser.email}:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val loginResponse = client.post(
-                        "/login"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val loginResponse =
+                        client.post(
+                            "/login",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
 
                     Assertions.assertEquals(HttpStatusCode.OK, loginResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        loginResponse.contentType()
+                        loginResponse.contentType(),
                     )
                     Assertions.assertEquals(
                         createdOrganization.organization.id,
-                        loginResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                        loginResponse.headers[Constants.X_ORGANIZATION_HEADER],
                     )
                     val responseBody = gson.fromJson(loginResponse.bodyAsText(), TokenResponse::class.java)
                     Assertions.assertNotNull(responseBody.token)
@@ -852,19 +875,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "$email:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val loginResponse = client.post(
-                        "/login"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val loginResponse =
+                        client.post(
+                            "/login",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
                     Assertions.assertEquals(HttpStatusCode.BadRequest, loginResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        loginResponse.contentType()
+                        loginResponse.contentType(),
                     )
                 }
             }
@@ -882,19 +906,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "$email:$password"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val loginResponse = client.post(
-                        "/login"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val loginResponse =
+                        client.post(
+                            "/login",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
                     Assertions.assertEquals(HttpStatusCode.BadRequest, loginResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        loginResponse.contentType()
+                        loginResponse.contentType(),
                     )
                 }
             }
@@ -911,19 +936,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "$email:${createdUser.password}"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val loginResponse = client.post(
-                        "/login"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val loginResponse =
+                        client.post(
+                            "/login",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, loginResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        loginResponse.contentType()
+                        loginResponse.contentType(),
                     )
                 }
             }
@@ -934,10 +960,11 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 // Override the cognito mock to throw error for invalid username
                 declareMock<CognitoIdentityProviderClient> {
                     coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
-                        val result = CreateUserPoolResponse.builder()
-                            .userPool(
-                                UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build()
-                            ).build()
+                        val result =
+                            CreateUserPoolResponse.builder()
+                                .userPool(
+                                    UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build(),
+                                ).build()
                         result
                     }
                     coEvery { this@declareMock.adminCreateUser(any<AdminCreateUserRequest>()) } coAnswers {
@@ -947,7 +974,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                                     .username(firstArg<AdminCreateUserRequest>().username())
                                     .userCreateDate(Instant.now())
                                     .attributes(firstArg<AdminCreateUserRequest>().userAttributes())
-                                    .build()
+                                    .build(),
                             )
                             .build()
                     }
@@ -955,16 +982,17 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         this@declareMock.adminInitiateAuth(
                             match<AdminInitiateAuthRequest> {
                                 it.authParameters()["PASSWORD"] == invalidPassword
-                            }
+                            },
                         )
-                    } throws NotAuthorizedException.builder()
-                        .message("Invalid username and password combination").build()
+                    } throws
+                        NotAuthorizedException.builder()
+                            .message("Invalid username and password combination").build()
 
                     coEvery {
                         this@declareMock.adminInitiateAuth(
                             match<AdminInitiateAuthRequest> {
                                 it.authParameters()["PASSWORD"] != invalidPassword
-                            }
+                            },
                         )
                     } coAnswers {
                         AdminInitiateAuthResponse.builder()
@@ -977,7 +1005,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                     coEvery {
                         this@declareMock.adminRespondToAuthChallenge(
-                            any<AdminRespondToAuthChallengeRequest>()
+                            any<AdminRespondToAuthChallengeRequest>(),
                         )
                     } returns mockk()
 
@@ -1003,19 +1031,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     val authString = "${createdUser.email}:$invalidPassword"
                     val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                    val loginResponse = client.post(
-                        "/login"
-                    ) {
-                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                        header(
-                            HttpHeaders.Authorization,
-                            authHeader
-                        )
-                    }
+                    val loginResponse =
+                        client.post(
+                            "/login",
+                        ) {
+                            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                            header(
+                                HttpHeaders.Authorization,
+                                authHeader,
+                            )
+                        }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, loginResponse.status)
                     Assertions.assertEquals(
                         ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        loginResponse.contentType()
+                        loginResponse.contentType(),
                     )
                 }
             }
@@ -1033,66 +1062,69 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 }
                 val (createdOrganization, createdUser) = createOrganization()
                 val username = createdOrganization.organization.rootUser.username
-                val tokenResponse = client.post(
-                    "/organizations/${createdOrganization.organization.id}/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                }
+                val tokenResponse =
+                    client.post(
+                        "/organizations/${createdOrganization.organization.id}/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
                 Assertions.assertNotNull(responseBody.token)
 
-                val validateResponse = client.post(
-                    "/validate"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
-                    setBody(
-                        gson.toJson(
-                            ValidationRequest(
-                                listOf(
-                                    ResourceAction(
-                                        ResourceHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            resourceInstance = username
-                                        ).toString(),
-                                        ActionHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            action = "createCredentials"
-                                        ).toString()
-                                    )
-                                )
-                            )
+                val validateResponse =
+                    client.post(
+                        "/validate",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
+                        setBody(
+                            gson.toJson(
+                                ValidationRequest(
+                                    listOf(
+                                        ResourceAction(
+                                            ResourceHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                resourceInstance = username,
+                                            ).toString(),
+                                            ActionHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                action = "createCredentials",
+                                            ).toString(),
+                                        ),
+                                    ),
+                                ),
+                            ),
                         )
-                    )
-                }
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    validateResponse.contentType()
+                    validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
-                val validationResponseBody = gson.fromJson(
-                    validateResponse.bodyAsText(),
-                    ValidationResponse::class.java
-                )
+                val validationResponseBody =
+                    gson.fromJson(
+                        validateResponse.bodyAsText(),
+                        ValidationResponse::class.java,
+                    )
                 validationResponseBody.results.forEach {
                     Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
                 }
@@ -1109,20 +1141,21 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val authString = "${rootUser.email}:${rootUser.password}"
                 val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                val tokenResponse = client.post(
-                    "/organizations/${createdOrganization.organization.id}/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, authHeader)
-                }
+                val tokenResponse =
+                    client.post(
+                        "/organizations/${createdOrganization.organization.id}/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, authHeader)
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
             }
         }
@@ -1136,23 +1169,24 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val (createdOrganization, createdUser) = createOrganization()
                 val username = createdOrganization.organization.rootUser.username
 
-                val tokenResponse = client.post(
-                    "/organizations/${createdOrganization.organization.id}/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                }
+                val tokenResponse =
+                    client.post(
+                        "/organizations/${createdOrganization.organization.id}/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
                 Assertions.assertNotNull(responseBody.token)
@@ -1163,45 +1197,47 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     masterKeysRepo.rotateKey()
                 }
 
-                val validateResponse = client.post(
-                    "/validate"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
-                    setBody(
-                        gson.toJson(
-                            ValidationRequest(
-                                listOf(
-                                    ResourceAction(
-                                        ResourceHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            resourceInstance = username
-                                        ).toString(),
-                                        ActionHrn(
-                                            organization = createdOrganization.organization.id,
-                                            resource = IamResources.USER,
-                                            action = "createCredentials"
-                                        ).toString()
-                                    )
-                                )
-                            )
+                val validateResponse =
+                    client.post(
+                        "/validate",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer ${responseBody.token}")
+                        setBody(
+                            gson.toJson(
+                                ValidationRequest(
+                                    listOf(
+                                        ResourceAction(
+                                            ResourceHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                resourceInstance = username,
+                                            ).toString(),
+                                            ActionHrn(
+                                                organization = createdOrganization.organization.id,
+                                                resource = IamResources.USER,
+                                                action = "createCredentials",
+                                            ).toString(),
+                                        ),
+                                    ),
+                                ),
+                            ),
                         )
-                    )
-                }
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    validateResponse.contentType()
+                    validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    validateResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
-                val validationResponseBody = gson.fromJson(
-                    validateResponse.bodyAsText(),
-                    ValidationResponse::class.java
-                )
+                val validationResponseBody =
+                    gson.fromJson(
+                        validateResponse.bodyAsText(),
+                        ValidationResponse::class.java,
+                    )
                 validationResponseBody.results.forEach {
                     Assertions.assertEquals(ResourceActionEffect.Effect.allow, it.effect)
                 }
@@ -1220,18 +1256,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
             createdUser: RootUser,
             issuedAt: Date = Date(),
             issuer: String = TokenServiceImpl.ISSUER,
-            userHrn: String = ResourceHrn(
-                organization = createdOrganizationResponse.organization.id,
-                resource = IamResources.USER,
-                resourceInstance = createdOrganizationResponse.organization.rootUser.username
-            ).toString(),
+            userHrn: String =
+                ResourceHrn(
+                    organization = createdOrganizationResponse.organization.id,
+                    resource = IamResources.USER,
+                    resourceInstance = createdOrganizationResponse.organization.rootUser.username,
+                ).toString(),
             organization: String? = createdOrganizationResponse.organization.name,
             expiration: Date = Date.from(Instant.now().plusSeconds(100)),
-            version: String? = TokenServiceImpl.VERSION_NUM
+            version: String? = TokenServiceImpl.VERSION_NUM,
         ): String {
-            val signingKey = runBlocking {
-                masterKeyCache.forSigning()
-            }
+            val signingKey =
+                runBlocking {
+                    masterKeyCache.forSigning()
+                }
             return Jwts.builder()
                 .setHeaderParam(TokenServiceImpl.KEY_ID, signingKey.id)
                 .setIssuedAt(issuedAt)
@@ -1254,22 +1292,24 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 }
                 val (createOrganizationResponse, createdUser) = createOrganization()
                 val expiry = Date.from(Instant.now().minusSeconds(100))
-                val jwt = generateToken(
-                    createdOrganizationResponse = createOrganizationResponse,
-                    createdUser = createdUser,
-                    expiration = expiry
-                )
+                val jwt =
+                    generateToken(
+                        createdOrganizationResponse = createOrganizationResponse,
+                        createdUser = createdUser,
+                        expiration = expiry,
+                    )
 
                 // Act
-                val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer $jwt"
-                    )
-                }
+                val response =
+                    client.get(
+                        "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt",
+                        )
+                    }
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
             }
@@ -1282,22 +1322,24 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createOrganizationResponse, createdUser) = createOrganization()
-                val jwt = generateToken(
-                    createdOrganizationResponse = createOrganizationResponse,
-                    createdUser = createdUser,
-                    issuer = "Invalid_Issuer"
-                )
+                val jwt =
+                    generateToken(
+                        createdOrganizationResponse = createOrganizationResponse,
+                        createdUser = createdUser,
+                        issuer = "Invalid_Issuer",
+                    )
 
                 // Act
-                val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer $jwt"
-                    )
-                }
+                val response =
+                    client.get(
+                        "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt",
+                        )
+                    }
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
             }
@@ -1310,22 +1352,24 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createOrganizationResponse, createdUser) = createOrganization()
-                val jwt = generateToken(
-                    createdOrganizationResponse = createOrganizationResponse,
-                    createdUser = createdUser,
-                    userHrn = "InvalidHrnFormat"
-                )
+                val jwt =
+                    generateToken(
+                        createdOrganizationResponse = createOrganizationResponse,
+                        createdUser = createdUser,
+                        userHrn = "InvalidHrnFormat",
+                    )
 
                 // Act
-                val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer $jwt"
-                    )
-                }
+                val response =
+                    client.get(
+                        "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt",
+                        )
+                    }
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
             }
         }
@@ -1337,22 +1381,24 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createOrganizationResponse, createdUser) = createOrganization()
-                val jwt = generateToken(
-                    createdOrganizationResponse = createOrganizationResponse,
-                    createdUser = createdUser,
-                    organization = null
-                )
+                val jwt =
+                    generateToken(
+                        createdOrganizationResponse = createOrganizationResponse,
+                        createdUser = createdUser,
+                        organization = null,
+                    )
 
                 // Act
-                val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer $jwt"
-                    )
-                }
+                val response =
+                    client.get(
+                        "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt",
+                        )
+                    }
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
             }
@@ -1365,22 +1411,24 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     config = ApplicationConfig("application-custom.conf")
                 }
                 val (createOrganizationResponse, createdUser) = createOrganization()
-                val jwt = generateToken(
-                    createdOrganizationResponse = createOrganizationResponse,
-                    createdUser = createdUser,
-                    version = null
-                )
+                val jwt =
+                    generateToken(
+                        createdOrganizationResponse = createOrganizationResponse,
+                        createdUser = createdUser,
+                        version = null,
+                    )
 
                 // Act
-                val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer $jwt"
-                    )
-                }
+                val response =
+                    client.get(
+                        "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt",
+                        )
+                    }
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
             }
@@ -1394,22 +1442,24 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 }
                 val (createOrganizationResponse, createdUser) = createOrganization()
                 val issuedAt = Date.from(Instant.now().plusSeconds(1000))
-                val jwt = generateToken(
-                    createdOrganizationResponse = createOrganizationResponse,
-                    createdUser = createdUser,
-                    issuedAt = issuedAt
-                )
+                val jwt =
+                    generateToken(
+                        createdOrganizationResponse = createOrganizationResponse,
+                        createdUser = createdUser,
+                        issuedAt = issuedAt,
+                    )
 
                 // Act
-                val response = client.get(
-                    "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer $jwt"
-                    )
-                }
+                val response =
+                    client.get(
+                        "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer $jwt",
+                        )
+                    }
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
             }
@@ -1430,52 +1480,56 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 // Create policy to delegate
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
-                val (resourceHrn, actionHrn) = createResourceActionHrn(
-                    createdOrganization.organization.id,
-                    null,
-                    resourceName,
-                    "action"
-                )
+                val (resourceHrn, actionHrn) =
+                    createResourceActionHrn(
+                        createdOrganization.organization.id,
+                        null,
+                        resourceName,
+                        "action",
+                    )
                 val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val createPolictRequest = CreatePolicyRequest(policyName, policyStatements)
 
-                val createPolicyCall = client.post(
-                    "/organizations/${createdOrganization.organization.id}/policies"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                    setBody(gson.toJson(createPolictRequest))
-                }
+                val createPolicyCall =
+                    client.post(
+                        "/organizations/${createdOrganization.organization.id}/policies",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                        setBody(gson.toJson(createPolictRequest))
+                    }
 
                 val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
 
                 // Test DelegateToken call
-                val requestBody = GetDelegateTokenRequest(
-                    policy = createdPolicy.hrn,
-                    principal = "dummyDelegate",
-                    expiry = 100L
-                )
-                val tokenResponse = client.post(
-                    "/delegate_token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
+                val requestBody =
+                    GetDelegateTokenRequest(
+                        policy = createdPolicy.hrn,
+                        principal = "dummyDelegate",
+                        expiry = 100L,
                     )
-                    setBody(gson.toJson(requestBody))
-                }
+                val tokenResponse =
+                    client.post(
+                        "/delegate_token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                        setBody(gson.toJson(requestBody))
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
                 Assertions.assertNotNull(responseBody.token)
@@ -1488,20 +1542,20 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(claims.get("usr", String::class.java) as String, "dummyDelegate")
                 Assertions.assertEquals(
                     claims.get("org", String::class.java) as String,
-                    createdOrganization.organization.id
+                    createdOrganization.organization.id,
                 )
                 Assertions.assertEquals(
                     claims.get("obof", String::class.java) as String,
-                    createdOrganization.organization.rootUser.hrn
+                    createdOrganization.organization.rootUser.hrn,
                 )
                 Assertions.assertEquals(
                     claims.expiration.toInstant().epochSecond - claims.issuedAt.toInstant().epochSecond,
-                    100L
+                    100L,
                 )
 
                 Assertions.assertTrue(
                     (claims.get("entitlements", String::class.java) as String)
-                        .contains("g, dummyDelegate, ${createdPolicy.hrn}")
+                        .contains("g, dummyDelegate, ${createdPolicy.hrn}"),
                 )
             }
         }
@@ -1517,53 +1571,57 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 // Create policy to delegate
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
-                val (resourceHrn, actionHrn) = createResourceActionHrn(
-                    createdOrganization.organization.id,
-                    null,
-                    resourceName,
-                    "action"
-                )
+                val (resourceHrn, actionHrn) =
+                    createResourceActionHrn(
+                        createdOrganization.organization.id,
+                        null,
+                        resourceName,
+                        "action",
+                    )
                 val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val createPolictRequest = CreatePolicyRequest(policyName, policyStatements)
 
-                val createPolicyCall = client.post(
-                    "/organizations/${createdOrganization.organization.id}/policies"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                    setBody(gson.toJson(createPolictRequest))
-                }
+                val createPolicyCall =
+                    client.post(
+                        "/organizations/${createdOrganization.organization.id}/policies",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                        setBody(gson.toJson(createPolictRequest))
+                    }
 
                 val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
 
                 // Test DelegateToken call
-                val requestBody = GetDelegateTokenRequest(
-                    policy = createdPolicy.hrn,
-                    principal = "dummyDelegate",
-                    expiry = 100L
-                )
-                val tokenResponse = client.post(
-                    "/delegate_token"
-                ) {
-                    header(HttpHeaders.Accept, ContentType.Text.Plain.toString())
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
+                val requestBody =
+                    GetDelegateTokenRequest(
+                        policy = createdPolicy.hrn,
+                        principal = "dummyDelegate",
+                        expiry = 100L,
                     )
-                    setBody(gson.toJson(requestBody))
-                }
+                val tokenResponse =
+                    client.post(
+                        "/delegate_token",
+                    ) {
+                        header(HttpHeaders.Accept, ContentType.Text.Plain.toString())
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                        setBody(gson.toJson(requestBody))
+                    }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
                     ContentType.Text.Plain.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
                     createdOrganization.organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
             }
         }
@@ -1579,46 +1637,51 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 // Create policy to delegate
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
-                val (resourceHrn, actionHrn) = createResourceActionHrn(
-                    createdOrganization.organization.id,
-                    null,
-                    resourceName,
-                    "action"
-                )
+                val (resourceHrn, actionHrn) =
+                    createResourceActionHrn(
+                        createdOrganization.organization.id,
+                        null,
+                        resourceName,
+                        "action",
+                    )
                 val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val createPolicyRequest = CreatePolicyRequest(policyName, policyStatements)
 
-                val createPolicyCall = client.post(
-                    "/organizations/${createdOrganization.organization.id}/policies"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
-                    )
-                    setBody(gson.toJson(createPolicyRequest))
-                }
+                val createPolicyCall =
+                    client.post(
+                        "/organizations/${createdOrganization.organization.id}/policies",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                        setBody(gson.toJson(createPolicyRequest))
+                    }
 
                 val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
 
                 // Test DelegateToken call
-                val requestBody = GetDelegateTokenRequest(
-                    policy = createdPolicy.hrn,
-                    principal = "dummyDelegate"
-                )
-                val tokenResponse = client.post(
-                    "/delegate_token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        "Bearer ${createdOrganization.rootUserToken}"
+                val requestBody =
+                    GetDelegateTokenRequest(
+                        policy = createdPolicy.hrn,
+                        principal = "dummyDelegate",
                     )
-                    setBody(gson.toJson(requestBody))
-                }
-                val rootUserClaims = with(createdOrganization.rootUserToken) {
-                    Jwts.parserBuilder().build().parseClaimsJwt(substring(0, lastIndexOf(".") + 1)).body as Claims
-                }
+                val tokenResponse =
+                    client.post(
+                        "/delegate_token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            "Bearer ${createdOrganization.rootUserToken}",
+                        )
+                        setBody(gson.toJson(requestBody))
+                    }
+                val rootUserClaims =
+                    with(createdOrganization.rootUserToken) {
+                        Jwts.parserBuilder().build().parseClaimsJwt(substring(0, lastIndexOf(".") + 1)).body as Claims
+                    }
 
                 val responseBody = gson.fromJson(tokenResponse.bodyAsText(), TokenResponse::class.java)
                 Assertions.assertNotNull(responseBody.token)
@@ -1631,17 +1694,17 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(claims.get("usr", String::class.java) as String, "dummyDelegate")
                 Assertions.assertEquals(
                     claims.get("org", String::class.java) as String,
-                    createdOrganization.organization.id
+                    createdOrganization.organization.id,
                 )
                 Assertions.assertEquals(
                     claims.get("obof", String::class.java) as String,
-                    createdOrganization.organization.rootUser.hrn
+                    createdOrganization.organization.rootUser.hrn,
                 )
                 Assertions.assertEquals(claims.expiration, rootUserClaims.expiration)
 
                 Assertions.assertTrue(
                     (claims.get("entitlements", String::class.java) as String)
-                        .contains("g, dummyDelegate, ${createdPolicy.hrn}")
+                        .contains("g, dummyDelegate, ${createdPolicy.hrn}"),
                 )
             }
         }

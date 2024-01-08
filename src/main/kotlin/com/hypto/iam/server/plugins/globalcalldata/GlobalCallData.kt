@@ -10,7 +10,6 @@ import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelinePhase
 
 class GlobalCallData(configuration: Configuration) {
-
     class Configuration
 
     private fun interceptBeforeReceive(context: PipelineContext<Unit, ApplicationCall>) {
@@ -33,7 +32,10 @@ class GlobalCallData(configuration: Configuration) {
         val globalCallDataPhase = PipelinePhase("GlobalCallData")
         val globalCallDataCleanupPhase = PipelinePhase("GlobalCallDataCleanup")
 
-        override fun install(pipeline: ApplicationCallPipeline, configure: Configuration.() -> Unit): GlobalCallData {
+        override fun install(
+            pipeline: ApplicationCallPipeline,
+            configure: Configuration.() -> Unit,
+        ): GlobalCallData {
             val configuration = Configuration().apply(configure)
 
             return GlobalCallData(configuration).also { callDataFeature ->

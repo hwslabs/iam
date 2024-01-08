@@ -50,7 +50,7 @@ fun Credential.Companion.from(record: CredentialsRecord): Credential {
         record.refreshToken,
         record.createdAt.toUTCOffset(),
         record.updatedAt.toUTCOffset(),
-        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
     )
 }
 
@@ -61,7 +61,7 @@ fun Credential.Companion.from(record: Credentials): Credential {
         record.refreshToken,
         record.createdAt.toUTCOffset(),
         record.updatedAt.toUTCOffset(),
-        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
     )
 }
 
@@ -71,7 +71,7 @@ fun CredentialWithoutSecret.Companion.from(record: CredentialsRecord): Credentia
         CredentialWithoutSecret.Status.valueOf(record.status),
         record.createdAt.toUTCOffset(),
         record.updatedAt.toUTCOffset(),
-        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
     )
 }
 
@@ -81,7 +81,7 @@ fun CredentialWithoutSecret.Companion.from(record: Credentials): CredentialWitho
         CredentialWithoutSecret.Status.valueOf(record.status),
         record.createdAt.toUTCOffset(),
         record.updatedAt.toUTCOffset(),
-        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        record.validUntil?.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
     )
 }
 
@@ -95,6 +95,7 @@ object MagicNumber {
 }
 
 val COMMA_REGEX = Regex("\\s*,\\s*")
+
 fun PolicyStatement.Companion.from(policyString: String): PolicyStatement {
     val components = policyString.trim().split(COMMA_REGEX)
     require(components.size == MagicNumber.FIVE || components[MagicNumber.ZERO] == "p") {
@@ -103,7 +104,7 @@ fun PolicyStatement.Companion.from(policyString: String): PolicyStatement {
     return PolicyStatement(
         components[MagicNumber.TWO],
         components[MagicNumber.THREE],
-        PolicyStatement.Effect.valueOf(components[MagicNumber.FOUR])
+        PolicyStatement.Effect.valueOf(components[MagicNumber.FOUR]),
     )
 }
 
@@ -116,7 +117,7 @@ fun Policy.Companion.from(record: PoliciesRecord): Policy {
         organizationId = hrn.organization,
         version = record.version,
         hrn = hrn.toString(),
-        statements = record.statements.trim().lines().map { PolicyStatement.from(it) }
+        statements = record.statements.trim().lines().map { PolicyStatement.from(it) },
     )
 }
 
@@ -129,7 +130,7 @@ fun Policy.Companion.from(record: Policies): Policy {
         organizationId = hrn.organization,
         version = record.version,
         hrn = hrn.toString(),
-        statements = record.statements.split("\n").map { PolicyStatement.from(it) }
+        statements = record.statements.split("\n").map { PolicyStatement.from(it) },
     )
 }
 
@@ -140,7 +141,7 @@ fun Resource.Companion.from(record: ResourcesRecord): Resource {
         hrn.resource!!,
         hrn.organization,
         hrn.toString(),
-        record.description
+        record.description,
     )
 }
 
@@ -151,7 +152,7 @@ fun Resource.Companion.from(record: Resources): Resource {
         hrn.resource!!,
         hrn.organization,
         hrn.toString(),
-        record.description
+        record.description,
     )
 }
 
@@ -163,7 +164,7 @@ fun Action.Companion.from(record: ActionsRecord): Action {
         hrn.resource!!,
         hrn.action!!,
         hrn.toString(),
-        record.description
+        record.description,
     )
 }
 
@@ -175,7 +176,7 @@ fun Action.Companion.from(record: Actions): Action {
         hrn.resource!!,
         hrn.action!!,
         hrn.toString(),
-        record.description
+        record.description,
     )
 }
 
@@ -195,7 +196,7 @@ fun UserPolicy.Companion.from(record: PrincipalPoliciesRecord): UserPolicy {
     require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(
         policyHrn.resourceInstance!!,
-        policyHrn.organization
+        policyHrn.organization,
     )
 }
 
@@ -204,13 +205,13 @@ fun UserPolicy.Companion.from(record: PrincipalPolicies): UserPolicy {
     require(policyHrn is ResourceHrn) { "Hrn should be an instance of resourceHrn" }
     return UserPolicy(
         policyHrn.resourceInstance!!,
-        policyHrn.organization
+        policyHrn.organization,
     )
 }
 
 fun ResourceActionEffect.Companion.from(
     resourceAction: ResourceAction,
-    effect: ResourceActionEffect.Effect
+    effect: ResourceActionEffect.Effect,
 ): ResourceActionEffect {
     return ResourceActionEffect(resourceAction.resource, resourceAction.action, effect)
 }
@@ -220,42 +221,44 @@ fun auditEntryFrom(
     eventTime: LocalDateTime,
     principal: String,
     resource: String,
-    operation: String
+    operation: String,
 ): AuditEntries {
     val principalHrn: ResourceHrn = hrnFactory.getHrn(principal) as ResourceHrn
     return AuditEntries(null, requestId, eventTime, principalHrn.organization, principal, resource, operation, null)
 }
 
-fun UpdateUserRequest.Status.toUserStatus() = when (this) {
-    UpdateUserRequest.Status.enabled -> User.Status.enabled
-    UpdateUserRequest.Status.disabled -> User.Status.disabled
-}
+fun UpdateUserRequest.Status.toUserStatus() =
+    when (this) {
+        UpdateUserRequest.Status.enabled -> User.Status.enabled
+        UpdateUserRequest.Status.disabled -> User.Status.disabled
+    }
 
 fun CreateOrganizationRequest.Companion.from(
     verifyEmailMetadata: Map<String, Any>,
-    rootUserEmail: String
+    rootUserEmail: String,
 ): CreateOrganizationRequest {
     return CreateOrganizationRequest(
         name = verifyEmailMetadata["name"] as String,
         description = verifyEmailMetadata["description"] as String?,
-        rootUser = RootUser(
-            password = verifyEmailMetadata["rootUserPassword"] as String,
-            email = rootUserEmail,
-            name = verifyEmailMetadata["rootUserName"] as String?,
-            preferredUsername = verifyEmailMetadata["rootUserPreferredUsername"] as String?,
-            phone = verifyEmailMetadata["rootUserPhone"] as String?
-        )
+        rootUser =
+            RootUser(
+                password = verifyEmailMetadata["rootUserPassword"] as String,
+                email = rootUserEmail,
+                name = verifyEmailMetadata["rootUserName"] as String?,
+                preferredUsername = verifyEmailMetadata["rootUserPreferredUsername"] as String?,
+                phone = verifyEmailMetadata["rootUserPhone"] as String?,
+            ),
     )
 }
 
 fun Passcode.Companion.from(
-    record: PasscodesRecord
+    record: PasscodesRecord,
 ): Passcode {
     return Passcode(
         record.email,
         record.purpose,
         record.createdAt.toUTCOffset(),
-        record.validUntil.toUTCOffset()
+        record.validUntil.toUTCOffset(),
     )
 }
 
@@ -263,6 +266,6 @@ fun AuthProvider.Companion.from(record: AuthProviderRecord): AuthProvider {
     return AuthProvider(
         providerName = record.providerName,
         authUrl = record.authUrl,
-        clientId = record.clientId
+        clientId = record.clientId,
     )
 }

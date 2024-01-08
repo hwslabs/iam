@@ -8,14 +8,13 @@ import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.customPaginate
 import com.hypto.iam.server.utils.Hrn
-import java.util.UUID
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.TableField
 import org.jooq.impl.DAOImpl
+import java.util.UUID
 
 object PrincipalPoliciesRepo : BaseRepo<PrincipalPoliciesRecord, PrincipalPolicies, UUID>() {
-
     private val idFun = fun (principalPolicies: PrincipalPolicies): UUID = principalPolicies.id
 
     override suspend fun dao(): DAOImpl<PrincipalPoliciesRecord, PrincipalPolicies, UUID> =
@@ -32,19 +31,19 @@ object PrincipalPoliciesRepo : BaseRepo<PrincipalPoliciesRecord, PrincipalPolici
 
     suspend fun fetchPoliciesByUserHrnPaginated(
         userHrn: String,
-        paginationContext: PaginationContext
+        paginationContext: PaginationContext,
     ): Result<PoliciesRecord> {
         return customPaginate<Record, String>(
             ctx("principalPolicies.fetchByPrincipalHrnPaginated")
                 .select(POLICIES.fields().asList())
                 .from(
                     PRINCIPAL_POLICIES.join(POLICIES).on(
-                        com.hypto.iam.server.db.Tables.POLICIES.HRN.eq(PRINCIPAL_POLICIES.POLICY_HRN)
-                    )
+                        com.hypto.iam.server.db.Tables.POLICIES.HRN.eq(PRINCIPAL_POLICIES.POLICY_HRN),
+                    ),
                 )
                 .where(PRINCIPAL_POLICIES.PRINCIPAL_HRN.eq(userHrn)),
             PRINCIPAL_POLICIES.POLICY_HRN as TableField<Record, String>,
-            paginationContext
+            paginationContext,
         ).fetchInto(POLICIES)
     }
 
@@ -62,13 +61,21 @@ object PrincipalPoliciesRepo : BaseRepo<PrincipalPoliciesRecord, PrincipalPolici
         return insertStep.set(lastRecord).returning().fetch()
     }
 
-    suspend fun delete(userHrn: Hrn, policies: List<String>): Boolean = ctx("principalPolicies.delete")
-        .deleteFrom(PRINCIPAL_POLICIES)
-        .where(PRINCIPAL_POLICIES.PRINCIPAL_HRN.eq(userHrn.toString()), PRINCIPAL_POLICIES.POLICY_HRN.`in`(policies))
-        .execute() > 0
+    suspend fun delete(
+        userHrn: Hrn,
+        policies: List<String>,
+    ): Boolean =
+        ctx("principalPolicies.delete")
+            .deleteFrom(PRINCIPAL_POLICIES)
+            .where(
+                PRINCIPAL_POLICIES.PRINCIPAL_HRN.eq(userHrn.toString()),
+                PRINCIPAL_POLICIES.POLICY_HRN.`in`(policies),
+            )
+            .execute() > 0
 
-    suspend fun deleteByPrincipalHrn(principalHrn: String): Boolean = ctx("principalPolicies.deleteByPrincipalHrn")
-        .deleteFrom(PRINCIPAL_POLICIES)
-        .where(PRINCIPAL_POLICIES.PRINCIPAL_HRN.like("%$principalHrn%"))
-        .execute() > 0
+    suspend fun deleteByPrincipalHrn(principalHrn: String): Boolean =
+        ctx("principalPolicies.deleteByPrincipalHrn")
+            .deleteFrom(PRINCIPAL_POLICIES)
+            .where(PRINCIPAL_POLICIES.PRINCIPAL_HRN.like("%$principalHrn%"))
+            .execute() > 0
 }

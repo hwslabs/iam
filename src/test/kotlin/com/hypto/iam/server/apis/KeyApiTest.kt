@@ -11,7 +11,6 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -19,14 +18,14 @@ import io.ktor.http.contentType
 import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
-import java.security.KeyFactory
-import java.security.PublicKey
-import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.koin.test.inject
+import java.security.KeyFactory
+import java.security.PublicKey
+import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 class KeyApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -44,8 +43,9 @@ class KeyApiTest : AbstractContainerBaseTest() {
                     header(HttpHeaders.ContentType, Json.toString())
                     header(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserToken}")
                 }
-            val token = gson
-                .fromJson(createTokenCall.bodyAsText(), TokenResponse::class.java).token
+            val token =
+                gson
+                    .fromJson(createTokenCall.bodyAsText(), TokenResponse::class.java).token
 
             println(token)
 
@@ -55,15 +55,16 @@ class KeyApiTest : AbstractContainerBaseTest() {
 
             val kid = jwt.header.getValue(TokenServiceImpl.KEY_ID) as String
 
-            val response = client.get(
-                "/keys/$kid?format=der"
-            ) {
-                header(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserToken}")
-            }
+            val response =
+                client.get(
+                    "/keys/$kid?format=der",
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserToken}")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
             val publicKeyResponse = gson.fromJson(response.bodyAsText(), KeyResponse::class.java)
 

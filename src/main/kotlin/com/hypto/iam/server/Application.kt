@@ -61,16 +61,16 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.Routing
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.MeterBinder
-import java.time.Duration
-import kotlin.time.Duration.Companion.ZERO
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.SLF4JLogger
+import java.time.Duration
+import kotlin.time.Duration.Companion.ZERO
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 private const val REQUEST_ID_HEADER = "X-Request-Id"
 const val ROOT_ORG = "hypto-root"
@@ -183,12 +183,12 @@ fun Application.handleRequest() {
                     "HikariPendingThreadsHealthCheck",
                     HikariPendingThreadsHealthCheck(pool, MAX_THREADS_WAITING_FOR_DB_CONNS),
                     ZERO,
-                    1.minutes
+                    1.minutes,
                 )
                 register("DatabaseHealthCheck", DatabaseConnectionHealthCheck(pool), ZERO, 1.minutes)
                 // TODO: Configure the below check based on infra set-up
                 // register(DiskSpaceHealthCheck(/*FileStore for root(/) */, 1.0)), 1.minutes)
-            }
+            },
         )
     }
 }
@@ -213,7 +213,7 @@ fun main() {
             connectionGroupSize = appConfig.server.connectionGroupSize
             workerGroupSize = appConfig.server.workerGroupSize
             callGroupSize = appConfig.server.callGroupSize
-        }
+        },
     ).apply {
         addShutdownHook {
             runBlocking {
@@ -226,6 +226,7 @@ fun main() {
 private val preWait = 1.seconds
 private val gracePeriod = 30.seconds
 private val timeout = 45.seconds
+
 private suspend fun shutdown(engine: ApplicationEngine) {
     delay(preWait)
     val log = engine.application.environment.log

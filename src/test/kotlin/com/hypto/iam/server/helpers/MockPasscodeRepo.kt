@@ -24,7 +24,7 @@ fun KoinTest.mockPasscodeRepo(): PasscodeRepo {
             getValidPasscodeById(
                 any<String>(),
                 any<VerifyEmailRequest.Purpose>(),
-                any<String>()
+                any<String>(),
             )
         } coAnswers {
             PasscodesRecord().setId(firstArg()).setPurpose(secondArg<VerifyEmailRequest.Purpose>().toString())

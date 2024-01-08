@@ -27,7 +27,7 @@ fun Route.actionApi() {
 
     withPermission(
         "createAction",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/resources/{resource_name}/actions") {
             val organizationId = call.parameters["organization_id"]
@@ -40,14 +40,14 @@ fun Route.actionApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.Created
+                status = HttpStatusCode.Created,
             )
         }
     }
 
     withPermission(
         "listAction",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources/{resource_name}/actions") {
             val organizationId = call.parameters["organization_id"]
@@ -56,25 +56,26 @@ fun Route.actionApi() {
             val pageSize = call.request.queryParameters["page_size"]
             val sortOrder = call.request.queryParameters["sort_order"]
 
-            val context = PaginationContext.from(
-                nextToken,
-                pageSize?.toInt(),
-                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-            )
+            val context =
+                PaginationContext.from(
+                    nextToken,
+                    pageSize?.toInt(),
+                    sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+                )
 
             val response = actionService.listActions(organizationId!!, resourceName!!, context)
 
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "getAction",
-        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
             val organizationId = call.parameters["organization_id"]
@@ -86,14 +87,14 @@ fun Route.actionApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "updateAction",
-        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
     ) {
         patch("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
             val organizationId = call.parameters["organization_id"]
@@ -107,14 +108,14 @@ fun Route.actionApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "deleteAction",
-        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
     ) {
         delete("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
             val organizationId = call.parameters["organization_id"]
@@ -126,7 +127,7 @@ fun Route.actionApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }

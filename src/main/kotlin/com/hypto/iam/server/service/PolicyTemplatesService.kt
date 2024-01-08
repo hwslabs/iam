@@ -16,26 +16,29 @@ class PolicyTemplatesServiceImpl : KoinComponent, PolicyTemplatesService {
     private val policyService: PolicyService by inject()
     private val organizationIdKey = "organization_id"
     private val userHrnKey = "user_hrn"
+
     override suspend fun createPersistAndReturnRootPolicyRecordsForOrganization(
         organizationId: String,
-        user: User
+        user: User,
     ): List<PoliciesRecord> {
         val templateVariablesMap = mapOf(organizationIdKey to organizationId, userHrnKey to user.hrn)
         val policyTemplates = policyTemplateRepo.fetchActivePolicyTemplates()
         val adminPolicyNames = policyTemplates.mapNotNullTo(mutableSetOf()) { if (it.isRootPolicy) it.name else null }
 
-        val rawPolicyPayloadsList = policyTemplates.map {
-            val template = try {
-                Template.parse(it.statements)
-            } catch (e: MustacheParserException) {
-                throw IllegalStateException("Invalid template ${it.name} - ${e.localizedMessage}", e)
+        val rawPolicyPayloadsList =
+            policyTemplates.map {
+                val template =
+                    try {
+                        Template.parse(it.statements)
+                    } catch (e: MustacheParserException) {
+                        throw IllegalStateException("Invalid template ${it.name} - ${e.localizedMessage}", e)
+                    }
+                RawPolicyPayload(
+                    hrn = ResourceHrn(organizationId, "", IamResources.POLICY, it.name),
+                    description = it.description,
+                    statements = template.processToString(templateVariablesMap),
+                )
             }
-            RawPolicyPayload(
-                hrn = ResourceHrn(organizationId, "", IamResources.POLICY, it.name),
-                description = it.description,
-                statements = template.processToString(templateVariablesMap)
-            )
-        }
 
         val policies = policyService.batchCreatePolicyRaw(organizationId, rawPolicyPayloadsList)
         return policies.filter {
@@ -47,6 +50,6 @@ class PolicyTemplatesServiceImpl : KoinComponent, PolicyTemplatesService {
 interface PolicyTemplatesService {
     suspend fun createPersistAndReturnRootPolicyRecordsForOrganization(
         organizationId: String,
-        user: User
+        user: User,
     ): List<PoliciesRecord>
 }

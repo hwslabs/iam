@@ -16,17 +16,18 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
 
     override suspend fun listUserAuth(
         organizationId: String,
-        userId: String
+        userId: String,
     ): UserAuthMethodsResponse {
         organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
-        val userAuth = userAuthRepo.fetchUserAuth(
-            ResourceHrn(organizationId, "", IamResources.USER, userId)
-        ).map {
-            UserAuthMethod(
-                providerName = it.providerName
-            )
-        }.toList()
+        val userAuth =
+            userAuthRepo.fetchUserAuth(
+                ResourceHrn(organizationId, "", IamResources.USER, userId),
+            ).map {
+                UserAuthMethod(
+                    providerName = it.providerName,
+                )
+            }.toList()
 
         return UserAuthMethodsResponse(userAuth)
     }
@@ -35,6 +36,6 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
 interface UserAuthService {
     suspend fun listUserAuth(
         organizationId: String,
-        userHrn: String
+        userHrn: String,
     ): UserAuthMethodsResponse
 }

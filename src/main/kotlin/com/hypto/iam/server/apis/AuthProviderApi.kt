@@ -19,17 +19,18 @@ fun Route.authProviderApi() {
         val nextToken = call.request.queryParameters["next_token"]
         val pageSize = call.request.queryParameters["page_size"]
 
-        val paginationContext = PaginationContext.from(
-            nextToken,
-            pageSize?.toInt(),
-            null
-        )
+        val paginationContext =
+            PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                null,
+            )
 
         val response = authProviderService.listAuthProvider(paginationContext)
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 }

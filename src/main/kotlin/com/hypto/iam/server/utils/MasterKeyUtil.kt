@@ -7,7 +7,6 @@ import java.io.InputStreamReader
 import java.nio.file.Files
 
 object MasterKeyUtil {
-
     private const val PRIVATE_KEY = "/tmp/private_key"
     private const val PUBLIC_KEY = "/tmp/public_key"
 

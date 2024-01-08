@@ -11,12 +11,17 @@ import kotlinx.coroutines.runBlocking
 
 class AuditEventHandler : RequestHandler<SQSEvent, Unit> {
     private val auditEntryRepo: AuditEntriesRepo = getKoinInstance()
-    override fun handleRequest(input: SQSEvent, context: Context?) {
+
+    override fun handleRequest(
+        input: SQSEvent,
+        context: Context?,
+    ) {
         val entries = input.records.map { auditEntriesFrom(it) }
 
-        val state = runBlocking {
-            auditEntryRepo.batchInsert(entries)
-        }
+        val state =
+            runBlocking {
+                auditEntryRepo.batchInsert(entries)
+            }
 
         // TODO: Verify if the entry already exists in case of failed messages and ignore them.
         if (!state) {
@@ -26,6 +31,7 @@ class AuditEventHandler : RequestHandler<SQSEvent, Unit> {
 
     companion object {
         val gson: Gson = getKoinInstance()
+
         fun auditEntriesFrom(message: SQSEvent.SQSMessage): AuditEntries {
             return gson.fromJson(message.body, AuditEntries::class.java)
         }

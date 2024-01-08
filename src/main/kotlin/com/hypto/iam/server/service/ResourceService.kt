@@ -15,7 +15,11 @@ import org.koin.core.component.inject
 class ResourceServiceImpl : KoinComponent, ResourceService {
     private val resourceRepo: ResourceRepo by inject()
 
-    override suspend fun createResource(organizationId: String, name: String, description: String): Resource {
+    override suspend fun createResource(
+        organizationId: String,
+        name: String,
+        description: String,
+    ): Resource {
         val resourceHrn = ResourceHrn(organizationId, null, name, null)
 
         if (resourceRepo.existsById(resourceHrn.toString())) {
@@ -26,39 +30,51 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
         return Resource.from(resourceRecord)
     }
 
-    override suspend fun getResource(organizationId: String, name: String): Resource {
-        val resourceRecord = resourceRepo.fetchByHrn(ResourceHrn(organizationId, null, name, null))
-            ?: throw EntityNotFoundException("Resource with name [$name] not found")
+    override suspend fun getResource(
+        organizationId: String,
+        name: String,
+    ): Resource {
+        val resourceRecord =
+            resourceRepo.fetchByHrn(ResourceHrn(organizationId, null, name, null))
+                ?: throw EntityNotFoundException("Resource with name [$name] not found")
         return Resource.from(resourceRecord)
     }
 
     override suspend fun listResources(
         organizationId: String,
-        context: PaginationContext
+        context: PaginationContext,
     ): ResourcePaginatedResponse {
         val resources = resourceRepo.fetchByOrganizationIdPaginated(organizationId, context)
         val newContext = PaginationContext.from(resources.lastOrNull()?.hrn, context)
         return ResourcePaginatedResponse(
             resources.map { Resource.from(it) },
             newContext.nextToken,
-            newContext.toOptions()
+            newContext.toOptions(),
         )
     }
 
-    override suspend fun updateResource(organizationId: String, name: String, description: String): Resource {
+    override suspend fun updateResource(
+        organizationId: String,
+        name: String,
+        description: String,
+    ): Resource {
         val resourceHrn = ResourceHrn(organizationId, null, name, null)
 
-        val resourceRecord = resourceRepo.update(
-            resourceHrn,
-            description
-        )
+        val resourceRecord =
+            resourceRepo.update(
+                resourceHrn,
+                description,
+            )
 
         checkNotNull(resourceRecord) { "Update unsuccessful" }
 
         return Resource.from(resourceRecord)
     }
 
-    override suspend fun deleteResource(organizationId: String, name: String): BaseSuccessResponse {
+    override suspend fun deleteResource(
+        organizationId: String,
+        name: String,
+    ): BaseSuccessResponse {
         val resourceHrn = ResourceHrn(organizationId, null, name, null)
 
         if (!resourceRepo.delete(resourceHrn)) {
@@ -73,12 +89,30 @@ class ResourceServiceImpl : KoinComponent, ResourceService {
  * Service which holds logic related to Resource operations
  */
 interface ResourceService {
-    suspend fun createResource(organizationId: String, name: String, description: String): Resource
-    suspend fun getResource(organizationId: String, name: String): Resource
-    suspend fun updateResource(organizationId: String, name: String, description: String): Resource
-    suspend fun deleteResource(organizationId: String, name: String): BaseSuccessResponse
+    suspend fun createResource(
+        organizationId: String,
+        name: String,
+        description: String,
+    ): Resource
+
+    suspend fun getResource(
+        organizationId: String,
+        name: String,
+    ): Resource
+
+    suspend fun updateResource(
+        organizationId: String,
+        name: String,
+        description: String,
+    ): Resource
+
+    suspend fun deleteResource(
+        organizationId: String,
+        name: String,
+    ): BaseSuccessResponse
+
     suspend fun listResources(
         organizationId: String,
-        context: PaginationContext
+        context: PaginationContext,
     ): ResourcePaginatedResponse
 }
