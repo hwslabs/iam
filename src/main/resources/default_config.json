@@ -14,7 +14,7 @@
     "publish_interval": 10
   },
   "server": {
-    "port": 4101,
+    "port": 8080,
     "connectionGroupSize": 32,
     "workerGroupSize": 64,
     "callGroupSize": 256,
@@ -45,11 +45,11 @@
   },
   "aws": {
     "region": "us-east-1",
-    "accessKey": "AKIA2SFEV35XJ3CA5GWU",
-    "secretKey": "1kjTX1MTjvZbdOeWknkfqcu9kr4dToLVoowHH74Q"
+    "accessKey": "<placeholder for aws access key>",
+    "secretKey": "<placeholder for aws secret key>"
   },
   "postHook": {
-    "signup": "http://localhost:4000/internal/signup"
+    "signup": "http://posthook.com/signup"
   },
   "onboardRoutes": {
     "signup": "/signup",
@@ -57,10 +57,10 @@
     "invite": "/organizations/users/verifyUser"
   },
   "cognito": {
-    "id": "us-east-1_B1jL1EFi9",
-    "name": "togai",
+    "id": "<user pool id>",
+    "name": "<user pool name>",
     "metadata": {
-      "iam_client_id": "7ad0fn3or5n2m2h5ilhd00nmeh"
+      "iam_client_id": "<placeholder for IAM client id>"
     },
     "identitySource": "AWS_COGNITO"
   }
