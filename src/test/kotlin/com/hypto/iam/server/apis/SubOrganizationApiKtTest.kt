@@ -25,13 +25,13 @@ import io.ktor.http.contentType
 import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
+import org.junit.jupiter.api.Test
+import org.koin.test.inject
+import org.testcontainers.junit.jupiter.Testcontainers
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.text.Charsets.UTF_8
-import org.junit.jupiter.api.Test
-import org.koin.test.inject
-import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
 internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
@@ -48,14 +48,16 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val orgId = organizationResponse.organization.id
             val token = organizationResponse.rootUserToken
 
-            val requestBody = CreateSubOrganizationRequest(
-                subOrgName,
-            )
-            val response = client.post("/organizations/$orgId/sub_organizations") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                CreateSubOrganizationRequest(
+                    subOrgName,
+                )
+            val response =
+                client.post("/organizations/$orgId/sub_organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                    setBody(gson.toJson(requestBody))
+                }
             val responseBody = gson.fromJson(response.bodyAsText(), CreateSubOrganizationResponse::class.java)
 
             // Assert API response
@@ -67,7 +69,7 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 orgId,
                 responseBody.subOrganization.organizationId,
                 "Sub organization parent id should " +
-                    "match"
+                    "match",
             )
 
             deleteOrganization(orgId)
@@ -84,14 +86,16 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val (organizationResponse, _) = createOrganization()
             val orgId = organizationResponse.organization.id
 
-            val requestBody = CreateSubOrganizationRequest(
-                subOrgName,
-            )
-            val response = client.post("/organizations/$orgId/sub_organizations") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer test-bearer-token")
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                CreateSubOrganizationRequest(
+                    subOrgName,
+                )
+            val response =
+                client.post("/organizations/$orgId/sub_organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer test-bearer-token")
+                    setBody(gson.toJson(requestBody))
+                }
             val responseBody = gson.fromJson(response.bodyAsText(), CreateSubOrganizationResponse::class.java)
             assertEquals(HttpStatusCode.Unauthorized, response.status)
             assertFalse(response.headers.contains(HttpHeaders.ContentType))
@@ -112,15 +116,17 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val token = organizationResponse.rootUserToken
             val subOrgDescription = "test-sub-org-desc"
 
-            val requestBody = CreateSubOrganizationRequest(
-                subOrgName,
-                subOrgDescription
-            )
-            val response = client.post("/organizations/$orgId/sub_organizations") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                CreateSubOrganizationRequest(
+                    subOrgName,
+                    subOrgDescription,
+                )
+            val response =
+                client.post("/organizations/$orgId/sub_organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                    setBody(gson.toJson(requestBody))
+                }
             val responseBody = gson.fromJson(response.bodyAsText(), CreateSubOrganizationResponse::class.java)
 
             // Assert API response
@@ -132,14 +138,15 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 orgId,
                 responseBody.subOrganization.organizationId,
                 "Sub organization parent id should " +
-                    "match"
+                    "match",
             )
 
             // Get sub organization
-            val getSubOrganizationResponse = client.get("/organizations/$orgId/sub_organizations/$subOrgName") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-            }
+            val getSubOrganizationResponse =
+                client.get("/organizations/$orgId/sub_organizations/$subOrgName") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                }
             assertEquals(HttpStatusCode.OK, getSubOrganizationResponse.status)
             val subOrganization =
                 gson.fromJson(getSubOrganizationResponse.bodyAsText(), SubOrganization::class.java)
@@ -162,10 +169,11 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val subOrgDescription = "test-sub-org-desc"
 
             // Get sub organization
-            val getSubOrganizationResponse = client.get("/organizations/$orgId/sub_organizations/dummy_sub_org") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-            }
+            val getSubOrganizationResponse =
+                client.get("/organizations/$orgId/sub_organizations/dummy_sub_org") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                }
             assertEquals(HttpStatusCode.NotFound, getSubOrganizationResponse.status)
             deleteOrganization(orgId)
         }
@@ -183,15 +191,17 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val token = organizationResponse.rootUserToken
             val subOrgDescription = "test-sub-org-desc"
 
-            val requestBody = CreateSubOrganizationRequest(
-                subOrgName,
-                subOrgDescription
-            )
-            val response = client.post("/organizations/$orgId/sub_organizations") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                CreateSubOrganizationRequest(
+                    subOrgName,
+                    subOrgDescription,
+                )
+            val response =
+                client.post("/organizations/$orgId/sub_organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                    setBody(gson.toJson(requestBody))
+                }
             val responseBody = gson.fromJson(response.bodyAsText(), CreateSubOrganizationResponse::class.java)
 
             // Assert API response
@@ -203,26 +213,28 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 orgId,
                 responseBody.subOrganization.organizationId,
                 "Sub organization parent id should " +
-                    "match"
+                    "match",
             )
 
             // Update sub organization name
-            val updateSubOrganizationNameRequest = UpdateSubOrganizationRequest(
-                "updated-sub-org-desc",
-            )
-            val updateSubOrganizationNameResponse = client
-                .patch("/organizations/$orgId/sub_organizations/$subOrgName") {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header("Authorization", "Bearer $token")
-                    setBody(gson.toJson(updateSubOrganizationNameRequest))
-                }
+            val updateSubOrganizationNameRequest =
+                UpdateSubOrganizationRequest(
+                    "updated-sub-org-desc",
+                )
+            val updateSubOrganizationNameResponse =
+                client
+                    .patch("/organizations/$orgId/sub_organizations/$subOrgName") {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header("Authorization", "Bearer $token")
+                        setBody(gson.toJson(updateSubOrganizationNameRequest))
+                    }
             assertEquals(HttpStatusCode.OK, updateSubOrganizationNameResponse.status)
             val updatedSubOrganization =
                 gson.fromJson(updateSubOrganizationNameResponse.bodyAsText(), SubOrganization::class.java)
             assertEquals(
                 "updated-sub-org-desc",
                 updatedSubOrganization.description,
-                "Sub organization description should match"
+                "Sub organization description should match",
             )
             deleteOrganization(orgId)
         }
@@ -240,15 +252,17 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val token = organizationResponse.rootUserToken
             val subOrgDescription = "test-sub-org-desc"
 
-            val requestBody = CreateSubOrganizationRequest(
-                subOrgName,
-                subOrgDescription
-            )
-            val response = client.post("/organizations/$orgId/sub_organizations") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                CreateSubOrganizationRequest(
+                    subOrgName,
+                    subOrgDescription,
+                )
+            val response =
+                client.post("/organizations/$orgId/sub_organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                    setBody(gson.toJson(requestBody))
+                }
             val responseBody = gson.fromJson(response.bodyAsText(), CreateSubOrganizationResponse::class.java)
 
             // Assert API response
@@ -260,21 +274,23 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                 orgId,
                 responseBody.subOrganization.organizationId,
                 "Sub organization parent id should " +
-                    "match"
+                    "match",
             )
 
             // Delete sub organization
-            val deleteSubOrganizationResponse = client.delete("/organizations/$orgId/sub_organizations/$subOrgName") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-            }
+            val deleteSubOrganizationResponse =
+                client.delete("/organizations/$orgId/sub_organizations/$subOrgName") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                }
             assertEquals(HttpStatusCode.OK, deleteSubOrganizationResponse.status)
 
             // Get sub organization
-            val getSubOrganizationResponse = client.get("/organizations/$orgId/sub_organizations/$subOrgName") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header("Authorization", "Bearer $token")
-            }
+            val getSubOrganizationResponse =
+                client.get("/organizations/$orgId/sub_organizations/$subOrgName") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("Authorization", "Bearer $token")
+                }
             assertEquals(HttpStatusCode.NotFound, getSubOrganizationResponse.status)
 
             deleteOrganization(orgId)
@@ -295,15 +311,17 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             repeat(subOrgCount) {
                 val subOrgName = "test-sub-org" + IdGenerator.randomId() + "$it"
                 val subOrgDescription = "test-sub-org-desc$it"
-                val requestBody = CreateSubOrganizationRequest(
-                    subOrgName,
-                    subOrgDescription
-                )
-                val response = client.post("/organizations/$orgId/sub_organizations") {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header("Authorization", "Bearer $token")
-                    setBody(gson.toJson(requestBody))
-                }
+                val requestBody =
+                    CreateSubOrganizationRequest(
+                        subOrgName,
+                        subOrgDescription,
+                    )
+                val response =
+                    client.post("/organizations/$orgId/sub_organizations") {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header("Authorization", "Bearer $token")
+                        setBody(gson.toJson(requestBody))
+                    }
                 val responseBody = gson.fromJson(response.bodyAsText(), CreateSubOrganizationResponse::class.java)
 
                 // Assert API response
@@ -315,7 +333,7 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
                     orgId,
                     responseBody.subOrganization.organizationId,
                     "Sub organization parent id should " +
-                        "match"
+                        "match",
                 )
                 originalSubOrgList.add(responseBody.subOrganization)
             }
@@ -324,21 +342,23 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
             val subOrganizationList = mutableListOf<SubOrganization>()
             var nextToken: String? = null
             do {
-                val url = if (nextToken == null) {
-                    "/organizations/$orgId/sub_organizations"
-                } else {
-                    "/organizations/$orgId/sub_organizations?next_token=$nextToken"
-                }
+                val url =
+                    if (nextToken == null) {
+                        "/organizations/$orgId/sub_organizations"
+                    } else {
+                        "/organizations/$orgId/sub_organizations?next_token=$nextToken"
+                    }
 
-                val listSubOrganizationResponse = client.get(url) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header("Authorization", "Bearer $token")
-                }
+                val listSubOrganizationResponse =
+                    client.get(url) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header("Authorization", "Bearer $token")
+                    }
                 assertEquals(HttpStatusCode.OK, listSubOrganizationResponse.status)
                 val subOrganizationPaginatedResponse =
                     gson.fromJson(
                         listSubOrganizationResponse.bodyAsText(),
-                        SubOrganizationsPaginatedResponse::class.java
+                        SubOrganizationsPaginatedResponse::class.java,
                     )
                 subOrganizationPaginatedResponse.data?.let { subOrganizationList.addAll(it) }
                 nextToken = subOrganizationPaginatedResponse.nextToken

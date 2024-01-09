@@ -187,7 +187,7 @@ fun SubOrganization.Companion.from(record: SubOrganizationsRecord): SubOrganizat
         record.organizationId.toString(),
         record.createdAt.toUTCOffset(),
         record.updatedAt.toUTCOffset(),
-        record.description
+        record.description,
     )
 }
 

@@ -42,9 +42,6 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.slot
 import io.mockk.verify
-import java.time.Instant
-import java.util.Base64
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -61,6 +58,9 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRe
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.NotAuthorizedException
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
+import java.time.Instant
+import java.util.Base64
+import kotlin.test.assertTrue
 
 class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -71,16 +71,17 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
         @Test
         fun `create user success case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val createUserRequest = CreateUserRequest(
-                preferredUsername = "testUserName",
-                name = "lorem ipsum",
-                password = "testPassword@Hash1",
-                email = testEmail,
-                status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778",
-                verified = true,
-                loginAccess = true
-            )
+            val createUserRequest =
+                CreateUserRequest(
+                    preferredUsername = "testUserName",
+                    name = "lorem ipsum",
+                    password = "testPassword@Hash1",
+                    email = testEmail,
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919626012778",
+                    verified = true,
+                    loginAccess = true,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -92,37 +93,39 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
-                } returns AdminGetUserResponse.builder()
-                    .enabled(true)
-                    .username(organization.rootUser.username)
-                    .userAttributes(
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
-                            .value(organization.rootUser.email).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(organization.rootUser.phone).build()
-                    )
-                    .userCreateDate(Instant.now())
-                    .build()
+                } returns
+                    AdminGetUserResponse.builder()
+                        .enabled(true)
+                        .username(organization.rootUser.username)
+                        .userAttributes(
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                                .value(organization.rootUser.email).build(),
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                                .value(organization.rootUser.phone).build(),
+                        )
+                        .userCreateDate(Instant.now())
+                        .build()
 
                 createResource(organization.id, rootUserToken)
 
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
                 val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 assertEquals(
                     organization.id,
-                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                    response.headers[Constants.X_ORGANIZATION_HEADER],
                 )
 
                 assertEquals(createUserRequest.preferredUsername, responseBody.user.preferredUsername)
@@ -137,15 +140,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
         @Test
         fun `create user without preferred username`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val createUserRequest = CreateUserRequest(
-                name = "lorem ipsum",
-                password = "testPassword@Hash1",
-                email = testEmail,
-                status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778",
-                verified = true,
-                loginAccess = true
-            )
+            val createUserRequest =
+                CreateUserRequest(
+                    name = "lorem ipsum",
+                    password = "testPassword@Hash1",
+                    email = testEmail,
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919626012778",
+                    verified = true,
+                    loginAccess = true,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -157,37 +161,39 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
-                } returns AdminGetUserResponse.builder()
-                    .enabled(true)
-                    .username(organization.rootUser.username)
-                    .userAttributes(
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
-                            .value(organization.rootUser.email).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(organization.rootUser.phone).build()
-                    )
-                    .userCreateDate(Instant.now())
-                    .build()
+                } returns
+                    AdminGetUserResponse.builder()
+                        .enabled(true)
+                        .username(organization.rootUser.username)
+                        .userAttributes(
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                                .value(organization.rootUser.email).build(),
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                                .value(organization.rootUser.phone).build(),
+                        )
+                        .userCreateDate(Instant.now())
+                        .build()
 
                 createResource(organization.id, rootUserToken)
 
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
                 val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 assertEquals(
                     organization.id,
-                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                    response.headers[Constants.X_ORGANIZATION_HEADER],
                 )
 
                 assertEquals(null, responseBody.user.preferredUsername)
@@ -254,15 +260,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
         @Test
         fun `create user with validation error case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "hypto.in"
-            val createUserRequest = CreateUserRequest(
-                preferredUsername = "testUserName",
-                name = "lorem ipsum",
-                password = "testPassword@ash",
-                email = testEmail,
-                status = CreateUserRequest.Status.enabled,
-                phone = "+919999999999",
-                loginAccess = true
-            )
+            val createUserRequest =
+                CreateUserRequest(
+                    preferredUsername = "testUserName",
+                    name = "lorem ipsum",
+                    password = "testPassword@ash",
+                    email = testEmail,
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919999999999",
+                    loginAccess = true,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -273,14 +280,15 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 createResource(organization.id, rootUserToken)
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
 
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
 
                 assertEquals(HttpStatusCode.BadRequest, response.status)
                 deleteOrganization(organization.id)
@@ -289,14 +297,15 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `create user without login access - success case`() {
-            val createUserRequest = CreateUserRequest(
-                preferredUsername = "testUserName",
-                name = "lorem ipsum",
-                email = "test-user-email" + IdGenerator.randomId() + "@hypto.in",
-                status = CreateUserRequest.Status.enabled,
-                verified = true,
-                loginAccess = false
-            )
+            val createUserRequest =
+                CreateUserRequest(
+                    preferredUsername = "testUserName",
+                    name = "lorem ipsum",
+                    email = "test-user-email" + IdGenerator.randomId() + "@hypto.in",
+                    status = CreateUserRequest.Status.enabled,
+                    verified = true,
+                    loginAccess = false,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -308,23 +317,24 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 createResource(organization.id, rootUserToken)
 
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
                 val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 assertEquals(
                     organization.id,
-                    response.headers[Constants.X_ORGANIZATION_HEADER]
+                    response.headers[Constants.X_ORGANIZATION_HEADER],
                 )
 
                 assertEquals(createUserRequest.preferredUsername, responseBody.user.preferredUsername)
@@ -340,15 +350,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `create user without login access - request validation error`() {
-            val createUserRequest = CreateUserRequest(
-                preferredUsername = "testUserName",
-                name = "lorem ipsum",
-                status = CreateUserRequest.Status.enabled,
-                verified = true,
-                email = "testuser@test.com",
-                password = "testPassword@ash",
-                loginAccess = false
-            )
+            val createUserRequest =
+                CreateUserRequest(
+                    preferredUsername = "testUserName",
+                    name = "lorem ipsum",
+                    status = CreateUserRequest.Status.enabled,
+                    verified = true,
+                    email = "testuser@test.com",
+                    password = "testPassword@ash",
+                    loginAccess = false,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -360,18 +371,19 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 createResource(organization.id, rootUserToken)
 
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    setBody(gson.toJson(createUserRequest))
-                }
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(createUserRequest))
+                    }
                 assertEquals(HttpStatusCode.BadRequest, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
 
                 deleteOrganization(organization.id)
@@ -393,41 +405,44 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCreds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, subOrgUserCreds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
-                } returns AdminGetUserResponse.builder()
-                    .enabled(true)
-                    .username(subOrgUser.username)
-                    .userAttributes(
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
-                            .value(subOrgUser.email).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(subOrgUser.preferredUsername).build()
-                    )
-                    .userCreateDate(Instant.now())
-                    .build()
+                } returns
+                    AdminGetUserResponse.builder()
+                        .enabled(true)
+                        .username(subOrgUser.username)
+                        .userAttributes(
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                                .value(subOrgUser.email).build(),
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                                .value(subOrgUser.preferredUsername).build(),
+                        )
+                        .userCreateDate(Instant.now())
+                        .build()
 
                 // Get user
-                val response = client.get(
-                    "/organizations/${organization.id}" +
-                        "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
-                        "/users/${subOrgUser.username}"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                }
+                val response =
+                    client.get(
+                        "/organizations/${organization.id}" +
+                            "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
+                            "/users/${subOrgUser.username}",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    }
                 val responseBody = gson.fromJson(response.bodyAsText(), User::class.java)
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
 
                 assertEquals(subOrgUser.preferredUsername, responseBody.preferredUsername)
@@ -439,15 +454,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
         @Test
         fun `get user with unauthorized access`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val createUserRequest = CreateUserRequest(
-                preferredUsername = "testUserName",
-                name = "lorem ipsum",
-                password = "testPassword@123",
-                email = testEmail,
-                status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778",
-                loginAccess = true
-            )
+            val createUserRequest =
+                CreateUserRequest(
+                    preferredUsername = "testUserName",
+                    name = "lorem ipsum",
+                    password = "testPassword@123",
+                    email = testEmail,
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919626012778",
+                    loginAccess = true,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -457,20 +473,22 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
                 // Create user
-                val (user1, _) = createUser(
-                    orgId = organization.id,
-                    bearerToken = rootUserToken,
-                    createUserRequest = createUserRequest
-                )
+                val (user1, _) =
+                    createUser(
+                        orgId = organization.id,
+                        bearerToken = rootUserToken,
+                        createUserRequest = createUserRequest,
+                    )
 
                 // Get user
-                val response = client.get(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users/${user1.username}"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer badSecret")
-                }
+                val response =
+                    client.get(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users/${user1.username}",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer badSecret")
+                    }
                 assertEquals(HttpStatusCode.Unauthorized, response.status)
                 deleteOrganization(organization.id)
             }
@@ -483,15 +501,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
         @Test
         fun `delete user success case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val createUserRequest = CreateUserRequest(
-                preferredUsername = "testUserName",
-                name = "lorem ipsum",
-                password = "testPassword@Hash1",
-                email = testEmail,
-                status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778",
-                loginAccess = true
-            )
+            val createUserRequest =
+                CreateUserRequest(
+                    preferredUsername = "testUserName",
+                    name = "lorem ipsum",
+                    password = "testPassword@Hash1",
+                    email = testEmail,
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919626012778",
+                    loginAccess = true,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -500,22 +519,24 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCreds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, subOrgUserCreds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
 
                 // Delete user
-                val response = client.delete(
-                    "/organizations/${organization.id}" +
-                        "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
-                        "/users/${subOrgUser.username}"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                }
+                val response =
+                    client.delete(
+                        "/organizations/${organization.id}" +
+                            "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
+                            "/users/${subOrgUser.username}",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    }
                 assertEquals(HttpStatusCode.OK, response.status)
 
                 // Verify the value from mocks
@@ -535,24 +556,26 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
         fun `list users`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testEmail1 = "test-user-email1" + IdGenerator.randomId() + "@hypto.in"
-            val createUserRequest1 = CreateUserRequest(
-                preferredUsername = "testUserName",
-                name = "lorem ipsum",
-                password = "testPassword@Hash1",
-                email = testEmail,
-                status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778",
-                loginAccess = true
-            )
-            val createUserRequest2 = CreateUserRequest(
-                preferredUsername = "testUserName2",
-                name = "lorem ipsum",
-                password = "testPassword@Hash2",
-                email = testEmail1,
-                status = CreateUserRequest.Status.enabled,
-                phone = "+919626012778",
-                loginAccess = true
-            )
+            val createUserRequest1 =
+                CreateUserRequest(
+                    preferredUsername = "testUserName",
+                    name = "lorem ipsum",
+                    password = "testPassword@Hash1",
+                    email = testEmail,
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919626012778",
+                    loginAccess = true,
+                )
+            val createUserRequest2 =
+                CreateUserRequest(
+                    preferredUsername = "testUserName2",
+                    name = "lorem ipsum",
+                    password = "testPassword@Hash2",
+                    email = testEmail1,
+                    status = CreateUserRequest.Status.enabled,
+                    phone = "+919626012778",
+                    loginAccess = true,
+                )
             testApplication {
                 environment {
                     config = ApplicationConfig("application-custom.conf")
@@ -566,7 +589,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 // Create user1
                 client.post(
                     "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
+                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -576,7 +599,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 // Create user2
                 client.post(
                     "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
+                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -584,17 +607,18 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 }
 
                 // List users
-                val listUsersResponse = client.get(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                }
+                val listUsersResponse =
+                    client.get(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    }
                 assertEquals(HttpStatusCode.OK, listUsersResponse.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    listUsersResponse.contentType()
+                    listUsersResponse.contentType(),
                 )
 
                 val responseBody = gson.fromJson(listUsersResponse.bodyAsText(), UserPaginatedResponse::class.java)
@@ -620,47 +644,51 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
 
                 // Create sub org user
-                val (subOrgUser, _) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, _) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
 
-                val updateUserRequest = UpdateUserRequest(
-                    name = "name updated",
-                    phone = "+911234567890",
-                    status = UpdateUserRequest.Status.enabled,
-                    verified = true
-                )
+                val updateUserRequest =
+                    UpdateUserRequest(
+                        name = "name updated",
+                        phone = "+911234567890",
+                        status = UpdateUserRequest.Status.enabled,
+                        verified = true,
+                    )
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
-                } returns AdminGetUserResponse.builder()
-                    .enabled(true)
-                    .username(subOrgUser.username)
-                    .userAttributes(
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
-                            .value(subOrgUser.email).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(subOrgUser.username).build()
-                    )
-                    .userCreateDate(Instant.now())
-                    .build()
+                } returns
+                    AdminGetUserResponse.builder()
+                        .enabled(true)
+                        .username(subOrgUser.username)
+                        .userAttributes(
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                                .value(subOrgUser.email).build(),
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                                .value(subOrgUser.username).build(),
+                        )
+                        .userCreateDate(Instant.now())
+                        .build()
 
-                val response = client.patch(
-                    "/organizations/${organization.id}" +
-                        "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
-                        "/users/${subOrgUser.username}"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(updateUserRequest))
-                }
+                val response =
+                    client.patch(
+                        "/organizations/${organization.id}" +
+                            "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
+                            "/users/${subOrgUser.username}",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(updateUserRequest))
+                    }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
 
                 deleteOrganization(organization.id)
@@ -671,7 +699,6 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     @Nested
     @DisplayName("Change user password API tests")
     inner class ChangeUserPasswordTest {
-
         @Test
         fun `change password with wrong old password - failure`() {
             testApplication {
@@ -682,45 +709,49 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCreds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, subOrgUserCreds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
                 val username = organizationResponse.organization.rootUser.username
-                val samplePolicy = createAndAttachPolicy(
-                    orgId = organization.id,
-                    username = subOrgUser.username,
-                    bearerToken = rootUserToken,
-                    policyName = "sample-policy2",
-                    subOrgName = subOrganizationResponse.subOrganization.name,
-                    resourceName = "iam-user",
-                    actionName = "changePassword",
-                    resourceInstance = subOrgUser.username,
-                )
+                val samplePolicy =
+                    createAndAttachPolicy(
+                        orgId = organization.id,
+                        username = subOrgUser.username,
+                        bearerToken = rootUserToken,
+                        policyName = "sample-policy2",
+                        subOrgName = subOrganizationResponse.subOrganization.name,
+                        resourceName = "iam-user",
+                        actionName = "changePassword",
+                        resourceInstance = subOrgUser.username,
+                    )
 
                 coEvery {
                     cognitoClient.adminInitiateAuth(any<AdminInitiateAuthRequest>())
                 } throws NotAuthorizedException.builder().message("Incorrect username or password").build()
 
-                val changePasswordRequest = ChangeUserPasswordRequest(
-                    oldPassword = "testPassword@Hash3",
-                    newPassword = "testPassword@Hash2"
-                )
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization
-                        .name}/users/${subOrgUser.username}/change_password"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(changePasswordRequest))
-                }
+                val changePasswordRequest =
+                    ChangeUserPasswordRequest(
+                        oldPassword = "testPassword@Hash3",
+                        newPassword = "testPassword@Hash2",
+                    )
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization
+                            .name}/users/${subOrgUser.username}/change_password",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(changePasswordRequest))
+                    }
                 assertEquals(HttpStatusCode.Unauthorized, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 deleteOrganization(organization.id)
             }
@@ -736,12 +767,13 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCred) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, subOrgUserCred) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
 
                 createAndAttachPolicy(
                     orgId = organization.id,
@@ -754,23 +786,25 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     resourceInstance = subOrgUser.username,
                 )
 
-                val changePasswordRequest = ChangeUserPasswordRequest(
-                    oldPassword = "testPassword@Hash1",
-                    newPassword = "testPassword@Hash2"
-                )
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization
-                        .name}/users/${subOrgUser.username}/change_password"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer ${subOrgUserCred.secret}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(changePasswordRequest))
-                }
+                val changePasswordRequest =
+                    ChangeUserPasswordRequest(
+                        oldPassword = "testPassword@Hash1",
+                        newPassword = "testPassword@Hash2",
+                    )
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization
+                            .name}/users/${subOrgUser.username}/change_password",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer ${subOrgUserCred.secret}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(changePasswordRequest))
+                    }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 deleteOrganization(organization.id)
             }
@@ -786,18 +820,20 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser1, subOrgUser1Creds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
-                val (subOrgUser2, subOrgUser2Creds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser1, subOrgUser1Creds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
+                val (subOrgUser2, subOrgUser2Creds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
 
                 createAndAttachPolicy(
                     orgId = organization.id,
@@ -807,22 +843,24 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     subOrgName = subOrganizationResponse.subOrganization.name,
                     resourceName = IamResources.USER,
                     actionName = "changePassword",
-                    resourceInstance = subOrgUser2.username
+                    resourceInstance = subOrgUser2.username,
                 )
 
-                val changePasswordRequest = ChangeUserPasswordRequest(
-                    oldPassword = "testPassword@Hash1",
-                    newPassword = "testPassword@Hash2"
-                )
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization
-                        .name}/users/${subOrgUser1.username}/change_password"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer ${subOrgUser2Creds.secret}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(changePasswordRequest))
-                }
+                val changePasswordRequest =
+                    ChangeUserPasswordRequest(
+                        oldPassword = "testPassword@Hash1",
+                        newPassword = "testPassword@Hash2",
+                    )
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization
+                            .name}/users/${subOrgUser1.username}/change_password",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer ${subOrgUser2Creds.secret}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(changePasswordRequest))
+                    }
                 assertEquals(HttpStatusCode.Forbidden, response.status)
                 deleteOrganization(organization.id)
             }
@@ -838,62 +876,67 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCreds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
-                val samplePolicy = createAndAttachPolicy(
-                    orgId = organization.id,
-                    username = subOrgUser.username,
-                    bearerToken = rootUserToken,
-                    policyName = "sample-policy3",
-                    subOrgName = subOrganizationResponse.subOrganization.name,
-                    resourceName = "iam-user",
-                    actionName = "changePassword",
-                    resourceInstance = subOrgUser.username,
-                )
+                val (subOrgUser, subOrgUserCreds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
+                val samplePolicy =
+                    createAndAttachPolicy(
+                        orgId = organization.id,
+                        username = subOrgUser.username,
+                        bearerToken = rootUserToken,
+                        policyName = "sample-policy3",
+                        subOrgName = subOrganizationResponse.subOrganization.name,
+                        resourceName = "iam-user",
+                        actionName = "changePassword",
+                        resourceInstance = subOrgUser.username,
+                    )
 
                 val username = organizationResponse.organization.rootUser.username
 
-                val changePasswordRequest = ChangeUserPasswordRequest(
-                    oldPassword = "testPassword@Hash1",
-                    newPassword = "testPassword@Hash2"
-                )
-                val response = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization
-                        .name}/users/${subOrgUser.username}/change_password"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(changePasswordRequest))
-                }
+                val changePasswordRequest =
+                    ChangeUserPasswordRequest(
+                        oldPassword = "testPassword@Hash1",
+                        newPassword = "testPassword@Hash2",
+                    )
+                val response =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization
+                            .name}/users/${subOrgUser.username}/change_password",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(changePasswordRequest))
+                    }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
 
                 val authString = "${subOrgUser.email}:${changePasswordRequest.newPassword}"
                 val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                val tokenResponse = client.post(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(
-                        HttpHeaders.Authorization,
-                        authHeader
-                    )
-                }
+                val tokenResponse =
+                    client.post(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(
+                            HttpHeaders.Authorization,
+                            authHeader,
+                        )
+                    }
 
                 assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 deleteOrganization(organization.id)
             }
@@ -912,12 +955,13 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val (organizationResponse, createdUser) = createOrganization()
                 val organizationId = organizationResponse.organization.id
                 val subOrganizationResponse = createSubOrganization(organizationId, organizationResponse.rootUserToken)
-                val (subOrgUser, subOrgUserCreds) = createSubOrganizationUser(
-                    organizationResponse.organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    organizationResponse.rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, subOrgUserCreds) =
+                    createSubOrganizationUser(
+                        organizationResponse.organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        organizationResponse.rootUserToken,
+                        cognitoClient,
+                    )
                 val testPasscode = "testPasscode"
 
                 val listUsersResponse =
@@ -940,11 +984,11 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                                             .build(),
                                         AttributeType.builder().name(
                                             CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM +
-                                                CognitoConstants.ATTRIBUTE_CREATED_BY
-                                        ).value("iam-system").build()
-                                    )
-                                ).userCreateDate(Instant.now()).build()
-                        )
+                                                CognitoConstants.ATTRIBUTE_CREATED_BY,
+                                        ).value("iam-system").build(),
+                                    ),
+                                ).userCreateDate(Instant.now()).build(),
+                        ),
                     ).build()
                 coEvery {
                     cognitoClient.listUsers(any<ListUsersRequest>())
@@ -958,28 +1002,29 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                                 email = createdUser.email,
                                 purpose = VerifyEmailRequest.Purpose.reset,
                                 organizationId = organizationId,
-                                subOrganizationName = subOrganizationResponse.subOrganization.name
-                            )
-                        )
+                                subOrganizationName = subOrganizationResponse.subOrganization.name,
+                            ),
+                        ),
                     )
                 }
 
-                val resetPasswordResponse = client.post(
-                    "/organizations/$organizationId/sub_organizations/${subOrganizationResponse.subOrganization
-                        .name}/users/resetPassword"
-                ) {
-                    header("X-Api-Key", testPasscode)
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(
-                        gson.toJson(
-                            ResetPasswordRequest(email = subOrgUser.email!!, password = "testPassword@123")
+                val resetPasswordResponse =
+                    client.post(
+                        "/organizations/$organizationId/sub_organizations/${subOrganizationResponse.subOrganization
+                            .name}/users/resetPassword",
+                    ) {
+                        header("X-Api-Key", testPasscode)
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(
+                            gson.toJson(
+                                ResetPasswordRequest(email = subOrgUser.email!!, password = "testPassword@123"),
+                            ),
                         )
-                    )
-                }
+                    }
                 assertEquals(HttpStatusCode.OK, resetPasswordResponse.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    resetPasswordResponse.contentType()
+                    resetPasswordResponse.contentType(),
                 )
                 val response = gson.fromJson(resetPasswordResponse.bodyAsText(), BaseSuccessResponse::class.java)
                 assertTrue(response.success)
@@ -1002,12 +1047,13 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCreds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, subOrgUserCreds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
 
                 createAndAttachPolicy(
                     orgId = organization.id,
@@ -1020,29 +1066,31 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     resourceInstance = subOrgUser.username,
                 )
 
-                val samplePolicy = createPolicy(
-                    orgId = organization.id,
-                    bearerToken = rootUserToken,
-                    policyName = "sample-policy",
-                    subOrgId = subOrganizationResponse.subOrganization.name,
-                    resourceName = "sample-resource",
-                    actionName = "sample-action",
-                    resourceInstance = "instanceId",
-                )
+                val samplePolicy =
+                    createPolicy(
+                        orgId = organization.id,
+                        bearerToken = rootUserToken,
+                        policyName = "sample-policy",
+                        subOrgId = subOrganizationResponse.subOrganization.name,
+                        resourceName = "sample-resource",
+                        actionName = "sample-action",
+                        resourceInstance = "instanceId",
+                    )
                 assertEquals(1, samplePolicy.statements.size)
-                val response = client.patch(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization
-                        .name}/users/${subOrgUser.username}/attach_policies"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
-                }
+                val response =
+                    client.patch(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization
+                            .name}/users/${subOrgUser.username}/attach_policies",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
+                    }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 deleteOrganization(organization.id)
             }
@@ -1058,36 +1106,39 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCreds) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient
-                )
+                val (subOrgUser, subOrgUserCreds) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                    )
 
-                val samplePolicy = createPolicy(
-                    orgId = organization.id,
-                    bearerToken = rootUserToken,
-                    policyName = "sample-policy",
-                    subOrgId = subOrganizationResponse.subOrganization.name,
-                    resourceName = "sample-resource",
-                    actionName = "sample-action",
-                    resourceInstance = "instanceId",
-                )
+                val samplePolicy =
+                    createPolicy(
+                        orgId = organization.id,
+                        bearerToken = rootUserToken,
+                        policyName = "sample-policy",
+                        subOrgId = subOrganizationResponse.subOrganization.name,
+                        resourceName = "sample-resource",
+                        actionName = "sample-action",
+                        resourceInstance = "instanceId",
+                    )
                 assertEquals(1, samplePolicy.statements.size)
-                val response = client.patch(
-                    "/organizations/${organization
-                        .id}/sub_organizations/${subOrganizationResponse.subOrganization
-                        .name}/users/${subOrgUser.username}/attach_policies"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
-                }
+                val response =
+                    client.patch(
+                        "/organizations/${organization
+                            .id}/sub_organizations/${subOrganizationResponse.subOrganization
+                            .name}/users/${subOrgUser.username}/attach_policies",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer ${subOrgUserCreds.secret}")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(PolicyAssociationRequest(listOf(samplePolicy.hrn))))
+                    }
                 assertEquals(HttpStatusCode.Forbidden, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
                 deleteOrganization(organization.id)
             }
@@ -1107,13 +1158,14 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, _) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient,
-                    false
-                )
+                val (subOrgUser, _) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                        false,
+                    )
 
                 createAndAttachPolicy(
                     orgId = organization.id,
@@ -1127,61 +1179,64 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 )
 
                 // Create password for sub org user
-                val response = client.post(
-                    "/organizations/${organization .id}" +
-                        "/sub_organizations/${subOrganizationResponse.subOrganization .name}" +
-                        "/users/${subOrgUser.username}/create_password"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
-                }.apply {
-                    assertEquals(HttpStatusCode.OK, status)
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        contentType()
-                    )
-                }
+                val response =
+                    client.post(
+                        "/organizations/${organization .id}" +
+                            "/sub_organizations/${subOrganizationResponse.subOrganization .name}" +
+                            "/users/${subOrgUser.username}/create_password",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
+                    }.apply {
+                        assertEquals(HttpStatusCode.OK, status)
+                        assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            contentType(),
+                        )
+                    }
 
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    response.contentType()
+                    response.contentType(),
                 )
 
                 // Check if password is created by logging in
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
-                } returns AdminGetUserResponse.builder()
-                    .enabled(true)
-                    .username(subOrgUser.username)
-                    .userAttributes(
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
-                            .value(subOrgUser.email).build(),
-                        AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
-                            .value(subOrgUser.username).build()
-                    )
-                    .userCreateDate(Instant.now())
-                    .build()
+                } returns
+                    AdminGetUserResponse.builder()
+                        .enabled(true)
+                        .username(subOrgUser.username)
+                        .userAttributes(
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                                .value(subOrgUser.email).build(),
+                            AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                                .value(subOrgUser.username).build(),
+                        )
+                        .userCreateDate(Instant.now())
+                        .build()
 
                 val authString = "${subOrgUser.email}:testPassword@Hash1"
                 val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
-                val tokenResponse = client.post(
-                    "/organizations/${organization.id}" +
-                        "/sub_organizations/${subOrganizationResponse.subOrganization.name}/token"
-                ) {
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    header(HttpHeaders.Authorization, authHeader)
-                }
+                val tokenResponse =
+                    client.post(
+                        "/organizations/${organization.id}" +
+                            "/sub_organizations/${subOrganizationResponse.subOrganization.name}/token",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, authHeader)
+                    }
                 assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                    tokenResponse.contentType()
+                    tokenResponse.contentType(),
                 )
                 assertEquals(
                     organization.id,
-                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER]
+                    tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
                 deleteOrganization(organization.id)
             }
@@ -1197,13 +1252,14 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
                 val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, _) = createSubOrganizationUser(
-                    organization.id,
-                    subOrganizationResponse.subOrganization.name,
-                    rootUserToken,
-                    cognitoClient,
-                    false
-                )
+                val (subOrgUser, _) =
+                    createSubOrganizationUser(
+                        organization.id,
+                        subOrganizationResponse.subOrganization.name,
+                        rootUserToken,
+                        cognitoClient,
+                        false,
+                    )
 
                 createAndAttachPolicy(
                     orgId = organization.id,
@@ -1217,21 +1273,22 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 )
 
                 // Create password for sub org user
-                val response = client.post(
-                    "/organizations/${organization .id}" +
-                        "/sub_organizations/dummySubOrg" +
-                        "/users/${subOrgUser.username}/create_password"
-                ) {
-                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
-                }.apply {
-                    assertEquals(HttpStatusCode.NotFound, status)
-                    assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                        contentType()
-                    )
-                }
+                val response =
+                    client.post(
+                        "/organizations/${organization .id}" +
+                            "/sub_organizations/dummySubOrg" +
+                            "/users/${subOrgUser.username}/create_password",
+                    ) {
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
+                    }.apply {
+                        assertEquals(HttpStatusCode.NotFound, status)
+                        assertEquals(
+                            ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                            contentType(),
+                        )
+                    }
                 deleteOrganization(organization.id)
             }
         }

@@ -140,7 +140,7 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
                     return@validate UserPrincipal(
                         tokenCredential = TokenCredential(tokenCredential.value, TokenType.PASSCODE),
                         hrnStr = metadata.inviterUserHrn,
-                        policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn)
+                        policies = principalPolicyService.fetchEntitlements(metadata.inviterUserHrn),
                     )
                 }
             }
@@ -150,12 +150,13 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
         validate { credentials ->
             val organizationId = this.parameters["organization_id"]!!
             val subOrganizationId = this.parameters["sub_organization_id"]
-            val principal = userPrincipalService.getUserPrincipalByCredentials(
-                organizationId,
-                subOrganizationId,
-                credentials.name.lowercase(),
-                credentials.password
-            )
+            val principal =
+                userPrincipalService.getUserPrincipalByCredentials(
+                    organizationId,
+                    subOrganizationId,
+                    credentials.name.lowercase(),
+                    credentials.password,
+                )
             if (principal != null) {
                 response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
             }
@@ -170,13 +171,14 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
             if (!appConfig.app.uniqueUsersAcrossOrganizations) {
                 throw BadRequestException(
                     "Email not unique across organizations. " +
-                        "Please use Token APIs with organization ID"
+                        "Please use Token APIs with organization ID",
                 )
             }
 
-            val principal = userPrincipalService.getUserPrincipalByCredentials(
-                UsernamePasswordCredential(credentials.name.lowercase(), credentials.password)
-            )
+            val principal =
+                userPrincipalService.getUserPrincipalByCredentials(
+                    UsernamePasswordCredential(credentials.name.lowercase(), credentials.password),
+                )
             response.headers.append(Constants.X_ORGANIZATION_HEADER, principal.organization)
             return@validate principal
         }
@@ -187,7 +189,8 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
 }
 
 // Defines authentication mechanisms used throughout the application.
-val ApplicationAuthProviders: Map<String, OAuthServerSettings> = listOf<OAuthServerSettings>(
+val ApplicationAuthProviders: Map<String, OAuthServerSettings> =
+    listOf<OAuthServerSettings>(
 //        OAuthServerSettings.OAuth2ServerSettings(
 //                name = "facebook",
 //                authorizeUrl = "https://graph.facebook.com/oauth/authorize",
@@ -198,7 +201,7 @@ val ApplicationAuthProviders: Map<String, OAuthServerSettings> = listOf<OAuthSer
 //                clientSecret = "settings.property("auth.oauth.facebook.clientSecret").getString()",
 //                defaultScopes = listOf("public_profile")
 //        )
-).associateBy { it.name }
+    ).associateBy { it.name }
 
 // Provides all resources and configurations for application telemetry using micrometer
 object MicrometerConfigs {
@@ -206,15 +209,16 @@ object MicrometerConfigs {
     private val registry = CompositeMeterRegistry()
 
     // TODO: Retain required metric binders and remove the rest
-    private val meterBinders = listOf(
+    private val meterBinders =
+        listOf(
 //        ClassLoaderMetrics(),
 //        JvmMemoryMetrics(),
 //        JvmGcMetrics(),
 //        JvmThreadMetrics(),
 //        JvmHeapPressureMetrics(),
-        ProcessorMetrics(),
-        LogbackMetrics()
-    )
+            ProcessorMetrics(),
+            LogbackMetrics(),
+        )
 
     private fun getNewRelicMeterRegistry(): NewRelicRegistry {
         val newRelicRegistry = NewRelicRegistry.builder(getNewRelicRegistryConfig()).build()
@@ -229,13 +233,19 @@ object MicrometerConfigs {
         return object : NewRelicRegistryConfig {
             override fun apiKey() = appConfig.newrelic.apiKey
 
-            override fun get(key: String): String? { return null }
+            override fun get(key: String): String? {
+                return null
+            }
+
             override fun step(): Duration {
                 // TODO: Needs Tweaking
                 return Duration.ofSeconds(appConfig.newrelic.publishInterval)
             }
+
             override fun serviceName() = "${appConfig.app.name}.${appConfig.app.env}.${appConfig.app.stack}"
+
             override fun enableAuditMode() = false
+
             override fun useLicenseKey() = true
         }
     }
@@ -248,8 +258,8 @@ object MicrometerConfigs {
 //                Tag.of("environment", appConfig.app.env.toString()),
 //                Tag.of("service", appConfig.app.name),
 //                Tag.of("stack", appConfig.app.stack)
-                Tag.of("host", InetAddress.getLocalHost().hostName)
-            )
+                Tag.of("host", InetAddress.getLocalHost().hostName),
+            ),
         )
         /*
          * TODO: Configure "LoggingMeterRegistry" with a logging sink to

@@ -37,28 +37,30 @@ fun Route.createPasscodeApi() {
         val request = call.receive<VerifyEmailRequest>().validate()
         // TODO: createuser permission checks needed for this endpoint if purpose is invite
         // TODO: add tests for invite user purpose
-        val email = if (request.email == null) {
-            request.userHrn?.let {
-                requireNotNull(principal) { "User is not authenticated. So can't send invite to ${request.userHrn}" }
-                val inviteeHrn = kotlin
-                    .runCatching { HrnFactory.getHrn(request.userHrn) as ResourceHrn }
-                    .getOrNull() ?: throw BadRequestException("Invalid user hrn")
-                val inviterHrn = HrnFactory.getHrn(principal.hrnStr) as ResourceHrn
-                require(inviterHrn.organization == inviteeHrn.organization) {
-                    "Authorization token doesn't belong to ${request.userHrn} organization"
-                }
-                // Adding a restriction to not allow sub organization users to send invites as we are not checking
-                // permissions for sending invites today.
-                // TODO: Add permission checks for sending invites
-                require(inviterHrn.subOrganization.isNullOrEmpty()) {
-                    "Sub organization users can't send invites"
-                }
-                val inviteeUser = usersService.getUser(inviteeHrn)
-                inviteeUser.email ?: throw BadRequestException("UserHrn ${request.userHrn} doesn't have email")
-            } ?: throw BadRequestException("Email or userHrn is required")
-        } else {
-            request.email.lowercase()
-        }
+        val email =
+            if (request.email == null) {
+                request.userHrn?.let {
+                    requireNotNull(principal) { "User is not authenticated. So can't send invite to ${request.userHrn}" }
+                    val inviteeHrn =
+                        kotlin
+                            .runCatching { HrnFactory.getHrn(request.userHrn) as ResourceHrn }
+                            .getOrNull() ?: throw BadRequestException("Invalid user hrn")
+                    val inviterHrn = HrnFactory.getHrn(principal.hrnStr) as ResourceHrn
+                    require(inviterHrn.organization == inviteeHrn.organization) {
+                        "Authorization token doesn't belong to ${request.userHrn} organization"
+                    }
+                    // Adding a restriction to not allow sub organization users to send invites as we are not checking
+                    // permissions for sending invites today.
+                    // TODO: Add permission checks for sending invites
+                    require(inviterHrn.subOrganization.isNullOrEmpty()) {
+                        "Sub organization users can't send invites"
+                    }
+                    val inviteeUser = usersService.getUser(inviteeHrn)
+                    inviteeUser.email ?: throw BadRequestException("UserHrn ${request.userHrn} doesn't have email")
+                } ?: throw BadRequestException("Email or userHrn is required")
+            } else {
+                request.email.lowercase()
+            }
 
         // Validations
         principal?.let {
@@ -74,19 +76,20 @@ fun Route.createPasscodeApi() {
             require(inviteMetadata.inviterUserHrn == principal.hrnStr) { "Does not support cross user invites" }
         }
 
-        val response = passcodeService.verifyEmail(
-            email,
-            request.userHrn,
-            request.purpose,
-            request.organizationId,
-            request.subOrganizationName,
-            request.metadata,
-            principal
-        )
+        val response =
+            passcodeService.verifyEmail(
+                email,
+                request.userHrn,
+                request.purpose,
+                request.organizationId,
+                request.subOrganizationName,
+                request.metadata,
+                principal,
+            )
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 }
@@ -101,15 +104,15 @@ fun Route.passcodeApis() {
                 "/organizations/{organizationId}/invites",
                 resourceNameIndex = 0,
                 resourceInstanceIndex = 1,
-                organizationIdIndex = 1
+                organizationIdIndex = 1,
             ),
             RouteOption(
                 "/organizations/{organizationId}/sub_organizations/{sub_organization_name}/invites",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
+                subOrganizationNameIndex = 3,
+            ),
         ),
         "listInvites",
     ) {
@@ -120,22 +123,24 @@ fun Route.passcodeApis() {
         val pageSize = call.request.queryParameters["page_size"]
         val sortOrder = call.request.queryParameters["sort_order"]
 
-        val context = PaginationContext.from(
-            nextToken,
-            pageSize?.toInt(),
-            sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-        )
+        val context =
+            PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+            )
 
-        val passcodes = passcodeService.listOrgPasscodes(
-            organizationId,
-            subOrganizationName,
-            VerifyEmailRequest.Purpose.invite,
-            context
-        )
+        val passcodes =
+            passcodeService.listOrgPasscodes(
+                organizationId,
+                subOrganizationName,
+                VerifyEmailRequest.Purpose.invite,
+                context,
+            )
         call.respondText(
             text = gson.toJson(passcodes),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 
@@ -145,15 +150,15 @@ fun Route.passcodeApis() {
                 "/organizations/{organizationId}/invites/resend",
                 resourceNameIndex = 0,
                 resourceInstanceIndex = 1,
-                organizationIdIndex = 1
+                organizationIdIndex = 1,
             ),
             RouteOption(
                 "/organizations/{organizationId}/sub_organizations/{sub_organization_name}/invites/resend",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
+                subOrganizationNameIndex = 3,
+            ),
         ),
         "resendInvite",
     ) {
@@ -162,16 +167,17 @@ fun Route.passcodeApis() {
         val subOrganizationName = call.parameters["sub_organization_name"]
         val request = call.receive<ResendInviteRequest>().validate()
 
-        val passcode = passcodeService.resendInvitePasscode(
-            organizationId,
-            subOrganizationName,
-            request.email,
-            principal
-        )
+        val passcode =
+            passcodeService.resendInvitePasscode(
+                organizationId,
+                subOrganizationName,
+                request.email,
+                principal,
+            )
         call.respondText(
             text = gson.toJson(passcode),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 }

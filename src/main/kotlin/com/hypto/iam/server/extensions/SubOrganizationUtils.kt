@@ -14,23 +14,32 @@ import java.util.Base64
  * With this option, same email address hello@hypto.in can coonfigure two different passwords for sub orgId1 and sub
  * orgId2.
  */
-fun getEncodedEmail(organizationId: String, subOrganizationName: String?, email: String) =
+fun getEncodedEmail(
+    organizationId: String,
+    subOrganizationName: String?,
+    email: String,
+) =
     if (subOrganizationName != null) {
         encodeSubOrgUserEmail(
             email,
             organizationId,
-            subOrganizationName
+            subOrganizationName,
         )
     } else {
         email
     }
 
-private fun encodeSubOrgUserEmail(email: String, organizationId: String, subOrganizationName: String): String {
+private fun encodeSubOrgUserEmail(
+    email: String,
+    organizationId: String,
+    subOrganizationName: String,
+): String {
     val emailParts = email.split("@").takeIf { it.size == 2 } ?: throw BadRequestException("Invalid email address")
     val localPart = emailParts[0]
     val domainPart = emailParts[1]
-    val subAddress = Base64.getEncoder().encodeToString(
-        "$organizationId:$subOrganizationName".toByteArray()
-    )
+    val subAddress =
+        Base64.getEncoder().encodeToString(
+            "$organizationId:$subOrganizationName".toByteArray(),
+        )
     return "$localPart+$subAddress@$domainPart"
 }

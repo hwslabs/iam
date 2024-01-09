@@ -22,8 +22,6 @@ import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
-import java.time.Instant
-import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
@@ -31,6 +29,8 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeTy
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
+import java.time.Instant
+import java.time.LocalDateTime
 
 internal class PasscodeApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -41,20 +41,22 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             environment {
                 config = ApplicationConfig("application-custom.conf")
             }
-            val requestBody = VerifyEmailRequest(
-                email = "abcd@abcd.com",
-                purpose = VerifyEmailRequest.Purpose.signup
-            )
-            val response = client.post(
-                "/verifyEmail"
-            ) {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                VerifyEmailRequest(
+                    email = "abcd@abcd.com",
+                    purpose = VerifyEmailRequest.Purpose.signup,
+                )
+            val response =
+                client.post(
+                    "/verifyEmail",
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(requestBody))
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
             val responseBody =
                 gson.fromJson(response.bodyAsText(), BaseSuccessResponse::class.java)
@@ -68,21 +70,23 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             environment {
                 config = ApplicationConfig("application-custom.conf")
             }
-            val requestBody = VerifyEmailRequest(
-                email = "abcd@abcd.com",
-                purpose = VerifyEmailRequest.Purpose.signup,
-                organizationId = "sampleOrg"
-            )
-            val response = client.post(
-                "/verifyEmail"
-            ) {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                VerifyEmailRequest(
+                    email = "abcd@abcd.com",
+                    purpose = VerifyEmailRequest.Purpose.signup,
+                    organizationId = "sampleOrg",
+                )
+            val response =
+                client.post(
+                    "/verifyEmail",
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(requestBody))
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
             val responseBody =
                 gson.fromJson(response.bodyAsText(), BaseSuccessResponse::class.java)
@@ -117,11 +121,11 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                                         .value("true")
                                         .build(),
                                     AttributeType.builder().name(
-                                        CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM + CognitoConstants.ATTRIBUTE_CREATED_BY
-                                    ).value("iam-system").build()
-                                )
-                            ).userCreateDate(Instant.now()).build()
-                    )
+                                        CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM + CognitoConstants.ATTRIBUTE_CREATED_BY,
+                                    ).value("iam-system").build(),
+                                ),
+                            ).userCreateDate(Instant.now()).build(),
+                    ),
                 ).build()
             coEvery {
                 cognitoClient.listUsers(any<ListUsersRequest>())
@@ -129,21 +133,23 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
 
             val organizationId = organizationResponse.organization.id
 
-            val requestBody = VerifyEmailRequest(
-                email = createdUser.email,
-                purpose = VerifyEmailRequest.Purpose.reset,
-                organizationId = organizationId
-            )
-            val response = client.post(
-                "/verifyEmail"
-            ) {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(gson.toJson(requestBody))
-            }
+            val requestBody =
+                VerifyEmailRequest(
+                    email = createdUser.email,
+                    purpose = VerifyEmailRequest.Purpose.reset,
+                    organizationId = organizationId,
+                )
+            val response =
+                client.post(
+                    "/verifyEmail",
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(requestBody))
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
             val responseBody =
                 gson.fromJson(response.bodyAsText(), BaseSuccessResponse::class.java)
@@ -162,22 +168,24 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             val (organizationResponse, _) = createOrganization()
             val organizationId = organizationResponse.organization.id
 
-            val requestBody = VerifyEmailRequest(
-                email = "unknownuser@email.com",
-                purpose = VerifyEmailRequest.Purpose.reset,
-                organizationId = organizationId
-            )
+            val requestBody =
+                VerifyEmailRequest(
+                    email = "unknownuser@email.com",
+                    purpose = VerifyEmailRequest.Purpose.reset,
+                    organizationId = organizationId,
+                )
 
-            val response = client.post(
-                "/verifyEmail"
-            ) {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(gson.toJson(requestBody))
-            }
+            val response =
+                client.post(
+                    "/verifyEmail",
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(requestBody))
+                }
             assertEquals(HttpStatusCode.NotFound, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
 
             deleteOrganization(organizationId)
@@ -191,26 +199,29 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 config = ApplicationConfig("application-custom.conf")
             }
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val metadata = mapOf<String, Any>(
-                "name" to "test-org" + IdGenerator.randomId(),
-                "rootUserName" to "test-name" + IdGenerator.randomId(),
-                "rootUserVerified" to true,
-                "rootUserPreferredUsername" to "user" + IdGenerator.randomId()
-            )
+            val metadata =
+                mapOf<String, Any>(
+                    "name" to "test-org" + IdGenerator.randomId(),
+                    "rootUserName" to "test-name" + IdGenerator.randomId(),
+                    "rootUserVerified" to true,
+                    "rootUserPreferredUsername" to "user" + IdGenerator.randomId(),
+                )
 
-            val verifyRequestBody = VerifyEmailRequest(
-                email = testEmail,
-                purpose = VerifyEmailRequest.Purpose.signup,
-                metadata = metadata
-            )
-            val response = client.post("/verifyEmail") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(gson.toJson(verifyRequestBody))
-            }
+            val verifyRequestBody =
+                VerifyEmailRequest(
+                    email = testEmail,
+                    purpose = VerifyEmailRequest.Purpose.signup,
+                    metadata = metadata,
+                )
+            val response =
+                client.post("/verifyEmail") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(verifyRequestBody))
+                }
             assertEquals(HttpStatusCode.BadRequest, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
         }
     }
@@ -226,30 +237,33 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             val rootUserToken = organizationResponse.rootUserToken
 
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val requestBody = VerifyEmailRequest(
-                email = testEmail,
-                purpose = VerifyEmailRequest.Purpose.invite,
-                organizationId = organizationId,
-                metadata = mapOf(
-                    "inviterUserHrn" to organizationResponse.organization.rootUser.hrn,
-                    "policies" to listOf("hrn:$organizationId::iam-policy/admin")
+            val requestBody =
+                VerifyEmailRequest(
+                    email = testEmail,
+                    purpose = VerifyEmailRequest.Purpose.invite,
+                    organizationId = organizationId,
+                    metadata =
+                        mapOf(
+                            "inviterUserHrn" to organizationResponse.organization.rootUser.hrn,
+                            "policies" to listOf("hrn:$organizationId::iam-policy/admin"),
+                        ),
                 )
-            )
 
             coEvery {
                 passcodeRepo.getValidPasscodeCount(any(), VerifyEmailRequest.Purpose.invite, any())
             } coAnswers {
                 0
             }
-            val response = client.post("/verifyEmail") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                setBody(gson.toJson(requestBody))
-            }
+            val response =
+                client.post("/verifyEmail") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(requestBody))
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
 
             coEvery {
@@ -257,7 +271,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                     organizationId,
                     null,
                     VerifyEmailRequest.Purpose.invite,
-                    testEmail
+                    testEmail,
                 )
             } coAnswers {
                 PasscodesRecord(
@@ -268,14 +282,15 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                     VerifyEmailRequest.Purpose.invite.value,
                     LocalDateTime.now(),
                     null,
-                    null
+                    null,
                 )
             }
-            val resendEmailResponse = client.post("/organizations/$organizationId/invites/resend") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                setBody(gson.toJson(ResendInviteRequest(testEmail)))
-            }
+            val resendEmailResponse =
+                client.post("/organizations/$organizationId/invites/resend") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(ResendInviteRequest(testEmail)))
+                }
             assertEquals(HttpStatusCode.OK, resendEmailResponse.status)
         }
     }
@@ -296,19 +311,20 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                     organizationId = organizationId,
                     subOrganizationName = null,
                     purpose = VerifyEmailRequest.Purpose.invite,
-                    email = testEmail
+                    email = testEmail,
                 )
             } coAnswers {
                 null
             }
 
-            val resendEmailResponse = client.post(
-                "/organizations/$organizationId/invites/resend"
-            ) {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                setBody(gson.toJson(ResendInviteRequest(testEmail)))
-            }
+            val resendEmailResponse =
+                client.post(
+                    "/organizations/$organizationId/invites/resend",
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(ResendInviteRequest(testEmail)))
+                }
             assertEquals(HttpStatusCode.NotFound, resendEmailResponse.status)
         }
     }

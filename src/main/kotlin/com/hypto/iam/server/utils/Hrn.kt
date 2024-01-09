@@ -38,7 +38,7 @@ class ResourceHrn : Hrn {
             (
                 "^hrn:(?<organization>[^:\n]+):" +
                     "(?<subOrganization>[^:\n]*):(?<resource>[^:/\n]*)/?(?<resourceInstance>[^/\n:]*)"
-                ).trimMargin().toRegex()
+            ).trimMargin().toRegex()
     }
 
     constructor(

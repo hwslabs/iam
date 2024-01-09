@@ -13,6 +13,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 private val logger = KotlinLogging.logger("service.UserPrincipalServiceImpl")
+
 class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     private val credentialsRepo: CredentialsRepo by inject()
     private val principalPolicyService: PrincipalPolicyService by inject()
@@ -20,75 +21,80 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     private val usersService: UsersService by inject()
 
     override suspend fun getUserPrincipalByRefreshToken(
-        tokenCredential: TokenCredential
+        tokenCredential: TokenCredential,
     ): UserPrincipal? {
         return credentialsRepo.fetchByRefreshToken(tokenCredential.value!!)?.let { credential ->
             UserPrincipal(
                 tokenCredential = tokenCredential,
                 hrnStr = credential.userHrn,
-                policies = principalPolicyService.fetchEntitlements(credential.userHrn)
+                policies = principalPolicyService.fetchEntitlements(credential.userHrn),
             )
         }
     }
 
     override suspend fun getUserPrincipalByJwtToken(
         tokenCredential: TokenCredential,
-        deepCheck: Boolean
-    ): UserPrincipal = measureTimedValue("TokenService.getUserPrincipalByJwtToken.$deepCheck", logger) {
-        val token = tokenService.validateJwtToken(tokenCredential.value!!)
-        val userHrnStr: String = token.body.get(TokenServiceImpl.USER_CLAIM, String::class.java)
-        val creatorHrnStr: String? = token.body.get(TokenServiceImpl.ON_BEHALF_CLAIM, String::class.java)
-        val entitlements: String = token.body.get(TokenServiceImpl.ENTITLEMENTS_CLAIM, String::class.java)
-        return UserPrincipal(
-            tokenCredential,
-            userHrnStr,
-            token.body,
-            if (deepCheck && (creatorHrnStr == null)) {
-                principalPolicyService.fetchEntitlements(userHrnStr)
-            } else {
-                PolicyBuilder(entitlements)
-            }
-        )
-    }
+        deepCheck: Boolean,
+    ): UserPrincipal =
+        measureTimedValue("TokenService.getUserPrincipalByJwtToken.$deepCheck", logger) {
+            val token = tokenService.validateJwtToken(tokenCredential.value!!)
+            val userHrnStr: String = token.body.get(TokenServiceImpl.USER_CLAIM, String::class.java)
+            val creatorHrnStr: String? = token.body.get(TokenServiceImpl.ON_BEHALF_CLAIM, String::class.java)
+            val entitlements: String = token.body.get(TokenServiceImpl.ENTITLEMENTS_CLAIM, String::class.java)
+            return UserPrincipal(
+                tokenCredential,
+                userHrnStr,
+                token.body,
+                if (deepCheck && (creatorHrnStr == null)) {
+                    principalPolicyService.fetchEntitlements(userHrnStr)
+                } else {
+                    PolicyBuilder(entitlements)
+                },
+            )
+        }
 
     override suspend fun getUserPrincipalByCredentials(
         organizationId: String,
         subOrganizationId: String?,
         userName: String,
-        password: String
-    ):
-        UserPrincipal = measureTimedValue("TokenService.getUserPrincipalByCredentials", logger) {
-        val user = usersService.authenticate(organizationId, subOrganizationId, userName, password)
-        return UserPrincipal(
-            tokenCredential = TokenCredential(userName, TokenType.BASIC),
-            hrnStr = user.hrn,
-            policies = principalPolicyService.fetchEntitlements(user.hrn)
-        )
-    }
+        password: String,
+    ): UserPrincipal =
+        measureTimedValue("TokenService.getUserPrincipalByCredentials", logger) {
+            val user = usersService.authenticate(organizationId, subOrganizationId, userName, password)
+            return UserPrincipal(
+                tokenCredential = TokenCredential(userName, TokenType.BASIC),
+                hrnStr = user.hrn,
+                policies = principalPolicyService.fetchEntitlements(user.hrn),
+            )
+        }
 
     override suspend fun getUserPrincipalByCredentials(
-        credentials: UsernamePasswordCredential
+        credentials: UsernamePasswordCredential,
     ): UserPrincipal {
         val validCredentials = credentials.validate()
         val user = usersService.authenticate(null, validCredentials.username, validCredentials.password)
         return UserPrincipal(
             tokenCredential = TokenCredential(validCredentials.username, TokenType.BASIC),
             hrnStr = user.hrn,
-            policies = principalPolicyService.fetchEntitlements(user.hrn)
+            policies = principalPolicyService.fetchEntitlements(user.hrn),
         )
     }
 }
 
 interface UserPrincipalService {
     suspend fun getUserPrincipalByRefreshToken(tokenCredential: TokenCredential): UserPrincipal?
-    suspend fun getUserPrincipalByJwtToken(tokenCredential: TokenCredential, deepCheck: Boolean = false): UserPrincipal?
+
+    suspend fun getUserPrincipalByJwtToken(
+        tokenCredential: TokenCredential,
+        deepCheck: Boolean = false,
+    ): UserPrincipal?
+
     suspend fun getUserPrincipalByCredentials(
         organizationId: String,
         subOrganizationId: String?,
         userName: String,
-        password: String
-    ):
-        UserPrincipal?
+        password: String,
+    ): UserPrincipal?
 
     suspend fun getUserPrincipalByCredentials(credentials: UsernamePasswordCredential): UserPrincipal
 }

@@ -7,13 +7,12 @@ import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
-import java.time.LocalDateTime
-import java.util.UUID
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
+import java.time.LocalDateTime
+import java.util.UUID
 
 object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
-
     private val idFun = fun(credentials: Credentials): UUID {
         return credentials.id
     }
@@ -33,7 +32,10 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
     /**
      * Fetch records that matches the `id` and `user_hrn`
      */
-    suspend fun fetchByIdAndUserHrn(id: UUID, value: String): CredentialsRecord? {
+    suspend fun fetchByIdAndUserHrn(
+        id: UUID,
+        value: String,
+    ): CredentialsRecord? {
         return ctx("credentials.fetch_by_id").selectFrom(CREDENTIALS)
             .where(CREDENTIALS.ID.eq(id).and(CREDENTIALS.USER_HRN.eq(value)))
             .fetchOne()
@@ -43,13 +45,17 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
      * Updates status to `inactive` for users with `userHrn`
      * @return true on successful update. false otherwise.
      */
-    suspend fun updateStatusForUser(userHrn: String, status: Credential.Status = Credential.Status.inactive): Boolean {
-        val count = ctx("credentials.update_status_for_user")
-            .update(CREDENTIALS)
-            .set(CREDENTIALS.STATUS, status.value)
-            .set(CREDENTIALS.UPDATED_AT, LocalDateTime.now())
-            .where(CREDENTIALS.USER_HRN.eq(userHrn))
-            .execute()
+    suspend fun updateStatusForUser(
+        userHrn: String,
+        status: Credential.Status = Credential.Status.inactive,
+    ): Boolean {
+        val count =
+            ctx("credentials.update_status_for_user")
+                .update(CREDENTIALS)
+                .set(CREDENTIALS.STATUS, status.value)
+                .set(CREDENTIALS.UPDATED_AT, LocalDateTime.now())
+                .where(CREDENTIALS.USER_HRN.eq(userHrn))
+                .execute()
         return count > 0
     }
 
@@ -65,7 +71,11 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
      * Updates status and / or validUntil attributes of a credential represented by {@param id}
      * @return true on successful update. false otherwise.
      */
-    suspend fun update(id: UUID, status: Credential.Status?, validUntil: LocalDateTime?): CredentialsRecord? {
+    suspend fun update(
+        id: UUID,
+        status: Credential.Status?,
+        validUntil: LocalDateTime?,
+    ): CredentialsRecord? {
         var builder = ctx("credentials.update").update(CREDENTIALS).set(CREDENTIALS.UPDATED_AT, LocalDateTime.now())
         status?.let { builder = builder.set(CREDENTIALS.STATUS, status.value) }
         validUntil?.let { builder = builder.set(CREDENTIALS.VALID_UNTIL, validUntil) }
@@ -80,38 +90,46 @@ object CredentialsRepo : BaseRepo<CredentialsRecord, Credentials, UUID>() {
         userHrn: Hrn,
         status: Credential.Status = Credential.Status.active,
         refreshToken: String,
-        validUntil: LocalDateTime? = null
+        validUntil: LocalDateTime? = null,
     ): CredentialsRecord {
-        val record = CredentialsRecord()
-            .setValidUntil(validUntil).setStatus(status.value).setRefreshToken(refreshToken)
-            .setUserHrn(userHrn.toString()).setCreatedAt(LocalDateTime.now()).setUpdatedAt(LocalDateTime.now())
+        val record =
+            CredentialsRecord()
+                .setValidUntil(validUntil).setStatus(status.value).setRefreshToken(refreshToken)
+                .setUserHrn(userHrn.toString()).setCreatedAt(LocalDateTime.now()).setUpdatedAt(LocalDateTime.now())
         record.attach(dao().configuration())
         record.store()
         return record
     }
 
     suspend fun getAllByUserHrn(
-        userHrn: Hrn
+        userHrn: Hrn,
     ): Result<CredentialsRecord> {
         return ctx().selectFrom(CREDENTIALS)
             .where(CREDENTIALS.USER_HRN.eq(userHrn.toString()))
             .fetch()
     }
 
-    suspend fun delete(organizationId: String, subOrganizationName: String?, userId: String, id: UUID): Boolean {
-        val record = CredentialsRecord()
-            .setId(id)
-            .setUserHrn(ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userId).toString())
+    suspend fun delete(
+        organizationId: String,
+        subOrganizationName: String?,
+        userId: String,
+        id: UUID,
+    ): Boolean {
+        val record =
+            CredentialsRecord()
+                .setId(id)
+                .setUserHrn(ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userId).toString())
         record.attach(dao().configuration())
         val count = record.delete()
         return count > 0
     }
 
     suspend fun deleteByUserHrn(userHrn: String): Boolean {
-        val count = ctx("credentials.delete_by_user_hrn")
-            .deleteFrom(CREDENTIALS)
-            .where(CREDENTIALS.USER_HRN.like("%$userHrn%"))
-            .execute()
+        val count =
+            ctx("credentials.delete_by_user_hrn")
+                .deleteFrom(CREDENTIALS)
+                .where(CREDENTIALS.USER_HRN.like("%$userHrn%"))
+                .execute()
         return count > 0
     }
 }
