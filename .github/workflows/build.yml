@@ -24,8 +24,9 @@ jobs:
         with:
           gradle-version: '8.5'
           arguments: build
-      - name: Upload JaCoCo coverage report as a workflow artifact
+      - name: Upload JaCoCo coverage report as a workflow artifact on failure
         uses: actions/upload-artifact@v3
+        if: failure()
         with:
           name: jacoco-report
           path: build/jacoco/test/jacocoTestReport.csv
