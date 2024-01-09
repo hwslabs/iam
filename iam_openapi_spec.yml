@@ -3496,10 +3496,11 @@ components:
       type: object
       additionalProperties: false
       required:
-        - email
         - purpose
       properties:
         email:
+          type: string
+        userHrn:
           type: string
         organizationId:
           type: string

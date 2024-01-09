@@ -11,6 +11,7 @@ import org.jooq.Condition
 import org.jooq.impl.DAOImpl
 import org.jooq.impl.DSL
 
+@Suppress("TooManyFunctions")
 object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
     private val idFun = fun(user: Users) = user.hrn
@@ -88,6 +89,16 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .returning().fetchOne()
     }
 
+    suspend fun updateLoginAccessStatus(hrn: String, loginAccess: Boolean): UsersRecord? {
+        return ctx("users.updateLoginAccessStatus")
+            .update(USERS)
+            .set(USERS.UPDATED_AT, LocalDateTime.now())
+            .set(USERS.LOGIN_ACCESS, loginAccess)
+            .where(USERS.HRN.eq(hrn))
+            .and(USERS.DELETED.eq(false))
+            .returning().fetchOne()
+    }
+
     suspend fun delete(hrn: String): UsersRecord? = ctx("users.delete")
         .update(USERS)
         .set(USERS.UPDATED_AT, LocalDateTime.now())
@@ -102,11 +113,12 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .where(USERS.EMAIL.equalIgnoreCase(email))
             .and(USERS.DELETED.eq(false))
             .and(USERS.VERIFIED.eq(true))
-            .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
+            .apply {
+                subOrganizationName?.let {
+                    and(USERS.SUB_ORGANIZATION_NAME.eq(it))
+                } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull)
+            }
             .apply { organizationId?.let { and(USERS.ORGANIZATION_ID.eq(it)) } }
-//        if (!organizationId.isNullOrEmpty()) {
-//            builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
-//        }
         return builder.fetchOne()
     }
 

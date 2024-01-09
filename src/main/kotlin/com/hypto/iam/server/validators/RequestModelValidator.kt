@@ -10,6 +10,7 @@ import com.hypto.iam.server.extensions.TimeNature
 import com.hypto.iam.server.extensions.dateTime
 import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.noEndSpaces
+import com.hypto.iam.server.extensions.oneOf
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
@@ -165,6 +166,12 @@ fun ResetPasswordRequest.validate(): ResetPasswordRequest {
 
 fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     verifyEmailRequestValidation.validateAndThrowOnFailure(this)
+    Validation {
+        (this::oneOf)(
+            this@validate,
+            listOf(VerifyEmailRequest::email, VerifyEmailRequest::userHrn)
+        )
+    }.validateAndThrowOnFailure(this)
 
     if (purpose == VerifyEmailRequest.Purpose.signup) {
         metadata?.let { validateSignupMetadata(metadata) }
@@ -454,7 +461,6 @@ val createSubOrganizationRequest = Validation {
     CreateSubOrganizationRequest::name required {
         maxLength(MAX_SUB_ORG_LENGTH) hint "Maximum length supported for" +
             "name is $MAX_SUB_ORG_LENGTH characters"
-        noEndSpaces()
     }
     CreateSubOrganizationRequest::description ifPresent {
         run(descriptionCheck)
@@ -477,11 +483,14 @@ val createUserPasswordRequestValidation = Validation {
 }
 
 val verifyEmailRequestValidation = Validation {
-    VerifyEmailRequest::email required {
+    VerifyEmailRequest::email ifPresent {
         run(emailCheck)
     }
     VerifyEmailRequest::organizationId ifPresent {
         run(organizationIdCheck)
+    }
+    VerifyEmailRequest::userHrn ifPresent {
+        run(hrnCheck)
     }
     VerifyEmailRequest::purpose required {}
 }

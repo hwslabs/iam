@@ -13,6 +13,7 @@ import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.getEncodedEmail
 import com.hypto.iam.server.extensions.toUTCOffset
 import com.hypto.iam.server.extensions.toUserStatus
 import com.hypto.iam.server.idp.IdentityGroup
@@ -95,13 +96,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
             // we are using email sub-addressing where we will append the local part (before '@') with base64 value
             // of orgId:suborgId. By this way, the email address and password credentials will be uniquely stored in
             // the identity provider and later used for authentication.
-            val encodedEmail = email ?.let { getEmail(organizationId, subOrganizationName, email) }
             if (password != null && loginAccess) {
                 createUserInIdentityProvider(
                     username,
                     preferredUsername,
                     name,
-                    encodedEmail,
+                    email,
                     phoneNumber,
                     password,
                     organizationId,
@@ -129,13 +129,14 @@ class UsersServiceImpl : KoinComponent, UsersService {
                 }
             ) ?: throw InternalException("Unable to create user")
 
-            policies?.let {
+            if (policies != null && policies.isNotEmpty()) {
                 principalPolicyService.attachPoliciesToUser(
                     ResourceHrn(userHrn.toString()),
                     policies.map { hrnFactory.getHrn(it) }
                 )
             }
             if (password != null) {
+                val encodedEmail = email ?.let { getEncodedEmail(organizationId, subOrganizationName, it) }
                 encodedEmail?.let {
                     passcodeRepo.deleteByEmailAndPurpose(encodedEmail, VerifyEmailRequest.Purpose.invite)
                 }
@@ -159,12 +160,15 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ) {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id")
+        val encodedEmail = email?.let {
+            getEncodedEmail(organizationId, subOrganizationName, email)
+        } ?: throw BadRequestException("Email is required")
 
         val passwordCredentials = PasswordCredentials(
             username = username,
             preferredUsername = preferredUsername,
             name = name,
-            email = email ?: throw BadRequestException("Email is required"),
+            email = encodedEmail,
             phoneNumber = phoneNumber ?: "",
             password = password ?: throw BadRequestException("Password is required"),
         )
@@ -193,16 +197,6 @@ class UsersServiceImpl : KoinComponent, UsersService {
         )
     }
 
-    private fun encodeSubOrgUserEmail(email: String, organizationId: String, subOrganizationName: String): String {
-        val emailParts = email.split("@").takeIf { it.size == 2 } ?: throw BadRequestException("Invalid email address")
-        val localPart = emailParts[0]
-        val domainPart = emailParts[1]
-        val subAddress = Base64.getEncoder().encodeToString(
-            "$organizationId:$subOrganizationName".toByteArray()
-        )
-        return "$localPart+$subAddress@$domainPart"
-    }
-
     override suspend fun getUser(organizationId: String, subOrganizationName: String?, userName: String): User {
         organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id. Unable to get user")
@@ -212,12 +206,17 @@ class UsersServiceImpl : KoinComponent, UsersService {
         return getUser(userHrn, userRecord)
     }
 
+    override suspend fun getUser(userHrn: ResourceHrn): User {
+        val userName = userHrn.resourceInstance ?: throw BadRequestException("Invalid user HRN")
+        return getUser(userHrn.organization, userHrn.subOrganization, userName)
+    }
+
     override suspend fun getUserByEmail(
         organizationId: String?,
         subOrganizationName: String?,
         email: String
     ): User {
-        val userRecord = if (subOrganizationName == null && appConfig.app.uniqueUsersAcrossOrganizations) {
+        val userRecord = if (subOrganizationName.isNullOrEmpty() && appConfig.app.uniqueUsersAcrossOrganizations) {
             val user = userRepo.findByEmail(email)
                 ?: throw EntityNotFoundException("User with email - $email not found")
             organizationRepo.findById(user.organizationId)
@@ -322,6 +321,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             providerName = TokenServiceImpl.ISSUER,
             authMetadata = null
         )
+        userRepo.updateLoginAccessStatus(user.hrn, true)
         return BaseSuccessResponse(true)
     }
 
@@ -369,7 +369,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         name: String?,
         phone: String?,
         status: UpdateUserRequest.Status?,
-        verified: Boolean?
+        verified: Boolean?,
     ): User {
         val org = organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
@@ -447,24 +447,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
         }
 
         val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        val encodedEmail = getEmail(organizationId, subOrganizationName, email)
+        val encodedEmail = getEncodedEmail(organizationId, subOrganizationName, email)
         identityProvider.authenticate(identityGroup, encodedEmail, password)
 
         return getUser(ResourceHrn(userRecord.hrn), userRecord)
-    }
-
-    private fun getEmail(
-        organizationId: String,
-        subOrganizationName: String?,
-        email: String,
-    ) = if (subOrganizationName != null) {
-        encodeSubOrgUserEmail(
-            email,
-            organizationId,
-            subOrganizationName
-        )
-    } else {
-        email
     }
 
     override suspend fun authenticate(
@@ -517,6 +503,7 @@ interface UsersService {
     ): User
 
     suspend fun getUser(organizationId: String, subOrganizationName: String?, userName: String): User
+    suspend fun getUser(userHrn: ResourceHrn): User
     suspend fun listUsers(organizationId: String, subOrganizationName: String?, paginationContext: PaginationContext):
         UserPaginatedResponse
 

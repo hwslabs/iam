@@ -128,7 +128,8 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         organizationId: String,
         subOrgId: String,
         bearerToken: String,
-        cognitoClient: CognitoIdentityProviderClient
+        cognitoClient: CognitoIdentityProviderClient,
+        loginAccess: Boolean = true,
     ): Pair<User, Credential> {
         val username = "testUserName" + IdGenerator.randomId()
         val email = "test-email" + IdGenerator.randomId() + "@hypto.in"
@@ -136,12 +137,12 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         val createUserRequest = CreateUserRequest(
             preferredUsername = username,
             name = "lorem ipsum",
-            password = "testPassword@Hash1",
+            password = if (!loginAccess) null else "testPassword@Hash1",
             email = email,
             status = CreateUserRequest.Status.enabled,
             phone = phone,
             verified = true,
-            loginAccess = true
+            loginAccess = loginAccess
         )
 
         coEvery {
