@@ -32,6 +32,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUse
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.text.Charsets.UTF_8
 
@@ -91,7 +92,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 // Actual test
-                val expiry = LocalDateTime.now().plusDays(1)
+                val expiry = LocalDateTime.now().plusDays(1).truncatedTo(ChronoUnit.SECONDS)
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
 
                 val response =
