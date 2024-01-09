@@ -113,7 +113,11 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .where(USERS.EMAIL.equalIgnoreCase(email))
             .and(USERS.DELETED.eq(false))
             .and(USERS.VERIFIED.eq(true))
-            .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
+            .apply {
+                subOrganizationName?.let {
+                    and(USERS.SUB_ORGANIZATION_NAME.eq(it))
+                } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull)
+            }
             .apply { organizationId?.let { and(USERS.ORGANIZATION_ID.eq(it)) } }
         return builder.fetchOne()
     }

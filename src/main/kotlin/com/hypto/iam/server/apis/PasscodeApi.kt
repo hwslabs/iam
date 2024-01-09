@@ -50,7 +50,7 @@ fun Route.createPasscodeApi() {
                 // Adding a restriction to not allow sub organization users to send invites as we are not checking
                 // permissions for sending invites today.
                 // TODO: Add permission checks for sending invites
-                require(!inviterHrn.subOrganization.isNullOrEmpty()) {
+                require(inviterHrn.subOrganization.isNullOrEmpty()) {
                     "Sub organization users can't send invites"
                 }
                 val inviteeUser = usersService.getUser(inviteeHrn)
@@ -76,6 +76,7 @@ fun Route.createPasscodeApi() {
 
         val response = passcodeService.verifyEmail(
             email,
+            request.userHrn,
             request.purpose,
             request.organizationId,
             request.subOrganizationName,

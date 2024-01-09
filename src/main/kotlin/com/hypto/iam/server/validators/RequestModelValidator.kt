@@ -461,7 +461,6 @@ val createSubOrganizationRequest = Validation {
     CreateSubOrganizationRequest::name required {
         maxLength(MAX_SUB_ORG_LENGTH) hint "Maximum length supported for" +
             "name is $MAX_SUB_ORG_LENGTH characters"
-        noEndSpaces()
     }
     CreateSubOrganizationRequest::description ifPresent {
         run(descriptionCheck)
@@ -484,7 +483,7 @@ val createUserPasswordRequestValidation = Validation {
 }
 
 val verifyEmailRequestValidation = Validation {
-    VerifyEmailRequest::email required {
+    VerifyEmailRequest::email ifPresent {
         run(emailCheck)
     }
     VerifyEmailRequest::organizationId ifPresent {
