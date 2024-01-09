@@ -26,8 +26,8 @@ import io.ktor.server.auth.Principal
 import io.ktor.server.auth.UnauthorizedResponse
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.response.respond
-import java.util.Base64
 import mu.KotlinLogging
+import java.util.Base64
 
 private val logger = KotlinLogging.logger { }
 
@@ -35,7 +35,7 @@ data class AuthenticationException(override val message: String) : Exception(mes
 
 enum class TokenLocation(val location: String) {
     QUERY("query"),
-    HEADER("header")
+    HEADER("header"),
 }
 
 enum class TokenType(val type: String) {
@@ -43,11 +43,12 @@ enum class TokenType(val type: String) {
     JWT("jwt"),
     BASIC("basic"),
     PASSCODE("passcode"),
-    OAUTH("oauth")
+    OAUTH("oauth"),
 }
 
 /** Class which stores the token credentials sent by the client */
 data class TokenCredential(val value: String?, val type: TokenType?) : Credential
+
 interface IamPrincipal : Principal {
     val tokenCredential: TokenCredential
     val organization: String
@@ -62,7 +63,7 @@ data class UsernamePasswordCredential(val username: String, val password: String
 data class ApiPrincipal(
     override val tokenCredential: TokenCredential,
     override val organization: String,
-    val policies: PolicyBuilder? = null
+    val policies: PolicyBuilder? = null,
 ) : IamPrincipal
 
 /** Class to store the Principal authenticated using Bearer auth **/
@@ -70,7 +71,7 @@ data class UserPrincipal(
     override val tokenCredential: TokenCredential,
     val hrnStr: String,
     val claims: Claims? = null,
-    val policies: PolicyBuilder
+    val policies: PolicyBuilder,
 ) : IamPrincipal {
     val hrn: Hrn = HrnFactory.getHrn(hrnStr)
     override val organization: String = hrn.organization
@@ -83,11 +84,11 @@ data class OAuthUserPrincipal(
     val email: String,
     val name: String,
     val companyName: String,
-    override val issuer: String
+    override val issuer: String,
 ) : IamPrincipal
 
 class TokenAuthenticationProvider internal constructor(
-    config: Config
+    config: Config,
 ) : AuthenticationProvider(config) {
     internal var authenticationFunction = config.authenticationFunction
     private val tokenKeyName = config.keyName
@@ -98,29 +99,31 @@ class TokenAuthenticationProvider internal constructor(
 
     override suspend fun onAuthenticate(context: AuthenticationContext) {
         val call = context.call
-        val credentials = call.request.tokenAuthenticationCredentials(tokenKeyName, tokenKeyLocation, tokenType) {
-            if (!authSchemeExists) {
-                return@tokenAuthenticationCredentials it
-            }
-            if (call.request.headers.contains("x-issuer")) {
-                if (!it.startsWith("Bearer")) {
+        val credentials =
+            call.request.tokenAuthenticationCredentials(tokenKeyName, tokenKeyLocation, tokenType) {
+                if (!authSchemeExists) {
+                    return@tokenAuthenticationCredentials it
+                }
+                if (call.request.headers.contains("x-issuer")) {
+                    if (!it.startsWith("Bearer")) {
+                        throw AuthenticationException("Invalid token")
+                    } else {
+                        return@tokenAuthenticationCredentials it.substringAfter("Bearer ")
+                    }
+                }
+                @Suppress("TooGenericExceptionCaught")
+                try {
+                    val result =
+                        when (val header = parseAuthorizationHeader(it)) {
+                            is HttpAuthHeader.Single -> header.blob
+                            else -> null
+                        }
+                    return@tokenAuthenticationCredentials result
+                } catch (e: Exception) {
+                    logger.error(e) { "Invalid token" }
                     throw AuthenticationException("Invalid token")
-                } else {
-                    return@tokenAuthenticationCredentials it.substringAfter("Bearer ")
                 }
             }
-            @Suppress("TooGenericExceptionCaught")
-            try {
-                val result = when (val header = parseAuthorizationHeader(it)) {
-                    is HttpAuthHeader.Single -> header.blob
-                    else -> null
-                }
-                return@tokenAuthenticationCredentials result
-            } catch (e: Exception) {
-                logger.error(e) { "Invalid token" }
-                throw AuthenticationException("Invalid token")
-            }
-        }
         val principal = credentials?.let { authenticationFunction(call, it) }
 
         validateResponse(credentials, principal, context, tokenKeyName, optionalAuth)
@@ -135,7 +138,7 @@ class TokenAuthenticationProvider internal constructor(
         val keyLocation: TokenLocation = TokenLocation.HEADER,
         val authSchemeExists: Boolean = false,
         val tokenType: TokenType? = null,
-        val optionalAuth: Boolean = false
+        val optionalAuth: Boolean = false,
     ) : AuthenticationProvider.Config(name) {
         internal var authenticationFunction: suspend ApplicationCall.(TokenCredential) -> IamPrincipal? = {
             throw NotImplementedError("Token auth validate function is not specified.")
@@ -151,51 +154,68 @@ class TokenAuthenticationProvider internal constructor(
     }
 }
 
-fun AuthenticationConfig.apiKeyAuth(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
-    val provider = TokenAuthenticationProvider(
-        TokenAuthenticationProvider.Config(name, X_API_KEY_HEADER).apply(configure)
-    )
+fun AuthenticationConfig.apiKeyAuth(
+    name: String? = null,
+    configure: TokenAuthenticationProvider.Config.() -> Unit,
+) {
+    val provider =
+        TokenAuthenticationProvider(
+            TokenAuthenticationProvider.Config(name, X_API_KEY_HEADER).apply(configure),
+        )
     register(provider)
 }
 
-fun AuthenticationConfig.passcodeAuth(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
-    val provider = TokenAuthenticationProvider(
-        TokenAuthenticationProvider.Config(name, X_API_KEY_HEADER, tokenType = TokenType.PASSCODE).apply(configure)
-    )
+fun AuthenticationConfig.passcodeAuth(
+    name: String? = null,
+    configure: TokenAuthenticationProvider.Config.() -> Unit,
+) {
+    val provider =
+        TokenAuthenticationProvider(
+            TokenAuthenticationProvider.Config(name, X_API_KEY_HEADER, tokenType = TokenType.PASSCODE).apply(configure),
+        )
     register(provider)
 }
 
-fun AuthenticationConfig.bearer(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
-    val provider = TokenAuthenticationProvider(
-        TokenAuthenticationProvider.Config(name, AUTHORIZATION_HEADER, authSchemeExists = true).apply(configure)
-    )
+fun AuthenticationConfig.bearer(
+    name: String? = null,
+    configure: TokenAuthenticationProvider.Config.() -> Unit,
+) {
+    val provider =
+        TokenAuthenticationProvider(
+            TokenAuthenticationProvider.Config(name, AUTHORIZATION_HEADER, authSchemeExists = true).apply(configure),
+        )
     register(provider)
 }
 
-fun AuthenticationConfig.oauth(name: String? = null, configure: TokenAuthenticationProvider.Config.() -> Unit) {
-    val provider = TokenAuthenticationProvider(
-        TokenAuthenticationProvider.Config(
-            name,
-            AUTHORIZATION_HEADER,
-            authSchemeExists = true,
-            tokenType = TokenType.OAUTH
-        ).apply(configure)
-    )
+fun AuthenticationConfig.oauth(
+    name: String? = null,
+    configure: TokenAuthenticationProvider.Config.() -> Unit,
+) {
+    val provider =
+        TokenAuthenticationProvider(
+            TokenAuthenticationProvider.Config(
+                name,
+                AUTHORIZATION_HEADER,
+                authSchemeExists = true,
+                tokenType = TokenType.OAUTH,
+            ).apply(configure),
+        )
     register(provider)
 }
 
 fun AuthenticationConfig.optionalBearer(
     name: String? = null,
-    configure: TokenAuthenticationProvider.Config.() -> Unit
+    configure: TokenAuthenticationProvider.Config.() -> Unit,
 ) {
-    val provider = TokenAuthenticationProvider(
-        TokenAuthenticationProvider.Config(
-            name,
-            AUTHORIZATION_HEADER,
-            authSchemeExists = true,
-            optionalAuth = true
-        ).apply(configure)
-    )
+    val provider =
+        TokenAuthenticationProvider(
+            TokenAuthenticationProvider.Config(
+                name,
+                AUTHORIZATION_HEADER,
+                authSchemeExists = true,
+                optionalAuth = true,
+            ).apply(configure),
+        )
     register(provider)
 }
 
@@ -204,13 +224,14 @@ private fun validateResponse(
     principal: IamPrincipal?,
     context: AuthenticationContext,
     apiKeyName: String,
-    optionalAuth: Boolean
+    optionalAuth: Boolean,
 ) {
-    val cause = when {
-        credentials == null -> AuthenticationFailedCause.NoCredentials
-        principal == null -> AuthenticationFailedCause.InvalidCredentials
-        else -> null
-    }
+    val cause =
+        when {
+            credentials == null -> AuthenticationFailedCause.NoCredentials
+            principal == null -> AuthenticationFailedCause.InvalidCredentials
+            else -> null
+        }
 
     if (cause != null && !optionalAuth) {
         context.challenge(apiKeyName, cause) { challenge, call ->
@@ -229,22 +250,25 @@ fun ApplicationRequest.tokenAuthenticationCredentials(
     apiKeyName: String,
     tokenLocation: TokenLocation,
     tokenType: TokenType? = null,
-    transform: ((String) -> String?)? = null
+    transform: ((String) -> String?)? = null,
 ): TokenCredential? {
-    val value: String? = when (tokenLocation) {
-        TokenLocation.QUERY -> this.queryParameters[apiKeyName]
-        TokenLocation.HEADER -> this.headers[apiKeyName]
-    }
-    val result = if (transform != null && value != null) {
-        transform.invoke(value)
-    } else {
-        value
-    }
-    val type = tokenType ?: if (result != null && isIamJWT(result)) {
-        TokenType.JWT
-    } else {
-        TokenType.CREDENTIAL
-    }
+    val value: String? =
+        when (tokenLocation) {
+            TokenLocation.QUERY -> this.queryParameters[apiKeyName]
+            TokenLocation.HEADER -> this.headers[apiKeyName]
+        }
+    val result =
+        if (transform != null && value != null) {
+            transform.invoke(value)
+        } else {
+            value
+        }
+    val type =
+        tokenType ?: if (result != null && isIamJWT(result)) {
+            TokenType.JWT
+        } else {
+            TokenType.CREDENTIAL
+        }
 
     return when (result) {
         null -> null
@@ -280,7 +304,7 @@ fun isIamJWT(jwt: String): Boolean {
 }
 
 fun bearerAuthValidation(
-    userPrincipalService: UserPrincipalService
+    userPrincipalService: UserPrincipalService,
 ): suspend ApplicationCall.(tokenCredential: TokenCredential) -> UserPrincipal? {
     return { tokenCredential ->
         if (tokenCredential.value == null) {
@@ -288,9 +312,10 @@ fun bearerAuthValidation(
         }
         try {
             when (tokenCredential.type) {
-                TokenType.CREDENTIAL -> userPrincipalService.getUserPrincipalByRefreshToken(
-                    tokenCredential
-                )
+                TokenType.CREDENTIAL ->
+                    userPrincipalService.getUserPrincipalByRefreshToken(
+                        tokenCredential,
+                    )
                 TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
                 else -> null
             }

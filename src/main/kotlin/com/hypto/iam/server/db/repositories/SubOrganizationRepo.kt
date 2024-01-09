@@ -5,19 +5,20 @@ import com.hypto.iam.server.db.tables.records.SubOrganizationsRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.models.SubOrganization
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record2
 import org.jooq.impl.DAOImpl
+import java.time.LocalDateTime
 
 typealias SubOrganizationPk = Record2<String, String>
-object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, SubOrganizationPk>() {
 
+object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, SubOrganizationPk>() {
+    @Suppress("ktlint:standard:blank-line-before-declaration")
     private fun getIdFun(dsl: DSLContext): (SubOrganization) -> SubOrganizationPk {
         return fun (subOrganization: SubOrganization): SubOrganizationPk {
             return dsl.newRecord(
                 Tables.SUB_ORGANIZATIONS.NAME,
-                Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID
+                Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID,
             ).values(subOrganization.name, subOrganization.organizationId)
         }
     }
@@ -26,42 +27,48 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
         return SubOrganizationRepo.txMan.getDao(
             Tables.SUB_ORGANIZATIONS,
             SubOrganization::class.java,
-            getIdFun(SubOrganizationRepo.txMan.dsl())
+            getIdFun(SubOrganizationRepo.txMan.dsl()),
         )
     }
 
     suspend fun create(
         organizationId: String,
         subOrganizationName: String,
-        description: String?
+        description: String?,
     ): SubOrganizationsRecord {
         val logTimestamp = LocalDateTime.now()
-        val record = SubOrganizationsRecord()
-            .setOrganizationId(organizationId)
-            .setName(subOrganizationName)
-            .setDescription(description)
-            .setCreatedAt(logTimestamp)
-            .setUpdatedAt(logTimestamp)
+        val record =
+            SubOrganizationsRecord()
+                .setOrganizationId(organizationId)
+                .setName(subOrganizationName)
+                .setDescription(description)
+                .setCreatedAt(logTimestamp)
+                .setUpdatedAt(logTimestamp)
         record.attach(dao().configuration())
         record.store()
         return record
     }
 
-    suspend fun fetchById(organizationId: String, subOrgName: String): SubOrganizationsRecord? {
+    suspend fun fetchById(
+        organizationId: String,
+        subOrgName: String,
+    ): SubOrganizationsRecord? {
         return SubOrganizationRepo
             .ctx("subOrganization.fetchById")
             .selectFrom(Tables.SUB_ORGANIZATIONS)
             .where(
                 Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(
                     Tables.SUB_ORGANIZATIONS.NAME.eq
-                    (subOrgName)
-                )
+                        (subOrgName),
+                ),
             )
             .fetchOne()
     }
 
-    suspend fun fetchSubOrganizationsPaginated(organizationId: String, context: PaginationContext):
-        org.jooq.Result<SubOrganizationsRecord> {
+    suspend fun fetchSubOrganizationsPaginated(
+        organizationId: String,
+        context: PaginationContext,
+    ): org.jooq.Result<SubOrganizationsRecord> {
         return SubOrganizationRepo
             .ctx("subOrganization.fetchPaginated")
             .selectFrom(Tables.SUB_ORGANIZATIONS)
@@ -81,7 +88,7 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
     suspend fun update(
         organizationId: String,
         subOrganizationName: String,
-        updatedDescription: String?
+        updatedDescription: String?,
     ): SubOrganizationsRecord? {
         val logTimestamp = LocalDateTime.now()
         return SubOrganizationRepo
@@ -92,19 +99,22 @@ object SubOrganizationRepo : BaseRepo<SubOrganizationsRecord, SubOrganization, S
             .where(
                 Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(
                     Tables.SUB_ORGANIZATIONS.NAME.eq
-                    (subOrganizationName)
-                )
+                        (subOrganizationName),
+                ),
             )
             .returning()
             .fetchOne()
     }
 
-    suspend fun delete(organizationId: String, id: String) {
+    suspend fun delete(
+        organizationId: String,
+        id: String,
+    ) {
         SubOrganizationRepo
             .ctx("subOrganization.delete")
             .deleteFrom(Tables.SUB_ORGANIZATIONS)
             .where(
-                Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(Tables.SUB_ORGANIZATIONS.NAME.eq(id))
+                Tables.SUB_ORGANIZATIONS.ORGANIZATION_ID.eq(organizationId).and(Tables.SUB_ORGANIZATIONS.NAME.eq(id)),
             )
             .execute()
     }

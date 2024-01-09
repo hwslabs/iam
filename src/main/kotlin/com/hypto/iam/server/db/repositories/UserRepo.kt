@@ -6,14 +6,13 @@ import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.models.User
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.impl.DAOImpl
 import org.jooq.impl.DSL
+import java.time.LocalDateTime
 
 @Suppress("TooManyFunctions")
 object UserRepo : BaseRepo<UsersRecord, Users, String>() {
-
     private val idFun = fun(user: Users) = user.hrn
 
     override suspend fun dao(): DAOImpl<UsersRecord, Users, String> =
@@ -23,16 +22,17 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         return ctx("users.insert").insertInto(USERS).set(usersRecord).returning().fetchOne()
     }
 
-    suspend fun findByHrn(hrn: String): UsersRecord? = ctx("users.findByHrn")
-        .selectFrom(USERS)
-        .where(USERS.HRN.eq(hrn))
-        .and(USERS.DELETED.eq(false))
-        .fetchOne()
+    suspend fun findByHrn(hrn: String): UsersRecord? =
+        ctx("users.findByHrn")
+            .selectFrom(USERS)
+            .where(USERS.HRN.eq(hrn))
+            .and(USERS.DELETED.eq(false))
+            .fetchOne()
 
     suspend fun fetchUsers(
         organizationId: String,
         subOrganizationName: String?,
-        paginationContext: PaginationContext
+        paginationContext: PaginationContext,
     ): List<UsersRecord> {
         return ctx("users.fetchMany").selectFrom(USERS)
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
@@ -47,7 +47,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         email: String?,
         organizationId: String,
         subOrganizationName: String?,
-        uniqueCheck: Boolean = false
+        uniqueCheck: Boolean = false,
     ): Boolean {
         val conditions = mutableListOf<Condition>()
 
@@ -58,29 +58,36 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             conditions.add(USERS.PREFERRED_USERNAME.eq(preferredUsername))
         }
 
-        var builder = DSL.selectFrom(USERS)
-            .where(DSL.or(conditions))
-            .and(USERS.DELETED.eq(false))
+        var builder =
+            DSL.selectFrom(USERS)
+                .where(DSL.or(conditions))
+                .and(USERS.DELETED.eq(false))
 
-        builder = if (uniqueCheck) {
-            // Check only verified users in other organizations and all users within the organization
-            builder.and(
-                (
-                    USERS.VERIFIED.eq(true)
-                        .andNot(USERS.ORGANIZATION_ID.eq(organizationId))
+        builder =
+            if (uniqueCheck) {
+                // Check only verified users in other organizations and all users within the organization
+                builder.and(
+                    (
+                        USERS.VERIFIED.eq(true)
+                            .andNot(USERS.ORGANIZATION_ID.eq(organizationId))
                     )
-                    .or(USERS.ORGANIZATION_ID.eq(organizationId))
-            )
-        } else {
-            // Check all verified and unverified users within the organization
-            builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
-                .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
-        }
+                        .or(USERS.ORGANIZATION_ID.eq(organizationId)),
+                )
+            } else {
+                // Check all verified and unverified users within the organization
+                builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
+                    .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
+            }
 
         return ctx("users.existsByAliasUsername").fetchExists(builder)
     }
 
-    suspend fun update(hrn: String, status: User.Status?, verified: Boolean?, name: String?): UsersRecord? {
+    suspend fun update(
+        hrn: String,
+        status: User.Status?,
+        verified: Boolean?,
+        name: String?,
+    ): UsersRecord? {
         val updateStep = ctx("users.update").update(USERS).set(USERS.UPDATED_AT, LocalDateTime.now())
         status?.let { updateStep.set(USERS.STATUS, it.value) }
         verified?.let { updateStep.set(USERS.VERIFIED, it) }
@@ -89,7 +96,10 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .returning().fetchOne()
     }
 
-    suspend fun updateLoginAccessStatus(hrn: String, loginAccess: Boolean): UsersRecord? {
+    suspend fun updateLoginAccessStatus(
+        hrn: String,
+        loginAccess: Boolean,
+    ): UsersRecord? {
         return ctx("users.updateLoginAccessStatus")
             .update(USERS)
             .set(USERS.UPDATED_AT, LocalDateTime.now())
@@ -99,26 +109,31 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .returning().fetchOne()
     }
 
-    suspend fun delete(hrn: String): UsersRecord? = ctx("users.delete")
-        .update(USERS)
-        .set(USERS.UPDATED_AT, LocalDateTime.now())
-        .set(USERS.DELETED, true)
-        .where(USERS.HRN.eq(hrn))
-        .returning().fetchOne()
+    suspend fun delete(hrn: String): UsersRecord? =
+        ctx("users.delete")
+            .update(USERS)
+            .set(USERS.UPDATED_AT, LocalDateTime.now())
+            .set(USERS.DELETED, true)
+            .where(USERS.HRN.eq(hrn))
+            .returning().fetchOne()
 
-    suspend fun findByEmail(email: String, organizationId: String? = null, subOrganizationName: String? = null):
-        UsersRecord? {
-        val builder = ctx("users.findByEmail")
-            .selectFrom(USERS)
-            .where(USERS.EMAIL.equalIgnoreCase(email))
-            .and(USERS.DELETED.eq(false))
-            .and(USERS.VERIFIED.eq(true))
-            .apply {
-                subOrganizationName?.let {
-                    and(USERS.SUB_ORGANIZATION_NAME.eq(it))
-                } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull)
-            }
-            .apply { organizationId?.let { and(USERS.ORGANIZATION_ID.eq(it)) } }
+    suspend fun findByEmail(
+        email: String,
+        organizationId: String? = null,
+        subOrganizationName: String? = null,
+    ): UsersRecord? {
+        val builder =
+            ctx("users.findByEmail")
+                .selectFrom(USERS)
+                .where(USERS.EMAIL.equalIgnoreCase(email))
+                .and(USERS.DELETED.eq(false))
+                .and(USERS.VERIFIED.eq(true))
+                .apply {
+                    subOrganizationName?.let {
+                        and(USERS.SUB_ORGANIZATION_NAME.eq(it))
+                    } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull)
+                }
+                .apply { organizationId?.let { and(USERS.ORGANIZATION_ID.eq(it)) } }
         return builder.fetchOne()
     }
 
@@ -132,10 +147,11 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
     }
 
     suspend fun deleteByOrganizationId(organizationId: String): Boolean {
-        val count = ctx("users.delete_by_organization_id")
-            .deleteFrom(USERS)
-            .where(USERS.ORGANIZATION_ID.eq(organizationId))
-            .execute()
+        val count =
+            ctx("users.delete_by_organization_id")
+                .deleteFrom(USERS)
+                .where(USERS.ORGANIZATION_ID.eq(organizationId))
+                .execute()
         return count > 0
     }
 }

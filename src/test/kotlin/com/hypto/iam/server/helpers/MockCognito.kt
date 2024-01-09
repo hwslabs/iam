@@ -2,7 +2,6 @@ package com.hypto.iam.server.helpers
 
 import io.mockk.coEvery
 import io.mockk.mockk
-import java.time.Instant
 import org.koin.test.KoinTest
 import org.koin.test.mock.declareMock
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
@@ -30,13 +29,15 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRe
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolClientType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserPoolType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
+import java.time.Instant
 
 fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
     return declareMock {
         coEvery { this@declareMock.createUserPool(any<CreateUserPoolRequest>()) } coAnswers {
-            val result = CreateUserPoolResponse.builder()
-                .userPool(UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build())
-                .build()
+            val result =
+                CreateUserPoolResponse.builder()
+                    .userPool(UserPoolType.builder().id("testUserPoolId").name("testUserPoolName").build())
+                    .build()
             result
         }
         coEvery { this@declareMock.createUserPoolClient(any<CreateUserPoolClientRequest>()) } coAnswers {
@@ -44,8 +45,9 @@ fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
                 .userPoolClient(UserPoolClientType.builder().clientId("12345").build())
                 .build()
         }
-        coEvery { this@declareMock.deleteUserPool(any<DeleteUserPoolRequest>()) } returns DeleteUserPoolResponse
-            .builder().build()
+        coEvery { this@declareMock.deleteUserPool(any<DeleteUserPoolRequest>()) } returns
+            DeleteUserPoolResponse
+                .builder().build()
         coEvery { this@declareMock.adminGetUser(any<AdminGetUserRequest>()) } coAnswers {
             AdminGetUserResponse.builder()
                 .enabled(true)
@@ -63,7 +65,7 @@ fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
                         .username(firstArg<AdminCreateUserRequest>().username())
                         .userCreateDate(Instant.now())
                         .attributes(firstArg<AdminCreateUserRequest>().userAttributes())
-                        .build()
+                        .build(),
                 )
                 .build()
         }
@@ -73,7 +75,7 @@ fun KoinTest.mockCognitoClient(): CognitoIdentityProviderClient {
         }
         coEvery {
             this@declareMock.adminRespondToAuthChallenge(
-                any<AdminRespondToAuthChallengeRequest>()
+                any<AdminRespondToAuthChallengeRequest>(),
             )
         } returns mockk()
         val listUsersResponse = ListUsersResponse.builder().users(listOf()).build()

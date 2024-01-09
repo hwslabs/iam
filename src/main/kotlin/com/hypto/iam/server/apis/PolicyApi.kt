@@ -32,11 +32,12 @@ fun Route.policyApi() {
 
     withPermission(
         "createPolicy",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/policies") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val request = call.receive<CreatePolicyRequest>().validate()
 
             val principal = context.principal<UserPrincipal>()!!
@@ -50,45 +51,48 @@ fun Route.policyApi() {
             call.respondText(
                 text = gson.toJson(policy),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.Created
+                status = HttpStatusCode.Created,
             )
         }
     }
 
     withPermission(
         "listPolicy",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/policies") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("Required organization_id to get user")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("Required organization_id to get user")
             val nextToken = call.request.queryParameters["nextToken"]
             val pageSize = call.request.queryParameters["pageSize"]
             val sortOrder = call.request.queryParameters["sortOrder"]
 
-            val context = PaginationContext.from(
-                nextToken,
-                pageSize?.toInt(),
-                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-            )
+            val context =
+                PaginationContext.from(
+                    nextToken,
+                    pageSize?.toInt(),
+                    sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+                )
 
             val response = policyService.listPolicies(organizationId, context)
 
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "deletePolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         delete("/organizations/{organization_id}/policies/{name}") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to delete a policy")
 
             val response = policyService.deletePolicy(organizationId, name)
@@ -96,18 +100,19 @@ fun Route.policyApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "getPolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/policies/{name}") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val name =
                 call.parameters["name"] ?: throw IllegalArgumentException("Required name to get the policy details")
 
@@ -116,18 +121,19 @@ fun Route.policyApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "getUserPolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/users/{user_id}/policies") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
             val userId =
                 call.parameters["user_id"] ?: throw IllegalArgumentException("Required user id to list policies")
 
@@ -135,31 +141,34 @@ fun Route.policyApi() {
             val pageSize = call.request.queryParameters["pageSize"]
             val sortOrder = call.request.queryParameters["sortOrder"]
 
-            val context = PaginationContext.from(
-                nextToken,
-                pageSize?.toInt(),
-                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-            )
+            val context =
+                PaginationContext.from(
+                    nextToken,
+                    pageSize?.toInt(),
+                    sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+                )
 
             val response = policyService.getPoliciesByUser(organizationId, userId, context)
 
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }
 
     withPermission(
         "updatePolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1)
+        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         patch("/organizations/{organization_id}/policies/{name}") {
-            val organizationId = call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
-            val name = call.parameters["name"]
-                ?: throw IllegalArgumentException("Required name to update the policy details")
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
+            val name =
+                call.parameters["name"]
+                    ?: throw IllegalArgumentException("Required name to update the policy details")
             val request = call.receive<UpdatePolicyRequest>().validate()
 
             val response = policyService.updatePolicy(organizationId, name, request)
@@ -167,7 +176,7 @@ fun Route.policyApi() {
             call.respondText(
                 text = gson.toJson(response),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
+                status = HttpStatusCode.OK,
             )
         }
     }

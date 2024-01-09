@@ -76,7 +76,7 @@ fun UpdateCredentialRequest.validate(): UpdateCredentialRequest {
     return Validation {
         (this::oneOrMoreOf)(
             this@validate,
-            listOf(UpdateCredentialRequest::status, UpdateCredentialRequest::validUntil)
+            listOf(UpdateCredentialRequest::status, UpdateCredentialRequest::validUntil),
         )
         UpdateCredentialRequest::validUntil ifPresent {
             dateTime(nature = TimeNature.FUTURE)
@@ -169,7 +169,7 @@ fun VerifyEmailRequest.validate(): VerifyEmailRequest {
     Validation {
         (this::oneOf)(
             this@validate,
-            listOf(VerifyEmailRequest::email, VerifyEmailRequest::userHrn)
+            listOf(VerifyEmailRequest::email, VerifyEmailRequest::userHrn),
         )
     }.validateAndThrowOnFailure(this)
 
@@ -209,8 +209,9 @@ const val HRN_PREFIX_REGEX = "^hrn:[^\n]*"
 const val EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\$"
 const val EMAIL_REGEX_HINT = "Email should be valid and contain `.`, `@`"
 const val PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w]).*\$"
-const val PASSWORD_REGEX_HINT = "Password should contain at least one uppercase letter, " +
-    "one lowercase letter, one number and one special character"
+const val PASSWORD_REGEX_HINT =
+    "Password should contain at least one uppercase letter, " +
+        "one lowercase letter, one number and one special character"
 const val ORGANIZATION_ID_REGEX = "^[a-zA-Z0-9]*\$"
 const val ORGANIZATION_ID_REGEX_HINT = "Organization ID should be a valid alphanumeric string"
 const val ORGANIZATION_NAME_REGEX = "^[_a-zA-Z0-9-\\s]*\$"
@@ -218,298 +219,332 @@ const val ORGANIZATION_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _, - 
 const val CREDENTIALS_EMAIL_INVALID = "Invalid Email"
 const val CREDENTIALS_PASSWORD_INVALID = "Invalid Password"
 
-val resourceNameCheck = Validation {
-    minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
-    maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
-        "name is ${Constants.MAX_NAME_LENGTH} characters"
-    pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
-}
-
-val orgNameCheck = Validation {
-    minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
-    maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
-        "name is ${Constants.MAX_NAME_LENGTH} characters"
-    pattern(ORGANIZATION_NAME_REGEX) hint ORGANIZATION_NAME_REGEX_HINT
-}
-
-val nameOfUserCheck = Validation {
-    minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
-    maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
-        "name is ${Constants.MAX_NAME_LENGTH} characters"
-    noEndSpaces()
-}
-
-val phoneNumberCheck = Validation {
-    minLength(Constants.MINIMUM_PHONE_NUMBER_LENGTH) hint "Minimum length expected " +
-        "is ${Constants.MINIMUM_PHONE_NUMBER_LENGTH}"
-    pattern(PHONE_NUMBER_REGEX) hint PHONE_NUMBER_REGEX_HINT
-}
-
-val preferredUserNameCheck = Validation {
-    minLength(Constants.MIN_USERNAME_LENGTH) hint "Minimum length expected is ${Constants.MIN_USERNAME_LENGTH}"
-    maxLength(Constants.MAX_USERNAME_LENGTH) hint "Maximum length supported for" +
-        "name is ${Constants.MAX_USERNAME_LENGTH} characters"
-    pattern(PREFERRED_USERNAME_REGEX) hint PREFERRED_USERNAME_REGEX_HINT
-}
-
-val emailCheck = Validation {
-    minLength(Constants.MIN_EMAIL_LENGTH) hint "Minimum length expected is ${Constants.MIN_EMAIL_LENGTH}"
-    pattern(EMAIL_REGEX) hint EMAIL_REGEX_HINT
-}
-
-val descriptionCheck = Validation {
-    maxLength(Constants.MAX_DESC_LENGTH) hint "Maximum length supported for" +
-        "description is ${Constants.MAX_DESC_LENGTH} characters"
-}
-
-val hrnCheck = Validation {
-    pattern(HRN_PREFIX_REGEX) hint "HRN must start with a valid organization Id"
-}
-
-val organizationIdCheck = Validation {
-    pattern(ORGANIZATION_ID_REGEX) hint ORGANIZATION_ID_REGEX_HINT
-}
-
-val policyStatementValidation = Validation {
-    PolicyStatement::resource required { run(hrnCheck) }
-    PolicyStatement::action required { run(hrnCheck) }
-    PolicyStatement::effect required {}
-}
-
-val validationRequestValidation = Validation {
-    ValidationRequest::validations required {}
-    ValidationRequest::validations onEach {
-        resourceActionValidation
+val resourceNameCheck =
+    Validation {
+        minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
+        maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+            "name is ${Constants.MAX_NAME_LENGTH} characters"
+        pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
     }
-}
 
-val resourceActionValidation = Validation {
-    ResourceAction::resource required { hrn() }
-    ResourceAction::action required { hrn() }
-}
-val passwordCheck = Validation {
-    minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PASSWORD_LENGTH}"
-    pattern(PASSWORD_REGEX) hint PASSWORD_REGEX_HINT
-}
-val rootUserRequestValidation = Validation {
-    RootUser::preferredUsername ifPresent {
-        run(preferredUserNameCheck)
+val orgNameCheck =
+    Validation {
+        minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
+        maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+            "name is ${Constants.MAX_NAME_LENGTH} characters"
+        pattern(ORGANIZATION_NAME_REGEX) hint ORGANIZATION_NAME_REGEX_HINT
     }
-    RootUser::name ifPresent {
-        run(nameOfUserCheck)
-    }
-    RootUser::phone ifPresent {
-        run(phoneNumberCheck)
-    }
-    RootUser::email required {
-        run(emailCheck)
-    }
-    RootUser::password required {
-        run(passwordCheck)
-    }
-}
 
-val credentialPasswordCheck = Validation {
-    minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint CREDENTIALS_PASSWORD_INVALID
-}
+val nameOfUserCheck =
+    Validation {
+        minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
+        maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+            "name is ${Constants.MAX_NAME_LENGTH} characters"
+        noEndSpaces()
+    }
 
-// Request model validations
+val phoneNumberCheck =
+    Validation {
+        minLength(Constants.MINIMUM_PHONE_NUMBER_LENGTH) hint "Minimum length expected " +
+            "is ${Constants.MINIMUM_PHONE_NUMBER_LENGTH}"
+        pattern(PHONE_NUMBER_REGEX) hint PHONE_NUMBER_REGEX_HINT
+    }
 
-val createOrganizationRequestValidation = Validation {
-    // Name is mandatory parameter and max length should be 50
-    CreateOrganizationRequest::name ifPresent {
-        run(orgNameCheck)
+val preferredUserNameCheck =
+    Validation {
+        minLength(Constants.MIN_USERNAME_LENGTH) hint "Minimum length expected is ${Constants.MIN_USERNAME_LENGTH}"
+        maxLength(Constants.MAX_USERNAME_LENGTH) hint "Maximum length supported for" +
+            "name is ${Constants.MAX_USERNAME_LENGTH} characters"
+        pattern(PREFERRED_USERNAME_REGEX) hint PREFERRED_USERNAME_REGEX_HINT
     }
-    CreateOrganizationRequest::rootUser ifPresent {
-        run(rootUserRequestValidation)
-    }
-}
 
-val updateOrganizationRequestValidation = Validation {
-    UpdateOrganizationRequest::name ifPresent {
-        run(orgNameCheck)
+val emailCheck =
+    Validation {
+        minLength(Constants.MIN_EMAIL_LENGTH) hint "Minimum length expected is ${Constants.MIN_EMAIL_LENGTH}"
+        pattern(EMAIL_REGEX) hint EMAIL_REGEX_HINT
     }
-    UpdateOrganizationRequest::description ifPresent {
-        run(descriptionCheck)
-    }
-}
 
-val createCredentialRequestValidation = Validation {
-    CreateCredentialRequest::validUntil ifPresent {
-        dateTime(nature = TimeNature.FUTURE)
+val descriptionCheck =
+    Validation {
+        maxLength(Constants.MAX_DESC_LENGTH) hint "Maximum length supported for" +
+            "description is ${Constants.MAX_DESC_LENGTH} characters"
     }
-}
 
-val createResourceRequestValidation = Validation {
-    CreateResourceRequest::name required {
-        run(resourceNameCheck)
+val hrnCheck =
+    Validation {
+        pattern(HRN_PREFIX_REGEX) hint "HRN must start with a valid organization Id"
     }
-    CreateResourceRequest::description ifPresent {
-        run(descriptionCheck)
-    }
-}
 
-val updateResourceRequestValidation = Validation {
-    UpdateResourceRequest::description ifPresent {
-        run(descriptionCheck)
+val organizationIdCheck =
+    Validation {
+        pattern(ORGANIZATION_ID_REGEX) hint ORGANIZATION_ID_REGEX_HINT
     }
-}
 
-val createActionRequestValidation = Validation {
-    CreateActionRequest::name required {
-        run(resourceNameCheck)
-    }
-    CreateActionRequest::description ifPresent {
-        run(descriptionCheck)
-    }
-}
-
-val updateActionRequestValidation = Validation {
-    UpdateActionRequest::description required {
-        run(descriptionCheck)
-    }
-}
-
-val createPolicyRequestValidation = Validation {
-    CreatePolicyRequest::name required {
-        run(resourceNameCheck)
-    }
-    CreatePolicyRequest::description ifPresent {
-        run(descriptionCheck)
-    }
-    CreatePolicyRequest::statements required {
-        minItems(MIN_POLICY_STATEMENTS)
-        maxItems(MAX_POLICY_STATEMENTS)
-    }
-    // TODO: [IMPORTANT] should we do a hrn check for resource and action in a policy statement?
-    CreatePolicyRequest::statements onEach {
+val policyStatementValidation =
+    Validation {
         PolicyStatement::resource required { run(hrnCheck) }
         PolicyStatement::action required { run(hrnCheck) }
         PolicyStatement::effect required {}
     }
-}
 
-val updatePolicyRequestValidation = Validation {
-    UpdatePolicyRequest::description ifPresent {
-        run(descriptionCheck)
-    }
-    UpdatePolicyRequest::statements required {
-        minItems(MIN_POLICY_STATEMENTS)
-        maxItems(MAX_POLICY_STATEMENTS)
-    }
-    UpdatePolicyRequest::statements ifPresent {
-        onEach {
-            policyStatementValidation
+val validationRequestValidation =
+    Validation {
+        ValidationRequest::validations required {}
+        ValidationRequest::validations onEach {
+            resourceActionValidation
         }
     }
-}
 
-val policyAssociationRequestValidation = Validation {
-    PolicyAssociationRequest::policies required {
-        minItems(MagicNumber.ONE)
-        maxItems(MAX_POLICY_ASSOCIATIONS_PER_REQUEST)
+val resourceActionValidation =
+    Validation {
+        ResourceAction::resource required { hrn() }
+        ResourceAction::action required { hrn() }
     }
-    PolicyAssociationRequest::policies onEach { hrn() }
-}
+val passwordCheck =
+    Validation {
+        minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint "Minimum length expected is ${Constants.MINIMUM_PASSWORD_LENGTH}"
+        pattern(PASSWORD_REGEX) hint PASSWORD_REGEX_HINT
+    }
+val rootUserRequestValidation =
+    Validation {
+        RootUser::preferredUsername ifPresent {
+            run(preferredUserNameCheck)
+        }
+        RootUser::name ifPresent {
+            run(nameOfUserCheck)
+        }
+        RootUser::phone ifPresent {
+            run(phoneNumberCheck)
+        }
+        RootUser::email required {
+            run(emailCheck)
+        }
+        RootUser::password required {
+            run(passwordCheck)
+        }
+    }
 
-val createUserRequestValidation = Validation<CreateUserRequest> {
-    addConstraint("Email and password is mandatory for Users with loginAccess") {
-        return@addConstraint (
-            (it.loginAccess == true && !it.email.isNullOrEmpty() && !it.password.isNullOrEmpty()) ||
-                !(it.loginAccess ?: false)
+val credentialPasswordCheck =
+    Validation {
+        minLength(Constants.MINIMUM_PASSWORD_LENGTH) hint CREDENTIALS_PASSWORD_INVALID
+    }
+
+// Request model validations
+
+val createOrganizationRequestValidation =
+    Validation {
+        // Name is mandatory parameter and max length should be 50
+        CreateOrganizationRequest::name ifPresent {
+            run(orgNameCheck)
+        }
+        CreateOrganizationRequest::rootUser ifPresent {
+            run(rootUserRequestValidation)
+        }
+    }
+
+val updateOrganizationRequestValidation =
+    Validation {
+        UpdateOrganizationRequest::name ifPresent {
+            run(orgNameCheck)
+        }
+        UpdateOrganizationRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+    }
+
+val createCredentialRequestValidation =
+    Validation {
+        CreateCredentialRequest::validUntil ifPresent {
+            dateTime(nature = TimeNature.FUTURE)
+        }
+    }
+
+val createResourceRequestValidation =
+    Validation {
+        CreateResourceRequest::name required {
+            run(resourceNameCheck)
+        }
+        CreateResourceRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+    }
+
+val updateResourceRequestValidation =
+    Validation {
+        UpdateResourceRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+    }
+
+val createActionRequestValidation =
+    Validation {
+        CreateActionRequest::name required {
+            run(resourceNameCheck)
+        }
+        CreateActionRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+    }
+
+val updateActionRequestValidation =
+    Validation {
+        UpdateActionRequest::description required {
+            run(descriptionCheck)
+        }
+    }
+
+val createPolicyRequestValidation =
+    Validation {
+        CreatePolicyRequest::name required {
+            run(resourceNameCheck)
+        }
+        CreatePolicyRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+        CreatePolicyRequest::statements required {
+            minItems(MIN_POLICY_STATEMENTS)
+            maxItems(MAX_POLICY_STATEMENTS)
+        }
+        // TODO: [IMPORTANT] should we do a hrn check for resource and action in a policy statement?
+        CreatePolicyRequest::statements onEach {
+            PolicyStatement::resource required { run(hrnCheck) }
+            PolicyStatement::action required { run(hrnCheck) }
+            PolicyStatement::effect required {}
+        }
+    }
+
+val updatePolicyRequestValidation =
+    Validation {
+        UpdatePolicyRequest::description ifPresent {
+            run(descriptionCheck)
+        }
+        UpdatePolicyRequest::statements required {
+            minItems(MIN_POLICY_STATEMENTS)
+            maxItems(MAX_POLICY_STATEMENTS)
+        }
+        UpdatePolicyRequest::statements ifPresent {
+            onEach {
+                policyStatementValidation
+            }
+        }
+    }
+
+val policyAssociationRequestValidation =
+    Validation {
+        PolicyAssociationRequest::policies required {
+            minItems(MagicNumber.ONE)
+            maxItems(MAX_POLICY_ASSOCIATIONS_PER_REQUEST)
+        }
+        PolicyAssociationRequest::policies onEach { hrn() }
+    }
+
+val createUserRequestValidation =
+    Validation<CreateUserRequest> {
+        addConstraint("Email and password is mandatory for Users with loginAccess") {
+            return@addConstraint (
+                (it.loginAccess == true && !it.email.isNullOrEmpty() && !it.password.isNullOrEmpty()) ||
+                    !(it.loginAccess ?: false)
             )
-    }
+        }
 
-    addConstraint("Password is not required for Users without loginAccess") {
-        return@addConstraint (
-            (
-                !(it.loginAccess ?: false) && it.password.isNullOrEmpty()
+        addConstraint("Password is not required for Users without loginAccess") {
+            return@addConstraint (
+                (
+                    !(it.loginAccess ?: false) && it.password.isNullOrEmpty()
                 ) || (it.loginAccess == true)
             )
+        }
+
+        CreateUserRequest::preferredUsername ifPresent {
+            run(preferredUserNameCheck)
+        }
+        CreateUserRequest::name required {
+            run(nameOfUserCheck)
+        }
+        CreateUserRequest::email ifPresent {
+            run(emailCheck)
+        }
+        CreateUserRequest::password ifPresent {
+            run(passwordCheck)
+        }
+        CreateUserRequest::phone ifPresent {
+            run(phoneNumberCheck)
+        }
     }
 
-    CreateUserRequest::preferredUsername ifPresent {
-        run(preferredUserNameCheck)
+val updateUserRequestValidation =
+    Validation {
+        UpdateUserRequest::name ifPresent {
+            run(nameOfUserCheck)
+        }
+        UpdateUserRequest::email ifPresent {
+            run(emailCheck)
+        }
+        UpdateUserRequest::phone ifPresent {
+            run(phoneNumberCheck)
+        }
     }
-    CreateUserRequest::name required {
-        run(nameOfUserCheck)
-    }
-    CreateUserRequest::email ifPresent {
-        run(emailCheck)
-    }
-    CreateUserRequest::password ifPresent {
-        run(passwordCheck)
-    }
-    CreateUserRequest::phone ifPresent {
-        run(phoneNumberCheck)
-    }
-}
 
-val updateUserRequestValidation = Validation {
-    UpdateUserRequest::name ifPresent {
-        run(nameOfUserCheck)
+val createSubOrganizationRequest =
+    Validation {
+        CreateSubOrganizationRequest::name required {
+            maxLength(MAX_SUB_ORG_LENGTH) hint "Maximum length supported for" +
+                "name is $MAX_SUB_ORG_LENGTH characters"
+        }
+        CreateSubOrganizationRequest::description ifPresent {
+            run(descriptionCheck)
+        }
     }
-    UpdateUserRequest::email ifPresent {
-        run(emailCheck)
-    }
-    UpdateUserRequest::phone ifPresent {
-        run(phoneNumberCheck)
-    }
-}
 
-val createSubOrganizationRequest = Validation {
-    CreateSubOrganizationRequest::name required {
-        maxLength(MAX_SUB_ORG_LENGTH) hint "Maximum length supported for" +
-            "name is $MAX_SUB_ORG_LENGTH characters"
+val changeUserPasswordRequestValidation =
+    Validation {
+        ChangeUserPasswordRequest::oldPassword required {
+            run(passwordCheck)
+        }
+        ChangeUserPasswordRequest::newPassword required {
+            run(passwordCheck)
+        }
     }
-    CreateSubOrganizationRequest::description ifPresent {
-        run(descriptionCheck)
-    }
-}
 
-val changeUserPasswordRequestValidation = Validation {
-    ChangeUserPasswordRequest::oldPassword required {
-        run(passwordCheck)
+val createUserPasswordRequestValidation =
+    Validation {
+        CreateUserPasswordRequest::password required {
+            run(passwordCheck)
+        }
     }
-    ChangeUserPasswordRequest::newPassword required {
-        run(passwordCheck)
-    }
-}
 
-val createUserPasswordRequestValidation = Validation {
-    CreateUserPasswordRequest::password required {
-        run(passwordCheck)
+val verifyEmailRequestValidation =
+    Validation {
+        VerifyEmailRequest::email ifPresent {
+            run(emailCheck)
+        }
+        VerifyEmailRequest::organizationId ifPresent {
+            run(organizationIdCheck)
+        }
+        VerifyEmailRequest::userHrn ifPresent {
+            run(hrnCheck)
+        }
+        VerifyEmailRequest::purpose required {}
     }
-}
 
-val verifyEmailRequestValidation = Validation {
-    VerifyEmailRequest::email ifPresent {
-        run(emailCheck)
+val resendInviteRequestValidation =
+    Validation {
+        ResendInviteRequest::email required {
+            run(emailCheck)
+        }
     }
-    VerifyEmailRequest::organizationId ifPresent {
-        run(organizationIdCheck)
-    }
-    VerifyEmailRequest::userHrn ifPresent {
-        run(hrnCheck)
-    }
-    VerifyEmailRequest::purpose required {}
-}
 
-val resendInviteRequestValidation = Validation {
-    ResendInviteRequest::email required {
-        run(emailCheck)
+val usernamePasswordCredentialValidation =
+    Validation {
+        UsernamePasswordCredential::username required {
+            minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
+        }
+        UsernamePasswordCredential::password required {
+            run(credentialPasswordCheck)
+        }
     }
-}
 
-val usernamePasswordCredentialValidation = Validation {
-    UsernamePasswordCredential::username required {
-        minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
+val getDelegateTokenRequestValidation =
+    Validation {
+        GetDelegateTokenRequest::policy required {}
     }
-    UsernamePasswordCredential::password required {
-        run(credentialPasswordCheck)
-    }
-}
-
-val getDelegateTokenRequestValidation = Validation {
-    GetDelegateTokenRequest::policy required {}
-}

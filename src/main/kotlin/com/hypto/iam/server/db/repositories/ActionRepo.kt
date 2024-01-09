@@ -7,12 +7,11 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.ResourceHrn
-import java.time.LocalDateTime
 import org.jooq.Result
 import org.jooq.impl.DAOImpl
+import java.time.LocalDateTime
 
 object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
-
     private val idFun = fun (action: Actions): String {
         return action.hrn
     }
@@ -25,21 +24,30 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
         return ctx("action.findByHrn").selectFrom(ACTIONS).where(ACTIONS.HRN.eq(hrn.toString())).fetchOne()
     }
 
-    suspend fun create(orgId: String, resourceHrn: ResourceHrn, hrn: ActionHrn, description: String?): ActionsRecord {
-        val record = ActionsRecord()
-            .setHrn(hrn.toString())
-            .setOrganizationId(orgId)
-            .setResourceHrn(resourceHrn.toString())
-            .setDescription(description)
-            .setCreatedAt(LocalDateTime.now())
-            .setUpdatedAt(LocalDateTime.now())
+    suspend fun create(
+        orgId: String,
+        resourceHrn: ResourceHrn,
+        hrn: ActionHrn,
+        description: String?,
+    ): ActionsRecord {
+        val record =
+            ActionsRecord()
+                .setHrn(hrn.toString())
+                .setOrganizationId(orgId)
+                .setResourceHrn(resourceHrn.toString())
+                .setDescription(description)
+                .setCreatedAt(LocalDateTime.now())
+                .setUpdatedAt(LocalDateTime.now())
 
         record.attach(dao().configuration())
         record.store()
         return record
     }
 
-    suspend fun update(hrn: ActionHrn, description: String): ActionsRecord? {
+    suspend fun update(
+        hrn: ActionHrn,
+        description: String,
+    ): ActionsRecord? {
         val condition = ACTIONS.HRN.eq(hrn.toString())
         return ctx("action.update").update(ACTIONS)
             .set(ACTIONS.DESCRIPTION, description)
@@ -52,7 +60,7 @@ object ActionRepo : BaseRepo<ActionsRecord, Actions, String>() {
     suspend fun fetchActionsPaginated(
         organizationId: String,
         resourceHrn: ResourceHrn,
-        paginationContext: PaginationContext
+        paginationContext: PaginationContext,
     ): Result<ActionsRecord> {
         return ctx("action.fetchPaginated").selectFrom(ACTIONS)
             .where(ACTIONS.ORGANIZATION_ID.eq(organizationId).and(ACTIONS.RESOURCE_HRN.eq(resourceHrn.toString())))

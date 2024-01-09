@@ -61,12 +61,6 @@ import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.policy.PolicyValidator
 import com.txman.TxMan
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeFormatterBuilder
-import java.time.temporal.ChronoField
-import java.util.concurrent.TimeUnit
 import mu.KotlinLogging
 import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
@@ -82,128 +76,142 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
 import software.amazon.awssdk.services.ses.SesClient
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
+import java.util.concurrent.TimeUnit
 
 private val log = KotlinLogging.logger { }
 const val MAX_IDLE_CONNECTIONS = 50
 const val KEEP_ALIVE_DURATION = 5L
 
 // DI module to get repositories
-val repositoryModule = module {
-    single { MasterKeysRepo }
-    single { CredentialsRepo }
-    single { OrganizationRepo }
-    single { PoliciesRepo }
-    single { ResourceRepo }
-    single { ActionRepo }
-    single { UserAuthProvidersRepo }
-    single { PrincipalPoliciesRepo }
-    single { PasscodeRepo }
-    single { UserRepo }
-    single { PolicyTemplatesRepo }
-    single { AuthProviderRepo }
-    single { UserAuthRepo }
-    single { SubOrganizationRepo }
-}
-
-val controllerModule = module {
-    single { OrganizationsServiceImpl() } bind OrganizationsService::class
-    single { TokenServiceImpl() } bind TokenService::class
-    single { CredentialServiceImpl() } bind CredentialService::class
-    single { PolicyServiceImpl() } bind PolicyService::class
-    single { ValidationServiceImpl() } bind ValidationService::class
-    single { PrincipalPolicyServiceImpl() } bind PrincipalPolicyService::class
-    single { ResourceServiceImpl() } bind ResourceService::class
-    single { ActionServiceImpl() } bind ActionService::class
-    single { UsersServiceImpl() } bind UsersService::class
-    single { UserPrincipalServiceImpl() } bind UserPrincipalService::class
-    single { PasscodeServiceImpl() } bind PasscodeService::class
-    single { PolicyTemplatesServiceImpl() } bind PolicyTemplatesService::class
-    single { AuthProviderServiceImpl() } bind AuthProviderService::class
-    single { UserAuthServiceImpl() } bind UserAuthService::class
-    single { SubOrganizationServiceImpl() } bind SubOrganizationService::class
-}
-
-val applicationModule = module {
-    single { getGsonInstance() }
-    single { MicrometerConfigs.getRegistry() }
-    single { MicrometerConfigs.getBinders() }
-    single { IdGenerator }
-    single { HrnFactory }
-    single { EncryptUtil }
-    single { ApplicationIdUtil.Generator }
-    single { ApplicationIdUtil.Validator }
-    single { PolicyValidator }
-    single { AppConfig.configuration }
-    single { MasterKeyCache }
-    single { CognitoIdentityProviderImpl() } bind IdentityProvider::class
-    single {
-        getCredentialsProvider(
-            get<AppConfig>().aws.accessKey,
-            get<AppConfig>().aws.secretKey
-        )
-    } bind AwsCredentialsProvider::class
-    single { getCognitoIdentityProviderClient(get<AppConfig>().aws.region, get()) }
-    single { getSesClient(get<AppConfig>().aws.region, get()) }
-    single { TxMan(com.hypto.iam.server.service.DatabaseFactory.getConfiguration()) }
-    single {
-        OkHttpClient().newBuilder().apply {
-            if (get<AppConfig>().app.isDevelopment || log.isDebugEnabled) {
-                this.addInterceptor(
-                    HttpLoggingInterceptor {
-                        if (log.isDebugEnabled) {
-                            log.debug { it }
-                        } else {
-                            log.info { it }
-                        }
-                    }.setLevel(HttpLoggingInterceptor.Level.BODY)
-                )
-            }
-        }.connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION, TimeUnit.MINUTES))
+val repositoryModule =
+    module {
+        single { MasterKeysRepo }
+        single { CredentialsRepo }
+        single { OrganizationRepo }
+        single { PoliciesRepo }
+        single { ResourceRepo }
+        single { ActionRepo }
+        single { UserAuthProvidersRepo }
+        single { PrincipalPoliciesRepo }
+        single { PasscodeRepo }
+        single { UserRepo }
+        single { PolicyTemplatesRepo }
+        single { AuthProviderRepo }
+        single { UserAuthRepo }
+        single { SubOrganizationRepo }
     }
-    single(named("AuthProvider")) { get<OkHttpClient.Builder>().build() }
-    single { AuthProviderRegistry }
-}
+
+val controllerModule =
+    module {
+        single { OrganizationsServiceImpl() } bind OrganizationsService::class
+        single { TokenServiceImpl() } bind TokenService::class
+        single { CredentialServiceImpl() } bind CredentialService::class
+        single { PolicyServiceImpl() } bind PolicyService::class
+        single { ValidationServiceImpl() } bind ValidationService::class
+        single { PrincipalPolicyServiceImpl() } bind PrincipalPolicyService::class
+        single { ResourceServiceImpl() } bind ResourceService::class
+        single { ActionServiceImpl() } bind ActionService::class
+        single { UsersServiceImpl() } bind UsersService::class
+        single { UserPrincipalServiceImpl() } bind UserPrincipalService::class
+        single { PasscodeServiceImpl() } bind PasscodeService::class
+        single { PolicyTemplatesServiceImpl() } bind PolicyTemplatesService::class
+        single { AuthProviderServiceImpl() } bind AuthProviderService::class
+        single { UserAuthServiceImpl() } bind UserAuthService::class
+        single { SubOrganizationServiceImpl() } bind SubOrganizationService::class
+    }
+
+val applicationModule =
+    module {
+        single { getGsonInstance() }
+        single { MicrometerConfigs.getRegistry() }
+        single { MicrometerConfigs.getBinders() }
+        single { IdGenerator }
+        single { HrnFactory }
+        single { EncryptUtil }
+        single { ApplicationIdUtil.Generator }
+        single { ApplicationIdUtil.Validator }
+        single { PolicyValidator }
+        single { AppConfig.configuration }
+        single { MasterKeyCache }
+        single { CognitoIdentityProviderImpl() } bind IdentityProvider::class
+        single {
+            getCredentialsProvider(
+                get<AppConfig>().aws.accessKey,
+                get<AppConfig>().aws.secretKey,
+            )
+        } bind AwsCredentialsProvider::class
+        single { getCognitoIdentityProviderClient(get<AppConfig>().aws.region, get()) }
+        single { getSesClient(get<AppConfig>().aws.region, get()) }
+        single { TxMan(com.hypto.iam.server.service.DatabaseFactory.getConfiguration()) }
+        single {
+            OkHttpClient().newBuilder().apply {
+                if (get<AppConfig>().app.isDevelopment || log.isDebugEnabled) {
+                    this.addInterceptor(
+                        HttpLoggingInterceptor {
+                            if (log.isDebugEnabled) {
+                                log.debug { it }
+                            } else {
+                                log.info { it }
+                            }
+                        }.setLevel(HttpLoggingInterceptor.Level.BODY),
+                    )
+                }
+            }.connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_DURATION, TimeUnit.MINUTES))
+        }
+        single(named("AuthProvider")) { get<OkHttpClient.Builder>().build() }
+        single { AuthProviderRegistry }
+    }
 
 fun getCognitoIdentityProviderClient(
     region: String,
-    credentialsProvider: AwsCredentialsProvider
+    credentialsProvider: AwsCredentialsProvider,
 ): CognitoIdentityProviderClient =
     CognitoIdentityProviderClient.builder().region(Region.of(region)).credentialsProvider(credentialsProvider).build()
 
 fun getSesClient(
     region: String,
-    credentialsProvider: AwsCredentialsProvider
+    credentialsProvider: AwsCredentialsProvider,
 ): SesClient = SesClient.builder().region(Region.of(region)).credentialsProvider(credentialsProvider).build()
 
-fun getCredentialsProvider(accessKey: String, secretKey: String): StaticCredentialsProvider =
+fun getCredentialsProvider(
+    accessKey: String,
+    secretKey: String,
+): StaticCredentialsProvider =
     StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey))
 
 private fun getGsonInstance(): Gson {
-    val isoDateTimeFormatter = DateTimeFormatterBuilder()
-        .append(DateTimeFormatter.ISO_DATE_TIME)
-        .parseDefaulting(ChronoField.OFFSET_SECONDS, 0) // UTC if no timezone offset specified
-        .toFormatter()
+    val isoDateTimeFormatter =
+        DateTimeFormatterBuilder()
+            .append(DateTimeFormatter.ISO_DATE_TIME)
+            .parseDefaulting(ChronoField.OFFSET_SECONDS, 0) // UTC if no timezone offset specified
+            .toFormatter()
 
-    val dateFormatter = DateTimeFormatterBuilder()
-        .append(DateTimeFormatter.ISO_LOCAL_DATE)
-        .toFormatter()
+    val dateFormatter =
+        DateTimeFormatterBuilder()
+            .append(DateTimeFormatter.ISO_LOCAL_DATE)
+            .toFormatter()
 
     return GsonBuilder()
         .registerTypeAdapter(
             OffsetDateTime::class.java,
-            JsonDeserializer { json, _, _ -> OffsetDateTime.from(isoDateTimeFormatter.parse(json.asString)) }
+            JsonDeserializer { json, _, _ -> OffsetDateTime.from(isoDateTimeFormatter.parse(json.asString)) },
         )
         .registerTypeAdapter(
             OffsetDateTime::class.java,
-            JsonSerializer<OffsetDateTime> { date, _, _ -> JsonPrimitive(isoDateTimeFormatter.format(date)) }
+            JsonSerializer<OffsetDateTime> { date, _, _ -> JsonPrimitive(isoDateTimeFormatter.format(date)) },
         )
         .registerTypeAdapter(
             LocalDate::class.java,
-            JsonDeserializer { json, _, _ -> LocalDate.from(dateFormatter.parse(json.asString)) }
+            JsonDeserializer { json, _, _ -> LocalDate.from(dateFormatter.parse(json.asString)) },
         )
         .registerTypeAdapter(
             LocalDate::class.java,
-            JsonSerializer<LocalDate> { date, _, _ -> JsonPrimitive(dateFormatter.format(date)) }
+            JsonSerializer<LocalDate> { date, _, _ -> JsonPrimitive(dateFormatter.format(date)) },
         )
         .create()
 }

@@ -6,12 +6,13 @@ import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
-import java.time.LocalDateTime
 import mu.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
+
 class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
     private val policiesRepo: PoliciesRepo by inject()
     private val principalPoliciesRepo: PrincipalPoliciesRepo by inject()
@@ -30,7 +31,10 @@ class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
         return policyBuilder
     }
 
-    override suspend fun attachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse {
+    override suspend fun attachPoliciesToUser(
+        principal: Hrn,
+        policies: List<Hrn>,
+    ): BaseSuccessResponse {
         require(policies.isNotEmpty()) {
             "No policy Hrns provided to attach"
         }
@@ -45,13 +49,16 @@ class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
                     .setPrincipalHrn(principal.toString())
                     .setPolicyHrn(it.toString())
                     .setCreatedAt(LocalDateTime.now())
-            }
+            },
         )
 
         return BaseSuccessResponse(true)
     }
 
-    override suspend fun detachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse {
+    override suspend fun detachPoliciesToUser(
+        principal: Hrn,
+        policies: List<Hrn>,
+    ): BaseSuccessResponse {
         principalPoliciesRepo.delete(principal, policies.map { it.toString() })
         return BaseSuccessResponse(true)
     }
@@ -59,6 +66,14 @@ class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
 
 interface PrincipalPolicyService {
     suspend fun fetchEntitlements(userHrn: String): PolicyBuilder
-    suspend fun attachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse
-    suspend fun detachPoliciesToUser(principal: Hrn, policies: List<Hrn>): BaseSuccessResponse
+
+    suspend fun attachPoliciesToUser(
+        principal: Hrn,
+        policies: List<Hrn>,
+    ): BaseSuccessResponse
+
+    suspend fun detachPoliciesToUser(
+        principal: Hrn,
+        policies: List<Hrn>,
+    ): BaseSuccessResponse
 }

@@ -15,7 +15,7 @@ data class SignUpMetadata(
     val rootUserPassword: String,
     val rootUserName: String?,
     val rootUserPreferredUsername: String?,
-    val rootUserPhone: String?
+    val rootUserPhone: String?,
 )
 
 data class InviteMetadata(val map: Map<String, Any>) {
@@ -24,39 +24,41 @@ data class InviteMetadata(val map: Map<String, Any>) {
 }
 
 data class VerifyEmailSignUpMetadata(
-    val metadata: SignUpMetadata
+    val metadata: SignUpMetadata,
 )
 
 data class VerifyEmailInviteMetadata(
-    val metadata: InviteMetadata
+    val metadata: InviteMetadata,
 )
 
-val signUpMetadataValidation = Validation {
-    VerifyEmailSignUpMetadata::metadata {
-        SignUpMetadata::name required {
-            run(orgNameCheck)
-        }
-        SignUpMetadata::rootUserPassword required {
-            run(passwordCheck)
-        }
-        SignUpMetadata::rootUserName ifPresent {
-            run(nameOfUserCheck)
-        }
-        SignUpMetadata::rootUserPreferredUsername ifPresent {
-            run(preferredUserNameCheck)
-        }
-        SignUpMetadata::rootUserPhone ifPresent {
-            run(phoneNumberCheck)
+val signUpMetadataValidation =
+    Validation {
+        VerifyEmailSignUpMetadata::metadata {
+            SignUpMetadata::name required {
+                run(orgNameCheck)
+            }
+            SignUpMetadata::rootUserPassword required {
+                run(passwordCheck)
+            }
+            SignUpMetadata::rootUserName ifPresent {
+                run(nameOfUserCheck)
+            }
+            SignUpMetadata::rootUserPreferredUsername ifPresent {
+                run(preferredUserNameCheck)
+            }
+            SignUpMetadata::rootUserPhone ifPresent {
+                run(phoneNumberCheck)
+            }
         }
     }
-}
 
-val inviteMetadataValidation = Validation {
-    InviteMetadata::inviterUserHrn required {
-        run(hrnCheck)
+val inviteMetadataValidation =
+    Validation {
+        InviteMetadata::inviterUserHrn required {
+            run(hrnCheck)
+        }
+        InviteMetadata::policies onEach { hrn() }
     }
-    InviteMetadata::policies onEach { hrn() }
-}
 
 fun validateSignupMetadata(metadata: Map<String, Any>) {
     val metadataObject = gson.fromJson(gson.toJsonTree(metadata), SignUpMetadata::class.java)

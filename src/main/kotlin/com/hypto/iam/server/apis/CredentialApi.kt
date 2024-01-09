@@ -18,8 +18,8 @@ import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import java.util.UUID
 import org.koin.ktor.ext.inject
+import java.util.UUID
 
 fun Route.credentialApi() {
     val gson: Gson by inject()
@@ -31,7 +31,7 @@ fun Route.credentialApi() {
                 "/organizations/{organization_id}/users/{userId}/credentials",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
-                organizationIdIndex = 1
+                organizationIdIndex = 1,
             ),
             RouteOption(
                 "/organizations/{organization_id}/sub_organizations/{sub_organization_name}" +
@@ -39,29 +39,31 @@ fun Route.credentialApi() {
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
+                subOrganizationNameIndex = 3,
+            ),
         ),
-        "createCredential"
+        "createCredential",
     ) {
-        val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
+        val organizationId =
+            call.parameters["organization_id"]
+                ?: throw IllegalArgumentException("organization_id required")
         val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
         val request = call.receive<CreateCredentialRequest>().validate()
 
-        val response = credentialService.createCredential(
-            organizationId,
-            subOrganizationName,
-            userId,
-            request
-                .validUntil
-        )
+        val response =
+            credentialService.createCredential(
+                organizationId,
+                subOrganizationName,
+                userId,
+                request
+                    .validUntil,
+            )
 
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.Created
+            status = HttpStatusCode.Created,
         )
     }
 
@@ -71,7 +73,7 @@ fun Route.credentialApi() {
                 "/organizations/{organization_id}/users/{userId}/credentials/{id}",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
-                organizationIdIndex = 1
+                organizationIdIndex = 1,
             ),
             RouteOption(
                 "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
@@ -79,13 +81,14 @@ fun Route.credentialApi() {
                 resourceNameIndex = 6,
                 resourceInstanceIndex = 7,
                 organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
+                subOrganizationNameIndex = 3,
+            ),
         ),
         "deleteCredential",
     ) {
-        val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
+        val organizationId =
+            call.parameters["organization_id"]
+                ?: throw IllegalArgumentException("organization_id required")
         val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
         val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
@@ -95,7 +98,7 @@ fun Route.credentialApi() {
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 
@@ -105,7 +108,7 @@ fun Route.credentialApi() {
                 "/organizations/{organization_id}/users/{userId}/credentials/{id}",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
-                organizationIdIndex = 1
+                organizationIdIndex = 1,
             ),
             RouteOption(
                 "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
@@ -113,13 +116,14 @@ fun Route.credentialApi() {
                 resourceNameIndex = 6,
                 resourceInstanceIndex = 7,
                 organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
+                subOrganizationNameIndex = 3,
+            ),
         ),
         "getCredential",
     ) {
-        val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
+        val organizationId =
+            call.parameters["organization_id"]
+                ?: throw IllegalArgumentException("organization_id required")
         val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
         val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
@@ -129,7 +133,7 @@ fun Route.credentialApi() {
         call.respondText(
             text = gson.toJson(credential),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 
@@ -139,7 +143,7 @@ fun Route.credentialApi() {
                 "/organizations/{organization_id}/users/{userId}/credentials",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
-                organizationIdIndex = 1
+                organizationIdIndex = 1,
             ),
             RouteOption(
                 "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
@@ -147,11 +151,10 @@ fun Route.credentialApi() {
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
                 organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
+                subOrganizationNameIndex = 3,
+            ),
         ),
         "listCredential",
-
     ) {
         val organizationId = call.parameters["organization_id"]!!
         val subOrganizationName = call.parameters["sub_organization_name"]
@@ -162,7 +165,7 @@ fun Route.credentialApi() {
         call.respondText(
             text = gson.toJson(credentials),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 
@@ -172,7 +175,7 @@ fun Route.credentialApi() {
                 "/organizations/{organization_id}/users/{userId}/credentials/{id}",
                 resourceNameIndex = 4,
                 resourceInstanceIndex = 5,
-                organizationIdIndex = 1
+                organizationIdIndex = 1,
             ),
             RouteOption(
                 "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
@@ -180,31 +183,33 @@ fun Route.credentialApi() {
                 resourceNameIndex = 6,
                 resourceInstanceIndex = 7,
                 organizationIdIndex = 1,
-                subOrganizationNameIndex = 3
-            )
+                subOrganizationNameIndex = 3,
+            ),
         ),
-        "updateCredential"
+        "updateCredential",
     ) {
-        val organizationId = call.parameters["organization_id"]
-            ?: throw IllegalArgumentException("organization_id required")
+        val organizationId =
+            call.parameters["organization_id"]
+                ?: throw IllegalArgumentException("organization_id required")
         val subOrganizationName = call.parameters["sub_organization_name"]
         val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
         val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
         val request = call.receive<UpdateCredentialRequest>().validate()
 
-        val response = credentialService.updateCredentialAndGetWithoutSecret(
-            organizationId,
-            subOrganizationName,
-            userId,
-            id,
-            request.status,
-            request.validUntil
-        )
+        val response =
+            credentialService.updateCredentialAndGetWithoutSecret(
+                organizationId,
+                subOrganizationName,
+                userId,
+                id,
+                request.status,
+                request.validUntil,
+            )
 
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 }

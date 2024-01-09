@@ -6,11 +6,10 @@ import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.paginate
 import com.hypto.iam.server.models.VerifyEmailRequest
-import java.time.LocalDateTime
 import org.jooq.impl.DAOImpl
+import java.time.LocalDateTime
 
 object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
-
     private val idFun = fun(passcodes: Passcodes) = passcodes.id
 
     override suspend fun dao(): DAOImpl<PasscodesRecord, Passcodes, String> {
@@ -18,7 +17,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
     }
 
     suspend fun createPasscode(
-        record: PasscodesRecord
+        record: PasscodesRecord,
     ): PasscodesRecord {
         record.attach(dao().configuration())
         record.store()
@@ -37,9 +36,9 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .where(PASSCODES.EMAIL.eq(email)).and(
                 PASSCODES.PURPOSE.eq(purpose.toString()).and(
                     PASSCODES.VALID_UNTIL.ge(
-                        LocalDateTime.now()
-                    )
-                )
+                        LocalDateTime.now(),
+                    ),
+                ),
             )
             .apply {
                 organizationId?.let {
@@ -57,14 +56,14 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
         id: String,
         purpose: VerifyEmailRequest.Purpose,
         email: String? = null,
-        organizationId: String? = null
+        organizationId: String? = null,
     ): PasscodesRecord? {
         return ctx("passcodes.getValidPasscodeById")
             .selectFrom(PASSCODES)
             .where(
                 PASSCODES.ID.eq(id),
                 PASSCODES.PURPOSE.eq(purpose.toString()),
-                PASSCODES.VALID_UNTIL.ge(LocalDateTime.now())
+                PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()),
             ).apply {
                 email?.let {
                     and(PASSCODES.EMAIL.eq(email))
@@ -80,7 +79,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
         organizationId: String,
         subOrganizationName: String?,
         purpose: VerifyEmailRequest.Purpose,
-        email: String
+        email: String,
     ): PasscodesRecord? {
         return ctx("passcodes.getValidPasscodeByEmail")
             .selectFrom(PASSCODES)
@@ -88,7 +87,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 PASSCODES.EMAIL.eq(email),
                 PASSCODES.PURPOSE.eq(purpose.toString()),
                 PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()),
-                PASSCODES.ORGANIZATION_ID.eq(organizationId)
+                PASSCODES.ORGANIZATION_ID.eq(organizationId),
             )
             .apply {
                 subOrganizationName?.let {
@@ -102,7 +101,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
         organizationId: String,
         subOrganizationName: String?,
         purpose: VerifyEmailRequest.Purpose? = null,
-        paginationContext: PaginationContext
+        paginationContext: PaginationContext,
     ): List<PasscodesRecord> {
         return ctx("passcodes.list")
             .selectFrom(PASSCODES)
@@ -125,28 +124,30 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
     suspend fun deleteByEmailAndPurpose(
         email: String,
         purpose: VerifyEmailRequest.Purpose,
-        organizationId: String? = null
+        organizationId: String? = null,
     ): Boolean {
-        val count = ctx("passcodes.deleteByEmailAndPurpose")
-            .deleteFrom(PASSCODES)
-            .where(
-                PASSCODES.EMAIL.eq(email),
-                PASSCODES.PURPOSE.eq(purpose.toString())
-            )
-            .apply {
-                organizationId?.let {
-                    and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+        val count =
+            ctx("passcodes.deleteByEmailAndPurpose")
+                .deleteFrom(PASSCODES)
+                .where(
+                    PASSCODES.EMAIL.eq(email),
+                    PASSCODES.PURPOSE.eq(purpose.toString()),
+                )
+                .apply {
+                    organizationId?.let {
+                        and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+                    }
                 }
-            }
-            .execute()
+                .execute()
         return count > 0
     }
 
     suspend fun deleteByOrganizationId(organizationId: String): Boolean {
-        val count = ctx("passcodes.delete_by_organization_id")
-            .deleteFrom(PASSCODES)
-            .where(PASSCODES.ORGANIZATION_ID.eq(organizationId))
-            .execute()
+        val count =
+            ctx("passcodes.delete_by_organization_id")
+                .deleteFrom(PASSCODES)
+                .where(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+                .execute()
         return count > 0
     }
 }

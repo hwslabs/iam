@@ -5,10 +5,10 @@ import com.hypto.iam.server.db.tables.Organizations.ORGANIZATIONS
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.db.tables.records.OrganizationsRecord
 import com.hypto.iam.server.idp.IdentityGroup
-import java.time.LocalDateTime
 import org.jooq.JSONB
 import org.jooq.impl.DAOImpl
 import org.koin.core.component.inject
+import java.time.LocalDateTime
 
 object OrganizationRepo : BaseRepo<OrganizationsRecord, Organizations, String>() {
     private val gson: Gson by inject()
@@ -27,11 +27,12 @@ object OrganizationRepo : BaseRepo<OrganizationsRecord, Organizations, String>()
         id: String,
         name: String?,
         description: String?,
-        identityGroup: IdentityGroup?
+        identityGroup: IdentityGroup?,
     ): OrganizationsRecord? {
-        val updateStep = ctx("organizations.update")
-            .update(ORGANIZATIONS)
-            .set(ORGANIZATIONS.UPDATED_AT, LocalDateTime.now())
+        val updateStep =
+            ctx("organizations.update")
+                .update(ORGANIZATIONS)
+                .set(ORGANIZATIONS.UPDATED_AT, LocalDateTime.now())
         if (!name.isNullOrEmpty()) {
             updateStep.set(ORGANIZATIONS.NAME, name)
         }

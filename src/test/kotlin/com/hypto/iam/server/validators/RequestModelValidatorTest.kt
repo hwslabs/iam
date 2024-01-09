@@ -2,13 +2,12 @@ package com.hypto.iam.server.validators
 
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 internal class RequestModelValidatorTest {
-
     //  CreateCredentialRequest validations
     @Test
     fun `CreateCredentialRequest - valid - without validity `() {
@@ -54,10 +53,11 @@ internal class RequestModelValidatorTest {
 
     @Test
     fun `UpdateCredentialRequest - valid - with both status and validity `() {
-        val req = UpdateCredentialRequest(
-            LocalDateTime.MAX.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
-            UpdateCredentialRequest.Status.inactive
-        )
+        val req =
+            UpdateCredentialRequest(
+                LocalDateTime.MAX.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                UpdateCredentialRequest.Status.inactive,
+            )
         Assertions.assertInstanceOf(UpdateCredentialRequest::class.java, req.validate())
     }
 

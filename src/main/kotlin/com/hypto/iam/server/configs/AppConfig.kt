@@ -12,7 +12,7 @@ data class AppConfig(
     val aws: Aws,
     val postHook: PostHook,
     val onboardRoutes: OnboardRoutes,
-    val cognito: IdentityGroup
+    val cognito: IdentityGroup,
 ) {
     /**
      * Environment variables should be in Snake case.
@@ -31,7 +31,7 @@ data class AppConfig(
         val maximumPoolSize: Int,
         val minimumIdle: Int,
         val isAutoCommit: Boolean,
-        val transactionIsolation: String
+        val transactionIsolation: String,
     ) {
         val jdbcUrl: String
             get() = "jdbc:postgresql://$host:$port/iam"
@@ -74,7 +74,7 @@ data class AppConfig(
         val signUpEmailTemplate: String,
         val inviteUserEmailTemplate: String,
         val resetPasswordEmailTemplate: String,
-        val uniqueUsersAcrossOrganizations: Boolean
+        val uniqueUsersAcrossOrganizations: Boolean,
     ) {
         val isDevelopment: Boolean
             get() = env == Environment.Development
@@ -107,21 +107,27 @@ data class AppConfig(
     data class OnboardRoutes(val signup: String, val reset: String, val invite: String)
 
     companion object {
-        val configuration: AppConfig = with(
-            ConfigLoaderBuilder.default()
-                .addPropertySource(
-                    EnvironmentVariablesPropertySource(useUnderscoresAsSeparator = true, allowUppercaseNames = true)
-                ).withReport().build().loadConfigOrThrow<AppConfig>("/default_config.json")
-        ) {
-            // Convert cognito metadata keys from snake case to hyphenated
-            // because terraform doesn't support snake case as per Karuppiah's comment
-            copy(
-                cognito = cognito.copy(
-                    metadata = cognito.metadata.entries.associate {
-                        it.key.split("_").joinToString(separator = "-") to it.value
-                    }
+        val configuration: AppConfig =
+            with(
+                ConfigLoaderBuilder.default()
+                    .addPropertySource(
+                        EnvironmentVariablesPropertySource(
+                            useUnderscoresAsSeparator = true,
+                            allowUppercaseNames = true,
+                        ),
+                    ).withReport().build().loadConfigOrThrow<AppConfig>("/default_config.json"),
+            ) {
+                // Convert cognito metadata keys from snake case to hyphenated
+                // because terraform doesn't support snake case as per Karuppiah's comment
+                copy(
+                    cognito =
+                        cognito.copy(
+                            metadata =
+                                cognito.metadata.entries.associate {
+                                    it.key.split("_").joinToString(separator = "-") to it.value
+                                },
+                        ),
                 )
-            )
-        }
+            }
     }
 }

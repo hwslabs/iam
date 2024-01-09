@@ -44,20 +44,21 @@ class ActionApiTest : AbstractContainerBaseTest() {
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
             val resource = createResource(organization.id, rootUserToken)
-            val response = client.post("/organizations/${organization.id}/resources/${resource.name}/actions") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                setBody(gson.toJson(CreateActionRequest(name = "test-action")))
-            }
+            val response =
+                client.post("/organizations/${organization.id}/resources/${resource.name}/actions") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    setBody(gson.toJson(CreateActionRequest(name = "test-action")))
+                }
             val responseBody = gson.fromJson(response.bodyAsText(), Action::class.java)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
             assertEquals(
                 organization.id,
-                response.headers[Constants.X_ORGANIZATION_HEADER]
+                response.headers[Constants.X_ORGANIZATION_HEADER],
             )
 
             assertEquals(organization.id, responseBody.organizationId)
@@ -79,15 +80,16 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
             val (action, resource) = createAction(organization.id, null, rootUserToken)
 
-            val response = client.get(
-                "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
-            ) {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            val response =
+                client.get(
+                    "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
 
             val responseBody = gson.fromJson(response.bodyAsText(), Action::class.java)
@@ -115,15 +117,16 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
             val (action, resource) = createAction(organization1.id, null, rootUserToken1)
 
-            val response = client.get(
-                "/organizations/${organization1.id}/resources/${resource.name}/actions/${action.name}"
-            ) {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
-            }
+            val response =
+                client.get(
+                    "/organizations/${organization1.id}/resources/${resource.name}/actions/${action.name}",
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
+                }
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
 
             deleteOrganization(organization1.id)
@@ -142,22 +145,24 @@ class ActionApiTest : AbstractContainerBaseTest() {
             val rootUserToken = organizationResponse.rootUserToken
 
             val (action, resource) = createAction(organization.id, null, rootUserToken)
-            var response = client.delete(
-                "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
-            ) {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            var response =
+                client.delete(
+                    "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(ContentType.Application.Json.withCharset(Charsets.UTF_8), response.contentType())
             val responseBody = gson.fromJson(response.bodyAsText(), BaseSuccessResponse::class.java)
             assertEquals(true, responseBody.success)
 
             // Check that the action is not available
-            response = client.get(
-                "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
-            ) {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            response =
+                client.get(
+                    "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
             assertEquals(HttpStatusCode.NotFound, response.status)
 
             deleteOrganization(organization.id)
@@ -176,15 +181,16 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
             val (action1, resource) = createAction(organization.id, null, rootUserToken)
             val (action2, _) = createAction(organization.id, resource, rootUserToken)
-            val response = client.get(
-                "/organizations/${organization.id}/resources/${resource.name}/actions"
-            ) {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-            }
+            val response =
+                client.get(
+                    "/organizations/${organization.id}/resources/${resource.name}/actions",
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
 
             val responseBody = gson.fromJson(response.bodyAsText(), ActionPaginatedResponse::class.java)
@@ -208,17 +214,18 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
             val (action, resource) = createAction(organization.id, null, rootUserToken)
             val newDescription = "new description"
-            val response = client.patch(
-                "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}"
-            ) {
-                header(HttpHeaders.Authorization, "Bearer $rootUserToken")
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(gson.toJson(UpdateActionRequest(description = "new description")))
-            }
+            val response =
+                client.patch(
+                    "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
+                ) {
+                    header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(gson.toJson(UpdateActionRequest(description = "new description")))
+                }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
                 ContentType.Application.Json.withCharset(Charsets.UTF_8),
-                response.contentType()
+                response.contentType(),
             )
 
             val responseBody = gson.fromJson(response.bodyAsText(), Action::class.java)

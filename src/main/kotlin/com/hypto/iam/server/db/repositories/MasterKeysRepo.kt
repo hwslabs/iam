@@ -5,16 +5,15 @@ import com.hypto.iam.server.db.tables.MasterKeys.MASTER_KEYS
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
 import com.hypto.iam.server.db.tables.records.MasterKeysRecord
 import com.hypto.iam.server.utils.MasterKeyUtil
+import org.jooq.Configuration
+import org.jooq.impl.DAOImpl
+import org.koin.core.component.inject
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
-import org.jooq.Configuration
-import org.jooq.impl.DAOImpl
-import org.koin.core.component.inject
 
 object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
-
     private val appConfig: AppConfig by inject()
 
     private val idFun = fun (masterKey: MasterKeys): UUID {
@@ -25,7 +24,7 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
         return txMan.getDao(
             MASTER_KEYS,
             MasterKeys::class.java,
-            idFun
+            idFun,
         )
     }
 
@@ -59,9 +58,9 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
                         MASTER_KEYS.UPDATED_AT.lessThan(
                             LocalDateTime.ofInstant(
                                 Instant.now().minusSeconds(appConfig.app.oldKeyTtl),
-                                ZoneOffset.systemDefault()
-                            )
-                        )
+                                ZoneOffset.systemDefault(),
+                            ),
+                        ),
                     ).execute()
 
                 c.dsl().update(MASTER_KEYS)
@@ -103,7 +102,7 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
                 .fetchOne("select pg_try_advisory_xact_lock($MASTER_KEY_OPERATION_LOCK_KEY) as lock")
                 ?.get("lock")
                 ?: false
-            ) as Boolean
+        ) as Boolean
     }
 
     private const val MASTER_KEY_OPERATION_LOCK_KEY = 10
@@ -111,6 +110,6 @@ object MasterKeysRepo : BaseRepo<MasterKeysRecord, MasterKeys, UUID>() {
     enum class Status(val value: String) {
         SIGNING("SIGNING"),
         VERIFYING("VERIFYING"),
-        EXPIRED("EXPIRED")
+        EXPIRED("EXPIRED"),
     }
 }

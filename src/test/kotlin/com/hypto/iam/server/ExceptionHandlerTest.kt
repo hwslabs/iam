@@ -40,22 +40,23 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"
 
-            val requestBody = CreateOrganizationRequest(
-                orgName,
-                RootUser(
-                    preferredUsername = preferredUsername,
-                    name = name,
-                    password = testPassword,
-                    email = testEmail,
-                    phone = testPhone
+            val requestBody =
+                CreateOrganizationRequest(
+                    orgName,
+                    RootUser(
+                        preferredUsername = preferredUsername,
+                        name = name,
+                        password = testPassword,
+                        email = testEmail,
+                        phone = testPhone,
+                    ),
                 )
-            )
             with(
                 handleRequest(HttpMethod.Post, "/organizations") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader("X-Api-Key", rootToken)
                     setBody(gson.toJson(requestBody))
-                }
+                },
             ) {
                 Assertions.assertEquals("{\"message\":\"Internal Server Error Occurred\"}", response.content)
                 Assertions.assertEquals(500, response.status()?.value)

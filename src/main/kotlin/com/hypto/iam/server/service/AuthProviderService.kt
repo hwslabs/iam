@@ -17,13 +17,13 @@ class AuthProviderServiceImpl : KoinComponent, AuthProviderService {
         return AuthProviderPaginatedResponse(
             authProviders.map { AuthProvider.from(it) },
             newContext.nextToken,
-            newContext.toOptions()
+            newContext.toOptions(),
         )
     }
 }
 
 interface AuthProviderService {
     suspend fun listAuthProvider(
-        context: PaginationContext
+        context: PaginationContext,
     ): AuthProviderPaginatedResponse
 }

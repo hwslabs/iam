@@ -4,11 +4,10 @@ import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.exceptions.PolicyFormatException
 import com.hypto.iam.server.utils.ResourceHrn
-import java.io.InputStream
 import org.koin.core.component.KoinComponent
+import java.io.InputStream
 
 class PolicyBuilder() : KoinComponent {
-
     constructor(policyHrn: ResourceHrn) : this() {
         this.policyHrn = policyHrn
         this.orgId = policyHrn.organization
@@ -38,7 +37,7 @@ class PolicyBuilder() : KoinComponent {
 
     fun withStatement(
         statement: com.hypto.iam.server.models.PolicyStatement,
-        principal: ResourceHrn = policyHrn
+        principal: ResourceHrn = policyHrn,
     ): PolicyBuilder {
         validateStatement(statement = statement)
         this.policyStatements.add(PolicyStatement.of(principal.toString(), statement))
@@ -68,7 +67,9 @@ class PolicyBuilder() : KoinComponent {
     }
 
     override fun toString(): String {
-        if (this::policyString.isInitialized) { return this.policyString }
+        if (this::policyString.isInitialized) {
+            return this.policyString
+        }
         val builder = StringBuilder()
         policyStatements.forEach { builder.appendLine(it.toString()) }
         policies.forEach { builder.appendLine(it.statements) }

@@ -39,48 +39,52 @@ fun Route.subOrganizationsApi() {
     route("/organizations/{organization_id}/sub_organizations") {
         withPermission(
             "listSubOrganizations",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             get {
-                val organizationId = call.parameters["organization_id"] ?: throw IllegalArgumentException(
-                    "organization_id is required"
-                )
+                val organizationId =
+                    call.parameters["organization_id"] ?: throw IllegalArgumentException(
+                        "organization_id is required",
+                    )
                 val nextToken = call.request.queryParameters["next_token"]
                 val pageSize = call.request.queryParameters["page_size"]
                 val sortOrder = call.request.queryParameters["sortOrder"]
 
-                val paginationContext = PaginationContext.from(
-                    nextToken,
-                    pageSize?.toInt(),
-                    sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) }
-                )
+                val paginationContext =
+                    PaginationContext.from(
+                        nextToken,
+                        pageSize?.toInt(),
+                        sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+                    )
                 val response = service.listSubOrganizations(organizationId, paginationContext)
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
+                    status = HttpStatusCode.OK,
                 )
             }
         }
 
         withPermission(
             "createSubOrganization",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             post {
-                val organizationId = call.parameters["organization_id"] ?: throw IllegalArgumentException(
-                    "organization_id is required"
-                )
+                val organizationId =
+                    call.parameters["organization_id"] ?: throw IllegalArgumentException(
+                        "organization_id is required",
+                    )
                 val request = call.receive<CreateSubOrganizationRequest>().validate()
-                val subOrganization = service.createSubOrganization(
-                    organizationId = organizationId,
-                    subOrganizationName = request.name,
-                    description = request.description
-                )
+                val subOrganization =
+                    service.createSubOrganization(
+                        organizationId = organizationId,
+                        subOrganizationName = request.name,
+                        description = request.description,
+                    )
                 call.respondText(
                     text = gson.toJson(CreateSubOrganizationResponse(subOrganization)),
                     contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.Created
+                    status = HttpStatusCode.Created,
                 )
             }
         }
@@ -93,8 +97,8 @@ fun Route.subOrganizationsApi() {
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
-            )
+                subOrganizationIdIndex = 3,
+            ),
         ) {
             delete {
                 val orgId = call.parameters["org_id"]!!
@@ -103,7 +107,7 @@ fun Route.subOrganizationsApi() {
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
+                    status = HttpStatusCode.OK,
                 )
             }
         }
@@ -114,8 +118,8 @@ fun Route.subOrganizationsApi() {
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
-            )
+                subOrganizationIdIndex = 3,
+            ),
         ) {
             get {
                 val name = call.parameters["sub_organization_name"]!!
@@ -124,7 +128,7 @@ fun Route.subOrganizationsApi() {
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
+                    status = HttpStatusCode.OK,
                 )
             }
         }
@@ -135,8 +139,8 @@ fun Route.subOrganizationsApi() {
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
-                subOrganizationIdIndex = 3
-            )
+                subOrganizationIdIndex = 3,
+            ),
         ) {
             patch {
                 val subOrgName = call.parameters["sub_organization_name"]!!
@@ -151,7 +155,7 @@ fun Route.subOrganizationsApi() {
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
+                    status = HttpStatusCode.OK,
                 )
             }
         }

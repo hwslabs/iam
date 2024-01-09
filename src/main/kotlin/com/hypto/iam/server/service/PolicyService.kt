@@ -28,7 +28,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         organizationId: String,
         name: String,
         description: String?,
-        statements: List<PolicyStatement>
+        statements: List<PolicyStatement>,
     ): Policy {
         val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, name)
         if (policyRepo.existsById(policyHrn.toString())) {
@@ -45,7 +45,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 
     override suspend fun batchCreatePolicyRaw(
         organizationId: String,
-        rawPolicyPayloadsList: List<RawPolicyPayload>
+        rawPolicyPayloadsList: List<RawPolicyPayload>,
     ): List<PoliciesRecord> {
         val policyHrnStrings = rawPolicyPayloadsList.map { it.hrn.toString() }
 
@@ -56,41 +56,50 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         return policyRepo.batchCreate(rawPolicyPayloadsList)
     }
 
-    override suspend fun getPolicy(organizationId: String, name: String): Policy {
-        val policyRecord = policyRepo.fetchByHrn(
-            ResourceHrn(organizationId, "", IamResources.POLICY, name).toString()
-        ) ?: throw EntityNotFoundException("Policy not found")
+    override suspend fun getPolicy(
+        organizationId: String,
+        name: String,
+    ): Policy {
+        val policyRecord =
+            policyRepo.fetchByHrn(
+                ResourceHrn(organizationId, "", IamResources.POLICY, name).toString(),
+            ) ?: throw EntityNotFoundException("Policy not found")
         return Policy.from(policyRecord)
     }
 
     override suspend fun updatePolicy(
         organizationId: String,
         name: String,
-        updatePolicyRequest: UpdatePolicyRequest
+        updatePolicyRequest: UpdatePolicyRequest,
     ): Policy {
         val policyHrn = ResourceHrn(organizationId, "", IamResources.POLICY, name)
         val policyHrnStr = policyHrn.toString()
 
-        val policyString = if (updatePolicyRequest.statements != null) {
-            // TODO: Validate policy statements (actions and resourceTypes)
-            PolicyBuilder(policyHrn).let { builder ->
-                updatePolicyRequest.statements.forEach { builder.withStatement(it) }
-                builder.build()
+        val policyString =
+            if (updatePolicyRequest.statements != null) {
+                // TODO: Validate policy statements (actions and resourceTypes)
+                PolicyBuilder(policyHrn).let { builder ->
+                    updatePolicyRequest.statements.forEach { builder.withStatement(it) }
+                    builder.build()
+                }
+            } else {
+                null
             }
-        } else {
-            null
-        }
 
-        val policyRecord = policyRepo.update(
-            policyHrnStr,
-            description = updatePolicyRequest.description,
-            statements = policyString
-        )
+        val policyRecord =
+            policyRepo.update(
+                policyHrnStr,
+                description = updatePolicyRequest.description,
+                statements = policyString,
+            )
         policyRecord ?: throw EntityNotFoundException("cannot find policy: $name")
         return Policy.from(policyRecord)
     }
 
-    override suspend fun deletePolicy(organizationId: String, name: String): BaseSuccessResponse {
+    override suspend fun deletePolicy(
+        organizationId: String,
+        name: String,
+    ): BaseSuccessResponse {
         val policyHrnStr = ResourceHrn(organizationId, "", IamResources.POLICY, name).toString()
         if (!policyRepo.deleteByHrn(policyHrnStr)) {
             throw EntityNotFoundException("Policy not found")
@@ -102,18 +111,22 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     override suspend fun getPoliciesByUser(
         organizationId: String,
         userId: String,
-        context: PaginationContext
+        context: PaginationContext,
     ): PolicyPaginatedResponse {
-        val policies = principalPolicyRepo
-            .fetchPoliciesByUserHrnPaginated(
-                ResourceHrn(organizationId, "", IamResources.USER, userId).toString(),
-                context
-            )
+        val policies =
+            principalPolicyRepo
+                .fetchPoliciesByUserHrnPaginated(
+                    ResourceHrn(organizationId, "", IamResources.USER, userId).toString(),
+                    context,
+                )
         val newContext = PaginationContext.from(policies.lastOrNull()?.hrn, context)
         return PolicyPaginatedResponse(policies.map { Policy.from(it) }, newContext.nextToken, newContext.toOptions())
     }
 
-    override suspend fun listPolicies(organizationId: String, context: PaginationContext): PolicyPaginatedResponse {
+    override suspend fun listPolicies(
+        organizationId: String,
+        context: PaginationContext,
+    ): PolicyPaginatedResponse {
         val policies = policyRepo.fetchByOrganizationIdPaginated(organizationId, context)
         val newContext = PaginationContext.from(policies.lastOrNull()?.hrn, context)
         return PolicyPaginatedResponse(policies.map { Policy.from(it) }, newContext.nextToken, newContext.toOptions())
@@ -125,20 +138,38 @@ interface PolicyService {
         organizationId: String,
         name: String,
         description: String?,
-        statements: List<PolicyStatement>
+        statements: List<PolicyStatement>,
     ): Policy
-    suspend fun getPolicy(organizationId: String, name: String): Policy
-    suspend fun updatePolicy(organizationId: String, name: String, updatePolicyRequest: UpdatePolicyRequest): Policy
-    suspend fun deletePolicy(organizationId: String, name: String): BaseSuccessResponse
+
+    suspend fun getPolicy(
+        organizationId: String,
+        name: String,
+    ): Policy
+
+    suspend fun updatePolicy(
+        organizationId: String,
+        name: String,
+        updatePolicyRequest: UpdatePolicyRequest,
+    ): Policy
+
+    suspend fun deletePolicy(
+        organizationId: String,
+        name: String,
+    ): BaseSuccessResponse
+
     suspend fun getPoliciesByUser(
         organizationId: String,
         userId: String,
-        context: PaginationContext
+        context: PaginationContext,
     ): PolicyPaginatedResponse
 
-    suspend fun listPolicies(organizationId: String, context: PaginationContext): PolicyPaginatedResponse
+    suspend fun listPolicies(
+        organizationId: String,
+        context: PaginationContext,
+    ): PolicyPaginatedResponse
+
     suspend fun batchCreatePolicyRaw(
         organizationId: String,
-        rawPolicyPayloadsList: List<RawPolicyPayload>
+        rawPolicyPayloadsList: List<RawPolicyPayload>,
     ): List<PoliciesRecord>
 }

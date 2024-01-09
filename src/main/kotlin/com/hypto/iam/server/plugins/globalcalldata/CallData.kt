@@ -5,6 +5,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
 interface Key<E : Any>
+
 object Call : Key<ApplicationCall>
 
 open class CallData(context: CoroutineContext) {

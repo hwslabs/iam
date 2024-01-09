@@ -24,10 +24,11 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
     override fun getProviderName() = "google"
 
     override fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal {
-        val requestBuilder = Request.Builder()
-            .url("$PROFILE_URL?$ACCESS_TOKEN_KEY=${tokenCredential.value}")
-            .method("GET", null)
-            .addHeader("Content-Type", "application/json")
+        val requestBuilder =
+            Request.Builder()
+                .url("$PROFILE_URL?$ACCESS_TOKEN_KEY=${tokenCredential.value}")
+                .method("GET", null)
+                .addHeader("Content-Type", "application/json")
         val request = requestBuilder.build()
         val response = httpClient.newCall(request).execute()
         if (!response.isSuccessful) {
@@ -44,7 +45,7 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
             googleUser.email,
             googleUser.name,
             googleUser.hd ?: "",
-            getProviderName()
+            getProviderName(),
         )
     }
 }
@@ -52,5 +53,5 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
 data class GoogleUser(
     val email: String,
     val name: String,
-    val hd: String? = null
+    val hd: String? = null,
 )

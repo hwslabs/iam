@@ -12,11 +12,11 @@ import org.jooq.impl.DAOImpl
 typealias AuthProviderPk = Record1<String?>
 
 object AuthProviderRepo : BaseRepo<AuthProviderRecord, AuthProvider, AuthProviderPk>() {
-
+    @Suppress("ktlint:standard:blank-line-before-declaration")
     private fun getIdFun(dsl: DSLContext): (AuthProvider) -> AuthProviderPk {
         return fun (authProvider: AuthProvider): AuthProviderPk {
             return dsl.newRecord(
-                AUTH_PROVIDER.PROVIDER_NAME
+                AUTH_PROVIDER.PROVIDER_NAME,
             )
                 .values(authProvider.providerName)
         }
@@ -26,12 +26,12 @@ object AuthProviderRepo : BaseRepo<AuthProviderRecord, AuthProvider, AuthProvide
         return txMan.getDao(
             AUTH_PROVIDER,
             AuthProvider::class.java,
-            getIdFun(txMan.dsl())
+            getIdFun(txMan.dsl()),
         )
     }
 
     suspend fun fetchAuthProvidersPaginated(
-        paginationContext: PaginationContext
+        paginationContext: PaginationContext,
     ): List<AuthProviderRecord> {
         return ctx("authProvider.fetchAuthProvidersPaginated").selectFrom(AUTH_PROVIDER)
             .where()

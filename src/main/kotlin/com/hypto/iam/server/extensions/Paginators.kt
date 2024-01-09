@@ -8,17 +8,17 @@ import com.hypto.iam.server.Constants.Companion.PAGINATION_MAX_PAGE_SIZE
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PaginationOptions.SortOrder
-import java.util.Base64
 import org.jooq.Record
 import org.jooq.SelectConditionStep
 import org.jooq.SelectForUpdateStep
 import org.jooq.SortField
 import org.jooq.TableField
+import java.util.Base64
 
 fun <R : Record, T : Any> customPaginate(
     step: SelectConditionStep<R>,
     sortField: TableField<R, T>,
-    context: PaginationContext
+    context: PaginationContext,
 ): SelectForUpdateStep<R> {
     val selectSeekStep = step.orderBy(getSort(sortField, context))
     if (context.lastItemId == null) {
@@ -29,12 +29,15 @@ fun <R : Record, T : Any> customPaginate(
 
 fun <R : Record, T : Any> SelectConditionStep<R>.paginate(
     sortField: TableField<R, T>,
-    context: PaginationContext
+    context: PaginationContext,
 ): SelectForUpdateStep<R> {
     return customPaginate(this, sortField, context)
 }
 
-fun <R : Record, T> getSort(field: TableField<R, T>, context: PaginationContext): SortField<T> {
+fun <R : Record, T> getSort(
+    field: TableField<R, T>,
+    context: PaginationContext,
+): SortField<T> {
     return if (context.sortOrder == SortOrder.asc) {
         field.asc()
     } else {
@@ -58,11 +61,15 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
             return PaginationContext(
                 jsonObject.get(PaginationContext::lastItemId.name).asString,
                 jsonObject.get(PaginationContext::pageSize.name).asInt,
-                SortOrder.valueOf(jsonObject.get(PaginationContext::sortOrder.name).asString)
+                SortOrder.valueOf(jsonObject.get(PaginationContext::sortOrder.name).asString),
             )
         }
 
-        fun from(nextToken: String?, pageSize: Int?, sortOrder: SortOrder?): PaginationContext {
+        fun from(
+            nextToken: String?,
+            pageSize: Int?,
+            sortOrder: SortOrder?,
+        ): PaginationContext {
             require(pageSize == null || pageSize <= PAGINATION_MAX_PAGE_SIZE) {
                 "Page Size must be less than or equal to $PAGINATION_MAX_PAGE_SIZE"
             }
@@ -73,11 +80,14 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
             return PaginationContext(
                 lastItemId = null,
                 pageSize = pageSize ?: PAGINATION_DEFAULT_PAGE_SIZE,
-                sortOrder = sortOrder ?: PAGINATION_DEFAULT_SORT_ORDER
+                sortOrder = sortOrder ?: PAGINATION_DEFAULT_SORT_ORDER,
             )
         }
 
-        fun from(lastItemId: String?, oldContext: PaginationContext): PaginationContext {
+        fun from(
+            lastItemId: String?,
+            oldContext: PaginationContext,
+        ): PaginationContext {
             return PaginationContext(lastItemId, oldContext.pageSize, oldContext.sortOrder)
         }
     }

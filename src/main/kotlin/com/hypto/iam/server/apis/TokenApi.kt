@@ -30,7 +30,10 @@ private val gson: Gson = getKoinInstance()
 private val userAuthRepo = getKoinInstance<UserAuthRepo>()
 
 @Suppress("ThrowsCount")
-suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
+suspend fun generateToken(
+    call: ApplicationCall,
+    context: ApplicationCall,
+) {
     val principal = context.principal<UserPrincipal>()!!
     val responseContentType = context.request.accept()
     val response =
@@ -41,21 +44,26 @@ suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
         }
 
     when (responseContentType) {
-        ContentType.Text.Plain.toString() -> call.respondText(
-            text = response.token,
-            contentType = ContentType.Text.Plain,
-            status = HttpStatusCode.OK
-        )
-        else -> call.respondText(
-            text = gson.toJson(response),
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
-        )
+        ContentType.Text.Plain.toString() ->
+            call.respondText(
+                text = response.token,
+                contentType = ContentType.Text.Plain,
+                status = HttpStatusCode.OK,
+            )
+        else ->
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK,
+            )
     }
 }
 
 @Suppress("ThrowsCount")
-suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) {
+suspend fun generateTokenOauth(
+    call: ApplicationCall,
+    context: ApplicationCall,
+) {
     val principal = context.principal<OAuthUserPrincipal>()!!
     val responseContentType = context.request.accept()
     val user = UserRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
@@ -66,16 +74,18 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
     }
 
     when (responseContentType) {
-        ContentType.Text.Plain.toString() -> call.respondText(
-            text = response.token,
-            contentType = ContentType.Text.Plain,
-            status = HttpStatusCode.OK
-        )
-        else -> call.respondText(
-            text = gson.toJson(response),
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
-        )
+        ContentType.Text.Plain.toString() ->
+            call.respondText(
+                text = response.token,
+                contentType = ContentType.Text.Plain,
+                status = HttpStatusCode.OK,
+            )
+        else ->
+            call.respondText(
+                text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK,
+            )
     }
 }
 
@@ -83,7 +93,7 @@ fun Route.tokenApi() {
     authenticate("basic-auth", "bearer-auth") {
         post(
             "/organizations/{organization_id}/token",
-            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/token"
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/token",
         ) {
             generateToken(call, context)
         }
@@ -104,16 +114,18 @@ fun Route.tokenApi() {
             val response = tokenService.generateDelegateJwtToken(principal, request)
 
             when (responseContentType) {
-                ContentType.Text.Plain.toString() -> call.respondText(
-                    text = response.token,
-                    contentType = ContentType.Text.Plain,
-                    status = HttpStatusCode.OK
-                )
-                else -> call.respondText(
-                    text = gson.toJson(response),
-                    contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
-                )
+                ContentType.Text.Plain.toString() ->
+                    call.respondText(
+                        text = response.token,
+                        contentType = ContentType.Text.Plain,
+                        status = HttpStatusCode.OK,
+                    )
+                else ->
+                    call.respondText(
+                        text = gson.toJson(response),
+                        contentType = ContentType.Application.Json,
+                        status = HttpStatusCode.OK,
+                    )
             }
         }
     }

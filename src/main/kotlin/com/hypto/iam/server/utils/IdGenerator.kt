@@ -6,7 +6,6 @@ import java.util.concurrent.ThreadLocalRandom
 import kotlin.streams.asSequence
 
 object IdGenerator {
-
     enum class Charset(val seed: String) {
         UPPERCASE_ALPHABETS("ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
         LOWERCASE_ALPHABETS(UPPERCASE_ALPHABETS.seed.lowercase()),
@@ -17,7 +16,10 @@ object IdGenerator {
         ALPHANUMERIC(ALPHABETS.seed + NUMERIC.seed),
     }
 
-    fun randomId(length: Long = 10, charset: Charset = Charset.UPPERCASE_ALPHABETS): String {
+    fun randomId(
+        length: Long = 10,
+        charset: Charset = Charset.UPPERCASE_ALPHABETS,
+    ): String {
         return ThreadLocalRandom.current().ints(length, 0, charset.seed.length)
             .asSequence()
             .map(charset.seed::get)
@@ -36,7 +38,10 @@ object IdGenerator {
      * - numberToId(number, IdGenerator.Charset.UPPER_ALPHANUMERIC) == "1HSP1D"
      * - numberToId(number, IdGenerator.Charset.LOWER_ALPHANUMERIC) == "1hsp1d"
      */
-    fun numberToId(number: Long, charset: Charset = Charset.UPPERCASE_ALPHABETS): String {
+    fun numberToId(
+        number: Long,
+        charset: Charset = Charset.UPPERCASE_ALPHABETS,
+    ): String {
         return if (number < 0L) {
             "-" + numberToId(-number - 1)
         } else if (number == 0L) {
@@ -56,7 +61,10 @@ object IdGenerator {
 
     private const val MIN_TIME_BASED_RANDOM_ID_SIZE = 10
 
-    fun timeBasedRandomId(length: Long = 10, charset: Charset = Charset.UPPERCASE_ALPHABETS): String {
+    fun timeBasedRandomId(
+        length: Long = 10,
+        charset: Charset = Charset.UPPERCASE_ALPHABETS,
+    ): String {
         require(length >= MIN_TIME_BASED_RANDOM_ID_SIZE) {
             "Cannot generate a timestamp based random id with less than $MIN_TIME_BASED_RANDOM_ID_SIZE characters"
         }

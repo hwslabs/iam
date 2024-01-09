@@ -22,7 +22,6 @@ import io.ktor.server.request.userAgent
 import io.ktor.util.AttributeKey
 import io.ktor.util.pipeline.PipelineContext
 import io.ktor.util.pipeline.PipelinePhase
-import java.time.LocalDateTime
 import mu.KLogger
 import mu.KotlinLogging
 import mu.toKLogger
@@ -30,6 +29,7 @@ import org.jooq.JSON
 import org.koin.core.component.KoinComponent
 import org.slf4j.LoggerFactory
 import org.slf4j.MarkerFactory
+import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger { }
 
@@ -57,7 +57,7 @@ class Audit(config: Configuration) : KoinComponent {
 
         override fun install(
             pipeline: ApplicationCallPipeline,
-            configure: Configuration.() -> Unit
+            configure: Configuration.() -> Unit,
         ): Audit {
             val configuration = Configuration().apply(configure)
 
@@ -83,8 +83,13 @@ class Audit(config: Configuration) : KoinComponent {
     }
 
     @Suppress("TooGenericExceptionCaught")
-    private fun interceptAfterSend(pipelineContext: PipelineContext<Any, ApplicationCall>, message: Any) {
-        if (!enabled) { return }
+    private fun interceptAfterSend(
+        pipelineContext: PipelineContext<Any, ApplicationCall>,
+        message: Any,
+    ) {
+        if (!enabled) {
+            return
+        }
         try {
             val auditContext = pipelineContext.call.attributes[AuditContextKey]
             auditContext.persist(message)
@@ -108,6 +113,7 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
         private val auditMarker = MarkerFactory.getMarker("AUDIT")
         private val gson: Gson = getKoinInstance()
     }
+
     val entries = mutableListOf<ResourceHrn>()
     private val logger = KotlinLogging.logger { }
 
@@ -137,27 +143,35 @@ class AuditContext(val context: PipelineContext<Unit, ApplicationCall>) {
         }
     }
 
-    private fun persistEntry(applicationCall: ApplicationCall, message: Any, resourceHrnStr: String) {
-        val principalHrn = applicationCall.principal<UserPrincipal>()?.hrn as ResourceHrn?
-            ?: error("User principal missing in application context")
+    private fun persistEntry(
+        applicationCall: ApplicationCall,
+        message: Any,
+        resourceHrnStr: String,
+    ) {
+        val principalHrn =
+            applicationCall.principal<UserPrincipal>()?.hrn as ResourceHrn?
+                ?: error("User principal missing in application context")
         applicationCall.callId ?: error("Request id missing in application context")
 
-        val meta = hashMapOf(
-            Pair("HttpMethod", applicationCall.request.httpMethod.value),
-            Pair("Referer", applicationCall.request.userAgent()), // TODO: [IMPORTANT] Verify this is not ALB address
-            Pair("StatusCode", fetchStatusCode(message)?.value.toString())
-        )
+        val meta =
+            hashMapOf(
+                Pair("HttpMethod", applicationCall.request.httpMethod.value),
+                Pair("Referer", applicationCall.request.userAgent()),
+                // TODO: [IMPORTANT] Verify this is not ALB address
+                Pair("StatusCode", fetchStatusCode(message)?.value.toString()),
+            )
 
-        val auditEntry = AuditEntries(
-            null,
-            applicationCall.callId!!,
-            LocalDateTime.now(),
-            principalHrn.toString(),
-            principalHrn.organization,
-            resourceHrnStr,
-            applicationCall.request.path(),
-            JSON.valueOf(gson.toJson(meta))
-        )
+        val auditEntry =
+            AuditEntries(
+                null,
+                applicationCall.callId!!,
+                LocalDateTime.now(),
+                principalHrn.toString(),
+                principalHrn.organization,
+                resourceHrnStr,
+                applicationCall.request.path(),
+                JSON.valueOf(gson.toJson(meta)),
+            )
 
         return auditLogger.info(auditMarker, gson.toJson(auditEntry))
     }

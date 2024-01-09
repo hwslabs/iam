@@ -25,7 +25,6 @@ import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.txman.TxMan
 import io.micrometer.core.annotation.Timed
-import java.time.LocalDateTime
 import mu.KotlinLogging
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -35,6 +34,7 @@ import org.jooq.JSONB
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
+import java.time.LocalDateTime
 
 class OrganizationAlreadyExistException(message: String) : Exception(message)
 
@@ -61,7 +61,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 
     override suspend fun createOrganization(
         request: CreateOrganizationRequest,
-        issuer: String
+        issuer: String,
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
         val identityGroup = appConfig.cognito
@@ -74,48 +74,52 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             return txMan.wrap {
                 passcodeRepo.deleteByEmailAndPurpose(rootUserFromRequest.email, VerifyEmailRequest.Purpose.signup)
                 // Create Organization
-                val organizationsRecord = OrganizationsRecord(
-                    organizationId,
-                    request.name,
-                    request.description ?: "",
-                    ResourceHrn(
-                        organization = organizationId,
-                        resource = IamResources.USER,
-                        resourceInstance = username
-                    ).toString(),
-                    JSONB.jsonb(gson.toJson(identityGroup)),
-                    logTimestamp,
-                    logTimestamp
-                )
+                val organizationsRecord =
+                    OrganizationsRecord(
+                        organizationId,
+                        request.name,
+                        request.description ?: "",
+                        ResourceHrn(
+                            organization = organizationId,
+                            resource = IamResources.USER,
+                            resourceInstance = username,
+                        ).toString(),
+                        JSONB.jsonb(gson.toJson(identityGroup)),
+                        logTimestamp,
+                        logTimestamp,
+                    )
                 organizationRepo.store(organizationsRecord)
 
                 // Create root user for the organization
-                val rootUser = usersService.createUser(
-                    organizationId = organizationId,
-                    subOrganizationName = null,
-                    username = username,
-                    preferredUsername = rootUserFromRequest.preferredUsername,
-                    name = rootUserFromRequest.name,
-                    email = rootUserFromRequest.email,
-                    phoneNumber = rootUserFromRequest.phone ?: "",
-                    password = rootUserFromRequest.password,
-                    createdBy = "iam-system",
-                    verified = true,
-                    loginAccess = true
-                )
+                val rootUser =
+                    usersService.createUser(
+                        organizationId = organizationId,
+                        subOrganizationName = null,
+                        username = username,
+                        preferredUsername = rootUserFromRequest.preferredUsername,
+                        name = rootUserFromRequest.name,
+                        email = rootUserFromRequest.email,
+                        phoneNumber = rootUserFromRequest.phone ?: "",
+                        password = rootUserFromRequest.password,
+                        createdBy = "iam-system",
+                        verified = true,
+                        loginAccess = true,
+                    )
 
-                val policyHrns = policyTemplatesService
-                    .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
-                    .map { ResourceHrn(it.hrn) }
+                val policyHrns =
+                    policyTemplatesService
+                        .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
+                        .map { ResourceHrn(it.hrn) }
 
-                val organization = Organization(
-                    id = organizationsRecord.id,
-                    name = organizationsRecord.name,
-                    description = organizationsRecord.description,
-                    rootUser = rootUser,
-                    createdAt = organizationsRecord.createdAt.toUTCOffset(),
-                    updatedAt = organizationsRecord.updatedAt.toUTCOffset()
-                )
+                val organization =
+                    Organization(
+                        id = organizationsRecord.id,
+                        name = organizationsRecord.name,
+                        description = organizationsRecord.description,
+                        rootUser = rootUser,
+                        createdAt = organizationsRecord.createdAt.toUTCOffset(),
+                        updatedAt = organizationsRecord.updatedAt.toUTCOffset(),
+                    )
                 val userHrn = hrnFactory.getHrn(rootUser.hrn)
 
                 if (policyHrns.isNotEmpty()) {
@@ -128,7 +132,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 userAuthRepo.create(
                     hrn = userHrn.toString(),
                     providerName = issuer,
-                    authMetadata = null
+                    authMetadata = null,
                 )
 
                 return@wrap Pair(organization, token)
@@ -144,7 +148,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         companyName: String,
         name: String,
         email: String,
-        issuer: String
+        issuer: String,
     ): Pair<Organization, TokenResponse> {
         val organizationId = idGenerator.organizationId()
         val username = idGenerator.username()
@@ -154,48 +158,52 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         try {
             return txMan.wrap {
                 // Create Organization
-                val organizationsRecord = OrganizationsRecord(
-                    organizationId,
-                    companyName,
-                    "",
-                    ResourceHrn(
-                        organization = organizationId,
-                        resource = IamResources.USER,
-                        resourceInstance = username
-                    ).toString(),
-                    null,
-                    logTimestamp,
-                    logTimestamp
-                )
+                val organizationsRecord =
+                    OrganizationsRecord(
+                        organizationId,
+                        companyName,
+                        "",
+                        ResourceHrn(
+                            organization = organizationId,
+                            resource = IamResources.USER,
+                            resourceInstance = username,
+                        ).toString(),
+                        null,
+                        logTimestamp,
+                        logTimestamp,
+                    )
                 organizationRepo.store(organizationsRecord)
 
                 // Create root user for the organization
-                val rootUser = usersService.createUser(
-                    organizationId = organizationId,
-                    subOrganizationName = null,
-                    username = username,
-                    preferredUsername = null,
-                    name = name,
-                    email = email,
-                    phoneNumber = null,
-                    password = null,
-                    createdBy = "iam-system",
-                    verified = true,
-                    loginAccess = true
-                )
+                val rootUser =
+                    usersService.createUser(
+                        organizationId = organizationId,
+                        subOrganizationName = null,
+                        username = username,
+                        preferredUsername = null,
+                        name = name,
+                        email = email,
+                        phoneNumber = null,
+                        password = null,
+                        createdBy = "iam-system",
+                        verified = true,
+                        loginAccess = true,
+                    )
 
-                val policyHrns = policyTemplatesService
-                    .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
-                    .map { ResourceHrn(it.hrn) }
+                val policyHrns =
+                    policyTemplatesService
+                        .createPersistAndReturnRootPolicyRecordsForOrganization(organizationId, rootUser)
+                        .map { ResourceHrn(it.hrn) }
 
-                val organization = Organization(
-                    id = organizationsRecord.id,
-                    name = organizationsRecord.name,
-                    description = organizationsRecord.description,
-                    rootUser = rootUser,
-                    createdAt = organizationsRecord.createdAt.toUTCOffset(),
-                    updatedAt = organizationsRecord.updatedAt.toUTCOffset()
-                )
+                val organization =
+                    Organization(
+                        id = organizationsRecord.id,
+                        name = organizationsRecord.name,
+                        description = organizationsRecord.description,
+                        rootUser = rootUser,
+                        createdAt = organizationsRecord.createdAt.toUTCOffset(),
+                        updatedAt = organizationsRecord.updatedAt.toUTCOffset(),
+                    )
                 val userHrn = hrnFactory.getHrn(rootUser.hrn)
 
                 if (policyHrns.isNotEmpty()) {
@@ -207,7 +215,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 userAuthRepo.create(
                     hrn = userHrn.toString(),
                     providerName = issuer,
-                    authMetadata = null
+                    authMetadata = null,
                 )
 
                 return@wrap Pair(organization, token)
@@ -219,12 +227,14 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     }
 
     private fun executePostHook(organization: Organization) {
-        val body = gson.toJson(mapOf("organization" to organization))
-            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        val requestBuilder = Request.Builder()
-            .url(AppConfig.configuration.postHook.signup)
-            .method("POST", body)
-            .addHeader("Content-Type", "application/json")
+        val body =
+            gson.toJson(mapOf("organization" to organization))
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val requestBuilder =
+            Request.Builder()
+                .url(AppConfig.configuration.postHook.signup)
+                .method("POST", body)
+                .addHeader("Content-Type", "application/json")
         val request = requestBuilder.build()
         val response = httpClient.newCall(request).execute()
         if (!response.isSuccessful) {
@@ -244,7 +254,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             description = response.description,
             rootUser = rootUser,
             createdAt = response.createdAt.toUTCOffset(),
-            updatedAt = response.updatedAt.toUTCOffset()
+            updatedAt = response.updatedAt.toUTCOffset(),
         )
     }
 
@@ -252,25 +262,26 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         id: String,
         name: String?,
         description: String?,
-        identityGroup: IdentityGroup?
+        identityGroup: IdentityGroup?,
     ): Organization {
         organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
         val updatedOrgRecord =
             organizationRepo.update(id, name, description, identityGroup) ?: throw InternalException(
-                "Internal service failure"
+                "Internal service failure",
             )
-        val rootUser = usersService.getUser(
-            updatedOrgRecord.id,
-            null,
-            ResourceHrn(updatedOrgRecord.rootUserHrn).resourceInstance!!
-        )
+        val rootUser =
+            usersService.getUser(
+                updatedOrgRecord.id,
+                null,
+                ResourceHrn(updatedOrgRecord.rootUserHrn).resourceInstance!!,
+            )
         return Organization(
             id = updatedOrgRecord.id,
             name = updatedOrgRecord.name,
             description = updatedOrgRecord.description,
             rootUser = rootUser,
             createdAt = updatedOrgRecord.createdAt.toUTCOffset(),
-            updatedAt = updatedOrgRecord.updatedAt.toUTCOffset()
+            updatedAt = updatedOrgRecord.updatedAt.toUTCOffset(),
         )
     }
 
@@ -298,22 +309,24 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
 interface OrganizationsService {
     suspend fun createOrganization(
         request: CreateOrganizationRequest,
-        issuer: String
+        issuer: String,
     ): Pair<Organization, TokenResponse>
 
     suspend fun createOauthOrganization(
         companyName: String,
         name: String,
         email: String,
-        issuer: String
+        issuer: String,
     ): Pair<Organization, TokenResponse>
 
     suspend fun getOrganization(id: String): Organization
+
     suspend fun updateOrganization(
         id: String,
         name: String?,
         description: String?,
-        identityGroup: IdentityGroup?
+        identityGroup: IdentityGroup?,
     ): Organization
+
     suspend fun deleteOrganization(id: String): BaseSuccessResponse
 }

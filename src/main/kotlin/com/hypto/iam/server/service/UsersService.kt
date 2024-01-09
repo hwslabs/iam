@@ -33,10 +33,9 @@ import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.EMAIL_REGEX
 import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
-import java.time.LocalDateTime
-import java.util.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.time.LocalDateTime
 
 class UsersServiceImpl : KoinComponent, UsersService {
     private val principalPolicyService: PrincipalPolicyService by inject()
@@ -52,7 +51,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val userAuthRepo: UserAuthRepo by inject()
     private val credentialRepo: CredentialsRepo by inject()
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "ComplexMethod")
     override suspend fun createUser(
         organizationId: String,
         subOrganizationName: String?,
@@ -65,28 +64,29 @@ class UsersServiceImpl : KoinComponent, UsersService {
         password: String?,
         createdBy: String?,
         verified: Boolean,
-        policies: List<String>?
+        policies: List<String>?,
     ): User {
         if (email == null && subOrganizationName != null) {
             throw BadRequestException("Email is required for sub-organization users")
         }
-        val uniquenesAcrossOrgs = if (subOrganizationName == null) {
-            appConfig.app.uniqueUsersAcrossOrganizations
-        } else {
-            false
-        }
+        val uniquenesAcrossOrgs =
+            if (subOrganizationName == null) {
+                appConfig.app.uniqueUsersAcrossOrganizations
+            } else {
+                false
+            }
         if (userRepo.existsByAliasUsername(
                 preferredUsername,
                 email,
                 organizationId,
                 subOrganizationName,
-                uniquenesAcrossOrgs
+                uniquenesAcrossOrgs,
             )
         ) {
             throw UserAlreadyExistException(
                 email?.let { "Email - $email" }.orEmpty() +
                     preferredUsername?.let { "Username - $preferredUsername" }.orEmpty() +
-                    " already registered. Unable to create user"
+                    " already registered. Unable to create user",
             )
         }
 
@@ -107,32 +107,33 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     organizationId,
                     subOrganizationName,
                     createdBy,
-                    verified
+                    verified,
                 )
             }
             val userHrn = ResourceHrn(organizationId, subOrganizationName, IamResources.USER, username)
-            val userRecord = userRepo.insert(
-                UsersRecord().apply {
-                    this.hrn = userHrn.toString()
-                    this.organizationId = organizationId
-                    this.email = email
-                    this.status = User.Status.enabled.value
-                    this.verified = verified
-                    this.deleted = false
-                    this.createdAt = LocalDateTime.now()
-                    this.updatedAt = LocalDateTime.now()
-                    this.preferredUsername = preferredUsername
-                    this.loginAccess = loginAccess
-                    this.name = name
-                    this.subOrganizationName = subOrganizationName
-                    this.createdBy = createdBy
-                }
-            ) ?: throw InternalException("Unable to create user")
+            val userRecord =
+                userRepo.insert(
+                    UsersRecord().apply {
+                        this.hrn = userHrn.toString()
+                        this.organizationId = organizationId
+                        this.email = email
+                        this.status = User.Status.enabled.value
+                        this.verified = verified
+                        this.deleted = false
+                        this.createdAt = LocalDateTime.now()
+                        this.updatedAt = LocalDateTime.now()
+                        this.preferredUsername = preferredUsername
+                        this.loginAccess = loginAccess
+                        this.name = name
+                        this.subOrganizationName = subOrganizationName
+                        this.createdBy = createdBy
+                    },
+                ) ?: throw InternalException("Unable to create user")
 
             if (policies != null && policies.isNotEmpty()) {
                 principalPolicyService.attachPoliciesToUser(
                     ResourceHrn(userHrn.toString()),
-                    policies.map { hrnFactory.getHrn(it) }
+                    policies.map { hrnFactory.getHrn(it) },
                 )
             }
             if (password != null) {
@@ -156,53 +157,62 @@ class UsersServiceImpl : KoinComponent, UsersService {
         organizationId: String,
         subOrganizationName: String?,
         createdBy: String?,
-        verified: Boolean
+        verified: Boolean,
     ) {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id")
-        val encodedEmail = email?.let {
-            getEncodedEmail(organizationId, subOrganizationName, email)
-        } ?: throw BadRequestException("Email is required")
+        val org =
+            organizationRepo.findById(organizationId)
+                ?: throw EntityNotFoundException("Invalid organization id")
+        val encodedEmail =
+            email?.let {
+                getEncodedEmail(organizationId, subOrganizationName, email)
+            } ?: throw BadRequestException("Email is required")
 
-        val passwordCredentials = PasswordCredentials(
-            username = username,
-            preferredUsername = preferredUsername,
-            name = name,
-            email = encodedEmail,
-            phoneNumber = phoneNumber ?: "",
-            password = password ?: throw BadRequestException("Password is required"),
-        )
-
-        val identityGroup = if (org.metadata != null) {
-            gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        } else {
-            organizationRepo.update(
-                organizationId,
-                null,
-                null,
-                appConfig.cognito
+        val passwordCredentials =
+            PasswordCredentials(
+                username = username,
+                preferredUsername = preferredUsername,
+                name = name,
+                email = encodedEmail,
+                phoneNumber = phoneNumber ?: "",
+                password = password ?: throw BadRequestException("Password is required"),
             )
-            appConfig.cognito
-        }
+
+        val identityGroup =
+            if (org.metadata != null) {
+                gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+            } else {
+                organizationRepo.update(
+                    organizationId,
+                    null,
+                    null,
+                    appConfig.cognito,
+                )
+                appConfig.cognito
+            }
 
         identityProvider.createUser(
             RequestContext(
                 organizationId = organizationId,
                 subOrganizationName = subOrganizationName,
                 requestedPrincipal = createdBy ?: "unknown user",
-                verified
+                verified,
             ),
             identityGroup,
-            passwordCredentials
+            passwordCredentials,
         )
     }
 
-    override suspend fun getUser(organizationId: String, subOrganizationName: String?, userName: String): User {
+    override suspend fun getUser(
+        organizationId: String,
+        subOrganizationName: String?,
+        userName: String,
+    ): User {
         organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id. Unable to get user")
         val userHrn = ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userName)
-        val userRecord = userRepo.findByHrn(userHrn.toString())
-            ?: throw EntityNotFoundException("Unable to find user")
+        val userRecord =
+            userRepo.findByHrn(userHrn.toString())
+                ?: throw EntityNotFoundException("Unable to find user")
         return getUser(userHrn, userRecord)
     }
 
@@ -214,18 +224,20 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun getUserByEmail(
         organizationId: String?,
         subOrganizationName: String?,
-        email: String
+        email: String,
     ): User {
-        val userRecord = if (subOrganizationName.isNullOrEmpty() && appConfig.app.uniqueUsersAcrossOrganizations) {
-            val user = userRepo.findByEmail(email)
-                ?: throw EntityNotFoundException("User with email - $email not found")
-            organizationRepo.findById(user.organizationId)
-                ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
-            user
-        } else {
-            organizationId ?: throw EntityNotFoundException("Organization id is required")
-            userRepo.findByEmail(email, organizationId, subOrganizationName)
-        } ?: throw EntityNotFoundException("User with email - $email not found")
+        val userRecord =
+            if (subOrganizationName.isNullOrEmpty() && appConfig.app.uniqueUsersAcrossOrganizations) {
+                val user =
+                    userRepo.findByEmail(email)
+                        ?: throw EntityNotFoundException("User with email - $email not found")
+                organizationRepo.findById(user.organizationId)
+                    ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+                user
+            } else {
+                organizationId ?: throw EntityNotFoundException("Organization id is required")
+                userRepo.findByEmail(email, organizationId, subOrganizationName)
+            } ?: throw EntityNotFoundException("User with email - $email not found")
 
         return getUser(ResourceHrn(userRecord.hrn), userRecord)
     }
@@ -235,14 +247,16 @@ class UsersServiceImpl : KoinComponent, UsersService {
         subOrganizationName: String?,
         userName: String,
         oldPassword: String,
-        newPassword: String
+        newPassword: String,
     ): BaseSuccessResponse {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to authenticate user")
+        val org =
+            organizationRepo.findById(organizationId)
+                ?: throw EntityNotFoundException("Invalid organization id name. Unable to authenticate user")
 
         val userHrn = ResourceHrn(organizationId, subOrganizationName ?: "", IamResources.USER, userName)
-        val userRecord = userRepo.findByHrn(userHrn.toString())
-            ?: throw EntityNotFoundException("Unable to find user")
+        val userRecord =
+            userRepo.findByHrn(userHrn.toString())
+                ?: throw EntityNotFoundException("Unable to find user")
         if (userRecord.loginAccess != true) {
             throw BadRequestException("User - $userName does not have login access")
         }
@@ -261,29 +275,32 @@ class UsersServiceImpl : KoinComponent, UsersService {
         organizationId: String,
         subOrganizationName: String?,
         user: User,
-        password: String
+        password: String,
     ): BaseSuccessResponse {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to set user password")
+        val org =
+            organizationRepo.findById(organizationId)
+                ?: throw EntityNotFoundException("Invalid organization id name. Unable to set user password")
 
         val userHrn = ResourceHrn(user.hrn)
-        val userRecord = userRepo.findByHrn(userHrn.toString())
-            ?: throw EntityNotFoundException("Unable to find user")
+        val userRecord =
+            userRepo.findByHrn(userHrn.toString())
+                ?: throw EntityNotFoundException("Unable to find user")
         if (userRecord.loginAccess != true) {
             throw BadRequestException("User - ${userHrn.resourceInstance} does not have login access")
         }
 
-        val identityGroup = if (org.metadata != null) {
-            gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-        } else {
-            organizationRepo.update(
-                organizationId,
-                null,
-                null,
+        val identityGroup =
+            if (org.metadata != null) {
+                gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+            } else {
+                organizationRepo.update(
+                    organizationId,
+                    null,
+                    null,
+                    appConfig.cognito,
+                )
                 appConfig.cognito
-            )
-            appConfig.cognito
-        }
+            }
 
         identityProvider.setUserPassword(identityGroup, user.username, password)
         passcodeRepo.deleteByEmailAndPurpose(user.email!!, VerifyEmailRequest.Purpose.reset)
@@ -294,7 +311,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         organizationId: String,
         subOrganizationName: String?,
         userId: String,
-        password: String
+        password: String,
     ): BaseSuccessResponse {
         val user = getUser(organizationId, subOrganizationName, userId)
         val cognito = appConfig.cognito
@@ -314,12 +331,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
             organizationId,
             subOrganizationName,
             user.createdBy,
-            user.verified
+            user.verified,
         )
         userAuthRepo.create(
             hrn = user.hrn,
             providerName = TokenServiceImpl.ISSUER,
-            authMetadata = null
+            authMetadata = null,
         )
         userRepo.updateLoginAccessStatus(user.hrn, true)
         return BaseSuccessResponse(true)
@@ -328,26 +345,28 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun listUsers(
         organizationId: String,
         subOrganizationName: String?,
-        paginationContext: PaginationContext
+        paginationContext: PaginationContext,
     ): UserPaginatedResponse {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+        val org =
+            organizationRepo.findById(organizationId)
+                ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
 
-        val users = userRepo.fetchUsers(organizationId, subOrganizationName, paginationContext).map { user ->
-            getUser(ResourceHrn(user.hrn), user)
-        }.toList()
+        val users =
+            userRepo.fetchUsers(organizationId, subOrganizationName, paginationContext).map { user ->
+                getUser(ResourceHrn(user.hrn), user)
+            }.toList()
 
         val newContext = PaginationContext.from(users.lastOrNull()?.hrn, paginationContext)
         return UserPaginatedResponse(
             users,
             newContext.nextToken,
-            newContext.toOptions()
+            newContext.toOptions(),
         )
     }
 
     private fun getUser(
         userHrn: ResourceHrn,
-        user: UsersRecord
+        user: UsersRecord,
     ) = User(
         hrn = userHrn.toString(),
         username = userHrn.resourceInstance.toString(),
@@ -359,7 +378,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         verified = user.verified,
         createdBy = user.createdBy ?: "",
         createdAt = user.createdAt.toUTCOffset(),
-        loginAccess = user.loginAccess ?: false
+        loginAccess = user.loginAccess ?: false,
     )
 
     override suspend fun updateUser(
@@ -371,11 +390,13 @@ class UsersServiceImpl : KoinComponent, UsersService {
         status: UpdateUserRequest.Status?,
         verified: Boolean?,
     ): User {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+        val org =
+            organizationRepo.findById(organizationId)
+                ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
         val userHrn = ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userName)
-        val userRecord = userRepo.findByHrn(userHrn.toString())
-            ?: throw EntityNotFoundException("User not found")
+        val userRecord =
+            userRepo.findByHrn(userHrn.toString())
+                ?: throw EntityNotFoundException("User not found")
 
         val userStatus = status?.toUserStatus()
         if (userRecord.loginAccess == true &&
@@ -390,26 +411,32 @@ class UsersServiceImpl : KoinComponent, UsersService {
                 userName = userName,
                 phone = phone,
                 status = userStatus,
-                verified = verified
+                verified = verified,
             )
         }
-        val updatedUserRecord = userRepo.update(userHrn.toString(), userStatus, verified, name)
-            ?: throw EntityNotFoundException("User not found")
+        val updatedUserRecord =
+            userRepo.update(userHrn.toString(), userStatus, verified, name)
+                ?: throw EntityNotFoundException("User not found")
 
         return getUser(userHrn, updatedUserRecord)
     }
 
-    override suspend fun deleteUser(organizationId: String, subOrganizationName: String?, userName: String):
-        BaseSuccessResponse {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
+    override suspend fun deleteUser(
+        organizationId: String,
+        subOrganizationName: String?,
+        userName: String,
+    ): BaseSuccessResponse {
+        val org =
+            organizationRepo.findById(organizationId)
+                ?: throw EntityNotFoundException("Invalid organization id name. Unable to delete user")
         val userHrn = ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userName)
         if (org.rootUserHrn == userHrn.toString()) {
             throw BadRequestException("Cannot delete Root User")
         }
 
-        val userRecord = userRepo.findByHrn(userHrn.toString())
-            ?: throw EntityNotFoundException("User not found")
+        val userRecord =
+            userRepo.findByHrn(userHrn.toString())
+                ?: throw EntityNotFoundException("User not found")
 
         if (userRecord.loginAccess == true &&
             org.metadata != null &&
@@ -430,14 +457,15 @@ class UsersServiceImpl : KoinComponent, UsersService {
         organizationId: String,
         subOrganizationName: String?,
         email: String,
-        password:
-            String
+        password: String,
     ): User {
-        val org = organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to authenticate user")
+        val org =
+            organizationRepo.findById(organizationId)
+                ?: throw EntityNotFoundException("Invalid organization id name. Unable to authenticate user")
 
-        val userRecord = userRepo.findByEmail(email, organizationId, subOrganizationName)
-            ?: throw EntityNotFoundException("User not found")
+        val userRecord =
+            userRepo.findByEmail(email, organizationId, subOrganizationName)
+                ?: throw EntityNotFoundException("User not found")
         if (userRecord.loginAccess != true) {
             throw BadRequestException("User - $email does not have login access")
         }
@@ -456,16 +484,18 @@ class UsersServiceImpl : KoinComponent, UsersService {
     override suspend fun authenticate(
         organizationId: String?,
         username: String,
-        password: String
+        password: String,
     ): User {
-        val userRecord = if (EMAIL_REGEX.toRegex().matches(username)) {
-            userRepo.findByEmail(username)
-        } else {
-            userRepo.findByPreferredUsername(username)
-        } ?: throw AuthenticationException("Invalid username and password combination")
+        val userRecord =
+            if (EMAIL_REGEX.toRegex().matches(username)) {
+                userRepo.findByEmail(username)
+            } else {
+                userRepo.findByPreferredUsername(username)
+            } ?: throw AuthenticationException("Invalid username and password combination")
 
-        val org = organizationRepo.findById(userRecord.organizationId)
-            ?: throw InternalException("Internal error while trying to authenticate the identity.")
+        val org =
+            organizationRepo.findById(userRecord.organizationId)
+                ?: throw InternalException("Internal error while trying to authenticate the identity.")
 
         if (userRecord.loginAccess == null) {
             throw BadRequestException("User - $username does not have login access")
@@ -499,13 +529,22 @@ interface UsersService {
         password: String?,
         createdBy: String?,
         verified: Boolean,
-        policies: List<String>? = null
+        policies: List<String>? = null,
     ): User
 
-    suspend fun getUser(organizationId: String, subOrganizationName: String?, userName: String): User
+    suspend fun getUser(
+        organizationId: String,
+        subOrganizationName: String?,
+        userName: String,
+    ): User
+
     suspend fun getUser(userHrn: ResourceHrn): User
-    suspend fun listUsers(organizationId: String, subOrganizationName: String?, paginationContext: PaginationContext):
-        UserPaginatedResponse
+
+    suspend fun listUsers(
+        organizationId: String,
+        subOrganizationName: String?,
+        paginationContext: PaginationContext,
+    ): UserPaginatedResponse
 
     suspend fun updateUser(
         organizationId: String,
@@ -514,27 +553,46 @@ interface UsersService {
         name: String?,
         phone: String?,
         status: UpdateUserRequest.Status? = null,
-        verified: Boolean?
+        verified: Boolean?,
     ): User
 
-    suspend fun deleteUser(organizationId: String, subOrganizationName: String?, userName: String): BaseSuccessResponse
-    suspend fun authenticate(organizationId: String, subOrganizationName: String?, email: String, password: String):
-        User
-    suspend fun authenticate(organizationId: String?, username: String, password: String):
-        User
-    suspend fun getUserByEmail(organizationId: String?, subOrganizationName: String?, email: String): User
+    suspend fun deleteUser(
+        organizationId: String,
+        subOrganizationName: String?,
+        userName: String,
+    ): BaseSuccessResponse
+
+    suspend fun authenticate(
+        organizationId: String,
+        subOrganizationName: String?,
+        email: String,
+        password: String,
+    ): User
+
+    suspend fun authenticate(
+        organizationId: String?,
+        username: String,
+        password: String,
+    ): User
+
+    suspend fun getUserByEmail(
+        organizationId: String?,
+        subOrganizationName: String?,
+        email: String,
+    ): User
+
     suspend fun setUserPassword(
         organizationId: String,
         subOrganizationName: String?,
         user: User,
-        password: String
+        password: String,
     ): BaseSuccessResponse
 
     suspend fun createUserPassword(
         organizationId: String,
         subOrganizationName: String?,
         userId: String,
-        password: String
+        password: String,
     ): BaseSuccessResponse
 
     suspend fun changeUserPassword(
@@ -542,6 +600,6 @@ interface UsersService {
         subOrganizationName: String?,
         userName: String,
         oldPassword: String,
-        newPassword: String
+        newPassword: String,
     ): BaseSuccessResponse
 }

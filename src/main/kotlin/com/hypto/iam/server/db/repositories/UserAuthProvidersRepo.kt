@@ -5,13 +5,12 @@ import com.hypto.iam.server.db.tables.records.UsersAuthProvidersRecord
 import org.jooq.impl.DAOImpl
 
 object UserAuthProvidersRepo : BaseRepo<UsersAuthProvidersRecord, UsersAuthProviders, Int>() {
-
     private val idFun = fun (usersAuthProviders: UsersAuthProviders) = usersAuthProviders.id
 
     override suspend fun dao(): DAOImpl<UsersAuthProvidersRecord, UsersAuthProviders, Int> =
         txMan.getDao(
             com.hypto.iam.server.db.tables.UsersAuthProviders.USERS_AUTH_PROVIDERS,
             UsersAuthProviders::class.java,
-            idFun
+            idFun,
         )
 }

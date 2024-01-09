@@ -26,9 +26,10 @@ abstract class AbstractContainerBaseTest : AutoCloseKoinTest() {
 
     @JvmField
     @RegisterExtension
-    val koinTestExtension = KoinTestExtension.create {
-        modules(repositoryModule, controllerModule, applicationModule)
-    }
+    val koinTestExtension =
+        KoinTestExtension.create {
+            modules(repositoryModule, controllerModule, applicationModule)
+        }
 
     @JvmField
     @RegisterExtension

@@ -74,36 +74,45 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     private val aliasAttributeTypes = mutableListOf(AliasAttributeType.EMAIL, AliasAttributeType.PREFERRED_USERNAME)
     private val appConfig: AppConfig by inject()
 
-    override suspend fun createIdentityGroup(name: String, configuration: Configuration): IdentityGroup {
+    override suspend fun createIdentityGroup(
+        name: String,
+        configuration: Configuration,
+    ): IdentityGroup {
         try {
             // Create user pool
-            val createUserPoolResponse = cognitoClient.createUserPool(
-                CreateUserPoolRequest.builder().poolName(name)
-                    .aliasAttributes(aliasAttributeTypes)
-                    .build()
-            )
-            val createUserPoolClientRequest = CreateUserPoolClientRequest.builder()
-                .userPoolId(createUserPoolResponse.userPool().id())
-                .clientName(APP_CLIENT_NAME)
-                .generateSecret(false)
-                .explicitAuthFlows(ExplicitAuthFlowsType.USER_PASSWORD_AUTH, ExplicitAuthFlowsType.ADMIN_NO_SRP_AUTH)
-                .build()
-
-            // Add custom attribute schema for the created user pool
-            val customAttributeRequest = AddCustomAttributesRequest.builder().userPoolId(
-                createUserPoolResponse
-                    .userPool().id()
-            ).customAttributes(
-                SchemaAttributeType.builder().name(ATTRIBUTE_CREATED_BY)
-                    .attributeDataType(AttributeDataType.STRING)
-                    .stringAttributeConstraints(
-                        StringAttributeConstraintsType.builder()
-                            .maxLength("100")
-                            .minLength("3").build()
+            val createUserPoolResponse =
+                cognitoClient.createUserPool(
+                    CreateUserPoolRequest.builder().poolName(name)
+                        .aliasAttributes(aliasAttributeTypes)
+                        .build(),
+                )
+            val createUserPoolClientRequest =
+                CreateUserPoolClientRequest.builder()
+                    .userPoolId(createUserPoolResponse.userPool().id())
+                    .clientName(APP_CLIENT_NAME)
+                    .generateSecret(false)
+                    .explicitAuthFlows(
+                        ExplicitAuthFlowsType.USER_PASSWORD_AUTH,
+                        ExplicitAuthFlowsType.ADMIN_NO_SRP_AUTH,
                     )
                     .build()
-            )
-                .build()
+
+            // Add custom attribute schema for the created user pool
+            val customAttributeRequest =
+                AddCustomAttributesRequest.builder().userPoolId(
+                    createUserPoolResponse
+                        .userPool().id(),
+                ).customAttributes(
+                    SchemaAttributeType.builder().name(ATTRIBUTE_CREATED_BY)
+                        .attributeDataType(AttributeDataType.STRING)
+                        .stringAttributeConstraints(
+                            StringAttributeConstraintsType.builder()
+                                .maxLength("100")
+                                .minLength("3").build(),
+                        )
+                        .build(),
+                )
+                    .build()
             cognitoClient.addCustomAttributes(customAttributeRequest)
 
             // Create app client to access the user pool
@@ -115,7 +124,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 createUserPoolResponse.userPool().id(),
                 createUserPoolResponse.userPool().name(),
                 IdentityProvider.IdentitySource.AWS_COGNITO,
-                metadata
+                metadata,
             )
         } catch (e: Exception) {
             logger.error(e) { "Error while trying to create user pool with message = ${e.message}" }
@@ -137,7 +146,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     override suspend fun createUser(
         context: RequestContext,
         identityGroup: IdentityGroup,
-        userCredentials: UserCredentials
+        userCredentials: UserCredentials,
     ): User {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         try {
@@ -167,13 +176,17 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     private fun createUserWithAccessToken(
         context: RequestContext,
         identityGroup: IdentityGroup,
-        userCredentials: AccessTokenCredentials
+        userCredentials: AccessTokenCredentials,
     ): User {
         logger.info("Creating cognito user with access token")
         TODO("Not implemented")
     }
 
-    override suspend fun getUser(identityGroup: IdentityGroup, userName: String, isAliasUsername: Boolean): User {
+    override suspend fun getUser(
+        identityGroup: IdentityGroup,
+        userName: String,
+        isAliasUsername: Boolean,
+    ): User {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         val getUserRequest = AdminGetUserRequest.builder().userPoolId(identityGroup.id).username(userName).build()
         try {
@@ -196,7 +209,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 loginAccess = true,
                 isEnabled = response.enabled(),
                 createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
-                createdAt = response.userCreateDate().toString()
+                createdAt = response.userCreateDate().toString(),
             )
         } catch (e: UserNotFoundException) {
             logger.info(e) { "Unable to find the user $userName in the organization" }
@@ -207,7 +220,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         }
     }
 
-    override suspend fun getUserByEmail(identityGroup: IdentityGroup, email: String): User {
+    override suspend fun getUserByEmail(
+        identityGroup: IdentityGroup,
+        email: String,
+    ): User {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         try {
             val listRequest =
@@ -225,7 +241,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 loginAccess = true,
                 isEnabled = userType.enabled(),
                 createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
-                createdAt = userType.userCreateDate().toString()
+                createdAt = userType.userCreateDate().toString(),
             )
         } catch (e: NoSuchElementException) {
             logger.info(e) { "Unable to find the user with email $email in the organization" }
@@ -242,7 +258,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         name: String?,
         phone: String?,
         status: com.hypto.iam.server.models.User.Status?,
-        verified: Boolean?
+        verified: Boolean?,
     ): User {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
 
@@ -270,14 +286,14 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             attrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_PHONE)
-                    .value(phone).build()
+                    .value(phone).build(),
             )
         }
         if (verified != null) {
             attrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_EMAIL_VERIFIED)
-                    .value(verified.toString()).build()
+                    .value(verified.toString()).build(),
             )
         }
         val updateRequest =
@@ -291,7 +307,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     override suspend fun setUserPassword(
         identityGroup: IdentityGroup,
         userName: String,
-        password: String
+        password: String,
     ) {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         val setPasswordRequest =
@@ -308,49 +324,53 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
     private fun createUserWithPassword(
         context: RequestContext,
         identityGroup: IdentityGroup,
-        credentials: PasswordCredentials
+        credentials: PasswordCredentials,
     ): User {
-        val emailAttr = AttributeType.builder()
-            .name(ATTRIBUTE_EMAIL)
-            .value(credentials.email).build()
-        val emailVerifiedAttr = AttributeType.builder()
-            .name(ATTRIBUTE_EMAIL_VERIFIED)
-            .value(context.verified.toString()).build()
-        val createdBy = AttributeType.builder()
-            .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY)
-            .value(context.requestedPrincipal).build()
+        val emailAttr =
+            AttributeType.builder()
+                .name(ATTRIBUTE_EMAIL)
+                .value(credentials.email).build()
+        val emailVerifiedAttr =
+            AttributeType.builder()
+                .name(ATTRIBUTE_EMAIL_VERIFIED)
+                .value(context.verified.toString()).build()
+        val createdBy =
+            AttributeType.builder()
+                .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY)
+                .value(context.requestedPrincipal).build()
 
         val optionalUserAttrs = mutableListOf<AttributeType>()
         if (credentials.phoneNumber.isNotEmpty()) {
             optionalUserAttrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_PHONE)
-                    .value(credentials.phoneNumber).build()
+                    .value(credentials.phoneNumber).build(),
             )
         }
         if (!credentials.preferredUsername.isNullOrEmpty()) {
             optionalUserAttrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_PREFERRED_USERNAME)
-                    .value(credentials.preferredUsername).build()
+                    .value(credentials.preferredUsername).build(),
             )
         }
         if (!credentials.name.isNullOrEmpty()) {
             optionalUserAttrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_NAME)
-                    .value(credentials.name).build()
+                    .value(credentials.name).build(),
             )
         }
 
         // Creates user in cognito
-        val userRequest = AdminCreateUserRequest.builder()
-            .userPoolId(identityGroup.id)
-            .username(credentials.username)
-            .temporaryPassword(credentials.password)
-            .userAttributes(emailAttr, emailVerifiedAttr, createdBy, *optionalUserAttrs.toTypedArray())
-            .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
-            .build()
+        val userRequest =
+            AdminCreateUserRequest.builder()
+                .userPoolId(identityGroup.id)
+                .username(credentials.username)
+                .temporaryPassword(credentials.password)
+                .userAttributes(emailAttr, emailVerifiedAttr, createdBy, *optionalUserAttrs.toTypedArray())
+                .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
+                .build()
 
         val adminCreateUserResponse = cognitoClient.adminCreateUser(userRequest)
 
@@ -369,39 +389,41 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             loginAccess = true,
             isEnabled = true,
             createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
-            createdAt = adminCreateUserResponse.user().userCreateDate().toString()
+            createdAt = adminCreateUserResponse.user().userCreateDate().toString(),
         )
     }
 
     private fun initiateNewUserAuth(
         identityGroup: IdentityGroup,
-        credentials: PasswordCredentials
+        credentials: PasswordCredentials,
     ) {
         // New user password is marked as temporary and below steps are required to make it permanent
         // Step-1: Initiate an authentication with the temporary password
         // Step-2: Respond to auth challenge by setting the temporary password as permanent password
-        val initiateAuthRequest = AdminInitiateAuthRequest.builder()
-            .userPoolId(identityGroup.id)
-            .clientId(identityGroup.metadata[APP_CLIENT_ID])
-            .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
-            .authParameters(mapOf("USERNAME" to credentials.username, "PASSWORD" to credentials.password)).build()
+        val initiateAuthRequest =
+            AdminInitiateAuthRequest.builder()
+                .userPoolId(identityGroup.id)
+                .clientId(identityGroup.metadata[APP_CLIENT_ID])
+                .authFlow(AuthFlowType.ADMIN_USER_PASSWORD_AUTH)
+                .authParameters(mapOf("USERNAME" to credentials.username, "PASSWORD" to credentials.password)).build()
         val initiateAuthResponse = cognitoClient.adminInitiateAuth(initiateAuthRequest)
 
         // Respond to auth challenge flow.
-        val adminRespondToAuthRequest = AdminRespondToAuthChallengeRequest.builder()
-            .userPoolId(identityGroup.id)
-            .clientId(identityGroup.metadata[APP_CLIENT_ID])
-            .challengeName(ChallengeNameType.NEW_PASSWORD_REQUIRED)
-            .session(initiateAuthResponse.session())
-            .challengeResponses(mapOf("USERNAME" to credentials.username, "NEW_PASSWORD" to credentials.password))
-            .build()
+        val adminRespondToAuthRequest =
+            AdminRespondToAuthChallengeRequest.builder()
+                .userPoolId(identityGroup.id)
+                .clientId(identityGroup.metadata[APP_CLIENT_ID])
+                .challengeName(ChallengeNameType.NEW_PASSWORD_REQUIRED)
+                .session(initiateAuthResponse.session())
+                .challengeResponses(mapOf("USERNAME" to credentials.username, "NEW_PASSWORD" to credentials.password))
+                .build()
         cognitoClient.adminRespondToAuthChallenge(adminRespondToAuthRequest)
     }
 
     override suspend fun listUsers(
         identityGroup: IdentityGroup,
         pageToken: String?,
-        limit: Int?
+        limit: Int?,
     ): Pair<List<User>, NextToken?> {
         require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
         try {
@@ -411,21 +433,22 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             }
             val response = cognitoClient.listUsers(listRequest.build())
             val usersTypes = response.users()
-            val users = usersTypes.map { user ->
-                val attrs = user.attributes()
-                User(
-                    username = user.username(),
-                    preferredUsername = getAttribute(attrs, ATTRIBUTE_PREFERRED_USERNAME),
-                    name = getAttribute(attrs, ATTRIBUTE_NAME),
-                    email = getAttribute(attrs, ATTRIBUTE_EMAIL),
-                    verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
-                    phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
-                    loginAccess = true,
-                    isEnabled = user.userStatus() != UserStatusType.ARCHIVED,
-                    createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
-                    createdAt = user.userCreateDate().toString()
-                )
-            }.toList()
+            val users =
+                usersTypes.map { user ->
+                    val attrs = user.attributes()
+                    User(
+                        username = user.username(),
+                        preferredUsername = getAttribute(attrs, ATTRIBUTE_PREFERRED_USERNAME),
+                        name = getAttribute(attrs, ATTRIBUTE_NAME),
+                        email = getAttribute(attrs, ATTRIBUTE_EMAIL),
+                        verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
+                        phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
+                        loginAccess = true,
+                        isEnabled = user.userStatus() != UserStatusType.ARCHIVED,
+                        createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
+                        createdAt = user.userCreateDate().toString(),
+                    )
+                }.toList()
             return Pair(users, response.paginationToken())
         } catch (e: Exception) {
             logger.error(e) {
@@ -436,11 +459,15 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         }
     }
 
-    override suspend fun deleteUser(identityGroup: IdentityGroup, userName: String) {
+    override suspend fun deleteUser(
+        identityGroup: IdentityGroup,
+        userName: String,
+    ) {
         try {
             require(identityGroup.identitySource == IdentityProvider.IdentitySource.AWS_COGNITO)
-            val adminDeleteUserRequest = AdminDeleteUserRequest.builder()
-                .userPoolId(identityGroup.id).username(userName).build()
+            val adminDeleteUserRequest =
+                AdminDeleteUserRequest.builder()
+                    .userPoolId(identityGroup.id).username(userName).build()
             cognitoClient.adminDeleteUser(adminDeleteUserRequest)
         } catch (e: Exception) {
             logger.error(e) {
@@ -455,13 +482,18 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         return IdentityProvider.IdentitySource.AWS_COGNITO
     }
 
-    override suspend fun authenticate(identityGroup: IdentityGroup, userName: String, password: String): User {
+    override suspend fun authenticate(
+        identityGroup: IdentityGroup,
+        userName: String,
+        password: String,
+    ): User {
         try {
-            val initiateAuthRequest = AdminInitiateAuthRequest.builder()
-                .userPoolId(identityGroup.id)
-                .clientId(identityGroup.metadata[APP_CLIENT_ID])
-                .authFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
-                .authParameters(mapOf("USERNAME" to userName, "PASSWORD" to password)).build()
+            val initiateAuthRequest =
+                AdminInitiateAuthRequest.builder()
+                    .userPoolId(identityGroup.id)
+                    .clientId(identityGroup.metadata[APP_CLIENT_ID])
+                    .authFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
+                    .authParameters(mapOf("USERNAME" to userName, "PASSWORD" to password)).build()
             val initiateAuthResponse = cognitoClient.adminInitiateAuth(initiateAuthRequest)
             return getUser(identityGroup, userName, true)
         } catch (e: NotAuthorizedException) {
@@ -476,7 +508,10 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         }
     }
 
-    private fun getAttribute(attrs: List<AttributeType>, key: String): String {
+    private fun getAttribute(
+        attrs: List<AttributeType>,
+        key: String,
+    ): String {
         return try {
             attrs.first { attr -> attr.name() == key }.value()
         } catch (e: NoSuchElementException) {

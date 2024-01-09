@@ -36,6 +36,10 @@ import io.jsonwebtoken.JwsHeader
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.SigningKeyResolverAdapter
+import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.PublicKey
@@ -44,10 +48,6 @@ import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
-import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 private val logger = KotlinLogging.logger("service.TokenService")
 
@@ -56,10 +56,12 @@ private val logger = KotlinLogging.logger("service.TokenService")
  */
 interface TokenService {
     suspend fun generateJwtToken(userHrn: Hrn): TokenResponse
+
     suspend fun validateJwtToken(token: String): Jws<Claims>
+
     suspend fun generateDelegateJwtToken(
         requesterPrincipal: UserPrincipal,
-        request: GetDelegateTokenRequest
+        request: GetDelegateTokenRequest,
     ): TokenResponse
 }
 
@@ -96,10 +98,11 @@ class TokenServiceImpl : KoinComponent, TokenService {
      */
     override suspend fun validateJwtToken(token: String): Jws<Claims> =
         measureTimedValue("TokenService.validateJwtToken", logger) {
-            val jws = Jwts.parserBuilder()
-                .setSigningKeyResolver(JwtSigVerificationKeyResolver)
-                .build()
-                .parseClaimsJws(token)
+            val jws =
+                Jwts.parserBuilder()
+                    .setSigningKeyResolver(JwtSigVerificationKeyResolver)
+                    .build()
+                    .parseClaimsJws(token)
 
             // Validate claims
             val body = jws.body
@@ -114,7 +117,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
             val userHrnStr: String? = body.get(USER_CLAIM, String::class.java)
             require(
                 userHrnStr != null &&
-                    (HrnFactory.isValid(userHrnStr) || onBehalfOfUser?.let { HrnFactory.isValid(it) } ?: false)
+                    (HrnFactory.isValid(userHrnStr) || onBehalfOfUser?.let { HrnFactory.isValid(it) } ?: false),
             ) { JWT_INVALID_USER_HRN }
 
             val organization: String? = body.get(ORGANIZATION_CLAIM, String::class.java)
@@ -133,56 +136,62 @@ class TokenServiceImpl : KoinComponent, TokenService {
 
     override suspend fun generateDelegateJwtToken(
         requesterPrincipal: UserPrincipal,
-        request: GetDelegateTokenRequest
+        request: GetDelegateTokenRequest,
     ): TokenResponse {
         // Validate permission
-        val policyHrn = if (hrnFactory.isValid(request.policy)) {
-            request.policy
-        } else {
-            ResourceHrn(
+        val policyHrn =
+            if (hrnFactory.isValid(request.policy)) {
+                request.policy
+            } else {
+                ResourceHrn(
+                    organization = requesterPrincipal.organization,
+                    resource = POLICY,
+                    resourceInstance = request.policy,
+                ).toString()
+            }
+        val actionHrn =
+            ActionHrn(
                 organization = requesterPrincipal.organization,
                 resource = POLICY,
-                resourceInstance = request.policy
+                action = "delegatePolicy",
             ).toString()
-        }
-        val actionHrn = ActionHrn(
-            organization = requesterPrincipal.organization,
-            resource = POLICY,
-            action = "delegatePolicy"
-        ).toString()
 
-        val hasPermissionToDelegate = policyValidator.validate(
-            requesterPrincipal.policies.stream(),
-            PolicyRequest(requesterPrincipal.hrnStr, policyHrn, actionHrn)
-        )
+        val hasPermissionToDelegate =
+            policyValidator.validate(
+                requesterPrincipal.policies.stream(),
+                PolicyRequest(requesterPrincipal.hrnStr, policyHrn, actionHrn),
+            )
         require(hasPermissionToDelegate) {
             "User ${requesterPrincipal.hrnStr} does not have 'delegatePolicy' permission on $policyHrn"
         }
 
         // Get policy and custom craft JWT token
-        val policy = policiesRepo.fetchByHrn(policyHrn)
-            ?: throw EntityNotFoundException("Cannot find policy: $policyHrn")
+        val policy =
+            policiesRepo.fetchByHrn(policyHrn)
+                ?: throw EntityNotFoundException("Cannot find policy: $policyHrn")
         logger.info { policy.statements }
 
-        val policyBuilder = PolicyBuilder()
-            .withPolicy(policy)
-            .withPrincipalPolicy(PrincipalPoliciesRecord(null, request.principal, policy.hrn, null))
+        val policyBuilder =
+            PolicyBuilder()
+                .withPolicy(policy)
+                .withPrincipalPolicy(PrincipalPoliciesRecord(null, request.principal, policy.hrn, null))
 
         /**
          * Expiry in seconds from the time of generation.
          *   If not provided, generated token will have the expiry of the token used for requesting.
          *   If a credential is used for requesting, expiry will be 24 hours from the time of requesting.
          */
-        val expiryDate = request.expiry?.let { Date.from(Instant.now().plusSeconds(it)) }
-            ?: requesterPrincipal.claims?.expiration
-            ?: Date.from(Instant.now().plusSeconds(SECONDS_IN_DAY))
+        val expiryDate =
+            request.expiry?.let { Date.from(Instant.now().plusSeconds(it)) }
+                ?: requesterPrincipal.claims?.expiration
+                ?: Date.from(Instant.now().plusSeconds(SECONDS_IN_DAY))
 
         return generateJwtTokenWithPolicy(
             organization = requesterPrincipal.organization,
             principal = request.principal ?: requesterPrincipal.hrnStr,
             requester = requesterPrincipal.hrnStr,
             entitlements = policyBuilder.toString(),
-            expiryDate = expiryDate
+            expiryDate = expiryDate,
         )
     }
 
@@ -193,7 +202,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
                 userHrn.organization,
                 userHrn.toString(),
                 entitlements = principalPolicyService.fetchEntitlements(userHrn.toString()).toString(),
-                expiryDate = Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity))
+                expiryDate = Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity)),
             )
         }
 
@@ -202,7 +211,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
         principal: String,
         requester: String? = null,
         entitlements: String,
-        expiryDate: Date
+        expiryDate: Date,
     ): TokenResponse {
         val signingKey = masterKeyCache.forSigning()
 
@@ -225,17 +234,22 @@ class TokenServiceImpl : KoinComponent, TokenService {
                 // Eventually move to Brotli from GZIP:
                 // https://tech.oyorooms.com/how-brotli-compression-gave-us-37-latency-improvement-14d41e50fee4
                 .compressWith(CompressionCodecs.GZIP)
-                .compact()
+                .compact(),
         )
     }
 
     object JwtSigVerificationKeyResolver : KoinComponent, SigningKeyResolverAdapter() {
         private val masterKeyCache: MasterKeyCache by inject()
-        override fun resolveSigningKey(jwsHeader: JwsHeader<*>, claims: Claims): PublicKey {
+
+        override fun resolveSigningKey(
+            jwsHeader: JwsHeader<*>,
+            claims: Claims,
+        ): PublicKey {
             val keyId = jwsHeader.keyId
-            val publicKey = runBlocking {
-                masterKeyCache.getKey(keyId)
-            }
+            val publicKey =
+                runBlocking {
+                    masterKeyCache.getKey(keyId)
+                }
             if (publicKey.status == Status.SIGNING || publicKey.status == Status.VERIFYING) {
                 return publicKey.publicKey
             } else {
@@ -299,7 +313,7 @@ class MasterKey(
     private val privateKeyPem: ByteArray,
     val publicKeyPem: ByteArray,
     val status: Status,
-    val id: String
+    val id: String,
 ) {
     val publicKey: PublicKey
         get() {
@@ -315,6 +329,7 @@ class MasterKey(
     companion object : KoinComponent {
         private val masterKeysRepo: MasterKeysRepo by inject()
         val keyFactory: KeyFactory = KeyFactory.getInstance("EC")
+
         suspend fun forSigning(): MasterKey {
             return masterKeysRepo.fetchForSigning()?.let {
                 MasterKey(
@@ -323,7 +338,7 @@ class MasterKey(
                     it.privateKeyPem,
                     it.publicKeyPem,
                     Status.valueOf(it.status),
-                    it.id.toString()
+                    it.id.toString(),
                 )
             } ?: throw InternalException("Signing key not found")
         }
@@ -340,7 +355,7 @@ class MasterKey(
                 key.privateKeyPem,
                 key.publicKeyPem,
                 Status.valueOf(key.status),
-                key.id.toString()
+                key.id.toString(),
             )
         }
     }

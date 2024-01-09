@@ -19,7 +19,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
         organizationId: String,
         resourceName: String,
         name: String,
-        description: String
+        description: String,
     ): Action {
         val actionHrn = ActionHrn(organizationId, null, resourceName, name)
         val resourceHrn = ResourceHrn(organizationId, null, resourceName, null)
@@ -33,7 +33,11 @@ class ActionServiceImpl : KoinComponent, ActionService {
         return Action.from(actionRecord)
     }
 
-    override suspend fun getAction(organizationId: String, resourceName: String, name: String): Action {
+    override suspend fun getAction(
+        organizationId: String,
+        resourceName: String,
+        name: String,
+    ): Action {
         val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
         val actionRecord =
@@ -44,7 +48,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
     override suspend fun listActions(
         organizationId: String,
         resourceName: String,
-        context: PaginationContext
+        context: PaginationContext,
     ): ActionPaginatedResponse {
         val resourceHrn = ResourceHrn(organizationId, null, resourceName, null)
 
@@ -53,7 +57,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
         return ActionPaginatedResponse(
             actions.map { Action.from(it) },
             newContext.nextToken,
-            newContext.toOptions()
+            newContext.toOptions(),
         )
     }
 
@@ -61,7 +65,7 @@ class ActionServiceImpl : KoinComponent, ActionService {
         organizationId: String,
         resourceName: String,
         name: String,
-        description: String
+        description: String,
     ): Action {
         val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
@@ -71,7 +75,11 @@ class ActionServiceImpl : KoinComponent, ActionService {
         return Action.from(actionRecord)
     }
 
-    override suspend fun deleteAction(organizationId: String, resourceName: String, name: String): BaseSuccessResponse {
+    override suspend fun deleteAction(
+        organizationId: String,
+        resourceName: String,
+        name: String,
+    ): BaseSuccessResponse {
         val actionHrn = ActionHrn(organizationId, null, resourceName, name)
 
         val response = actionRepo.delete(actionHrn)
@@ -84,22 +92,31 @@ interface ActionService {
         organizationId: String,
         resourceName: String,
         name: String,
-        description: String
+        description: String,
     ): Action
 
-    suspend fun getAction(organizationId: String, resourceName: String, name: String): Action
+    suspend fun getAction(
+        organizationId: String,
+        resourceName: String,
+        name: String,
+    ): Action
+
     suspend fun listActions(
         organizationId: String,
         resourceName: String,
-        context: PaginationContext
+        context: PaginationContext,
     ): ActionPaginatedResponse
 
     suspend fun updateAction(
         organizationId: String,
         resourceName: String,
         name: String,
-        description: String
+        description: String,
     ): Action
 
-    suspend fun deleteAction(organizationId: String, resourceName: String, name: String): BaseSuccessResponse
+    suspend fun deleteAction(
+        organizationId: String,
+        resourceName: String,
+        name: String,
+    ): BaseSuccessResponse
 }

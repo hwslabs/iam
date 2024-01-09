@@ -1,8 +1,8 @@
 package com.hypto.iam.server.utils
 
-import java.lang.Thread.sleep
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.lang.Thread.sleep
 
 class IdGeneratorTest {
     private val subject = IdGenerator
@@ -48,7 +48,7 @@ class IdGeneratorTest {
             for (i in 0 until charSet.seed.length) {
                 Assertions.assertEquals(
                     subject.numberToId(i.toLong(), charSet),
-                    charSet.seed[i].toString()
+                    charSet.seed[i].toString(),
                 )
             }
         }

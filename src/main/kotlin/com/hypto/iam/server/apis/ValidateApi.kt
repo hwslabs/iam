@@ -28,7 +28,7 @@ fun Route.validationApi() {
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 }

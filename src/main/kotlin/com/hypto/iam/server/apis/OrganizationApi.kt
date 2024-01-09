@@ -43,16 +43,17 @@ fun Route.createOrganizationApi() {
 
     post("/organizations") {
         call.principal<OAuthUserPrincipal>()?.let { oAuthUserPrincipal ->
-            val (organization, tokenResponse) = organizationService.createOauthOrganization(
-                companyName = oAuthUserPrincipal.companyName,
-                name = oAuthUserPrincipal.name,
-                email = oAuthUserPrincipal.email,
-                issuer = oAuthUserPrincipal.issuer
-            )
+            val (organization, tokenResponse) =
+                organizationService.createOauthOrganization(
+                    companyName = oAuthUserPrincipal.companyName,
+                    name = oAuthUserPrincipal.name,
+                    email = oAuthUserPrincipal.email,
+                    issuer = oAuthUserPrincipal.issuer,
+                )
             call.respondText(
                 text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.Created
+                status = HttpStatusCode.Created,
             )
         }
 
@@ -65,31 +66,34 @@ fun Route.createOrganizationApi() {
             if (passcodeMetadata != null && apiRequest != null) {
                 throw BadRequestException(
                     "Organization and Admin user details are provided " +
-                        "both during passcode creation time and sign-up request."
+                        "both during passcode creation time and sign-up request.",
                 )
             }
             if (passcodeMetadata == null && apiRequest == null) {
                 throw BadRequestException("Organization and Admin user details are missing")
             }
 
-            val request = apiRequest?.copy(
-                rootUser = apiRequest.rootUser.copy(
-                    email = apiRequest.rootUser.email.lowercase()
+            val request =
+                apiRequest?.copy(
+                    rootUser =
+                        apiRequest.rootUser.copy(
+                            email = apiRequest.rootUser.email.lowercase(),
+                        ),
+                ) ?: CreateOrganizationRequest.from(
+                    passcodeService.decryptMetadata(passcodeMetadata!!),
+                    passcode.email.lowercase(),
                 )
-            ) ?: CreateOrganizationRequest.from(
-                passcodeService.decryptMetadata(passcodeMetadata!!),
-                passcode.email.lowercase()
-            )
             request.validate()
 
-            val (organization, tokenResponse) = organizationService.createOrganization(
-                request = request,
-                issuer = apiPrincipal.issuer
-            )
+            val (organization, tokenResponse) =
+                organizationService.createOrganization(
+                    request = request,
+                    issuer = apiPrincipal.issuer,
+                )
             call.respondText(
                 text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),
                 contentType = ContentType.Application.Json,
-                status = HttpStatusCode.Created
+                status = HttpStatusCode.Created,
             )
         }
     }
@@ -110,7 +114,7 @@ fun Route.deleteOrganizationApi() {
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK
+            status = HttpStatusCode.OK,
         )
     }
 }
@@ -127,7 +131,7 @@ fun Route.getAndUpdateOrganizationApi() {
     route("/organizations/{id}") {
         withPermission(
             "getOrganization",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             get {
                 val id = call.parameters["id"]!!
@@ -135,14 +139,14 @@ fun Route.getAndUpdateOrganizationApi() {
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
+                    status = HttpStatusCode.OK,
                 )
             }
         }
 
         withPermission(
             "updateOrganization",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1)
+            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             patch {
                 val id = call.parameters["id"]!!
@@ -152,12 +156,12 @@ fun Route.getAndUpdateOrganizationApi() {
                         id = id,
                         name = request.name,
                         description = request.description,
-                        identityGroup = null
+                        identityGroup = null,
                     )
                 call.respondText(
                     text = gson.toJson(response),
                     contentType = ContentType.Application.Json,
-                    status = HttpStatusCode.OK
+                    status = HttpStatusCode.OK,
                 )
             }
         }
