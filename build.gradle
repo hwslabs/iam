@@ -87,7 +87,7 @@ test {
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
     reports {
-        csv.getRequired()
+        csv.required = true
     }
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
