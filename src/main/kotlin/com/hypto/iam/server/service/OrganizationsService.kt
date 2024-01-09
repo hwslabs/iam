@@ -92,6 +92,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 // Create root user for the organization
                 val rootUser = usersService.createUser(
                     organizationId = organizationId,
+                    subOrganizationName = null,
                     username = username,
                     preferredUsername = rootUserFromRequest.preferredUsername,
                     name = rootUserFromRequest.name,
@@ -171,6 +172,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
                 // Create root user for the organization
                 val rootUser = usersService.createUser(
                     organizationId = organizationId,
+                    subOrganizationName = null,
                     username = username,
                     preferredUsername = null,
                     name = name,
@@ -235,7 +237,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
     @Timed("organization.get") // TODO: Make this work
     override suspend fun getOrganization(id: String): Organization {
         val response = organizationRepo.findById(id) ?: throw EntityNotFoundException("Organization id - $id not found")
-        val rootUser = usersService.getUser(response.id, ResourceHrn(response.rootUserHrn).resourceInstance!!)
+        val rootUser = usersService.getUser(response.id, null, ResourceHrn(response.rootUserHrn).resourceInstance!!)
         return Organization(
             id = response.id,
             name = response.name,
@@ -259,6 +261,7 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
             )
         val rootUser = usersService.getUser(
             updatedOrgRecord.id,
+            null,
             ResourceHrn(updatedOrgRecord.rootUserHrn).resourceInstance!!
         )
         return Organization(

@@ -15,6 +15,7 @@ import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.db.tables.records.ResourcesRecord
+import com.hypto.iam.server.db.tables.records.SubOrganizationsRecord
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.AuthProvider
@@ -28,6 +29,7 @@ import com.hypto.iam.server.models.Resource
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.ResourceActionEffect
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.SubOrganization
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPolicy
@@ -173,6 +175,17 @@ fun Action.Companion.from(record: Actions): Action {
         hrn.resource!!,
         hrn.action!!,
         hrn.toString(),
+        record.description
+    )
+}
+
+fun SubOrganization.Companion.from(record: SubOrganizationsRecord): SubOrganization {
+    return SubOrganization(
+        record.name,
+        "hrn:${record.organizationId}:${record.name}",
+        record.organizationId.toString(),
+        record.createdAt.toUTCOffset(),
+        record.updatedAt.toUTCOffset(),
         record.description
     )
 }

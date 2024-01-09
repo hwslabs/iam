@@ -11,6 +11,8 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
+import com.hypto.iam.server.db.repositories.SubOrganizationRepo
+import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
@@ -18,6 +20,8 @@ import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.CreateSubOrganizationRequest
+import com.hypto.iam.server.models.CreateSubOrganizationResponse
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.Credential
@@ -38,9 +42,15 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.server.testing.ApplicationTestBuilder
+import io.mockk.coEvery
+import java.time.Instant
 import kotlinx.coroutines.runBlocking
 import org.koin.test.inject
 import org.koin.test.junit5.AutoCloseKoinTest
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
 
 object DataSetupHelperV2 : AutoCloseKoinTest() {
     private val gson: Gson by inject()
@@ -51,6 +61,7 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
     private val policyRepo: PoliciesRepo by inject()
     private val principalPoliciesRepo: PrincipalPoliciesRepo by inject()
     private val resourceRepo: ResourceRepo by inject()
+    private val subOrganizationRepo: SubOrganizationRepo by inject()
     private val actionRepo: ActionRepo by inject()
 
     suspend fun ApplicationTestBuilder.createOrganization(
@@ -90,6 +101,83 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         return Pair(createdOrganizationResponse, rootUser.copy(email = rootUser.email.lowercase()))
     }
 
+    suspend fun ApplicationTestBuilder.createSubOrganization(
+        organizationId: String,
+        bearerToken: String
+    ): CreateSubOrganizationResponse {
+        // Create organization
+        val subOrgName = "test-sub-org" + IdGenerator.randomId()
+        val subOrgId = IdGenerator.randomId()
+
+        val createSubOrganizationCall = client.post("/organizations/$organizationId/sub_organizations") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header("Authorization", "Bearer $bearerToken")
+            setBody(
+                gson.toJson(
+                    CreateSubOrganizationRequest(
+                        subOrgName,
+                        subOrgId
+                    )
+                )
+            )
+        }
+        return gson.fromJson(createSubOrganizationCall.bodyAsText(), CreateSubOrganizationResponse::class.java)
+    }
+
+    suspend fun ApplicationTestBuilder.createSubOrganizationUser(
+        organizationId: String,
+        subOrgId: String,
+        bearerToken: String,
+        cognitoClient: CognitoIdentityProviderClient
+    ): Pair<User, Credential> {
+        val username = "testUserName" + IdGenerator.randomId()
+        val email = "test-email" + IdGenerator.randomId() + "@hypto.in"
+        val phone = "+919626012778"
+        val createUserRequest = CreateUserRequest(
+            preferredUsername = username,
+            name = "lorem ipsum",
+            password = "testPassword@Hash1",
+            email = email,
+            status = CreateUserRequest.Status.enabled,
+            phone = phone,
+            verified = true,
+            loginAccess = true
+        )
+
+        coEvery {
+            cognitoClient.adminGetUser(any<AdminGetUserRequest>())
+        } returns AdminGetUserResponse.builder()
+            .enabled(true)
+            .username(username)
+            .userAttributes(
+                AttributeType.builder().name(CognitoConstants.ATTRIBUTE_EMAIL)
+                    .value(email).build(),
+                AttributeType.builder().name(CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME)
+                    .value(phone).build()
+            )
+            .userCreateDate(Instant.now())
+            .build()
+
+        val createUserCall = client.post("/organizations/$organizationId/sub_organizations/$subOrgId/users") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $bearerToken")
+            setBody(gson.toJson(createUserRequest))
+        }
+
+        val createdUserResponse = gson.fromJson(createUserCall.bodyAsText(), CreateUserResponse::class.java)
+        val userId = createdUserResponse.user.hrn.substring(createdUserResponse.user.hrn.lastIndexOf("/") + 1)
+
+        val createCredentialCall = client.post(
+            "/organizations/$organizationId/sub_organizations/$subOrgId/users/$userId/credentials"
+        ) {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $bearerToken")
+            setBody(gson.toJson(CreateCredentialRequest()))
+        }
+
+        return Pair(createdUserResponse.user, gson.fromJson(createCredentialCall.bodyAsText(), Credential::class.java))
+    }
+
     suspend fun ApplicationTestBuilder.createCredential(
         orgId: String,
         userName: String,
@@ -125,12 +213,11 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         return Pair(createdUser.user, credential)
     }
 
-    suspend fun ApplicationTestBuilder.createAndAttachPolicy(
+    suspend fun ApplicationTestBuilder.createPolicy(
         orgId: String,
-        username: String?,
         bearerToken: String,
         policyName: String,
-        accountId: String?,
+        subOrgId: String?,
         resourceName: String,
         actionName: String,
         resourceInstance: String,
@@ -138,7 +225,39 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
     ): Policy {
         val (resourceHrn, actionHrn) = createResourceActionHrn(
             orgId,
-            accountId,
+            subOrgId,
+            resourceName,
+            actionName,
+            resourceInstance
+        )
+        val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, effect))
+        val requestBody = CreatePolicyRequest(policyName, policyStatements)
+
+        val createPolicyCall = client.post(
+            "/organizations/$orgId/policies"
+        ) {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            header(HttpHeaders.Authorization, "Bearer $bearerToken")
+            setBody(gson.toJson(requestBody))
+        }
+
+        return gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
+    }
+
+    suspend fun ApplicationTestBuilder.createAndAttachPolicy(
+        orgId: String,
+        username: String?,
+        bearerToken: String,
+        policyName: String,
+        subOrgName: String?,
+        resourceName: String,
+        actionName: String,
+        resourceInstance: String,
+        effect: PolicyStatement.Effect = PolicyStatement.Effect.allow
+    ): Policy {
+        val (resourceHrn, actionHrn) = createResourceActionHrn(
+            orgId,
+            subOrgName,
             resourceName,
             actionName,
             resourceInstance
@@ -157,9 +276,13 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
         val policy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
 
         if (username != null) {
+            val url = if (subOrgName == null) {
+                "/organizations/$orgId/users/$username/attach_policies"
+            } else {
+                "/organizations/$orgId/sub_organizations/$subOrgName/users/$username/attach_policies"
+            }
             client.patch(
-                "/organizations/$orgId/users/" +
-                    "$username/attach_policies"
+                url
             ) {
                 val createAssociationRequest = PolicyAssociationRequest(listOf(policy.hrn))
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -217,13 +340,14 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
 
     fun ApplicationTestBuilder.createResourceActionHrn(
         orgId: String,
-        accountId: String?,
+        subOrgName: String?,
         resourceName: String,
         actionName: String,
         resourceInstance: String? = null
     ): Pair<String, String> {
-        val resourceHrn = ResourceHrn(orgId, accountId, resourceName, resourceInstance).toString()
-        val actionHrn = ActionHrn(orgId, accountId, resourceName, actionName).toStringEscape()
+        val resourceHrn = ResourceHrn(orgId, subOrgName, resourceName, resourceInstance).toString()
+        // Today we dont support any sub org specific action, so passing empty string
+        val actionHrn = ActionHrn(orgId, "", resourceName, actionName).toStringEscape()
         return Pair(resourceHrn, actionHrn)
     }
 
@@ -242,6 +366,9 @@ object DataSetupHelperV2 : AutoCloseKoinTest() {
                     actionRepo.delete(it)
                 }
                 resourceRepo.delete(resource)
+            }
+            subOrganizationRepo.fetchByOrganizationId(orgId).forEach { subOrg ->
+                subOrg?.let { subOrganizationRepo.delete(orgId, it.name) }
             }
             organizationRepo.deleteById(orgId)
         }

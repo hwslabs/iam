@@ -28,7 +28,8 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
     suspend fun getValidPasscodeCount(
         email: String,
         purpose: VerifyEmailRequest.Purpose,
-        organizationId: String? = null
+        organizationId: String? = null,
+        subOrganizationName: String? = null,
     ): Int =
         ctx("passcodes.getValidCount")
             .selectCount()
@@ -43,6 +44,11 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .apply {
                 organizationId?.let {
                     and(PASSCODES.ORGANIZATION_ID.eq(organizationId))
+                }
+            }
+            .apply {
+                subOrganizationName?.let {
+                    and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
                 }
             }
             .fetchOne(0, Int::class.java) ?: 0
@@ -72,6 +78,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
 
     suspend fun getValidPasscodeByEmail(
         organizationId: String,
+        subOrganizationName: String?,
         purpose: VerifyEmailRequest.Purpose,
         email: String
     ): PasscodesRecord? {
@@ -83,11 +90,17 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()),
                 PASSCODES.ORGANIZATION_ID.eq(organizationId)
             )
+            .apply {
+                subOrganizationName?.let {
+                    and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
+                }
+            }
             .fetchOne()
     }
 
     suspend fun listPasscodes(
         organizationId: String,
+        subOrganizationName: String?,
         purpose: VerifyEmailRequest.Purpose? = null,
         paginationContext: PaginationContext
     ): List<PasscodesRecord> {
@@ -97,6 +110,11 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .apply {
                 purpose?.let {
                     and(PASSCODES.PURPOSE.eq(purpose.toString()))
+                }
+            }
+            .apply {
+                subOrganizationName?.let {
+                    and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
                 }
             }
             .and(PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()))

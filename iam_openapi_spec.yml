@@ -189,6 +189,134 @@ paths:
       security:
         - apiKeyAuth: []
 
+  # sub organizations
+  /organizations/{organization_id}/sub_organizations:
+    post:
+      tags:
+        - Sub Organization Management
+      summary: Create a sub organization under an organization. Sub organization provides a way to create a hierarchy of organizations to easily manage resources at each levels.
+      description: Create a sub organization under an organization.
+      operationId: createSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateSubOrganizationRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateSubOrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    get:
+      tags:
+        - Sub Organization Management
+      summary: List sub organizations under an organization.
+      description: List all sub organizations under an organization.
+      operationId: listSubOrganizations
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ListSubOrganizationsResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}:
+    get:
+      tags:
+        - Sub Organization Management
+      summary: Get a sub organization
+      description: Get a sub organization and the metadata for the given sub organization.
+      operationId: getSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/SubOrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    patch:
+      tags:
+        - Sub Organization Management
+      summary: Update a sub organization
+      description: Update a sub organization
+      operationId: updateSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateSubOrganizationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SubOrganizationResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      tags:
+          - Sub Organization Management
+      summary: Delete a sub organization
+      description: Delete a sub organization. This is a privileged api and only internal application will have access to delete sub organization.
+      operationId: deleteSubOrganization
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   # user
   /organizations/{organization_id}/users:
     post:
@@ -223,6 +351,57 @@ paths:
       operationId: listUsers
       parameters:
         - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+      responses:
+        '200':
+          $ref: '#/components/responses/UserPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/sub_organization/{sub_organization_name}/users:
+    post:
+      tags:
+        - User Management
+      summary: Create a user
+      description: User is an entity which represent a person who is part of the organization or account. This user entity can be created either through user name, password or the user can be federated through an identity provider like Google, Facebook or any SAML 2.0, OIDC identity provider. This is a sign-up api to create a new user in an organization.
+      operationId: createSubOrganizationUser
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUserRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateUserResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    get:
+      tags:
+        - User Management
+      summary: List users
+      description: List users associated with the organization. This is a pagniated api which returns the list of users with a next page token.
+      operationId: listSubOrganizationUsers
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
         - $ref: '#/components/parameters/next_token'
         - $ref: '#/components/parameters/page_size'
       responses:
@@ -317,6 +496,86 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}:
+    get:
+      tags:
+        - User Management
+      summary: Gets a user entity associated with the organization
+      description: Get a User
+      operationId: getSubOrganizationUser
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetUserResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    patch:
+      tags:
+        - User Management
+      summary: Update a User
+      description: Update a User
+      operationId: updateSubOrganizationUser
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUserRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UpdateUserResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      tags:
+        - User Management
+      summary: Delete a User
+      description: Delete a User
+      operationId: deleteSubOrganizationUser
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /organizations/{organization_id}/users/{user_name}/change_password:
     post:
       tags:
@@ -345,6 +604,35 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}/change_password:
+    post:
+      tags:
+        - User Management
+      summary: Change password for a user
+      description: Change password for a user
+      operationId: changeSubOrganizationPassword
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/ChangeUserPasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /organizations/{organization_id}/users/{user_name}/create_password:
     post:
       tags:
@@ -355,6 +643,35 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUserPasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}/create_password:
+    post:
+      tags:
+        - User Management
+      summary: Create password for a user
+      description: Create password for a user
+      operationId: createSubOrganizationPassword
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
       requestBody:
         $ref: '#/components/requestBodies/CreateUserPasswordRequest'
       responses:
@@ -402,6 +719,37 @@ paths:
       security:
         - apiKeyAuth: []
 
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/resetPassword:
+    post:
+      tags:
+        - User Management
+      summary: Reset Password
+      description: Reset Password
+      operationId: resetSubOrganizationPassword
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/ResetPasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security:
+        - apiKeyAuth: [ ]
+
   /organizations/{organization_id}/users/{user_name}/policies:
     get:
       tags:
@@ -412,6 +760,36 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '200':
+          $ref: '#/components/responses/PolicyPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}/policies:
+    get:
+      tags:
+        - User Policy Management
+      summary: List all policies associated with user
+      description: List all policies associated with user
+      operationId: getSubOrganizationUserPolicies
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
         - $ref: '#/components/parameters/next_token'
         - $ref: '#/components/parameters/page_size'
         - $ref: '#/components/parameters/sort_order'
@@ -460,6 +838,36 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}/attach_policies:
+    patch:
+      tags:
+        - User Policy Management
+      summary: Attach policies to user
+      description: Attach policies to user
+      operationId: attachSubOrganizationPolicies
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/PolicyAssociationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+
   /organizations/{organization_id}/users/{user_name}/detach_policies:
     patch:
       tags:
@@ -487,6 +895,37 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
+
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}/detach_policies:
+    patch:
+      tags:
+        - User Policy Management
+      summary: Detach policies from user
+      description: Detach policies from user
+      operationId: detachSubOrganizationPolicies
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/PolicyAssociationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 
   /organizations/{organization_id}/users/{user_name}/auth_methods:
     get:
@@ -552,6 +991,61 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/ListCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}/credentials:
+    post:
+      tags:
+        - User Credential Management
+      summary: Create a new credential for a user
+      description: Create a new credential for a user. This API returns the credential's secret key, which will be available only in the response of this API.
+      operationId: createSubOrganizationCredential
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateCredentialRequest'
+
+      responses:
+        '201':
+          $ref: '#/components/responses/CreateCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    get:
+      tags:
+        - User Credential Management
+      summary: List all credentials for a user
+      description: List all credentials for a user
+      operationId: listSubOrganizationCredentials
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
       responses:
         '200':
           $ref: '#/components/responses/ListCredentialResponse'
@@ -649,6 +1143,91 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/{user_name}/credentials/{credential_id}:
+    get:
+      tags:
+        - User Credential Management
+      summary: Gets credential for the user
+      description: Gets credential for the user, given the credential id
+      operationId: getSubOrganizationCredential
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/credential_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    patch:
+      tags:
+        - User Credential Management
+      summary: Update the status of credential
+      description: Update the status of credential to ACTIVE/INACTIVE. Credentials which are marked INACTIVE cannot be used to fetch short-term tokens.
+      operationId: updateSubOrganizationCredential
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/credential_id'
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateCredentialRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/UpdateCredentialResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+    delete:
+      tags:
+        - User Credential Management
+      summary: Delete a credential
+      description: Delete a credential associated with the user
+      operationId: deleteSubOrganizationCredential
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/credential_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 
   # resource
   /organizations/{organization_id}/resources:
@@ -1077,6 +1656,34 @@ paths:
         - basicAuth: [ ]
         - bearerAuth: [ ]
 
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/token:
+    post:
+      tags:
+        - User Authorization
+      summary: Generate a organization_id scoped token
+      description: Generate a token for the given user credential scoped by the provided organization_id
+      operationId: getTokenForSubOrg
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+      security:
+        - basicAuth: [ ]
+        - bearerAuth: [ ]
+
+
   /token:
     post:
       tags:
@@ -1194,6 +1801,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  #Invites
   /verifyEmail:
     post:
       tags:
@@ -1361,6 +1969,16 @@ components:
             pattern: ^[A-Za-z0-9]{10}$
             example: "XlK5h64gND"
 
+    sub_organization_name:
+      in: path
+      name: sub_organization_name
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            example: "customer_1"
+
     credential_id:
       in: path
       name: credential_id
@@ -1455,6 +2073,28 @@ components:
           examples:
             UpdateOrganizationRequest:
               $ref: '#/components/examples/UpdateOrganizationRequest'
+
+    CreateSubOrganizationRequest:
+      description: Payload to create sub organization
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateSubOrganizationRequest'
+          examples:
+            CreateSubOrganizationRequest:
+              $ref: '#/components/examples/CreateSubOrganizationRequest'
+
+    UpdateSubOrganizationRequest:
+      description: Payload to update sub organization
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateSubOrganizationRequest'
+          examples:
+            UpdateSubOrganizationRequest:
+              $ref: '#/components/examples/UpdateSubOrganizationRequest'
 
     CreateUserRequest:
       description: Payload to create user
@@ -1719,6 +2359,22 @@ components:
             Organization:
               $ref: '#/components/examples/CreateOrganizationResponse'
 
+    CreateSubOrganizationResponse:
+      description: Response for Create Sub Organization request
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateSubOrganizationResponse'
+          examples:
+            Organization:
+              $ref: '#/components/examples/CreateSubOrganizationResponse'
+
     OrganizationResponse:
       description: Response for Get and Update Organization requests
       headers:
@@ -1734,6 +2390,38 @@ components:
           examples:
             Organization:
               $ref: '#/components/examples/Organization'
+
+    SubOrganizationResponse:
+      description: Response for Get and Update Sub Organization requests
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SubOrganization'
+          examples:
+            Organization:
+              $ref: '#/components/examples/SubOrganization'
+
+    ListSubOrganizationsResponse:
+      description: Response for list sub organization under an organization request.
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SubOrganizationsPaginatedResponse'
+          examples:
+            Organization:
+              $ref: '#/components/examples/SubOrganizationsPaginatedResponse'
 
     CreateUserResponse:
       description: Response for CreateUserRequest
@@ -2058,6 +2746,18 @@ components:
         name: ACME Enterprise
         description: Updated Brief description about ACME
 
+    CreateSubOrganizationRequest:
+      summary: A sample CreateSubOrganizationRequest
+      value:
+        name: ACME Enterprise
+        description: Brief description about ACME
+        id: "Customer - 1"
+
+    UpdateSubOrganizationRequest:
+      summary: A sample UpdateSubOrganizationRequest
+      value:
+        name: ACME Enterprise
+
     CreateUserRequest:
       summary: A sample create user request
       value:
@@ -2237,6 +2937,27 @@ components:
           createdAt: 2020-01-01T00:00:00.000Z
         rootUserToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 
+    CreateSubOrganizationResponse:
+      value:
+        subOrganization:
+          id: hrn:XlK5h64gND:cus_123
+          name: ACME Enterprise - Customer 123
+          description: Brief description about ACME
+          updatedAt: 2020-01-01T00:00:00.000Z
+          createdAt: 2020-01-01T00:00:00.000Z
+
+    SubOrganizationsPaginatedResponse:
+      value:
+        data:
+          - id: XlK5h64gND
+            name: ACME sub Organization
+            createdAt: 2020-01-01T00:00:00.000Z
+            updatedAt: 2020-01-01T00:00:00.000Z
+        nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
+        context:
+          pageSize: 10
+          sortOrder: asc
+
     TokenResponse:
       value:
         token: XlK5h64gNDBfMXAPKKGRmWjaxmXJJzDKIJNWqSWj
@@ -2364,6 +3085,14 @@ components:
           createdBy: ""
           createdAt: 2020-01-01T00:00:00.000Z
         rootUserHrn: "hrn:XlK5h64gND::iam-user/root-user-name"
+        createdAt: 2020-01-01T00:00:00.000Z
+        updatedAt: 2020-01-01T00:00:00.000Z
+
+    SubOrganization:
+      summary: A sample SubOrganization
+      value:
+        id: XlK5h64gND
+        name: ACME Enterprise
         createdAt: 2020-01-01T00:00:00.000Z
         updatedAt: 2020-01-01T00:00:00.000Z
 
@@ -2509,6 +3238,28 @@ components:
           type: string
           maxLength: 30
 
+    CreateSubOrganizationRequest:
+      description: Payload to create sub organization
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the sub organization
+        description:
+          type: string
+          maxLength: 500
+
+    UpdateSubOrganizationRequest:
+      description: Payload to update sub organization
+      type: object
+      additionalProperties: false
+      properties:
+        description:
+          type: string
+          description: Description of the sub organization
 
     CreateUserRequest:
       description: Payload to create ledger account
@@ -2752,6 +3503,8 @@ components:
           type: string
         organizationId:
           type: string
+        subOrganizationName:
+          type: string
         purpose:
           type: string
           enum:
@@ -2866,6 +3619,30 @@ components:
         rootUserToken:
           description: JWT token of the root user
           type: string
+
+    CreateSubOrganizationResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - subOrganization
+      properties:
+        subOrganization:
+          $ref: "#/components/schemas/SubOrganization"
+
+    SubOrganizationsPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/SubOrganization'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
 
     ListCredentialResponse:
       type: object
@@ -3011,6 +3788,36 @@ components:
           maxLength: 500
         rootUser:
           $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SubOrganization:
+      type: object
+      description: Sub organization details
+      additionalProperties: false
+      required:
+        - name
+        - id
+        - organizationId
+        - createdAt
+        - updatedAt
+      properties:
+        name:
+          type: string
+          description: Sub organization name
+        id:
+          type: string
+          description: Sub organization id in HRN format
+        organizationId:
+          type: string
+          description: Organization id where this sub organization belongs to
+        description:
+          type: string
+          description: Any description related to sub organization
         createdAt:
           type: string
           format: date-time

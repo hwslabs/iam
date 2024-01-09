@@ -30,10 +30,12 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
     suspend fun fetchUsers(
         organizationId: String,
+        subOrganizationName: String?,
         paginationContext: PaginationContext
     ): List<UsersRecord> {
         return ctx("users.fetchMany").selectFrom(USERS)
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
+            .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
             .and(USERS.DELETED.eq(false))
             .paginate(USERS.CREATED_AT, paginationContext)
             .fetch()
@@ -43,6 +45,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         preferredUsername: String?,
         email: String?,
         organizationId: String,
+        subOrganizationName: String?,
         uniqueCheck: Boolean = false
     ): Boolean {
         val conditions = mutableListOf<Condition>()
@@ -61,12 +64,16 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         builder = if (uniqueCheck) {
             // Check only verified users in other organizations and all users within the organization
             builder.and(
-                (USERS.VERIFIED.eq(true).andNot(USERS.ORGANIZATION_ID.eq(organizationId)))
+                (
+                    USERS.VERIFIED.eq(true)
+                        .andNot(USERS.ORGANIZATION_ID.eq(organizationId))
+                    )
                     .or(USERS.ORGANIZATION_ID.eq(organizationId))
             )
         } else {
             // Check all verified and unverified users within the organization
             builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
+                .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
         }
 
         return ctx("users.existsByAliasUsername").fetchExists(builder)
@@ -88,15 +95,18 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         .where(USERS.HRN.eq(hrn))
         .returning().fetchOne()
 
-    suspend fun findByEmail(email: String, organizationId: String? = null): UsersRecord? {
-        var builder = ctx("users.findByEmail")
+    suspend fun findByEmail(email: String, organizationId: String? = null, subOrganizationName: String? = null):
+        UsersRecord? {
+        val builder = ctx("users.findByEmail")
             .selectFrom(USERS)
-            .where(USERS.EMAIL.eq(email))
+            .where(USERS.EMAIL.equalIgnoreCase(email))
             .and(USERS.DELETED.eq(false))
             .and(USERS.VERIFIED.eq(true))
-        if (!organizationId.isNullOrEmpty()) {
-            builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
-        }
+            .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
+            .apply { organizationId?.let { and(USERS.ORGANIZATION_ID.eq(it)) } }
+//        if (!organizationId.isNullOrEmpty()) {
+//            builder = builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
+//        }
         return builder.fetchOne()
     }
 

@@ -27,10 +27,11 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
 
     override suspend fun createCredential(
         organizationId: String,
+        subOrganizationName: String?,
         userId: String,
         validUntil: String?
     ): Credential {
-        val userHrn = ResourceHrn(usersService.getUser(organizationId, userId).hrn)
+        val userHrn = ResourceHrn(usersService.getUser(organizationId, subOrganizationName, userId).hrn)
         // TODO: Limit number of active credentials for a single user
         val credentialsRecord = repo.create(
             userHrn = userHrn,
@@ -45,29 +46,32 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
 
     override suspend fun getCredentialWithoutSecret(
         organizationId: String,
+        subOrganizationName: String?,
         userId: String,
         id: UUID
     ): CredentialWithoutSecret {
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
+        val userHrn = ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userId)
         return CredentialWithoutSecret.from(fetchCredential(userHrn, id))
     }
 
     override suspend fun listCredentials(
         organizationId: String,
+        subOrganizationName: String?,
         userId: String
     ): ListCredentialResponse {
-        val userHrn = ResourceHrn(usersService.getUser(organizationId, userId).hrn)
+        val userHrn = ResourceHrn(usersService.getUser(organizationId, subOrganizationName, userId).hrn)
         return ListCredentialResponse(repo.getAllByUserHrn(userHrn).map { CredentialWithoutSecret.from(it) })
     }
 
     override suspend fun updateCredentialAndGetWithoutSecret(
         organizationId: String,
+        subOrganizationName: String?,
         userId: String,
         id: UUID,
         status: UpdateCredentialRequest.Status?,
         validUntil: String?
     ): CredentialWithoutSecret {
-        val userHrn = ResourceHrn(organizationId, "", IamResources.USER, userId)
+        val userHrn = ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userId)
         // TODO: 3 DB queries are being made in this method. Try to optimize
         fetchCredential(userHrn, id) // Validation
 
@@ -84,8 +88,13 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
         return CredentialWithoutSecret.from(credentialsRecord)
     }
 
-    override suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse {
-        if (!repo.delete(organizationId, userId, id)) {
+    override suspend fun deleteCredential(
+        organizationId: String,
+        subOrganizationName: String?,
+        userId: String,
+        id: UUID
+    ): BaseSuccessResponse {
+        if (!repo.delete(organizationId, subOrganizationName, userId, id)) {
             throw EntityNotFoundException("Credential not found")
         }
 
@@ -107,16 +116,31 @@ class CredentialServiceImpl : KoinComponent, CredentialService {
 }
 
 interface CredentialService {
-    suspend fun createCredential(organizationId: String, userId: String, validUntil: String? = null): Credential
-    suspend fun getCredentialWithoutSecret(organizationId: String, userId: String, id: UUID): CredentialWithoutSecret
+    suspend fun createCredential(
+        organizationId: String,
+        subOrganizationName: String?,
+        userId: String,
+        validUntil:
+            String? = null
+    ): Credential
+    suspend fun getCredentialWithoutSecret(
+        organizationId: String,
+        subOrganizationName: String?,
+        userId: String,
+        id:
+            UUID
+    ): CredentialWithoutSecret
     suspend fun updateCredentialAndGetWithoutSecret(
         organizationId: String,
+        subOrganizationName: String?,
         userId: String,
         id: UUID,
         status: UpdateCredentialRequest.Status?,
         validUntil: String?
     ): CredentialWithoutSecret
 
-    suspend fun deleteCredential(organizationId: String, userId: String, id: UUID): BaseSuccessResponse
-    suspend fun listCredentials(organizationId: String, userId: String): ListCredentialResponse
+    suspend fun deleteCredential(organizationId: String, subOrganizationName: String?, userId: String, id: UUID):
+        BaseSuccessResponse
+    suspend fun listCredentials(organizationId: String, subOrganizationName: String?, userId: String):
+        ListCredentialResponse
 }

@@ -18,6 +18,7 @@ import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
 import com.hypto.iam.server.db.repositories.PrincipalPoliciesRepo
 import com.hypto.iam.server.db.repositories.ResourceRepo
+import com.hypto.iam.server.db.repositories.SubOrganizationRepo
 import com.hypto.iam.server.db.repositories.UserAuthProvidersRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
@@ -42,6 +43,8 @@ import com.hypto.iam.server.service.PrincipalPolicyService
 import com.hypto.iam.server.service.PrincipalPolicyServiceImpl
 import com.hypto.iam.server.service.ResourceService
 import com.hypto.iam.server.service.ResourceServiceImpl
+import com.hypto.iam.server.service.SubOrganizationService
+import com.hypto.iam.server.service.SubOrganizationServiceImpl
 import com.hypto.iam.server.service.TokenService
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserAuthService
@@ -99,6 +102,7 @@ val repositoryModule = module {
     single { PolicyTemplatesRepo }
     single { AuthProviderRepo }
     single { UserAuthRepo }
+    single { SubOrganizationRepo }
 }
 
 val controllerModule = module {
@@ -116,6 +120,7 @@ val controllerModule = module {
     single { PolicyTemplatesServiceImpl() } bind PolicyTemplatesService::class
     single { AuthProviderServiceImpl() } bind AuthProviderService::class
     single { UserAuthServiceImpl() } bind UserAuthService::class
+    single { SubOrganizationServiceImpl() } bind SubOrganizationService::class
 }
 
 val applicationModule = module {

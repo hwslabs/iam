@@ -9,6 +9,7 @@ object IamResources {
     const val ROLE = "iam-role"
     const val ACTION = "iam-action"
     const val CREDENTIAL = "iam-credential"
+    const val SUB_ORGANIZATION = "iam-sub-organization"
 
     val resourceMap: Map<String, String> = mapOf(
         "users" to USER,
@@ -18,6 +19,7 @@ object IamResources {
         "credentials" to CREDENTIAL,
         "roles" to ROLE,
         "organizations" to ORGANIZATION,
-        "accounts" to ACCOUNT
+        "accounts" to ACCOUNT,
+        "sub_organizations" to SUB_ORGANIZATION
     )
 }

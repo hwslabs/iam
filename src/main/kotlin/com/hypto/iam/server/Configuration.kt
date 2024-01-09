@@ -149,8 +149,10 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
     basic("basic-auth") {
         validate { credentials ->
             val organizationId = this.parameters["organization_id"]!!
+            val subOrganizationId = this.parameters["sub_organization_id"]
             val principal = userPrincipalService.getUserPrincipalByCredentials(
                 organizationId,
+                subOrganizationId,
                 credentials.name.lowercase(),
                 credentials.password
             )

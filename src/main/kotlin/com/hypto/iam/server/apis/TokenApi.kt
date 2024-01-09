@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
+import com.hypto.iam.server.extensions.post
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.security.AuthenticationException
@@ -23,7 +24,6 @@ import io.ktor.server.request.accept
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.post
 
 private val tokenService: TokenService = getKoinInstance()
 private val gson: Gson = getKoinInstance()
@@ -81,7 +81,10 @@ suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) 
 
 fun Route.tokenApi() {
     authenticate("basic-auth", "bearer-auth") {
-        post("/organizations/{organization_id}/token") {
+        post(
+            "/organizations/{organization_id}/token",
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/token"
+        ) {
             generateToken(call, context)
         }
     }

@@ -9,6 +9,7 @@ class Constants private constructor() {
         const val MIN_USERNAME_LENGTH = 8
         const val MIN_EMAIL_LENGTH = 4
         const val MAX_NAME_LENGTH = 50
+        const val MAX_SUB_ORG_LENGTH = 1200
         const val MAX_USERNAME_LENGTH = 50
         const val MIN_DESC_LENGTH = 2
         const val MAX_DESC_LENGTH = 100

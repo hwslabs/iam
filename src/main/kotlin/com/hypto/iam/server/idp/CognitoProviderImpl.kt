@@ -12,9 +12,11 @@ import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_CREATED_BY
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_EMAIL_VERIFIED
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_NAME
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_ORGANIZATION_ID
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PHONE
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFERRED_USERNAME
 import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_PREFIX_CUSTOM
+import com.hypto.iam.server.idp.CognitoConstants.ATTRIBUTE_SUB_ORGANIZATION_ID
 import com.hypto.iam.server.idp.CognitoConstants.EMPTY
 import com.hypto.iam.server.security.AuthenticationException
 import mu.KotlinLogging
@@ -57,6 +59,8 @@ object CognitoConstants {
     const val ATTRIBUTE_PHONE = "phone_number"
     const val ATTRIBUTE_CREATED_BY = "createdBy"
     const val ATTRIBUTE_PREFERRED_USERNAME = "preferred_username"
+    const val ATTRIBUTE_ORGANIZATION_ID = "organization_id"
+    const val ATTRIBUTE_SUB_ORGANIZATION_ID = "sub_organization_id"
     const val ATTRIBUTE_PREFIX_CUSTOM = "custom:"
     const val ACTION_SUPPRESS = "SUPPRESS"
     const val APP_CLIENT_NAME = "iam-client"
@@ -193,6 +197,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
                 loginAccess = true,
                 isEnabled = response.enabled(),
+                organizationId = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_ORGANIZATION_ID),
+                subOrganizationId = getAttribute(attrs, ATTRIBUTE_SUB_ORGANIZATION_ID),
                 createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
                 createdAt = response.userCreateDate().toString()
             )
@@ -222,6 +228,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                 verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
                 loginAccess = true,
                 isEnabled = userType.enabled(),
+                organizationId = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_ORGANIZATION_ID),
+                subOrganizationId = getAttribute(attrs, ATTRIBUTE_SUB_ORGANIZATION_ID),
                 createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
                 createdAt = userType.userCreateDate().toString()
             )
@@ -302,6 +310,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         cognitoClient.adminSetUserPassword(setPasswordRequest)
     }
 
+    @Suppress("SpreadOperator")
     private fun createUserWithPassword(
         context: RequestContext,
         identityGroup: IdentityGroup,
@@ -316,9 +325,12 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         val createdBy = AttributeType.builder()
             .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY)
             .value(context.requestedPrincipal).build()
+        val organizationId = AttributeType.builder()
+            .name(ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_ORGANIZATION_ID)
+            .value(context.organizationId).build()
 
         val optionalUserAttrs = mutableListOf<AttributeType>()
-        if (!credentials.phoneNumber.isNullOrEmpty()) {
+        if (credentials.phoneNumber.isNotEmpty()) {
             optionalUserAttrs.add(
                 AttributeType.builder()
                     .name(ATTRIBUTE_PHONE)
@@ -339,13 +351,20 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                     .value(credentials.name).build()
             )
         }
+        if (!context.subOrganizationName.isNullOrEmpty()) {
+            optionalUserAttrs.add(
+                AttributeType.builder()
+                    .name(ATTRIBUTE_SUB_ORGANIZATION_ID)
+                    .value(context.subOrganizationName).build()
+            )
+        }
 
         // Creates user in cognito
         val userRequest = AdminCreateUserRequest.builder()
             .userPoolId(identityGroup.id)
             .username(credentials.username)
             .temporaryPassword(credentials.password)
-            .userAttributes(emailAttr, emailVerifiedAttr, createdBy, *optionalUserAttrs.toTypedArray())
+            .userAttributes(emailAttr, emailVerifiedAttr, createdBy, organizationId, *optionalUserAttrs.toTypedArray())
             .messageAction(ACTION_SUPPRESS) // TODO: Make welcome email as configuration option
             .build()
 
@@ -365,6 +384,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             verified = getAttribute(attrs, ATTRIBUTE_EMAIL_VERIFIED).toBoolean(),
             loginAccess = true,
             isEnabled = true,
+            organizationId = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_ORGANIZATION_ID),
+            subOrganizationId = getAttribute(attrs, ATTRIBUTE_SUB_ORGANIZATION_ID),
             createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
             createdAt = adminCreateUserResponse.user().userCreateDate().toString()
         )
@@ -419,6 +440,8 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
                     phoneNumber = getAttribute(attrs, ATTRIBUTE_PHONE),
                     loginAccess = true,
                     isEnabled = user.userStatus() != UserStatusType.ARCHIVED,
+                    organizationId = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_ORGANIZATION_ID),
+                    subOrganizationId = getAttribute(attrs, ATTRIBUTE_SUB_ORGANIZATION_ID),
                     createdBy = getAttribute(attrs, ATTRIBUTE_PREFIX_CUSTOM + ATTRIBUTE_CREATED_BY),
                     createdAt = user.userCreateDate().toString()
                 )

@@ -5,6 +5,7 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.PoliciesRepo
+import com.hypto.iam.server.db.repositories.SubOrganizationRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.exceptions.DbExceptionHandler
@@ -50,6 +51,7 @@ data class InviteUserTemplateData(
     val link: String,
     val nameOfUser: String,
     val organizationName: String,
+    val subOrganizationName: String?
 )
 
 private val logger = KotlinLogging.logger("service.TokenService")
@@ -61,6 +63,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
     private val usersService: UsersService by inject()
     private val userRepo: UserRepo by inject()
     private val organizationRepo: OrganizationRepo by inject()
+    private val subOrganizationRepo: SubOrganizationRepo by inject()
     private val policiesRepo: PoliciesRepo by inject()
     private val passcodeRepo: PasscodeRepo by inject()
     private val gson: Gson by inject()
@@ -81,6 +84,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         email: String,
         purpose: Purpose,
         organizationId: String?,
+        subOrganizationId: String?,
         metadata: Map<String, Any>?,
         principal: UserPrincipal?
     ): BaseSuccessResponse {
@@ -99,7 +103,12 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             }
 
             // Clean-up old invites
-            val oldInviteRecord = passcodeRepo.getValidPasscodeCount(email, Purpose.invite, organizationId!!)
+            val oldInviteRecord = passcodeRepo.getValidPasscodeCount(
+                email,
+                Purpose.invite,
+                organizationId!!,
+                subOrganizationId
+            )
             if (oldInviteRecord > 0) {
                 passcodeRepo.deleteByEmailAndPurpose(email, purpose, organizationId)
             }
@@ -120,10 +129,11 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                 val passcode = passcodeRepo.createPasscode(passcodeRecord)
                 when (purpose) {
                     Purpose.signup -> sendSignupPasscode(email, passcode.id)
-                    Purpose.reset -> sendResetPassword(email, organizationId, passcode.id)
+                    Purpose.reset -> sendResetPassword(email, organizationId, subOrganizationId, passcode.id)
                     Purpose.invite -> sendInviteUserPasscode(
                         email,
                         organizationId!!,
+                        subOrganizationId,
                         passcode.id,
                         principal ?: throw AuthorizationException("User is not authorized")
                     )
@@ -140,7 +150,8 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         passcode: String,
         email: String,
         purpose: Purpose,
-        organizationId: String? = null
+        organizationId: String? = null,
+        subOrganizationId: String? = null
     ): String {
         val link = URIBuilder()
             .setScheme("https")
@@ -157,6 +168,10 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
 
         organizationId?.let {
             link.setParameter("organizationId", it)
+        }
+
+        subOrganizationId?.let {
+            link.setParameter("subOrganizationId", it)
         }
 
         return link.build().toString()
@@ -186,8 +201,13 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return true
     }
 
-    private suspend fun sendResetPassword(email: String, organizationId: String?, passcode: String): Boolean {
-        val user = usersService.getUserByEmail(organizationId, email)
+    private suspend fun sendResetPassword(
+        email: String,
+        organizationId: String?,
+        subOrganizationId: String?,
+        passcode: String
+    ): Boolean {
+        val user = usersService.getUserByEmail(organizationId, subOrganizationId, email)
         if (!user.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
@@ -203,28 +223,39 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return true
     }
 
+    @Suppress("ThrowsCount")
     private suspend fun sendInviteUserPasscode(
         email: String,
         orgId: String,
+        subOrganizationId: String?,
         passcode: String,
         principal: UserPrincipal
     ): Boolean {
         try {
-            usersService.getUserByEmail(null, email)
-            throw EntityAlreadyExistsException("User with email $email already exists")
+            if (subOrganizationId != null) {
+                usersService.getUserByEmail(orgId, subOrganizationId, email)
+                throw EntityAlreadyExistsException("User with email $email already exists in org $orgId")
+            } else {
+                usersService.getUserByEmail(null, null, email)
+                throw EntityAlreadyExistsException("User with email $email already exists")
+            }
         } catch (e: EntityNotFoundException) {
             logger.info { "User with email $email does not exist" }
         }
-        val link = createPasscodeLink(passcode, email, Purpose.invite, orgId)
-
+        val link = createPasscodeLink(passcode, email, Purpose.invite, orgId, subOrganizationId)
         val user = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
         if (!user.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
         val organization =
             organizationRepo.findById(orgId) ?: throw EntityNotFoundException("Organization id - $orgId not found")
+        subOrganizationId?.let {
+            subOrganizationRepo.fetchById(orgId, it)
+                ?: throw EntityNotFoundException("Sub organization id - $subOrganizationId not found")
+        }
+
         val nameOfUser = user.name ?: user.preferredUsername ?: user.email
-        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name)
+        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name, subOrganizationId)
         val emailRequest = SendTemplatedEmailRequest.builder()
             .source(appConfig.app.senderEmailAddress)
             .template(appConfig.app.inviteUserEmailTemplate)
@@ -237,11 +268,13 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
 
     override suspend fun resendInvitePasscode(
         orgId: String,
+        subOrgName: String?,
         email: String,
         principal: UserPrincipal
     ): Boolean {
         val record = passcodeRepo.getValidPasscodeByEmail(
             organizationId = orgId,
+            subOrganizationName = subOrgName,
             purpose = Purpose.invite,
             email = email
         ) ?: throw EntityNotFoundException("No invite email found for $email")
@@ -254,7 +287,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val organization =
             organizationRepo.findById(orgId) ?: throw EntityNotFoundException("Organization id - $orgId not found")
         val nameOfUser = invitingUser.name ?: invitingUser.preferredUsername ?: invitingUser.email
-        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name)
+        val templateData = InviteUserTemplateData(link, nameOfUser, organization.name, subOrgName)
         val emailRequest = SendTemplatedEmailRequest.builder()
             .source(appConfig.app.senderEmailAddress)
             .template(appConfig.app.inviteUserEmailTemplate)
@@ -267,10 +300,11 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
 
     override suspend fun listOrgPasscodes(
         organizationId: String,
+        subOrganizationId: String?,
         purpose: Purpose,
         paginationContext: PaginationContext
     ): PasscodePaginatedResponse {
-        val passcodes = passcodeRepo.listPasscodes(organizationId, purpose, paginationContext)
+        val passcodes = passcodeRepo.listPasscodes(organizationId, subOrganizationId, purpose, paginationContext)
 
         val newContext = PaginationContext.from(passcodes.lastOrNull()?.id, paginationContext)
         return PasscodePaginatedResponse(
@@ -286,16 +320,18 @@ interface PasscodeService {
         email: String,
         purpose: Purpose,
         organizationId: String?,
+        subOrganizationId: String?,
         metadata: Map<String, Any>?,
         principal: UserPrincipal?
     ): BaseSuccessResponse
 
     suspend fun listOrgPasscodes(
         organizationId: String,
+        subOrganizationId: String?,
         purpose: Purpose,
         paginationContext: PaginationContext
     ): PasscodePaginatedResponse
-    suspend fun resendInvitePasscode(orgId: String, email: String, principal: UserPrincipal): Boolean
+    suspend fun resendInvitePasscode(orgId: String, subOrgId: String?, email: String, principal: UserPrincipal): Boolean
     suspend fun encryptMetadata(metadata: Map<String, Any>): String
     suspend fun decryptMetadata(metadata: String): Map<String, Any>
 }

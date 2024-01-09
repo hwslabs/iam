@@ -1,5 +1,7 @@
 .gradle
 build/
+.SpaceVim.d/
+.vscode/
 
 # Ignore Gradle GUI config
 gradle-app.setting

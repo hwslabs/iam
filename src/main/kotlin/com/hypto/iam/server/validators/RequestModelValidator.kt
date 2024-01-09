@@ -3,6 +3,7 @@ package com.hypto.iam.server.validators
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.Constants.Companion.MAX_POLICY_ASSOCIATIONS_PER_REQUEST
 import com.hypto.iam.server.Constants.Companion.MAX_POLICY_STATEMENTS
+import com.hypto.iam.server.Constants.Companion.MAX_SUB_ORG_LENGTH
 import com.hypto.iam.server.Constants.Companion.MIN_POLICY_STATEMENTS
 import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.extensions.TimeNature
@@ -17,6 +18,7 @@ import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
+import com.hypto.iam.server.models.CreateSubOrganizationRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
@@ -131,6 +133,11 @@ fun PolicyAssociationRequest.validate(): PolicyAssociationRequest {
 
 fun CreateUserRequest.validate(): CreateUserRequest {
     return createUserRequestValidation.validateAndThrowOnFailure(this)
+}
+
+fun CreateSubOrganizationRequest.validate(): CreateSubOrganizationRequest {
+    // TODO: Add validation for sub organization
+    return createSubOrganizationRequest.validateAndThrowOnFailure(this)
 }
 
 fun UpdateUserRequest.validate(): UpdateUserRequest {
@@ -406,11 +413,10 @@ val createUserRequestValidation = Validation<CreateUserRequest> {
             )
     }
 
-    addConstraint("Email and password is not required for Users without loginAccess") {
+    addConstraint("Password is not required for Users without loginAccess") {
         return@addConstraint (
             (
-                !(it.loginAccess ?: false) && it.email.isNullOrEmpty() &&
-                    it.password.isNullOrEmpty()
+                !(it.loginAccess ?: false) && it.password.isNullOrEmpty()
                 ) || (it.loginAccess == true)
             )
     }
@@ -441,6 +447,17 @@ val updateUserRequestValidation = Validation {
     }
     UpdateUserRequest::phone ifPresent {
         run(phoneNumberCheck)
+    }
+}
+
+val createSubOrganizationRequest = Validation {
+    CreateSubOrganizationRequest::name required {
+        maxLength(MAX_SUB_ORG_LENGTH) hint "Maximum length supported for" +
+            "name is $MAX_SUB_ORG_LENGTH characters"
+        noEndSpaces()
+    }
+    CreateSubOrganizationRequest::description ifPresent {
+        run(descriptionCheck)
     }
 }
 

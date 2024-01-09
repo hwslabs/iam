@@ -1,5 +1,6 @@
 package com.hypto.iam.server.security
 
+import com.hypto.iam.server.extensions.RouteOption
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
@@ -157,15 +158,28 @@ private fun Route.authorizedRoute(
 fun getResourceHrnFunc(
     resourceNameIndex: Int,
     resourceInstanceIndex: Int,
-    organizationIdIndex: Int
+    organizationIdIndex: Int,
+    subOrganizationIdIndex: Int? = null
 ): (ApplicationRequest) -> ResourceHrn {
     return { request ->
         val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
         ResourceHrn(
             pathSegments[organizationIdIndex],
-            null,
+            subOrganizationIdIndex?.let { pathSegments[it] },
             IamResources.resourceMap[pathSegments[resourceNameIndex]]!!,
             pathSegments[resourceInstanceIndex]
+        )
+    }
+}
+
+fun getResourceHrnFunc(templateInput: RouteOption): (ApplicationRequest) -> ResourceHrn {
+    return { request ->
+        val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
+        ResourceHrn(
+            pathSegments[templateInput.organizationIdIndex],
+            templateInput.subOrganizationNameIndex?.let { pathSegments[it] },
+            IamResources.resourceMap[pathSegments[templateInput.resourceNameIndex]]!!,
+            pathSegments[templateInput.resourceInstanceIndex]
         )
     }
 }

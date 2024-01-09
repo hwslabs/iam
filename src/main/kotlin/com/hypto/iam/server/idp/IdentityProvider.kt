@@ -60,6 +60,8 @@ data class User(
     val email: String,
     val loginAccess: Boolean,
     val isEnabled: Boolean,
+    val organizationId: String,
+    val subOrganizationId: String?,
     val createdBy: String,
     val verified: Boolean,
     val createdAt: String
@@ -87,6 +89,7 @@ data class AccessTokenCredentials(
 
 data class RequestContext(
     val organizationId: String,
+    val subOrganizationName: String?,
     val requestedPrincipal: String,
     val verified: Boolean
 )

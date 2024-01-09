@@ -467,7 +467,7 @@ tasks.named('generateJooq').configure {
     allInputsDeclared = true
 }
 
-compileKotlin.dependsOn clean, tasks.named("detekt"), ktlintFormat, generateJooq, generateOpenAPIModels
+compileKotlin.dependsOn clean, ktlintFormat, tasks.named("detekt"), generateJooq, generateOpenAPIModels
 
 gradle.taskGraph.whenReady { graph ->
   def shadowJarEnabled = gradle.startParameter.taskRequests
