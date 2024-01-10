@@ -37,11 +37,10 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
                 )
             val oAuthUserPrincipal = authProvider.getProfileDetails(TokenCredential(token, TokenType.OAUTH))
             val user =
-                userRepo.findByEmail(oAuthUserPrincipal.email) ?: throw AuthenticationException(
-                    "User has not signed up yet",
-                )
-            if (principal.hrnStr != user.hrn) {
-                throw AuthenticationException("Can't add auth method for another user")
+                userRepo.findByEmail(oAuthUserPrincipal.email)
+                    ?: throw AuthenticationException("User not found")
+            require(principal.hrnStr == user.hrn) {
+                "Can't add auth method for another user"
             }
             val userAuth = userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, issuer)
             if (userAuth == null) {
@@ -50,8 +49,6 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
                     oAuthUserPrincipal.issuer,
                     oAuthUserPrincipal.metadata?.let { AuthMetadata.toJsonB(it) },
                 )
-            } else {
-                throw AuthenticationException("User already has this auth method")
             }
         }
         return BaseSuccessResponse(true)

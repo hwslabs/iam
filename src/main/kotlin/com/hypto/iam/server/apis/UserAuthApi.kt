@@ -40,13 +40,13 @@ fun Route.userAuthApi() {
     }
 
     withPermission(
-        "createUserAuth",
+        "addUserAuthMethod",
         getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/users/{id}/auth_methods") {
             val organizationId = call.parameters["organization_id"]!!
             val userId = call.parameters["id"]!!
-            val issuer = call.request.headers["x-issuer"] ?: throw BadRequestException("x-issuer header is missing")
+            val issuer = call.request.headers["x-issuer"] ?: throw BadRequestException("Required headers are missing")
             val request = call.receive<AddUserAuthMethodRequest>().validate()
             val token = request.token ?: throw BadRequestException("token is missing")
             val principal = context.principal<UserPrincipal>()!!

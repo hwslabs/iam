@@ -16,7 +16,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 
-object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
+object MicrosoftAuthProvider : BaseAuthProvider(), KoinComponent {
     private const val PROFILE_URL = "https://graph.microsoft.com/v1.0/me"
 
     val gson: Gson by inject()

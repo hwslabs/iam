@@ -955,12 +955,16 @@ paths:
     post:
       tags:
         - User Authorization Methods Management
-      summary: Add authorization methods to a user entity associated with the organization
-      description: Add authorization methods to a User
-      operationId: addUserAuthMethods
+      summary: Add authorization method to a user
+      description: Add authorization method to a user
+      operationId: addUserAuthMethod
       parameters:
         - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
+        - in: header
+          name: x-issuer
+          schema:
+            type: string
       requestBody:
         $ref: '#/components/requestBodies/AddUserAuthMethodRequest'
       responses:

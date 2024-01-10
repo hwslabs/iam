@@ -331,16 +331,10 @@ data class AuthMetadata(
     val id: String? = null,
 ) {
     companion object {
-        fun from(json: String): AuthMetadata {
-            return gson.fromJson(json, AuthMetadata::class.java)
-        }
+        fun from(json: String): AuthMetadata = gson.fromJson(json, AuthMetadata::class.java)
 
-        fun from(json: JSONB): AuthMetadata {
-            return gson.fromJson(json.data(), AuthMetadata::class.java)
-        }
+        fun from(json: JSONB): AuthMetadata = gson.fromJson(json.data(), AuthMetadata::class.java)
 
-        fun toJsonB(authMetadata: AuthMetadata): JSONB {
-            return JSONB.valueOf(gson.toJson(authMetadata))
-        }
+        fun toJsonB(authMetadata: AuthMetadata) = JSONB.valueOf(gson.toJson(authMetadata))
     }
 }

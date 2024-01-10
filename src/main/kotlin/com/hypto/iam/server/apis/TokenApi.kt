@@ -86,11 +86,7 @@ suspend fun generateTokenOauth(
                     principal.metadata?.let { AuthMetadata.toJsonB(it) },
                 )
         }
-        if (userAuth != null) {
-            authProvider.authenticate(principal, userAuth)
-        } else {
-            throw AuthenticationException("User has not signed up yet")
-        }
+        userAuth?.let { authProvider.authenticate(principal, it) } ?: throw AuthenticationException("User has not signed up yet")
     }
 
     val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
