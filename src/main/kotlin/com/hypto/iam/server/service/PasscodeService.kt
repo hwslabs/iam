@@ -164,7 +164,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         purpose: Purpose,
         userHrn: String? = null,
         organizationId: String? = null,
-        subOrganizationId: String? = null,
+        subOrganizationName: String? = null,
     ): String {
         val link =
             URIBuilder()
@@ -188,7 +188,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             link.setParameter("organizationId", it)
         }
 
-        subOrganizationId?.let {
+        subOrganizationName?.let {
             link.setParameter("subOrganizationId", it)
         }
 
@@ -199,7 +199,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         email: String,
         passcode: String,
     ): Boolean {
-        val link = createPasscodeLink(passcode, email, Purpose.signup)
+        val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.signup)
         val templateData = SignupTemplateData(link)
         val emailRequest =
             SendTemplatedEmailRequest.builder()
@@ -233,7 +233,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         if (!user.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
-        val link = createPasscodeLink(passcode, email, Purpose.reset, user.organizationId)
+        val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.reset, organizationId = user.organizationId)
         val templateData = ResetPasswordTemplateData(link, user.name)
         val emailRequest =
             SendTemplatedEmailRequest.builder()
@@ -270,7 +270,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         } catch (e: EntityNotFoundException) {
             logger.info { "User with email $email does not exist" }
         }
-        val link = createPasscodeLink(passcode, email, Purpose.invite, userHrn, orgId, subOrganizationName)
+        val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.invite, userHrn = userHrn, organizationId = orgId, subOrganizationName = subOrganizationName)
         val user = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
         if (!user.loginAccess) {
             throw AuthorizationException("User token does not have login access")
@@ -309,7 +309,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                 purpose = Purpose.invite,
                 email = email,
             ) ?: throw EntityNotFoundException("No invite email found for $email")
-        val link = createPasscodeLink(record.id, email, Purpose.invite, orgId)
+        val link = createPasscodeLink(passcode = record.id, email = email, purpose = Purpose.invite, organizationId = orgId)
 
         val invitingUser = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
         if (!invitingUser.loginAccess) {
