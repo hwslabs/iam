@@ -12,6 +12,7 @@ import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
+import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import org.koin.core.component.KoinComponent
@@ -27,6 +28,7 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
         userId: String,
         issuer: String,
         token: String,
+        principal: UserPrincipal,
     ): BaseSuccessResponse {
         if (issuer != TokenServiceImpl.ISSUER) {
             val authProvider =
@@ -38,8 +40,11 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
                 userRepo.findByEmail(oAuthUserPrincipal.email) ?: throw AuthenticationException(
                     "User has not signed up yet",
                 )
+            if (principal.hrnStr != user.hrn) {
+                throw AuthenticationException("Can't add auth method for another user")
+            }
             val userAuth = userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, issuer)
-            if (userAuth != null) {
+            if (userAuth == null) {
                 userAuthRepo.create(
                     user.hrn,
                     oAuthUserPrincipal.issuer,
@@ -77,6 +82,7 @@ interface UserAuthService {
         userId: String,
         issuer: String,
         token: String,
+        principal: UserPrincipal,
     ): BaseSuccessResponse
 
     suspend fun listUserAuth(

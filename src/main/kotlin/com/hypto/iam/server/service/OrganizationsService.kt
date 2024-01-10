@@ -1,6 +1,7 @@
 package com.hypto.iam.server.service
 
 import com.google.gson.Gson
+import com.hypto.iam.server.authProviders.AuthProviderRegistry
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.CredentialsRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
@@ -20,11 +21,13 @@ import com.hypto.iam.server.models.Organization
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.AuthMetadata
+import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.txman.TxMan
+import io.ktor.server.plugins.BadRequestException
 import io.micrometer.core.annotation.Timed
 import mu.KotlinLogging
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -152,6 +155,11 @@ class OrganizationsServiceImpl : KoinComponent, OrganizationsService {
         issuer: String,
         metadata: AuthMetadata?,
     ): Pair<Organization, TokenResponse> {
+        val authProvider = AuthProviderRegistry.getProvider(issuer) ?: throw BadRequestException("Invalid issuer. Issuer does not exist.")
+        if (!authProvider.isVerifiedProvider) {
+            throw AuthenticationException("Authentication provider is not a verified. Try using a different provider.")
+        }
+
         val organizationId = idGenerator.organizationId()
         val username = idGenerator.username()
         val logTimestamp = LocalDateTime.now()
