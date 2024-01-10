@@ -3,7 +3,6 @@ package com.hypto.iam.server.db.repositories
 import com.hypto.iam.server.db.Tables.USER_AUTH
 import com.hypto.iam.server.db.tables.pojos.UserAuth
 import com.hypto.iam.server.db.tables.records.UserAuthRecord
-import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.utils.Hrn
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -69,24 +68,5 @@ object UserAuthRepo : BaseRepo<UserAuthRecord, UserAuth, UserAuthPk>() {
             .where(USER_AUTH.USER_HRN.eq(userHrn))
             .execute()
         return count > 0
-    }
-
-    suspend fun alreadyExists(metadata: AuthMetadata): Boolean {
-        val count = ctx("userAuth.alreadyExists")
-            .selectCount()
-            .from(USER_AUTH)
-            .where(USER_AUTH.AUTH_METADATA.eq(AuthMetadata.toJsonB(metadata)))
-            .fetchOne(0, Int::class.java)
-        return if (count != null) {
-            count > 0
-        } else {
-            false
-        }
-    }
-
-    fun updateAuthMetadata(userAuth: UserAuthRecord, authMetadata: AuthMetadata): UserAuthRecord {
-        userAuth.authMetadata = AuthMetadata.toJsonB(authMetadata)
-        userAuth.update()
-        return userAuth
     }
 }

@@ -2,9 +2,9 @@ package com.hypto.iam.server.authProviders
 
 import com.google.gson.Gson
 import com.hypto.iam.server.ROOT_ORG
+import com.hypto.iam.server.db.tables.records.UserAuthRecord
 import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.logger
-import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenCredential
@@ -21,6 +21,7 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
 
     val gson: Gson by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
+    override val isVerifiedProvider: Boolean = true
 
     override fun getProviderName() = "google"
 
@@ -49,7 +50,7 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
         )
     }
 
-    override fun authenticate(principalMetadata: AuthMetadata?, authMetadata: AuthMetadata?) {
+    override suspend fun authenticate(principal: OAuthUserPrincipal, userAuthRecord: UserAuthRecord) {
         return
     }
 }

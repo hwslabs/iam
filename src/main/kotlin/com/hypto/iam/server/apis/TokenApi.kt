@@ -13,6 +13,7 @@ import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
+import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
@@ -29,6 +30,7 @@ import io.ktor.server.routing.post
 
 private val tokenService: TokenService = getKoinInstance()
 private val gson: Gson = getKoinInstance()
+private val userRepo = getKoinInstance<UserRepo>()
 private val userAuthRepo = getKoinInstance<UserAuthRepo>()
 
 @Suppress("ThrowsCount")
@@ -60,26 +62,25 @@ suspend fun generateToken(call: ApplicationCall, context: ApplicationCall) {
 suspend fun generateTokenOauth(call: ApplicationCall, context: ApplicationCall) {
     val principal = context.principal<OAuthUserPrincipal>()!!
     val responseContentType = context.request.accept()
-    val user = UserRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
+    val user = userRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
+    var userAuth = userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer)
 
-    if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer) == null) {
-        val alreadyExists = principal.metadata?.let { userAuthRepo.alreadyExists(it) }
-        if (alreadyExists == true) throw AuthenticationException("Already signed up with another account")
-        val metadata = principal.metadata?.let { AuthMetadata.toJsonB(it) }
-        userAuthRepo.create(user.hrn, principal.issuer, metadata)
-    }
-    val userAuth = UserAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer)
-        ?: throw AuthenticationException("User has not signed up yet")
-
-    if (principal.metadata != null && userAuth.authMetadata == null) {
-        userAuthRepo.updateAuthMetadata(userAuth, principal.metadata)
-    }
-
-    val authProvider = AuthProviderRegistry.getProvider(principal.issuer) ?: throw AuthenticationException(
-        "Invalid issuer"
-    )
-    userAuth.authMetadata?.let {
-        authProvider.authenticate(principal.metadata, AuthMetadata.from(it))
+    if (principal.issuer != TokenServiceImpl.ISSUER) {
+        val authProvider = AuthProviderRegistry.getProvider(principal.issuer) ?: throw AuthenticationException(
+            "Invalid issuer"
+        )
+        if (authProvider.isVerifiedProvider && userAuth == null) {
+            userAuth = userAuthRepo.create(
+                user.hrn,
+                principal.issuer,
+                principal.metadata?.let { AuthMetadata.toJsonB(it) }
+            )
+        }
+        if (userAuth != null) {
+            authProvider.authenticate(principal, userAuth)
+        } else {
+            throw AuthenticationException("User has not signed up yet")
+        }
     }
 
     val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))

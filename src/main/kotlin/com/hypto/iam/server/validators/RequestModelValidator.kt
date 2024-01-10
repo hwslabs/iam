@@ -11,6 +11,7 @@ import com.hypto.iam.server.extensions.hrn
 import com.hypto.iam.server.extensions.noEndSpaces
 import com.hypto.iam.server.extensions.oneOrMoreOf
 import com.hypto.iam.server.extensions.validateAndThrowOnFailure
+import com.hypto.iam.server.models.AddUserAuthMethodRequest
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
@@ -57,6 +58,13 @@ fun CreateOrganizationRequest.validate(): CreateOrganizationRequest {
  */
 fun UpdateOrganizationRequest.validate(): UpdateOrganizationRequest {
     return updateOrganizationRequestValidation.validateAndThrowOnFailure(this)
+}
+
+/**
+ * Extension function to validate AddUserAuthMethodRequest input from client
+ */
+fun AddUserAuthMethodRequest.validate(): AddUserAuthMethodRequest {
+    return addUserAuthMethodRequestValidation.validateAndThrowOnFailure(this)
 }
 
 /**
@@ -318,6 +326,10 @@ val updateOrganizationRequestValidation = Validation {
     UpdateOrganizationRequest::description ifPresent {
         run(descriptionCheck)
     }
+}
+
+val addUserAuthMethodRequestValidation = Validation {
+    AddUserAuthMethodRequest::token required {}
 }
 
 val createCredentialRequestValidation = Validation {
