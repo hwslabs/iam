@@ -289,20 +289,37 @@ class UsersServiceImpl : KoinComponent, UsersService {
             throw BadRequestException("User - ${userHrn.resourceInstance} does not have login access")
         }
 
-        val identityGroup =
-            if (org.metadata != null) {
-                gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
-            } else {
+        if (org.metadata != null) {
+            val identityGroup = gson.fromJson(org.metadata.data(), IdentityGroup::class.java)
+            identityProvider.setUserPassword(identityGroup, user.username, password)
+        } else {
+            txMan.wrap {
                 organizationRepo.update(
                     organizationId,
                     null,
                     null,
                     appConfig.cognito,
                 )
-                appConfig.cognito
+                createUserInIdentityProvider(
+                    user.username,
+                    user.preferredUsername,
+                    user.name,
+                    user.email,
+                    user.phone,
+                    password,
+                    organizationId,
+                    subOrganizationName,
+                    user.createdBy,
+                    user.verified,
+                )
+                userAuthRepo.create(
+                    user.hrn,
+                    TokenServiceImpl.ISSUER,
+                    authMetadata = null,
+                )
             }
+        }
 
-        identityProvider.setUserPassword(identityGroup, user.username, password)
         passcodeRepo.deleteByEmailAndPurpose(user.email!!, VerifyEmailRequest.Purpose.reset)
         return BaseSuccessResponse(true)
     }
