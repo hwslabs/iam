@@ -189,7 +189,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         }
 
         subOrganizationName?.let {
-            link.setParameter("subOrganizationId", it)
+            link.setParameter("subOrganizationName", it)
         }
 
         return link.build().toString()
