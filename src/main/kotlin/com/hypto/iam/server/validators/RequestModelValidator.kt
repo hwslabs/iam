@@ -363,6 +363,7 @@ val updateOrganizationRequestValidation =
 val addUserAuthMethodRequestValidation =
     Validation {
         AddUserAuthMethodRequest::token required {}
+        AddUserAuthMethodRequest::issuer required {}
     }
 
 val createCredentialRequestValidation =

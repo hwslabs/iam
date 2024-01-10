@@ -46,9 +46,9 @@ fun Route.userAuthApi() {
         post("/organizations/{organization_id}/users/{id}/auth_methods") {
             val organizationId = call.parameters["organization_id"]!!
             val userId = call.parameters["id"]!!
-            val issuer = call.request.headers["x-issuer"] ?: throw BadRequestException("Required headers are missing")
             val request = call.receive<AddUserAuthMethodRequest>().validate()
             val token = request.token ?: throw BadRequestException("token is missing")
+            val issuer = request.issuer ?: throw BadRequestException("issuer is missing")
             val principal = context.principal<UserPrincipal>()!!
             val response = userAuthService.createUserAuth(organizationId, userId, issuer, token, principal)
             call.respondText(

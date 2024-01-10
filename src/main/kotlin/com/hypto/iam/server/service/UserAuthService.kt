@@ -15,6 +15,7 @@ import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
+import io.ktor.server.plugins.BadRequestException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -30,27 +31,22 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
         token: String,
         principal: UserPrincipal,
     ): BaseSuccessResponse {
-        if (issuer != TokenServiceImpl.ISSUER) {
-            val authProvider =
-                AuthProviderRegistry.getProvider(issuer) ?: throw AuthenticationException(
-                    "Invalid issuer",
-                )
-            val oAuthUserPrincipal = authProvider.getProfileDetails(TokenCredential(token, TokenType.OAUTH))
-            val user =
-                userRepo.findByEmail(oAuthUserPrincipal.email)
-                    ?: throw AuthenticationException("User not found")
-            require(principal.hrnStr == user.hrn) {
-                "Can't add auth method for another user"
-            }
-            val userAuth = userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, issuer)
-            if (userAuth == null) {
-                userAuthRepo.create(
-                    user.hrn,
-                    oAuthUserPrincipal.issuer,
-                    oAuthUserPrincipal.metadata?.let { AuthMetadata.toJsonB(it) },
-                )
-            }
+        val authProvider =
+            AuthProviderRegistry.getProvider(issuer) ?: throw BadRequestException(
+                "Invalid issuer",
+            )
+        val oAuthUserPrincipal = authProvider.getProfileDetails(TokenCredential(token, TokenType.OAUTH))
+        val user =
+            userRepo.findByEmail(oAuthUserPrincipal.email)
+                ?: throw BadRequestException("User not found")
+        require(principal.hrnStr == user.hrn) {
+            "Can't add auth method for another user"
         }
+        userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, issuer) ?: userAuthRepo.create(
+            user.hrn,
+            issuer,
+            oAuthUserPrincipal.metadata?.let { AuthMetadata.toJsonB(it) },
+        )
         return BaseSuccessResponse(true)
     }
 
