@@ -952,6 +952,32 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
         default:
           $ref: '#/components/responses/ErrorResponse'
+    post:
+      tags:
+        - User Authorization Methods Management
+      summary: Add authorization methods to a user entity associated with the organization
+      description: Add authorization methods to a User
+      operationId: addUserAuthMethods
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/AddUserAuthMethodRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
 
   # credential
   /organizations/{organization_id}/users/{user_name}/credentials:
@@ -2152,6 +2178,17 @@ components:
             ResetPasswordRequest:
               $ref: '#/components/examples/ResetPasswordRequest'
 
+    AddUserAuthMethodRequest:
+      description: Payload to add user auth method
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AddUserAuthMethodRequest'
+          examples:
+            AddUserAuthMethodRequest:
+              $ref: '#/components/examples/AddUserAuthMethodRequest'
+
     CreateCredentialRequest:
       description: Payload to create credential
       required: true
@@ -2795,6 +2832,11 @@ components:
         email: bob@acme.com
         password: <new password>
 
+    AddUserAuthMethodRequest:
+      summary: sample add user auth methods request
+      value:
+        token: <JWT token or Access token provided by the auth provider>
+
     CreateCredentialRequest:
       summary: sample create credential request
       value:
@@ -3359,6 +3401,14 @@ components:
         password:
           type: string
           maxLength: 50
+
+    AddUserAuthMethodRequest:
+      description: Payload to add user auth methods
+      type: object
+      additionalProperties: false
+      properties:
+        token:
+          type: string
 
     CreateCredentialRequest:
       description: Payload to create credential

@@ -49,6 +49,7 @@ fun Route.createOrganizationApi() {
                     name = oAuthUserPrincipal.name,
                     email = oAuthUserPrincipal.email,
                     issuer = oAuthUserPrincipal.issuer,
+                    metadata = oAuthUserPrincipal.metadata,
                 )
             call.respondText(
                 text = gson.toJson(CreateOrganizationResponse(organization, tokenResponse.token)),

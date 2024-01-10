@@ -2,8 +2,10 @@ package com.hypto.iam.server.authProviders
 
 import com.google.gson.Gson
 import com.hypto.iam.server.ROOT_ORG
+import com.hypto.iam.server.db.tables.records.UserAuthRecord
 import com.hypto.iam.server.exceptions.UnknownException
 import com.hypto.iam.server.logger
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenCredential
@@ -19,6 +21,7 @@ object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
 
     val gson: Gson by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
+    override val isVerifiedProvider: Boolean = false
 
     override fun getProviderName() = "microsoft"
 
@@ -49,11 +52,31 @@ object MicrosoftAuthProvider : BaseAuthProvider, KoinComponent {
             microsoftUser.displayName,
             "",
             getProviderName(),
+            AuthMetadata(
+                id = microsoftUser.id,
+            ),
         )
+    }
+
+    override suspend fun authenticate(
+        principal: OAuthUserPrincipal,
+        userAuthRecord: UserAuthRecord,
+    ) {
+        val principalMetadata = principal.metadata
+        val authMetadata = AuthMetadata.from(userAuthRecord.authMetadata)
+
+        // Reason to use id instead of email is because email can be changed in Microsoft profile
+        // Blog: https://0x8.in/blog/2021/04/30/mip-oid-sub/
+        if (principalMetadata?.id == null || authMetadata.id == null || authMetadata.id != principalMetadata.id) {
+            throw AuthenticationException("User is not authenticated with Microsoft")
+        }
+
+        return
     }
 }
 
 data class MicrosoftUser(
+    val id: String,
     val mail: String? = null,
     val displayName: String,
 )

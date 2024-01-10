@@ -27,6 +27,7 @@ import io.ktor.server.auth.UnauthorizedResponse
 import io.ktor.server.request.ApplicationRequest
 import io.ktor.server.response.respond
 import mu.KotlinLogging
+import org.jooq.JSONB
 import java.util.Base64
 
 private val logger = KotlinLogging.logger { }
@@ -85,6 +86,7 @@ data class OAuthUserPrincipal(
     val name: String,
     val companyName: String,
     override val issuer: String,
+    val metadata: AuthMetadata? = null,
 ) : IamPrincipal
 
 class TokenAuthenticationProvider internal constructor(
@@ -321,6 +323,24 @@ fun bearerAuthValidation(
             }
         } catch (e: Exception) {
             null
+        }
+    }
+}
+
+data class AuthMetadata(
+    val id: String? = null,
+) {
+    companion object {
+        fun from(json: String): AuthMetadata {
+            return gson.fromJson(json, AuthMetadata::class.java)
+        }
+
+        fun from(json: JSONB): AuthMetadata {
+            return gson.fromJson(json.data(), AuthMetadata::class.java)
+        }
+
+        fun toJsonB(authMetadata: AuthMetadata): JSONB {
+            return JSONB.valueOf(gson.toJson(authMetadata))
         }
     }
 }
