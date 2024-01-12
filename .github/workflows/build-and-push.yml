@@ -55,7 +55,7 @@ jobs:
           distribution: 'temurin'
       - name: Run Postgres
         run: |
-          docker-compose -f docker-compose.yml up -d pg
+          docker compose -f docker-compose.yml up -d pg
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
