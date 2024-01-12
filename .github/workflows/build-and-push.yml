@@ -5,24 +5,63 @@ on:
   push:
     branches: [ "main" ]
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.STAGING_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.STAGING_AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.STAGING_AWS_REGION }}
+
 jobs:
-  build:
+  start-runner:
+    name: Start self-hosted EC2 runner
     runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK 11
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.RUNNER_MANAGER_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.RUNNER_MANAGER_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.RUNNER_MANAGER_AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: TogaiHQ/ec2-github-runner@main
+        with:
+          mode: start
+          github-token: ${{ secrets.RUNNER_MANAGER_GH_PERSONAL_ACCESS_TOKEN }}
+          ec2-image-id: ami-0db2753029bcf5661 # AMI architecure is arm64
+          ec2-instance-type: 't4g.large'
+          subnet-id: ${{ secrets.RUNNER_MANAGER_SUBNET_ID }}
+          security-group-id: ${{ secrets.RUNNER_MANAGER_SECURITY_GROUP_ID }}
+          runner-home-dir: /home/ubuntu/actions-runner
+          assign-public-ip-to-instance: "true"
+          is-spot-instance: "false"
+          key-name: github-runner-keypair
+          aws-resource-tags: '[{"Key":"Feature", "Value":"Continuous Integration"},{"Key":"Repository", "Value":"${{ github.repository }}"}]'
+
+
+  build:
+    needs: start-runner # required to start the main job when the runner is ready
+    runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
       - name: Run Postgres
         run: |
-          docker-compose -f docker-compose.yml up -d pg
+          docker compose -f docker-compose.yml up -d pg
       - name: Build with Gradle
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: '8.5'
           arguments: build
+
       - name: Upload JaCoCo coverage report as a workflow artifact
         uses: actions/upload-artifact@v3
         with:
@@ -63,6 +102,29 @@ jobs:
           docker tag $REGISTRY/$repository:$IMAGE_TAG $REGISTRY/$repository:latest
           docker push $REGISTRY/$repository:$IMAGE_TAG
           docker push $REGISTRY/$repository:latest
+
+  stop-runner:
+    name: Stop self-hosted EC2 runner
+    needs:
+      - start-runner # required to get output from the start-runner job
+      - build # required to wait when the main job is done
+    runs-on: ubuntu-latest
+    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.RUNNER_MANAGER_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.RUNNER_MANAGER_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.RUNNER_MANAGER_AWS_REGION }}
+
+      - name: Stop EC2 runner
+        uses: TogaiHQ/ec2-github-runner@main
+        with:
+          mode: stop
+          github-token: ${{ secrets.RUNNER_MANAGER_GH_PERSONAL_ACCESS_TOKEN }}
+          label: ${{ needs.start-runner.outputs.label }}
+          ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
 
   commit-badge:
     runs-on: ubuntu-latest
