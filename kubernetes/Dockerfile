@@ -1,4 +1,4 @@
-FROM amazoncorretto:11.0.20-alpine
+FROM amazoncorretto:17.0.9-alpine
 
 RUN apk add --no-cache bash openssl
 
