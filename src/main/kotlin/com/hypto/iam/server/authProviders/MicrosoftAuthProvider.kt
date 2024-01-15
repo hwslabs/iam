@@ -16,14 +16,11 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 
-object MicrosoftAuthProvider : BaseAuthProvider(), KoinComponent {
+object MicrosoftAuthProvider : BaseAuthProvider("microsoft", false), KoinComponent {
     private const val PROFILE_URL = "https://graph.microsoft.com/v1.0/me"
 
     val gson: Gson by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
-    override val isVerifiedProvider: Boolean = false
-
-    override fun getProviderName() = "microsoft"
 
     override fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal {
         val requestBuilder =
@@ -51,7 +48,7 @@ object MicrosoftAuthProvider : BaseAuthProvider(), KoinComponent {
             microsoftUser.mail,
             microsoftUser.displayName,
             "",
-            getProviderName(),
+            this.providerName,
             AuthMetadata(
                 id = microsoftUser.id,
             ),

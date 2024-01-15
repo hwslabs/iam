@@ -11,6 +11,6 @@ object AuthProviderRegistry {
     fun getProvider(providerName: String) = providerRegistry[providerName]
 
     fun registerProvider(provider: BaseAuthProvider) {
-        providerRegistry = providerRegistry.plus(provider.getProviderName() to provider)
+        providerRegistry = providerRegistry.plus(provider.providerName to provider)
     }
 }

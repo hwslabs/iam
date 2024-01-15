@@ -4,11 +4,7 @@ import com.hypto.iam.server.db.tables.records.UserAuthRecord
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenCredential
 
-abstract class BaseAuthProvider {
-    open val isVerifiedProvider: Boolean = true
-
-    abstract fun getProviderName(): String
-
+abstract class BaseAuthProvider(open val providerName: String, open val isVerifiedProvider: Boolean = true) {
     abstract fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal
 
     open suspend fun authenticate(
