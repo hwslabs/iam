@@ -2,6 +2,9 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
+import com.hypto.iam.server.ROOT_ORG
+import com.hypto.iam.server.authProviders.GoogleAuthProvider
+import com.hypto.iam.server.authProviders.MicrosoftAuthProvider
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
@@ -20,6 +23,9 @@ import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.ValidationRequest
 import com.hypto.iam.server.models.ValidationResponse
+import com.hypto.iam.server.security.OAuthUserPrincipal
+import com.hypto.iam.server.security.TokenCredential
+import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.service.MasterKeyCache
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.ActionHrn
@@ -44,6 +50,7 @@ import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -1716,5 +1723,89 @@ class TokenApiTest : AbstractContainerBaseTest() {
          * - generate delegate token - policy does not exist
          * - generate delegate token - requestor does not have delegate_policy permission
          */
+    }
+
+    @Nested
+    @DisplayName("Login with OAuth")
+    inner class LoginWithOAuth {
+        @Test
+        fun `Login with Google without adding userAuth access method - success`() {
+            testApplication {
+                // Arrange
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (createdOrganization, createdUser) = createOrganization()
+                val googleToken = "google-token"
+
+                mockkObject(GoogleAuthProvider)
+                coEvery {
+                    GoogleAuthProvider.getProfileDetails(any())
+                } coAnswers {
+                    OAuthUserPrincipal(
+                        tokenCredential = TokenCredential(googleToken, TokenType.OAUTH),
+                        companyName = createdOrganization.organization.name,
+                        name = createdUser.name ?: "",
+                        email = createdUser.email,
+                        organization = ROOT_ORG,
+                        issuer = "google",
+                    )
+                }
+
+                // Act
+                val response =
+                    client.post("/login") {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header("x-issuer", "google")
+                        header(HttpHeaders.Authorization, "Bearer $googleToken")
+                    }
+
+                // Assert
+                Assertions.assertEquals(HttpStatusCode.OK, response.status)
+                Assertions.assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType(),
+                )
+                val responseBody = gson.fromJson(response.bodyAsText(), TokenResponse::class.java)
+                Assertions.assertNotNull(responseBody.token)
+            }
+        }
+
+        @Test
+        fun `Login with Microsoft without adding userAuth access method - fail`() {
+            testApplication {
+                // Arrange
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+                val (createdOrganization, createdUser) = createOrganization()
+                val microsoftToken = "microsoft-token"
+
+                mockkObject(MicrosoftAuthProvider)
+                coEvery {
+                    MicrosoftAuthProvider.getProfileDetails(any())
+                } coAnswers {
+                    OAuthUserPrincipal(
+                        tokenCredential = TokenCredential(microsoftToken, TokenType.OAUTH),
+                        companyName = createdOrganization.organization.name,
+                        name = createdUser.name ?: "",
+                        email = createdUser.email,
+                        organization = ROOT_ORG,
+                        issuer = "microsoft",
+                    )
+                }
+
+                // Act
+                val response =
+                    client.post("/login") {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header("x-issuer", "microsoft")
+                        header(HttpHeaders.Authorization, "Bearer $microsoftToken")
+                    }
+
+                // Assert
+                Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
+            }
+        }
     }
 }

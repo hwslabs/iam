@@ -14,7 +14,6 @@ import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
-import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
@@ -73,21 +72,20 @@ suspend fun generateTokenOauth(
     val user = userRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
     var userAuth = userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer)
 
-    if (principal.issuer != TokenServiceImpl.ISSUER) {
-        val authProvider =
-            AuthProviderRegistry.getProvider(principal.issuer) ?: throw AuthenticationException(
-                "Invalid issuer",
+    val authProvider =
+        AuthProviderRegistry.getProvider(principal.issuer) ?: throw AuthenticationException(
+            "Invalid issuer",
+        )
+    if (authProvider.isVerifiedProvider && userAuth == null) {
+        userAuth =
+            userAuthRepo.create(
+                user.hrn,
+                principal.issuer,
+                principal.metadata?.let { AuthMetadata.toJsonB(it) },
             )
-        if (authProvider.isVerifiedProvider && userAuth == null) {
-            userAuth =
-                userAuthRepo.create(
-                    user.hrn,
-                    principal.issuer,
-                    principal.metadata?.let { AuthMetadata.toJsonB(it) },
-                )
-        }
-        userAuth?.let { authProvider.authenticate(principal, it) } ?: throw AuthenticationException("User has not signed up yet")
     }
+    userAuth?.let { authProvider.authenticate(principal, it) }
+        ?: throw AuthenticationException("User has not signed up yet")
 
     val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 

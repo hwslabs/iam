@@ -9,7 +9,6 @@ import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.UserAuthMethod
 import com.hypto.iam.server.models.UserAuthMethodsResponse
 import com.hypto.iam.server.security.AuthMetadata
-import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
@@ -55,7 +54,7 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
         userId: String,
     ): UserAuthMethodsResponse {
         organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+            ?: throw EntityNotFoundException("Invalid organization id")
         val userAuth =
             userAuthRepo.fetchUserAuth(
                 ResourceHrn(organizationId, "", IamResources.USER, userId),

@@ -316,7 +316,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val user = getUser(organizationId, subOrganizationName, userId)
         val cognito = appConfig.cognito
         organizationRepo.findById(organizationId)
-            ?: throw EntityNotFoundException("Invalid organization id name. Unable to create user")
+            ?: throw EntityNotFoundException("Invalid organization id")
         if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, TokenServiceImpl.ISSUER) != null) {
             throw BadRequestException("Organization already has password access")
         }
