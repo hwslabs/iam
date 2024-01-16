@@ -2,6 +2,9 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
+import com.hypto.iam.server.ROOT_ORG
+import com.hypto.iam.server.authProviders.GoogleAuthProvider
+import com.hypto.iam.server.authProviders.MicrosoftAuthProvider
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
@@ -16,6 +19,10 @@ import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
+import com.hypto.iam.server.security.AuthMetadata
+import com.hypto.iam.server.security.OAuthUserPrincipal
+import com.hypto.iam.server.security.TokenCredential
+import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.service.PasscodeService
 import com.hypto.iam.server.utils.IdGenerator
 import io.ktor.client.request.get
@@ -32,12 +39,14 @@ import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
+import io.mockk.mockkObject
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.koin.test.mock.declareMock
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -311,6 +320,97 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             assertEquals(10, responseBody.organization.id.length)
 
             deleteOrganization(orgId)
+        }
+    }
+
+    @Test
+    fun `create organization using google authorization - success`() {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            // Arrange
+            val googleToken = "test-google-token"
+            val name = "test-name"
+            val email = "test-email"
+            val companyName = "test-company"
+
+            mockkObject(GoogleAuthProvider)
+            coEvery {
+                GoogleAuthProvider.getProfileDetails(any())
+            } coAnswers {
+                OAuthUserPrincipal(
+                    tokenCredential = TokenCredential(googleToken, TokenType.OAUTH),
+                    companyName = companyName,
+                    name = name,
+                    email = email,
+                    organization = ROOT_ORG,
+                    issuer = "google",
+                )
+            }
+
+            // Act
+            val response =
+                client.post("/organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("x-issuer", "google")
+                    header(HttpHeaders.Authorization, "Bearer $googleToken")
+                }
+
+            // Assert
+            assertEquals(HttpStatusCode.Created, response.status)
+            assertEquals(
+                ContentType.Application.Json.withCharset(UTF_8),
+                response.contentType(),
+            )
+            val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
+            assertEquals(companyName, responseBody.organization.name)
+            assertEquals(name, responseBody.organization.rootUser.name)
+            assertEquals(email, responseBody.organization.rootUser.email)
+
+            // Cleanup
+            val orgId = responseBody.organization.id
+            deleteOrganization(orgId)
+        }
+    }
+
+    @Test
+    fun `create organization using microsoft authorization - fail`() {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
+            // Arrange
+            val microsoftToken = "test-microsoft-token"
+            val name = "test-name"
+            val email = "test-email"
+            val companyName = "test-company"
+
+            mockkObject(MicrosoftAuthProvider)
+            coEvery {
+                MicrosoftAuthProvider.getProfileDetails(any())
+            } coAnswers {
+                OAuthUserPrincipal(
+                    tokenCredential = TokenCredential(microsoftToken, TokenType.OAUTH),
+                    companyName = companyName,
+                    name = name,
+                    email = email,
+                    organization = ROOT_ORG,
+                    issuer = "microsoft",
+                    metadata = AuthMetadata(id = UUID.randomUUID().toString()),
+                )
+            }
+
+            // Act
+            val response =
+                client.post("/organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("x-issuer", "microsoft")
+                    header(HttpHeaders.Authorization, "Bearer $microsoftToken")
+                }
+
+            // Assert
+            assertEquals(HttpStatusCode.Unauthorized, response.status)
         }
     }
 

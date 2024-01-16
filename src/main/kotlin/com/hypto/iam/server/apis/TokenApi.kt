@@ -1,12 +1,14 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.authProviders.AuthProviderRegistry
 import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.post
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.TokenResponse
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
@@ -27,6 +29,7 @@ import io.ktor.server.routing.Route
 
 private val tokenService: TokenService = getKoinInstance()
 private val gson: Gson = getKoinInstance()
+private val userRepo = getKoinInstance<UserRepo>()
 private val userAuthRepo = getKoinInstance<UserAuthRepo>()
 
 @Suppress("ThrowsCount")
@@ -66,12 +69,25 @@ suspend fun generateTokenOauth(
 ) {
     val principal = context.principal<OAuthUserPrincipal>()!!
     val responseContentType = context.request.accept()
-    val user = UserRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
-    val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
+    val user = userRepo.findByEmail(principal.email) ?: throw AuthenticationException("User has not signed up yet")
+    var userAuth = userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer)
 
-    if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, principal.issuer) == null) {
-        userAuthRepo.create(user.hrn, principal.issuer, null)
+    val authProvider =
+        AuthProviderRegistry.getProvider(principal.issuer) ?: throw AuthenticationException(
+            "Invalid issuer",
+        )
+    if (authProvider.isVerifiedProvider && userAuth == null) {
+        userAuth =
+            userAuthRepo.create(
+                user.hrn,
+                principal.issuer,
+                principal.metadata?.let { AuthMetadata.toJsonB(it) },
+            )
     }
+    userAuth?.let { authProvider.authenticate(principal, it) }
+        ?: throw AuthenticationException("User has not signed up yet")
+
+    val response = tokenService.generateJwtToken(ResourceHrn(user.hrn))
 
     when (responseContentType) {
         ContentType.Text.Plain.toString() ->

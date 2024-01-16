@@ -14,14 +14,12 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 
-object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
+object GoogleAuthProvider : BaseAuthProvider("google"), KoinComponent {
     private const val PROFILE_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
     private const val ACCESS_TOKEN_KEY = "access_token"
 
     val gson: Gson by inject()
     private val httpClient: OkHttpClient by inject(named("AuthProvider"))
-
-    override fun getProviderName() = "google"
 
     override fun getProfileDetails(tokenCredential: TokenCredential): OAuthUserPrincipal {
         val requestBuilder =
@@ -45,7 +43,7 @@ object GoogleAuthProvider : BaseAuthProvider, KoinComponent {
             googleUser.email,
             googleUser.name,
             googleUser.hd ?: "",
-            getProviderName(),
+            this.providerName,
         )
     }
 }
