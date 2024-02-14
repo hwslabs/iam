@@ -80,7 +80,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             } else {
                 // Check all verified and unverified users within the organization
                 builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
-                    .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull)}
+                    .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull) }
             }
 
         return ctx("users.existsByAliasUsername").fetchExists(builder)
