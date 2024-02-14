@@ -48,7 +48,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .apply {
                 subOrganizationName?.let {
                     and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
-                }
+                } ?: and(PASSCODES.SUB_ORGANIZATION_NAME.isNull)
             }
             .fetchOne(0, Int::class.java) ?: 0
 
@@ -92,7 +92,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .apply {
                 subOrganizationName?.let {
                     and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
-                }
+                } ?: and(PASSCODES.SUB_ORGANIZATION_NAME.isNull)
             }
             .fetchOne()
     }
@@ -114,7 +114,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .apply {
                 subOrganizationName?.let {
                     and(PASSCODES.SUB_ORGANIZATION_NAME.eq(subOrganizationName))
-                }
+                } ?: and(PASSCODES.SUB_ORGANIZATION_NAME.isNull)
             }
             .and(PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()))
             .paginate(PASSCODES.CREATED_AT, paginationContext)
