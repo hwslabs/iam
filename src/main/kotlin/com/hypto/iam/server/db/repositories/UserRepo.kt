@@ -36,7 +36,11 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
     ): List<UsersRecord> {
         return ctx("users.fetchMany").selectFrom(USERS)
             .where(USERS.ORGANIZATION_ID.eq(organizationId))
-            .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
+            .apply {
+                subOrganizationName?.let {
+                    and(USERS.SUB_ORGANIZATION_NAME.eq(it))
+                } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull)
+            }
             .and(USERS.DELETED.eq(false))
             .paginate(USERS.CREATED_AT, paginationContext)
             .fetch()
@@ -76,7 +80,7 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             } else {
                 // Check all verified and unverified users within the organization
                 builder.and(USERS.ORGANIZATION_ID.eq(organizationId))
-                    .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } }
+                    .apply { subOrganizationName?.let { and(USERS.SUB_ORGANIZATION_NAME.eq(it)) } ?: and(USERS.SUB_ORGANIZATION_NAME.isNull) }
             }
 
         return ctx("users.existsByAliasUsername").fetchExists(builder)
