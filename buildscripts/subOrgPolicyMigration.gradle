@@ -1,0 +1,52 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.postgresql:postgresql:42.5.0"
+    }
+}
+
+import groovy.sql.Sql
+import java.sql.Driver
+
+if (project.hasProperty("args")) {
+    ext.cmdargs = project.getProperty("args")
+} else {
+    ext.cmdargs = ""
+}
+
+task subOrgPolicyMigration {
+    description "Update existing policies to support sub-organization"
+    doLast {
+        def driver = Class.forName("org.postgresql.Driver").getDeclaredConstructor().newInstance() as Driver
+        def props = new Properties()
+
+        props.setProperty("user", flyway.user)
+        props.setProperty("password", flyway.password)
+        def conn = driver.connect(flyway.url, props)
+        def sql = new Sql(conn)
+        def subOrgPolicyMigrationQuery =
+                "UPDATE policies SET statements = replace(statements, '::', ':.*:');"
+        def policyMigrationRevertPrincipalQuery =
+                "UPDATE policies SET statements = replace(statements, ':.*:iam-policy', '::iam-policy');"
+        def subOrgPolicyTemplateMigrationQuery =
+                "UPDATE policy_templates SET statements = replace(statements, '::', ':.*:');"
+        def policyTemplateMigrationRevertPrincipalQuery =
+                "UPDATE policy_templates SET statements = replace(statements, ':.*:iam-policy', '::iam-policy');"
+
+        sql.withBatch {
+            it.addBatch(subOrgPolicyMigrationQuery)
+            it.addBatch(policyMigrationRevertPrincipalQuery)
+            it.addBatch(subOrgPolicyTemplateMigrationQuery)
+            it.addBatch(policyTemplateMigrationRevertPrincipalQuery)
+            it.executeBatch()
+        }
+        println("Executed query: $subOrgPolicyMigrationQuery")
+        println("Executed query: $policyMigrationRevertPrincipalQuery")
+        println("executed query: $subOrgPolicyTemplateMigrationQuery")
+        println("executed query: $policyTemplateMigrationRevertPrincipalQuery")
+    }
+}
