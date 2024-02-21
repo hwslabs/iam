@@ -433,30 +433,14 @@ val createPolicyRequestValidation =
     }
 
 val createPolicyFromTemplateRequestValidation =
-    Validation<CreatePolicyFromTemplateRequest> {
+    Validation {
         CreatePolicyFromTemplateRequest::name required {
             run(resourceNameCheck)
         }
         CreatePolicyFromTemplateRequest::templateName required {
             run(resourceNameCheck)
         }
-        CreatePolicyFromTemplateRequest::subOrganizationId ifPresent {
-            run(resourceNameCheck)
-        }
-        CreatePolicyFromTemplateRequest::accountId ifPresent {
-            run(resourceNameCheck)
-        }
-        CreatePolicyFromTemplateRequest::userId required {}
-        CreatePolicyFromTemplateRequest::allAccountsAccess ifPresent {}
-        addConstraint("subOrganizationId is required when accountId is present") {
-            it.accountId == null || it.subOrganizationId != null
-        }
-        addConstraint("subOrganizationId is required when allAccountAccess is set to true") {
-            it.allAccountsAccess != true || it.subOrganizationId != null
-        }
-        addConstraint("accountId should be null if allAccountAccess is set to true") {
-            it.allAccountsAccess != true || it.accountId == null
-        }
+        CreatePolicyFromTemplateRequest::templateVariables ifPresent {}
     }
 
 val updatePolicyRequestValidation =

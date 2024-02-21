@@ -2919,10 +2919,11 @@ components:
     CreatePolicyFromTemplateRequest:
       summary: sample create policy from template request
       value:
-        name: Product Manager Policy
+        name: Product-Manager-Policy
         templateName: product-manager
-        subOrganizationId: sub-org
-        accountId: acc.svbk324.sac3245
+        templateVariables:
+          subOrganizationId: sub-org
+          accountId: acc.svbk324.sac3245
 
 
     UpdatePolicyRequest:
@@ -3558,7 +3559,6 @@ components:
       required:
         - name
         - templateName
-        - userId
       properties:
         name:
           type: string
@@ -3566,17 +3566,10 @@ components:
         templateName:
           type: string
           maxLength: 512
-        userId:
-          type: string
-          maxLength: 512
-        subOrganizationId:
-          type: string
-          maxLength: 50
-        allAccountsAccess:
-          type: boolean
-        accountId:
-          type: string
-          maxLength: 512
+        templateVariables:
+          type: object
+          additionalProperties:
+            type: string
 
     UpdatePolicyRequest:
       description: Payload to update policy

@@ -1,8 +1,8 @@
 package com.hypto.iam.server.service
 
-import com.hypto.iam.server.Constants.Companion.ACCOUNT_ID
 import com.hypto.iam.server.Constants.Companion.ORGANIZATION_ID_KEY
 import com.hypto.iam.server.Constants.Companion.SUB_ORGANIZATION_ID_KEY
+import com.hypto.iam.server.Constants.Companion.USER_HRN_KEY
 import com.hypto.iam.server.Constants.Companion.USER_ID
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
@@ -152,24 +152,20 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         organizationId: String,
         request: CreatePolicyFromTemplateRequest,
     ): Policy {
-        val accountId =
-            when (request.allAccountsAccess) {
-                true -> ".*"
-                else -> request.accountId
-            }
-        val templateVariablesMap =
-            mapOf(
-                ORGANIZATION_ID_KEY to organizationId,
-                SUB_ORGANIZATION_ID_KEY to request.subOrganizationId,
-                ACCOUNT_ID to accountId,
-                USER_ID to request.userId,
-            )
         val policyTemplate =
             policyTemplatesRepo.fetchActivePolicyByName(request.templateName)
                 ?: throw EntityNotFoundException("Policy Template [${request.templateName}] not found")
         if (policyTemplate.isRootPolicy == true) {
-            throw BadRequestException("Can't attach root policies")
+            throw BadRequestException("Can't create policies from root policies")
         }
+        val policyTemplateVariables = policyTemplate.requiredVariables.asList()
+        val requestTemplateVariables = request.templateVariables?.keys ?: emptySet()
+        if (policyTemplateVariables.isNotEmpty()) {
+            require(policyTemplateVariables.size == requestTemplateVariables.size && policyTemplateVariables.containsAll(requestTemplateVariables)) {
+                "Some template variables are missing. Required variables $policyTemplateVariables"
+            }
+        }
+//        Not adding subOrg in policyHrn as it is an entity of an organization
         val policyHrn = ResourceHrn(organizationId, null, IamResources.POLICY, request.name)
         if (policyRepo.existsById(policyHrn.toString())) {
             throw EntityAlreadyExistsException("Policy with name [${request.name}] already exists")
@@ -180,23 +176,35 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
             } catch (e: MustacheParserException) {
                 throw IllegalStateException("Invalid template ${request.templateName} - ${e.localizedMessage}", e)
             }
+        val templateVariablesMap = mutableMapOf<String, String>()
+        request.templateVariables?.forEach {
+            when (it.key) {
+                USER_ID ->
+                    templateVariablesMap[USER_HRN_KEY] =
+                        ResourceHrn(organizationId, request.templateVariables[SUB_ORGANIZATION_ID_KEY], IamResources.USER, it.value).toString()
+                else -> templateVariablesMap[it.key] = it.value
+            }
+        }
+        templateVariablesMap[ORGANIZATION_ID_KEY] = organizationId
         val rawPolicyPayload =
             RawPolicyPayload(
                 hrn = policyHrn,
                 description = policyTemplate.description,
                 statements = template.processToString(templateVariablesMap),
             )
-        val userHrn = ResourceHrn(organizationId, request.subOrganizationId, IamResources.USER, request.userId)
-        userRepo.findByHrn(userHrn.toString()) ?: throw EntityNotFoundException("Unable to find user")
         val principalPoliciesRecord =
-            PrincipalPoliciesRecord()
-                .setPrincipalHrn(userHrn.toString())
-                .setPolicyHrn(policyHrn.toString())
-                .setCreatedAt(LocalDateTime.now())
+            templateVariablesMap[USER_HRN_KEY]?.let {
+                userRepo.findByHrn(it) ?: throw EntityNotFoundException("Unable to find user [$it]")
+                PrincipalPoliciesRecord()
+                    .setPrincipalHrn(it)
+                    .setPolicyHrn(policyHrn.toString())
+                    .setCreatedAt(LocalDateTime.now())
+            }
+
         val policy =
             txMan.wrap {
                 val policy = batchCreatePolicyRaw(organizationId, listOf(rawPolicyPayload))
-                principalPolicyRepo.insert(listOf(principalPoliciesRecord))
+                principalPoliciesRecord?.let { principalPolicyRepo.insert(listOf(it)) }
                 policy
             }
         return Policy.from(policy[0])

@@ -33,7 +33,6 @@ class Constants private constructor() {
         const val ORGANIZATION_ID_KEY = "organization_id"
         const val SUB_ORGANIZATION_ID_KEY = "sub_organization_id"
         const val USER_HRN_KEY = "user_hrn"
-        const val ACCOUNT_ID = "account_id"
         const val USER_ID = "user_id"
     }
 }
