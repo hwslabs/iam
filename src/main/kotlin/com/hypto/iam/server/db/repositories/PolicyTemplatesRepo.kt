@@ -25,4 +25,13 @@ object PolicyTemplatesRepo : BaseRepo<PolicyTemplatesRecord, PolicyTemplates, St
             .selectFrom(POLICY_TEMPLATES)
             .where(POLICY_TEMPLATES.STATUS.eq(Status.ACTIVE.value))
             .fetch()
+
+    suspend fun fetchActivePolicyByName(name: String): PolicyTemplatesRecord? =
+        ctx("policy_templates.fetchActivePolicyByName")
+            .selectFrom(POLICY_TEMPLATES)
+            .where(
+                POLICY_TEMPLATES.NAME.eq(name),
+                POLICY_TEMPLATES.STATUS.eq(Status.ACTIVE.value),
+            )
+            .fetchOne()
 }

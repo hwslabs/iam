@@ -1,5 +1,7 @@
 package com.hypto.iam.server.service
 
+import com.hypto.iam.server.Constants.Companion.ORGANIZATION_ID_KEY
+import com.hypto.iam.server.Constants.Companion.USER_HRN_KEY
 import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
 import com.hypto.iam.server.db.repositories.RawPolicyPayload
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
@@ -14,14 +16,12 @@ import org.koin.core.component.inject
 class PolicyTemplatesServiceImpl : KoinComponent, PolicyTemplatesService {
     private val policyTemplateRepo: PolicyTemplatesRepo by inject()
     private val policyService: PolicyService by inject()
-    private val organizationIdKey = "organization_id"
-    private val userHrnKey = "user_hrn"
 
     override suspend fun createPersistAndReturnRootPolicyRecordsForOrganization(
         organizationId: String,
         user: User,
     ): List<PoliciesRecord> {
-        val templateVariablesMap = mapOf(organizationIdKey to organizationId, userHrnKey to user.hrn)
+        val templateVariablesMap = mapOf(ORGANIZATION_ID_KEY to organizationId, USER_HRN_KEY to user.hrn)
         val policyTemplates = policyTemplateRepo.fetchActivePolicyTemplates()
         val adminPolicyNames = policyTemplates.mapNotNullTo(mutableSetOf()) { if (it.isRootPolicy) it.name else null }
 

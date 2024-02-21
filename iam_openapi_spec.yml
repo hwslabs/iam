@@ -1525,6 +1525,33 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
   # policy
+  /organizations/{organization_id}/policy_from_template:
+    post:
+      tags:
+        - Policy Management
+      summary: Create a policy from template
+      description: Create a policy from template
+      operationId: createPolicyFromTemplate
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/CreatePolicyFromTemplateRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/PolicyResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
   /organizations/{organization_id}/policies:
     post:
       tags:
@@ -2266,6 +2293,17 @@ components:
             CreatePolicyRequest:
               $ref: '#/components/examples/CreatePolicyRequest'
 
+    CreatePolicyFromTemplateRequest:
+      description: Payload to create policy from policy template
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreatePolicyFromTemplateRequest'
+          examples:
+            CreatePolicyRequest:
+              $ref: '#/components/examples/CreatePolicyFromTemplateRequest'
+
     UpdatePolicyRequest:
       description: Payload to update policy
       required: true
@@ -2877,6 +2915,15 @@ components:
           - resource: hrn:XlK5h64gND::invoice/*
             action: hrn:XlK5h64gND::invoice$view
             effect: allow
+
+    CreatePolicyFromTemplateRequest:
+      summary: sample create policy from template request
+      value:
+        name: Product Manager Policy
+        templateName: product-manager
+        subOrganizationId: sub-org
+        accountId: acc.svbk324.sac3245
+
 
     UpdatePolicyRequest:
       summary: sample update policy request
@@ -3503,6 +3550,33 @@ components:
           maxItems: 20
           items:
             $ref: '#/components/schemas/PolicyStatement'
+
+    CreatePolicyFromTemplateRequest:
+      description: Payload to create policy from template
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - templateName
+        - userId
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        templateName:
+          type: string
+          maxLength: 512
+        userId:
+          type: string
+          maxLength: 512
+        subOrganizationId:
+          type: string
+          maxLength: 50
+        allAccountsAccess:
+          type: boolean
+        accountId:
+          type: string
+          maxLength: 512
 
     UpdatePolicyRequest:
       description: Payload to update policy

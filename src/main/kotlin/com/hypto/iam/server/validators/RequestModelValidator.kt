@@ -18,6 +18,7 @@ import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateSubOrganizationRequest
@@ -122,6 +123,10 @@ fun UpdateActionRequest.validate(): UpdateActionRequest {
 
 fun CreatePolicyRequest.validate(): CreatePolicyRequest {
     return createPolicyRequestValidation.validateAndThrowOnFailure(this)
+}
+
+fun CreatePolicyFromTemplateRequest.validate(): CreatePolicyFromTemplateRequest {
+    return createPolicyFromTemplateRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun UpdatePolicyRequest.validate(): UpdatePolicyRequest {
@@ -424,6 +429,33 @@ val createPolicyRequestValidation =
             PolicyStatement::resource required { run(hrnCheck) }
             PolicyStatement::action required { run(hrnCheck) }
             PolicyStatement::effect required {}
+        }
+    }
+
+val createPolicyFromTemplateRequestValidation =
+    Validation<CreatePolicyFromTemplateRequest> {
+        CreatePolicyFromTemplateRequest::name required {
+            run(resourceNameCheck)
+        }
+        CreatePolicyFromTemplateRequest::templateName required {
+            run(resourceNameCheck)
+        }
+        CreatePolicyFromTemplateRequest::subOrganizationId ifPresent {
+            run(resourceNameCheck)
+        }
+        CreatePolicyFromTemplateRequest::accountId ifPresent {
+            run(resourceNameCheck)
+        }
+        CreatePolicyFromTemplateRequest::userId required {}
+        CreatePolicyFromTemplateRequest::allAccountsAccess ifPresent {}
+        addConstraint("subOrganizationId is required when accountId is present") {
+            it.accountId == null || it.subOrganizationId != null
+        }
+        addConstraint("subOrganizationId is required when allAccountAccess is set to true") {
+            it.allAccountsAccess != true || it.subOrganizationId != null
+        }
+        addConstraint("accountId should be null if allAccountAccess is set to true") {
+            it.allAccountsAccess != true || it.accountId == null
         }
     }
 
