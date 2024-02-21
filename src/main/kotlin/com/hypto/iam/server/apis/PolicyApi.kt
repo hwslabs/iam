@@ -4,6 +4,7 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdatePolicyRequest
@@ -26,6 +27,7 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
+@Suppress("ComplexMethod")
 fun Route.policyApi() {
     val policyService: PolicyService by inject()
     val gson: Gson by inject()
@@ -48,6 +50,29 @@ fun Route.policyApi() {
             val policy =
                 policyService.createPolicy(organizationId, request.name, request.description, request.statements)
 
+            call.respondText(
+                text = gson.toJson(policy),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.Created,
+            )
+        }
+    }
+
+    withPermission(
+        "createPolicyFromTemplate",
+        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+    ) {
+        post("/organizations/{organization_id}/policy_from_template") {
+            val organizationId =
+                call.parameters["organization_id"]
+                    ?: throw IllegalArgumentException("organization_id required")
+            val request = call.receive<CreatePolicyFromTemplateRequest>().validate()
+
+            val principal = context.principal<UserPrincipal>()!!
+            if (principal.hrn.organization != organizationId) {
+                throw AuthorizationException("Cross organization policy creation is not supported")
+            }
+            val policy = policyService.createPolicyFromTemplate(organizationId, request)
             call.respondText(
                 text = gson.toJson(policy),
                 contentType = ContentType.Application.Json,

@@ -29,5 +29,10 @@ class Constants private constructor() {
         const val SECRET_PREFIX = "$"
         const val JOOQ_QUERY_NAME = "queryName"
         const val SECONDS_IN_DAY = 24 * 60 * 60L
+
+        const val ORGANIZATION_ID_KEY = "organization_id"
+        const val SUB_ORGANIZATION_ID_KEY = "sub_organization_id"
+        const val USER_HRN_KEY = "user_hrn"
+        const val USER_ID = "user_id"
     }
 }

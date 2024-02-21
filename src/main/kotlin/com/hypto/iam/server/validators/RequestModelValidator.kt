@@ -18,6 +18,7 @@ import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.CreateOrganizationRequest
+import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateSubOrganizationRequest
@@ -122,6 +123,10 @@ fun UpdateActionRequest.validate(): UpdateActionRequest {
 
 fun CreatePolicyRequest.validate(): CreatePolicyRequest {
     return createPolicyRequestValidation.validateAndThrowOnFailure(this)
+}
+
+fun CreatePolicyFromTemplateRequest.validate(): CreatePolicyFromTemplateRequest {
+    return createPolicyFromTemplateRequestValidation.validateAndThrowOnFailure(this)
 }
 
 fun UpdatePolicyRequest.validate(): UpdatePolicyRequest {
@@ -425,6 +430,17 @@ val createPolicyRequestValidation =
             PolicyStatement::action required { run(hrnCheck) }
             PolicyStatement::effect required {}
         }
+    }
+
+val createPolicyFromTemplateRequestValidation =
+    Validation {
+        CreatePolicyFromTemplateRequest::name required {
+            run(resourceNameCheck)
+        }
+        CreatePolicyFromTemplateRequest::templateName required {
+            run(resourceNameCheck)
+        }
+        CreatePolicyFromTemplateRequest::templateVariables ifPresent {}
     }
 
 val updatePolicyRequestValidation =
