@@ -1,6 +1,7 @@
 package com.hypto.iam.server.service
 
 import com.hypto.iam.server.Constants.Companion.ORGANIZATION_ID_KEY
+import com.hypto.iam.server.Constants.Companion.POLICY_NAME
 import com.hypto.iam.server.Constants.Companion.SUB_ORGANIZATION_ID_KEY
 import com.hypto.iam.server.Constants.Companion.USER_HRN_KEY
 import com.hypto.iam.server.Constants.Companion.USER_ID
@@ -41,7 +42,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     private val txMan: TxMan by inject()
     private val userRepo: UserRepo by inject()
 
-    private val regexMetaCharactersSet = setOf('.',  '+',  '*',  '?',  '^',  '$',  '(',  ')',  '[',  ']',  '{',  '}',  '|',  '\\')
+    private val regexMetaCharactersSet = setOf('.', '+', '*', '?', '^', '$', '(', ')', '[', ']', '{', '}', '|', '\\')
 
     private fun escapeRegexMetaCharacters(value: String): String {
         val sb = StringBuilder()
@@ -163,6 +164,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         return PolicyPaginatedResponse(policies.map { Policy.from(it) }, newContext.nextToken, newContext.toOptions())
     }
 
+    @Suppress("ComplexMethod")
     override suspend fun createPolicyFromTemplate(
         organizationId: String,
         request: CreatePolicyFromTemplateRequest,
@@ -200,12 +202,13 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
                             organizationId,
                             request.templateVariables[SUB_ORGANIZATION_ID_KEY]?.let { escapeRegexMetaCharacters(it) },
                             IamResources.USER,
-                            it.value
+                            it.value,
                         ).toString()
                 else -> templateVariablesMap[it.key] = escapeRegexMetaCharacters(it.value)
             }
         }
         templateVariablesMap[ORGANIZATION_ID_KEY] = organizationId
+        templateVariablesMap[POLICY_NAME] = request.name
         val rawPolicyPayload =
             RawPolicyPayload(
                 hrn = policyHrn,
