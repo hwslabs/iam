@@ -30,6 +30,7 @@ import net.pwall.mustache.Template
 import net.pwall.mustache.parser.MustacheParserException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.lang.StringBuilder
 import java.time.LocalDateTime
 
 // https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_grammar.html
@@ -39,6 +40,20 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     private val policyTemplatesRepo: PolicyTemplatesRepo by inject()
     private val txMan: TxMan by inject()
     private val userRepo: UserRepo by inject()
+
+    private val regexMetaCharactersSet = setOf('.',  '+',  '*',  '?',  '^',  '$',  '(',  ')',  '[',  ']',  '{',  '}',  '|',  '\\')
+
+    private fun escapeRegexMetaCharacters(value: String): String {
+        val sb = StringBuilder()
+        value.forEach {
+            if (regexMetaCharactersSet.contains(it)) {
+                sb.append("\\$it")
+            } else {
+                sb.append(it)
+            }
+        }
+        return sb.toString()
+    }
 
     override suspend fun createPolicy(
         organizationId: String,
@@ -181,8 +196,13 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
             when (it.key) {
                 USER_ID ->
                     templateVariablesMap[USER_HRN_KEY] =
-                        ResourceHrn(organizationId, request.templateVariables[SUB_ORGANIZATION_ID_KEY], IamResources.USER, it.value).toString()
-                else -> templateVariablesMap[it.key] = it.value
+                        ResourceHrn(
+                            organizationId,
+                            request.templateVariables[SUB_ORGANIZATION_ID_KEY]?.let { escapeRegexMetaCharacters(it) },
+                            IamResources.USER,
+                            it.value
+                        ).toString()
+                else -> templateVariablesMap[it.key] = escapeRegexMetaCharacters(it.value)
             }
         }
         templateVariablesMap[ORGANIZATION_ID_KEY] = organizationId
