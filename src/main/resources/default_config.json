@@ -41,7 +41,11 @@
     "sign_up_email_template": "<placeholder for signup user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
     "invite_user_email_template": "<placeholder for invite user template name>",
-    "unique_users_across_organizations": false
+    "unique_users_across_organizations": false,
+    "sub_org_config": {
+      "base_url": "<placeholder for sub org base url>",
+      "invite_user_email_template": "<placeholder for invite user template name>"
+    }
   },
   "aws": {
     "region": "us-east-1",

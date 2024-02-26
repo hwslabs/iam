@@ -166,16 +166,33 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         organizationId: String? = null,
         subOrganizationName: String? = null,
     ): String {
+        val baseUrl =
+            if (subOrganizationName.isNullOrEmpty()) {
+                appConfig.app.baseUrl
+            } else {
+                appConfig.app.subOrgConfig.baseUrl
+            }
         val link =
             URIBuilder()
                 .setScheme("https")
-                .setHost(appConfig.app.baseUrl)
+                .setHost(baseUrl)
 
         link.path =
-            when (purpose) {
-                Purpose.signup -> AppConfig.configuration.onboardRoutes.signup
-                Purpose.reset -> AppConfig.configuration.onboardRoutes.reset
-                Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
+            when (subOrganizationName) {
+                null -> {
+                    when (purpose) {
+                        Purpose.signup -> AppConfig.configuration.onboardRoutes.signup
+                        Purpose.reset -> AppConfig.configuration.onboardRoutes.reset
+                        Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
+                    }
+                }
+                else -> {
+                    when (purpose) {
+                        Purpose.signup -> AppConfig.configuration.onboardRoutes.signup
+                        Purpose.reset -> AppConfig.configuration.onboardRoutes.reset
+                        Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
+                    }
+                }
             }
 
         link.setParameter("passcode", passcode)
@@ -192,6 +209,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             link.setParameter("subOrganizationName", it)
         }
 
+        link.setParameter("purpose", purpose.toString())
         return link.build().toString()
     }
 
@@ -255,17 +273,20 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         passcode: String,
         principal: UserPrincipal,
     ): Boolean {
+        var templateName: String? = null
         try {
             if (!subOrganizationName.isNullOrEmpty()) {
                 val user = usersService.getUserByEmail(orgId, subOrganizationName, email)
                 require(!user.loginAccess) {
                     "User with email $email already has login access in sub-org $subOrganizationName"
                 }
+                templateName = appConfig.app.subOrgConfig.inviteUserEmailTemplate
             } else {
                 val user = usersService.getUserByEmail(orgId, null, email)
                 require(!user.loginAccess) {
                     "User with email $email already has login access"
                 }
+                templateName = appConfig.app.inviteUserEmailTemplate
             }
         } catch (e: EntityNotFoundException) {
             logger.info { "User with email $email does not exist" }
@@ -287,7 +308,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val emailRequest =
             SendTemplatedEmailRequest.builder()
                 .source(appConfig.app.senderEmailAddress)
-                .template(appConfig.app.inviteUserEmailTemplate)
+                .template(templateName)
                 .templateData(gson.toJson(templateData))
                 .destination(Destination.builder().toAddresses(email).build())
                 .build()

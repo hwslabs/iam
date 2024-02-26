@@ -39,6 +39,11 @@ data class AppConfig(
 
     enum class Environment { Development, Staging, Production }
 
+    data class SubOrgConfig(
+        val baseUrl: String,
+        val inviteUserEmailTemplate: String,
+    )
+
     /**
      * @param jwtTokenValidity Represents how long the JWT token must be valid from the instant of creation
      * @param oldKeyTtl Represents the TTL in seconds until which the rotated key must be available for
@@ -70,6 +75,7 @@ data class AppConfig(
         val passcodeValiditySeconds: Long,
         val passcodeCountLimit: Long,
         val baseUrl: String,
+        val subOrgConfig: SubOrgConfig,
         val senderEmailAddress: String,
         val signUpEmailTemplate: String,
         val inviteUserEmailTemplate: String,
