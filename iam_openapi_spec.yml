@@ -3303,7 +3303,7 @@ components:
           type: string
           maxLength: 500
 
-#Email validation: Max Length = 320 https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwiK7pmd8siEAxWC3zgGHREcAVgQFnoECA0QAw&url=https%3A%2F%2Fwww.mindbaz.com%2Fen%2Femail-deliverability%2Fwhat-is-the-maximum-size-of-an-mail-address%2F&usg=AOvVaw2c-c1fBpFvZaF0_NyQDRBQ&opi=89978449
+#Email validation: Max Length = 320 https://www.mindbaz.com/en/email-deliverability/what-is-the-maximum-size-of-an-mail-address/
     RootUser:
       type: object
       description: Root user details for the organization

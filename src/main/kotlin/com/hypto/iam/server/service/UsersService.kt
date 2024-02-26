@@ -129,15 +129,14 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     },
                 ) ?: throw InternalException("Unable to create user")
 
-            if (policies != null && policies.isNotEmpty()) {
+            if (!policies.isNullOrEmpty()) {
                 principalPolicyService.attachPoliciesToUser(
                     ResourceHrn(userHrn.toString()),
                     policies.map { hrnFactory.getHrn(it) },
                 )
             }
-            if (password != null) {
-                val encodedEmail = email ?.let { getEncodedEmail(organizationId, subOrganizationName, it) }
-                encodedEmail?.let {
+            if (password != null && email != null) {
+                getEncodedEmail(organizationId, subOrganizationName, email).also { encodedEmail ->
                     passcodeRepo.deleteByEmailAndPurpose(encodedEmail, VerifyEmailRequest.Purpose.invite)
                 }
             }
