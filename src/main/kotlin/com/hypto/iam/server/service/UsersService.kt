@@ -42,7 +42,6 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val hrnFactory: HrnFactory by inject()
     private val userRepo: UserRepo by inject()
     private val organizationRepo: OrganizationRepo by inject()
-    private val organizationService: OrganizationsService by inject()
     private val identityProvider: IdentityProvider by inject()
     private val gson: Gson by inject()
     private val txMan: TxMan by inject()
@@ -331,13 +330,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
         password: String,
     ): BaseSuccessResponse {
         val user = getUser(organizationId, subOrganizationName, userId)
-        val cognito = appConfig.cognito
         organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id")
         if (userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, TokenServiceImpl.ISSUER) != null) {
             throw BadRequestException("Organization already has password access")
         }
-        organizationService.updateOrganization(organizationId, null, null, cognito)
         createUserInIdentityProvider(
             user.username,
             user.preferredUsername,
