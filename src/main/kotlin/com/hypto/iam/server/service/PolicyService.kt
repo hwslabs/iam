@@ -142,13 +142,14 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
 
     override suspend fun getPoliciesByUser(
         organizationId: String,
+        subOrganizationId: String?,
         userId: String,
         context: PaginationContext,
     ): PolicyPaginatedResponse {
         val policies =
             principalPolicyRepo
                 .fetchPoliciesByUserHrnPaginated(
-                    ResourceHrn(organizationId, "", IamResources.USER, userId).toString(),
+                    ResourceHrn(organizationId, subOrganizationId, IamResources.USER, userId).toString(),
                     context,
                 )
         val newContext = PaginationContext.from(policies.lastOrNull()?.hrn, context)
@@ -260,6 +261,7 @@ interface PolicyService {
 
     suspend fun getPoliciesByUser(
         organizationId: String,
+        subOrganizationId: String?,
         userId: String,
         context: PaginationContext,
     ): PolicyPaginatedResponse
