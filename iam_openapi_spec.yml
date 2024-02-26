@@ -367,7 +367,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/sub_organization/{sub_organization_name}/users:
+  /organizations/{organization_id}/sub_organizations/{sub_organization_name}/users:
     post:
       tags:
         - User Management
