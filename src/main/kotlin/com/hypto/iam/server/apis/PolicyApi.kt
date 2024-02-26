@@ -4,6 +4,8 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.extensions.PaginationContext
+import com.hypto.iam.server.extensions.RouteOption
+import com.hypto.iam.server.extensions.getWithPermission
 import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.PaginationOptions
@@ -151,36 +153,47 @@ fun Route.policyApi() {
         }
     }
 
-    withPermission(
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/users/{user_id}/policies",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1,
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users" +
+                    "/{user_id}/policies",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1,
+                subOrganizationNameIndex = 3,
+            ),
+        ),
         "getUserPolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
-        get("/organizations/{organization_id}/users/{user_id}/policies") {
-            val organizationId =
-                call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
-            val userId =
-                call.parameters["user_id"] ?: throw IllegalArgumentException("Required user id to list policies")
+        val organizationId = call.parameters["organization_id"] ?: throw IllegalArgumentException("organization_id required")
+        val subOrganizationId = call.parameters["sub_organization_name"]
+        val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required user id to list policies")
 
-            val nextToken = call.request.queryParameters["nextToken"]
-            val pageSize = call.request.queryParameters["pageSize"]
-            val sortOrder = call.request.queryParameters["sortOrder"]
+        val nextToken = call.request.queryParameters["nextToken"]
+        val pageSize = call.request.queryParameters["pageSize"]
+        val sortOrder = call.request.queryParameters["sortOrder"]
 
-            val context =
-                PaginationContext.from(
-                    nextToken,
-                    pageSize?.toInt(),
-                    sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
-                )
-
-            val response = policyService.getPoliciesByUser(organizationId, userId, context)
-
-            call.respondText(
-                text = gson.toJson(response),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK,
+        val context =
+            PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
             )
-        }
+
+        val response = policyService.getPoliciesByUser(organizationId, subOrganizationId, userId, context)
+
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
+        )
     }
 
     withPermission(

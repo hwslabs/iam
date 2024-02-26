@@ -3303,6 +3303,7 @@ components:
           type: string
           maxLength: 500
 
+#Email validation: Max Length = 320 https://www.mindbaz.com/en/email-deliverability/what-is-the-maximum-size-of-an-mail-address/
     RootUser:
       type: object
       description: Root user details for the organization
@@ -3323,7 +3324,7 @@ components:
           maxLength: 100
         email:
           type: string
-          maxLength: 100
+          maxLength: 320
           pattern: ^\S+@\S+\.\S+$
         phone:
           type: string
@@ -3372,7 +3373,7 @@ components:
           maxLength: 100
         email:
           type: string
-          maxLength: 100
+          maxLength: 320
           pattern: ^\S+@\S+\.\S+$
         phone:
           type: string
@@ -3398,7 +3399,7 @@ components:
           maxLength: 50
         email:
           type: string
-          maxLength: 50
+          maxLength: 320
         phone:
           type: string
           maxLength: 30
@@ -3446,7 +3447,7 @@ components:
       properties:
         email:
           type: string
-          maxLength: 50
+          maxLength: 320
         password:
           type: string
           maxLength: 50
@@ -3620,6 +3621,7 @@ components:
       properties:
         email:
           type: string
+          maxLength: 320
         userHrn:
           type: string
         organizationId:
@@ -3659,6 +3661,7 @@ components:
       properties:
         email:
           type: string
+          maxLength: 320
 
     GetDelegateTokenRequest:
       description: payload to generate a delegate_token
@@ -3975,7 +3978,7 @@ components:
           maxLength: 50
         email:
           type: string
-          maxLength: 50
+          maxLength: 320
         status:
           type: string
           enum:
@@ -4200,6 +4203,7 @@ components:
       properties:
         email:
           type: string
+          maxLength: 320
         purpose:
           type: string
         createdAt:
