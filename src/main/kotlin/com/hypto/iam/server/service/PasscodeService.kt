@@ -166,16 +166,33 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         organizationId: String? = null,
         subOrganizationName: String? = null,
     ): String {
+        val baseUrl =
+            if (subOrganizationName.isNullOrEmpty()) {
+                appConfig.app.baseUrl
+            } else {
+                appConfig.subOrgConfig.baseUrl
+            }
         val link =
             URIBuilder()
                 .setScheme("https")
-                .setHost(appConfig.app.baseUrl)
+                .setHost(baseUrl)
 
         link.path =
-            when (purpose) {
-                Purpose.signup -> AppConfig.configuration.onboardRoutes.signup
-                Purpose.reset -> AppConfig.configuration.onboardRoutes.reset
-                Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
+            when (subOrganizationName) {
+                null -> {
+                    when (purpose) {
+                        Purpose.signup -> appConfig.onboardRoutes.signup
+                        Purpose.reset -> appConfig.onboardRoutes.reset
+                        Purpose.invite -> appConfig.onboardRoutes.invite
+                    }
+                }
+                else -> {
+                    when (purpose) {
+                        Purpose.signup -> appConfig.subOrgConfig.onboardRoutes.signup
+                        Purpose.reset -> appConfig.subOrgConfig.onboardRoutes.reset
+                        Purpose.invite -> appConfig.subOrgConfig.onboardRoutes.invite
+                    }
+                }
             }
 
         link.setParameter("passcode", passcode)
@@ -192,6 +209,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             link.setParameter("subOrganizationName", it)
         }
 
+        link.setParameter("purpose", purpose.toString())
         return link.build().toString()
     }
 
@@ -233,12 +251,17 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         if (!user.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
+        val templateName = if (subOrganizationId.isNullOrEmpty()) {
+            appConfig.app.resetPasswordEmailTemplate
+        } else {
+            appConfig.subOrgConfig.resetPasswordEmailTemplate
+        }
         val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.reset, organizationId = user.organizationId)
         val templateData = ResetPasswordTemplateData(link, user.name)
         val emailRequest =
             SendTemplatedEmailRequest.builder()
                 .source(appConfig.app.senderEmailAddress)
-                .template(appConfig.app.resetPasswordEmailTemplate)
+                .template(templateName)
                 .templateData(gson.toJson(templateData))
                 .destination(Destination.builder().toAddresses(user.email).build())
                 .build()
@@ -255,13 +278,16 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         passcode: String,
         principal: UserPrincipal,
     ): Boolean {
+        var templateName: String? = null
         try {
             if (!subOrganizationName.isNullOrEmpty()) {
+                templateName = appConfig.subOrgConfig.inviteUserEmailTemplate
                 val user = usersService.getUserByEmail(orgId, subOrganizationName, email)
                 require(!user.loginAccess) {
                     "User with email $email already has login access in sub-org $subOrganizationName"
                 }
             } else {
+                templateName = appConfig.app.inviteUserEmailTemplate
                 val user = usersService.getUserByEmail(orgId, null, email)
                 require(!user.loginAccess) {
                     "User with email $email already has login access"
@@ -287,7 +313,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val emailRequest =
             SendTemplatedEmailRequest.builder()
                 .source(appConfig.app.senderEmailAddress)
-                .template(appConfig.app.inviteUserEmailTemplate)
+                .template(templateName)
                 .templateData(gson.toJson(templateData))
                 .destination(Destination.builder().toAddresses(email).build())
                 .build()

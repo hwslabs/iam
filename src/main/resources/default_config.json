@@ -56,6 +56,16 @@
     "reset": "/organizations/users/resetPassword",
     "invite": "/organizations/users/verifyUser"
   },
+  "sub_org_config": {
+    "base_url": "<placeholder for sub org base url>",
+    "invite_user_email_template": "<placeholder for invite user template name>",
+    "reset_password_email_template": "<placeholder for reset password template name>",
+    "onboardRoutes": {
+      "signup": "/signup",
+      "reset": "/reset",
+      "invite": "/invite"
+    }
+  },
   "cognito": {
     "id": "<user pool id>",
     "name": "<user pool name>",

@@ -9,6 +9,7 @@ data class AppConfig(
     val server: Server,
     val database: Database,
     val newrelic: Newrelic,
+    val subOrgConfig: SubOrgConfig,
     val aws: Aws,
     val postHook: PostHook,
     val onboardRoutes: OnboardRoutes,
@@ -38,6 +39,13 @@ data class AppConfig(
     }
 
     enum class Environment { Development, Staging, Production }
+
+    data class SubOrgConfig(
+        val baseUrl: String,
+        val inviteUserEmailTemplate: String,
+        val resetPasswordEmailTemplate: String,
+        val onboardRoutes: OnboardRoutes,
+    )
 
     /**
      * @param jwtTokenValidity Represents how long the JWT token must be valid from the instant of creation
