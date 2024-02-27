@@ -78,4 +78,10 @@ object PrincipalPoliciesRepo : BaseRepo<PrincipalPoliciesRecord, PrincipalPolici
             .deleteFrom(PRINCIPAL_POLICIES)
             .where(PRINCIPAL_POLICIES.PRINCIPAL_HRN.like("%$principalHrn%"))
             .execute() > 0
+
+    suspend fun deleteByPolicyHrn(policyHrn: String): Boolean =
+        ctx("principalPolicies.deleteByPrincipalHrn")
+            .deleteFrom(PRINCIPAL_POLICIES)
+            .where(PRINCIPAL_POLICIES.POLICY_HRN.eq(policyHrn))
+            .execute() > 0
 }

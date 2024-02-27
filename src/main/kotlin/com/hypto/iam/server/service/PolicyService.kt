@@ -12,6 +12,7 @@ import com.hypto.iam.server.db.repositories.RawPolicyPayload
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
+import com.hypto.iam.server.exceptions.DbExceptionHandler
 import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.PaginationContext
@@ -29,6 +30,7 @@ import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
 import net.pwall.mustache.Template
 import net.pwall.mustache.parser.MustacheParserException
+import org.jooq.exception.DataAccessException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.lang.StringBuilder
@@ -133,10 +135,16 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         name: String,
     ): BaseSuccessResponse {
         val policyHrnStr = ResourceHrn(organizationId, "", IamResources.POLICY, name).toString()
-        if (!policyRepo.deleteByHrn(policyHrnStr)) {
-            throw EntityNotFoundException("Policy not found")
+        try {
+            txMan.wrap {
+                principalPolicyRepo.deleteByPolicyHrn(policyHrnStr)
+                if (!policyRepo.deleteByHrn(policyHrnStr)) {
+                    throw EntityNotFoundException("Policy not found")
+                }
+            }
+        } catch (dae: DataAccessException) {
+            throw DbExceptionHandler.mapToApplicationException(dae)
         }
-
         return BaseSuccessResponse(true)
     }
 
