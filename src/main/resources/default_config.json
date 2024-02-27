@@ -44,7 +44,12 @@
     "unique_users_across_organizations": false,
     "sub_org_config": {
       "base_url": "<placeholder for sub org base url>",
-      "invite_user_email_template": "<placeholder for invite user template name>"
+      "invite_user_email_template": "<placeholder for invite user template name>",
+      "onboardRoutes": {
+        "signup": "/signup",
+        "reset": "/reset",
+        "invite": "/invite"
+      }
     }
   },
   "aws": {

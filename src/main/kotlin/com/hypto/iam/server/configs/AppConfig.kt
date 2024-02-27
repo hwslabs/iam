@@ -42,6 +42,8 @@ data class AppConfig(
     data class SubOrgConfig(
         val baseUrl: String,
         val inviteUserEmailTemplate: String,
+        val resetPasswordEmailTemplate: String,
+        val onboardRoutes: OnboardRoutes,
     )
 
     /**

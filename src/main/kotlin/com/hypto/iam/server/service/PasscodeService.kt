@@ -181,16 +181,16 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             when (subOrganizationName) {
                 null -> {
                     when (purpose) {
-                        Purpose.signup -> AppConfig.configuration.onboardRoutes.signup
-                        Purpose.reset -> AppConfig.configuration.onboardRoutes.reset
-                        Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
+                        Purpose.signup -> appConfig.onboardRoutes.signup
+                        Purpose.reset -> appConfig.onboardRoutes.reset
+                        Purpose.invite -> appConfig.onboardRoutes.invite
                     }
                 }
                 else -> {
                     when (purpose) {
-                        Purpose.signup -> AppConfig.configuration.onboardRoutes.signup
-                        Purpose.reset -> AppConfig.configuration.onboardRoutes.reset
-                        Purpose.invite -> AppConfig.configuration.onboardRoutes.invite
+                        Purpose.signup -> appConfig.app.subOrgConfig.onboardRoutes.signup
+                        Purpose.reset -> appConfig.app.subOrgConfig.onboardRoutes.reset
+                        Purpose.invite -> appConfig.app.subOrgConfig.onboardRoutes.invite
                     }
                 }
             }
@@ -276,17 +276,17 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         var templateName: String? = null
         try {
             if (!subOrganizationName.isNullOrEmpty()) {
+                templateName = appConfig.app.subOrgConfig.inviteUserEmailTemplate
                 val user = usersService.getUserByEmail(orgId, subOrganizationName, email)
                 require(!user.loginAccess) {
                     "User with email $email already has login access in sub-org $subOrganizationName"
                 }
-                templateName = appConfig.app.subOrgConfig.inviteUserEmailTemplate
             } else {
+                templateName = appConfig.app.inviteUserEmailTemplate
                 val user = usersService.getUserByEmail(orgId, null, email)
                 require(!user.loginAccess) {
                     "User with email $email already has login access"
                 }
-                templateName = appConfig.app.inviteUserEmailTemplate
             }
         } catch (e: EntityNotFoundException) {
             logger.info { "User with email $email does not exist" }
