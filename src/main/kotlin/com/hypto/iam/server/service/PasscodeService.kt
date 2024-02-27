@@ -251,11 +251,12 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         if (!user.loginAccess) {
             throw AuthorizationException("User does not have login access")
         }
-        val templateName = if (subOrganizationId.isNullOrEmpty()) {
-            appConfig.app.resetPasswordEmailTemplate
-        } else {
-            appConfig.subOrgConfig.resetPasswordEmailTemplate
-        }
+        val templateName =
+            if (subOrganizationId.isNullOrEmpty()) {
+                appConfig.app.resetPasswordEmailTemplate
+            } else {
+                appConfig.subOrgConfig.resetPasswordEmailTemplate
+            }
         val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.reset, organizationId = user.organizationId)
         val templateData = ResetPasswordTemplateData(link, user.name)
         val emailRequest =
