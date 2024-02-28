@@ -23,7 +23,6 @@ fun getEncodedEmail(
         encodeSubOrgUserEmail(
             email,
             organizationId,
-            subOrganizationName,
         )
     } else {
         email
@@ -32,14 +31,10 @@ fun getEncodedEmail(
 private fun encodeSubOrgUserEmail(
     email: String,
     organizationId: String,
-    subOrganizationName: String,
 ): String {
     val emailParts = email.split("@").takeIf { it.size == 2 } ?: throw BadRequestException("Invalid email address")
     val localPart = emailParts[0]
     val domainPart = emailParts[1]
-    val subAddress =
-        Base64.getEncoder().encodeToString(
-            "$organizationId:$subOrganizationName".toByteArray(),
-        )
+    val subAddress = Base64.getEncoder().encodeToString(organizationId.toByteArray())
     return "$localPart+$subAddress@$domainPart"
 }

@@ -109,7 +109,7 @@ fun Route.tokenApi() {
     authenticate("basic-auth", "bearer-auth") {
         post(
             "/organizations/{organization_id}/token",
-            "/organizations/{organization_id}/sub_organizations/{sub_organization_id}/token",
+            "/organizations/{organization_id}/sub_organizations/token",
         ) {
             generateToken(call, context)
         }
