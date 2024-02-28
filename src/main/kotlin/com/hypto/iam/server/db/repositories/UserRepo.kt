@@ -102,19 +102,6 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .returning().fetchOne()
     }
 
-    suspend fun updateLoginAccessStatus(
-        hrn: String,
-        loginAccess: Boolean,
-    ): UsersRecord? {
-        return ctx("users.updateLoginAccessStatus")
-            .update(USERS)
-            .set(USERS.UPDATED_AT, LocalDateTime.now())
-            .set(USERS.LOGIN_ACCESS, loginAccess)
-            .where(USERS.HRN.eq(hrn))
-            .and(USERS.DELETED.eq(false))
-            .returning().fetchOne()
-    }
-
     suspend fun delete(hrn: String): UsersRecord? =
         ctx("users.delete")
             .update(USERS)
