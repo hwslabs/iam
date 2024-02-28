@@ -5,6 +5,7 @@ package com.hypto.iam.server
 import com.hypto.iam.server.authProviders.AuthProviderRegistry
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.PasscodeRepo
+import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
@@ -89,10 +90,11 @@ internal fun applicationCompressionConfiguration(): CompressionConfig.() -> Unit
     }
 }
 
-@Suppress("ThrowsCount")
+@Suppress("ThrowsCount", "ComplexMethod")
 internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -> Unit = {
     val appConfig = getKoinInstance<AppConfig>()
     val passcodeRepo = getKoinInstance<PasscodeRepo>()
+    val userRepo: UserRepo = getKoinInstance<UserRepo>()
     val passcodeService = getKoinInstance<PasscodeService>()
     val principalPolicyService = getKoinInstance<PrincipalPolicyService>()
     val userPrincipalService = getKoinInstance<UserPrincipalService>()
@@ -149,11 +151,31 @@ internal fun applicationAuthenticationConfiguration(): AuthenticationConfig.() -
     basic("basic-auth") {
         validate { credentials ->
             val organizationId = this.parameters["organization_id"]!!
-            val subOrganizationId = this.parameters["sub_organization_id"]
             val principal =
                 userPrincipalService.getUserPrincipalByCredentials(
                     organizationId,
-                    subOrganizationId,
+                    null,
+                    credentials.name.lowercase(),
+                    credentials.password,
+                )
+            if (principal != null) {
+                response.headers.append(Constants.X_ORGANIZATION_HEADER, organizationId)
+            }
+            return@validate principal
+        }
+    }
+    basic("sub-org-basic-auth") {
+        validate { credentials ->
+            val organizationId = this.parameters["organization_id"]!!
+            val usersRecord =
+                userRepo.findSubOrgByEmail(
+                    email = credentials.name.lowercase(),
+                    organizationId = organizationId,
+                ) ?: return@validate null
+            val principal =
+                userPrincipalService.getUserPrincipalByCredentials(
+                    organizationId,
+                    usersRecord.subOrganizationName,
                     credentials.name.lowercase(),
                     credentials.password,
                 )

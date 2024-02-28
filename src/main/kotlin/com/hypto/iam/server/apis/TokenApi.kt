@@ -107,10 +107,13 @@ suspend fun generateTokenOauth(
 
 fun Route.tokenApi() {
     authenticate("basic-auth", "bearer-auth") {
-        post(
-            "/organizations/{organization_id}/token",
-            "/organizations/{organization_id}/sub_organizations/token",
-        ) {
+        post("/organizations/{organization_id}/token") {
+            generateToken(call, context)
+        }
+    }
+
+    authenticate("sub-org-basic-auth") {
+        post("/organizations/{organization_id}/sub_organizations/token") {
             generateToken(call, context)
         }
     }

@@ -141,6 +141,20 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
         return builder.fetchOne()
     }
 
+    suspend fun findSubOrgByEmail(
+        email: String,
+        organizationId: String,
+    ): UsersRecord? {
+        return ctx("users.findSubOrgByEmail")
+            .selectFrom(USERS)
+            .where(USERS.EMAIL.equalIgnoreCase(email))
+            .and(USERS.DELETED.eq(false))
+            .and(USERS.VERIFIED.eq(true))
+            .and(USERS.ORGANIZATION_ID.eq(organizationId))
+            .and(USERS.SUB_ORGANIZATION_NAME.isNotNull)
+            .fetchOne()
+    }
+
     suspend fun findByPreferredUsername(preferredUsername: String): UsersRecord? {
         return ctx("users.findByAliasUsername")
             .selectFrom(USERS)

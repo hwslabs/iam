@@ -923,8 +923,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 val tokenResponse =
                     client.post(
-                        "/organizations/${organization
-                            .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/token",
+                        "/organizations/${organization.id}/sub_organizations/token",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         header(
@@ -1182,7 +1181,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val response =
                     client.post(
                         "/organizations/${organization .id}" +
-                            "/sub_organizations/${subOrganizationResponse.subOrganization .name}" +
+                            "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
                             "/users/${subOrgUser.username}/create_password",
                     ) {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -1223,8 +1222,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 val tokenResponse =
                     client.post(
-                        "/organizations/${organization.id}" +
-                            "/sub_organizations/${subOrganizationResponse.subOrganization.name}/token",
+                        "/organizations/${organization.id}/sub_organizations/token",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         header(HttpHeaders.Authorization, authHeader)
