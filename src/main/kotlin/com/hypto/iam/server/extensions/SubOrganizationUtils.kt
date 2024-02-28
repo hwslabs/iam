@@ -4,15 +4,14 @@ import io.ktor.server.plugins.BadRequestException
 import java.util.Base64
 
 /**
- * For sub organizations, we have to encode the email address to include the org and sub org id details in the email
- * so that users can have unique credentials across orgs and sub orgs.
+ * For sub organizations, we have to encode the email address to include the org details in the email
+ * so that users can have unique credentials across orgs.
  *
  * To support this, we are using the email local addressing scheme. This scheme allows us to add a suffix to email
  * address.
  * Ex: hello@hypto.in can be encoded as hello+<base64(orgId:subOrgId)>@hypto.in
  *
- * With this option, same email address hello@hypto.in can coonfigure two different passwords for sub orgId1 and sub
- * orgId2.
+ * With this option, same email address hello@hypto.in can configure two different passwords for orgId1 and orgId2.
  */
 fun getEncodedEmail(
     organizationId: String,

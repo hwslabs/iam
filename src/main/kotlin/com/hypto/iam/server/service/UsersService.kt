@@ -90,11 +90,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
         }
 
         return txMan.wrap {
-            // Note: We are using email sub-addressing to support same email login across multiple sub orgs.
-            // Example - An email address x@y.com can be a user for multiple hypto sub-orgs. To support this model,
-            // we are using email sub-addressing where we will append the local part (before '@') with base64 value
-            // of orgId:suborgId. By this way, the email address and password credentials will be uniquely stored in
-            // the identity provider and later used for authentication.
+            // Note: We are using email sub-addressing to support same email login across multiple sub orgs
+            // in different orgs.
+            // Example - An email address x@y.com can be a user for multiple hypto sub-orgs for different org.
+            // To support this model, we are using email sub-addressing where we will append the local part
+            // (before '@') with base64 value of orgId. By this way, the email address and password credentials
+            // will be uniquely stored in the identity provider and later used for authentication.
             if (password != null && loginAccess) {
                 createUserInIdentityProvider(
                     username,
