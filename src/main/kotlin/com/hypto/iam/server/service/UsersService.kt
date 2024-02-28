@@ -344,14 +344,18 @@ class UsersServiceImpl : KoinComponent, UsersService {
             organizationId,
             subOrganizationName,
             user.createdBy,
-            user.verified,
+            true,
         )
         userAuthRepo.create(
             hrn = user.hrn,
             providerName = TokenServiceImpl.ISSUER,
             authMetadata = null,
         )
-        userRepo.updateLoginAccessStatus(user.hrn, true)
+        userRepo.update(
+            hrn = user.hrn,
+            verified = true,
+            loginAccess = true,
+        )
         return BaseSuccessResponse(true)
     }
 
@@ -428,8 +432,12 @@ class UsersServiceImpl : KoinComponent, UsersService {
             )
         }
         val updatedUserRecord =
-            userRepo.update(userHrn.toString(), userStatus, verified, name)
-                ?: throw EntityNotFoundException("User not found")
+            userRepo.update(
+                hrn = userHrn.toString(),
+                status = userStatus,
+                verified = verified,
+                name = name,
+            ) ?: throw EntityNotFoundException("User not found")
 
         return getUser(userHrn, updatedUserRecord)
     }

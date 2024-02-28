@@ -88,14 +88,16 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
 
     suspend fun update(
         hrn: String,
-        status: User.Status?,
-        verified: Boolean?,
-        name: String?,
+        status: User.Status? = null,
+        verified: Boolean? = null,
+        name: String? = null,
+        loginAccess: Boolean? = null,
     ): UsersRecord? {
         val updateStep = ctx("users.update").update(USERS).set(USERS.UPDATED_AT, LocalDateTime.now())
         status?.let { updateStep.set(USERS.STATUS, it.value) }
         verified?.let { updateStep.set(USERS.VERIFIED, it) }
         name?.let { updateStep.set(USERS.NAME, it) }
+        loginAccess?.let { updateStep.set(USERS.LOGIN_ACCESS, it) }
         return updateStep.where(USERS.HRN.eq(hrn)).and(USERS.DELETED.eq(false))
             .returning().fetchOne()
     }
