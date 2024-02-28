@@ -647,7 +647,7 @@ paths:
         $ref: '#/components/requestBodies/CreateUserPasswordRequest'
       responses:
         '200':
-          $ref: '#/components/responses/BaseSuccessResponse'
+          $ref: '#/components/responses/TokenResponse'
         '400':
           $ref: '#/components/responses/ErrorResponse'
         '401':
