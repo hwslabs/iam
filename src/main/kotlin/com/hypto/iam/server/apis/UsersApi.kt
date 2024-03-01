@@ -5,7 +5,6 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
-import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.RouteOption
 import com.hypto.iam.server.extensions.deleteWithPermission
@@ -469,12 +468,13 @@ fun Route.createUserPasswordApi() {
             require(passcode.email == inviteeUser.email) { "Email in passcode does not match email in request" }
         }
 
-        val user = usersService.createUserPassword(
-            organizationId,
-            subOrganizationName,
-            userId,
-            request.password,
-    ) ?: throw NotFoundException("User not found")
+        val user =
+            usersService.createUserPassword(
+                organizationId,
+                subOrganizationName,
+                userId,
+                request.password,
+            ) ?: throw NotFoundException("User not found")
 
         tokenService.generateJwtToken(ResourceHrn(user.hrn))
     }
