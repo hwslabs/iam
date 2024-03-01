@@ -19,6 +19,7 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
+import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPaginatedResponse
@@ -43,6 +44,7 @@ import io.mockk.coEvery
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -1188,6 +1190,8 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
                     }.apply {
+                        val response = gson.fromJson(bodyAsText(), TokenResponse::class.java)
+                        assertNotEquals(response.token.length, 0)
                         assertEquals(HttpStatusCode.OK, status)
                         assertEquals(
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),

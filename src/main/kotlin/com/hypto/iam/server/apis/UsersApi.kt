@@ -41,7 +41,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.principal
-import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -424,6 +423,7 @@ fun Route.resetPasswordApi() {
 }
 
 fun Route.createUserPasswordApi() {
+    val gson: Gson by inject()
     val usersService: UsersService by inject()
     val passcodeRepo: PasscodeRepo by inject()
     val tokenService: TokenService by inject()
@@ -474,8 +474,13 @@ fun Route.createUserPasswordApi() {
                 subOrganizationName,
                 userId,
                 request.password,
-            ) ?: throw NotFoundException("User not found")
+            )
 
-        tokenService.generateJwtToken(ResourceHrn(user.hrn))
+        val tokenResponse = tokenService.generateJwtToken(ResourceHrn(user.hrn))
+        call.respondText(
+            text = gson.toJson(tokenResponse),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created,
+        )
     }
 }
