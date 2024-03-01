@@ -112,7 +112,7 @@ fun Route.tokenApi() {
         }
     }
 
-    authenticate("sub-org-basic-auth") {
+    authenticate("sub-org-basic-auth", "bearer-auth") {
         post("/organizations/{organization_id}/sub_organizations/token") {
             generateToken(call, context)
         }

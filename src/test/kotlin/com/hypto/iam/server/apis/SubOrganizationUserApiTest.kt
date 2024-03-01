@@ -44,7 +44,6 @@ import io.mockk.coEvery
 import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -1190,20 +1189,37 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
                     }.apply {
-                        val response = gson.fromJson(bodyAsText(), TokenResponse::class.java)
-                        assertNotEquals(response.token.length, 0)
-                        assertEquals(HttpStatusCode.OK, status)
+                        assertEquals(HttpStatusCode.Created, status)
                         assertEquals(
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             contentType(),
                         )
                     }
 
-                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
                     response.contentType(),
                 )
+
+                val createPasswordResponse = gson.fromJson(response.bodyAsText(), TokenResponse::class.java)
+
+                client.post(
+                    "/organizations/${organization.id}/sub_organizations/token",
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer " + createPasswordResponse.token)
+                }.apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        contentType(),
+                    )
+                    assertEquals(
+                        organization.id,
+                        headers[Constants.X_ORGANIZATION_HEADER],
+                    )
+                }
 
                 // Check if password is created by logging in
                 coEvery {
