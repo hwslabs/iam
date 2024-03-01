@@ -328,7 +328,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         subOrganizationName: String?,
         userId: String,
         password: String,
-    ) {
+    ): UsersRecord? {
         val user = getUser(organizationId, subOrganizationName, userId)
         organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id")
@@ -352,7 +352,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             providerName = TokenServiceImpl.ISSUER,
             authMetadata = null,
         )
-        userRepo.update(
+        return userRepo.update(
             hrn = user.hrn,
             verified = true,
             loginAccess = true,
@@ -614,7 +614,7 @@ interface UsersService {
         subOrganizationName: String?,
         userId: String,
         password: String,
-    )
+    ): UsersRecord?
 
     suspend fun changeUserPassword(
         organizationId: String,

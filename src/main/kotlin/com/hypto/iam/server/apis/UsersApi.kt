@@ -5,6 +5,7 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
+import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.RouteOption
 import com.hypto.iam.server.extensions.deleteWithPermission
@@ -41,6 +42,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.principal
+import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -425,6 +427,7 @@ fun Route.resetPasswordApi() {
 fun Route.createUserPasswordApi() {
     val usersService: UsersService by inject()
     val passcodeRepo: PasscodeRepo by inject()
+    val tokenService: TokenService by inject()
 
     postWithPermission(
         listOf(
@@ -466,13 +469,13 @@ fun Route.createUserPasswordApi() {
             require(passcode.email == inviteeUser.email) { "Email in passcode does not match email in request" }
         }
 
-        usersService.createUserPassword(
+        val user = usersService.createUserPassword(
             organizationId,
             subOrganizationName,
             userId,
             request.password,
-        )
+    ) ?: throw NotFoundException("User not found")
 
-        generateToken(call, context)
+        tokenService.generateJwtToken(ResourceHrn(user.hrn))
     }
 }
