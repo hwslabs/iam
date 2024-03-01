@@ -357,7 +357,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             verified = true,
             loginAccess = true,
         )
-        return user
+        return getUser(organizationId, subOrganizationName, userId)
     }
 
     override suspend fun listUsers(
