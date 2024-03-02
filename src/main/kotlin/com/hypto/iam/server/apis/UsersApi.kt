@@ -423,8 +423,10 @@ fun Route.resetPasswordApi() {
 }
 
 fun Route.createUserPasswordApi() {
+    val gson: Gson by inject()
     val usersService: UsersService by inject()
     val passcodeRepo: PasscodeRepo by inject()
+    val tokenService: TokenService by inject()
 
     postWithPermission(
         listOf(
@@ -466,13 +468,19 @@ fun Route.createUserPasswordApi() {
             require(passcode.email == inviteeUser.email) { "Email in passcode does not match email in request" }
         }
 
-        usersService.createUserPassword(
-            organizationId,
-            subOrganizationName,
-            userId,
-            request.password,
-        )
+        val user =
+            usersService.createUserPassword(
+                organizationId,
+                subOrganizationName,
+                userId,
+                request.password,
+            )
 
-        generateToken(call, context)
+        val tokenResponse = tokenService.generateJwtToken(ResourceHrn(user.hrn))
+        call.respondText(
+            text = gson.toJson(tokenResponse),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created,
+        )
     }
 }

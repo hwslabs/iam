@@ -19,6 +19,7 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.CreateUserResponse
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
+import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPaginatedResponse
@@ -1188,18 +1189,37 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                         setBody(gson.toJson(CreateUserPasswordRequest("testPassword@Hash1")))
                     }.apply {
-                        assertEquals(HttpStatusCode.OK, status)
+                        assertEquals(HttpStatusCode.Created, status)
                         assertEquals(
                             ContentType.Application.Json.withCharset(Charsets.UTF_8),
                             contentType(),
                         )
                     }
 
-                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
                     ContentType.Application.Json.withCharset(Charsets.UTF_8),
                     response.contentType(),
                 )
+
+                val createPasswordResponse = gson.fromJson(response.bodyAsText(), TokenResponse::class.java)
+
+                client.post(
+                    "/organizations/${organization.id}/sub_organizations/token",
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header(HttpHeaders.Authorization, "Bearer " + createPasswordResponse.token)
+                }.apply {
+                    assertEquals(HttpStatusCode.OK, status)
+                    assertEquals(
+                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        contentType(),
+                    )
+                    assertEquals(
+                        organization.id,
+                        headers[Constants.X_ORGANIZATION_HEADER],
+                    )
+                }
 
                 // Check if password is created by logging in
                 coEvery {

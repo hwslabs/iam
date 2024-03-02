@@ -328,7 +328,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         subOrganizationName: String?,
         userId: String,
         password: String,
-    ) {
+    ): User {
         val user = getUser(organizationId, subOrganizationName, userId)
         organizationRepo.findById(organizationId)
             ?: throw EntityNotFoundException("Invalid organization id")
@@ -357,6 +357,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             verified = true,
             loginAccess = true,
         )
+        return getUser(organizationId, subOrganizationName, userId)
     }
 
     override suspend fun listUsers(
@@ -614,7 +615,7 @@ interface UsersService {
         subOrganizationName: String?,
         userId: String,
         password: String,
-    )
+    ): User
 
     suspend fun changeUserPassword(
         organizationId: String,
