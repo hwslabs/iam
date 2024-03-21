@@ -179,7 +179,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
                         organizationId = requesterPrincipal.organization,
                         userHrn = requesterPrincipal.hrn.toString(),
                         userId = (requesterPrincipal.hrn as ResourceHrn).resourceInstance,
-                    )
+                    ),
                 )
                 .withPolicy(policy)
                 .withPrincipalPolicy(PrincipalPoliciesRecord(null, request.principal, policy.hrn, null))

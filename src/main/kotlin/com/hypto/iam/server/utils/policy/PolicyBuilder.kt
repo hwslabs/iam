@@ -1,6 +1,8 @@
 package com.hypto.iam.server.utils.policy
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.exceptions.PolicyFormatException
@@ -10,6 +12,10 @@ import net.pwall.mustache.parser.MustacheParserException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.InputStream
+
+val mapTypeToken = object : TypeToken<Map<String, String?>>() {}
+
+fun String.toSnakeCase(): String = PropertyNamingStrategies.SnakeCaseStrategy().translate(this)
 
 class PolicyVariables(
     val organizationId: String,
@@ -96,7 +102,8 @@ class PolicyBuilder : KoinComponent {
                 } catch (e: MustacheParserException) {
                     throw IllegalStateException("Invalid policy format: $policy")
                 }
-            template.processToString(gson.fromJson(gson.toJson(policyVariables), Map::class.java))
+            val variablesMap = gson.fromJson(gson.toJson(policyVariables), mapTypeToken)
+            template.processToString(variablesMap.mapKeys { it.key.toSnakeCase() })
         } else {
             policy
         }

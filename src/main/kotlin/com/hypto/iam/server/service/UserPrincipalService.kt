@@ -5,7 +5,6 @@ import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.UsernamePasswordCredential
-import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.measureTimedValue
 import com.hypto.iam.server.utils.policy.PolicyBuilder
