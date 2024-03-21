@@ -173,13 +173,13 @@ class TokenServiceImpl : KoinComponent, TokenService {
         logger.info { policy.statements }
 
         val policyBuilder =
-            PolicyBuilder(
-                policyVariables =
+            PolicyBuilder()
+                .withPolicyVariables(
                     PolicyVariables(
                         organizationId = requesterPrincipal.organization,
                         userHrn = request.principal ?: throw IllegalArgumentException("Principal is required"),
-                    ),
-            )
+                    )
+                )
                 .withPolicy(policy)
                 .withPrincipalPolicy(PrincipalPoliciesRecord(null, request.principal, policy.hrn, null))
 

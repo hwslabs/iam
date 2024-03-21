@@ -52,7 +52,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
                 if (deepCheck && (creatorHrnStr == null)) {
                     principalPolicyService.fetchEntitlements(userHrnStr)
                 } else {
-                    PolicyBuilder(policyStr = entitlements, policyVariables = PolicyVariables(organizationId, userHrnStr))
+                    PolicyBuilder(policyStr = entitlements).withPolicyVariables(PolicyVariables(organizationId, userHrnStr))
                 },
             )
         }

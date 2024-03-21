@@ -22,7 +22,7 @@ class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
     override suspend fun fetchEntitlements(userHrn: String): PolicyBuilder {
         val principalPolicies = principalPoliciesRepo.fetchByPrincipalHrn(userHrn)
         val hrn = HrnFactory.getHrn(userHrn)
-        val policyBuilder = PolicyBuilder(policyVariables = PolicyVariables(organizationId = hrn.organization, userHrn = userHrn))
+        val policyBuilder = PolicyBuilder().withPolicyVariables(PolicyVariables(organizationId = hrn.organization, userHrn = userHrn))
         principalPolicies.forEach {
             val policy = policiesRepo.fetchByHrn(it.policyHrn)!!
             logger.info { policy.statements }

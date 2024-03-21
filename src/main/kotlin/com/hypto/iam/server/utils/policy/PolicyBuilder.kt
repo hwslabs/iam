@@ -18,18 +18,7 @@ class PolicyVariables(
 
 class PolicyBuilder : KoinComponent {
     private val gson: Gson by inject()
-    constructor(policyVariables: PolicyVariables) {
-        this.orgId = policyVariables.organizationId
-    }
-
-    constructor(policyHrn: ResourceHrn, policyVariables: PolicyVariables) {
-        this.policyHrn = policyHrn
-        this.orgId = policyHrn.organization
-    }
-
-    constructor(policyStr: String, policyVariables: PolicyVariables) {
-        this.policyString = policyStr
-    }
+    constructor()
 
     constructor(policyHrn: ResourceHrn) {
         this.policyHrn = policyHrn
@@ -90,7 +79,15 @@ class PolicyBuilder : KoinComponent {
 
     @Suppress("SwallowedException")
     fun build(): String {
-        val policy = toString()
+        if (this::policyString.isInitialized) {
+            return this.policyString
+        }
+        val builder = StringBuilder()
+        policyStatements.forEach { builder.appendLine(it.toString()) }
+        policies.forEach { builder.appendLine(it.statements) }
+        principalPolicies.forEach { builder.appendLine(PolicyStatement.g(it.principalHrn, it.policyHrn)) }
+
+        val policy = builder.toString()
         return if (this::policyVariables.isInitialized) {
             val template =
                 try {
@@ -109,13 +106,6 @@ class PolicyBuilder : KoinComponent {
     }
 
     override fun toString(): String {
-        if (this::policyString.isInitialized) {
-            return this.policyString
-        }
-        val builder = StringBuilder()
-        policyStatements.forEach { builder.appendLine(it.toString()) }
-        policies.forEach { builder.appendLine(it.statements) }
-        principalPolicies.forEach { builder.appendLine(PolicyStatement.g(it.principalHrn, it.policyHrn)) }
-        return builder.toString()
+        return build()
     }
 }

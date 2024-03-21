@@ -71,7 +71,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         }
 
         // TODO: Validate policy statements (actions and resourceTypes)
-        val newPolicyBuilder = PolicyBuilder(policyHrn, policyVariables = PolicyVariables(organizationId))
+        val newPolicyBuilder = PolicyBuilder(policyHrn).withPolicyVariables(PolicyVariables(organizationId))
         statements.forEach { newPolicyBuilder.withStatement(it) }
 
         val policyRecord = policyRepo.create(policyHrn, description, newPolicyBuilder.build())
@@ -113,7 +113,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         val policyString =
             if (updatePolicyRequest.statements != null) {
                 // TODO: Validate policy statements (actions and resourceTypes)
-                PolicyBuilder(policyHrn, policyVariables = PolicyVariables(organizationId)).let { builder ->
+                PolicyBuilder(policyHrn).withPolicyVariables(PolicyVariables(organizationId)).let { builder ->
                     updatePolicyRequest.statements.forEach { builder.withStatement(it) }
                     builder.build()
                 }
