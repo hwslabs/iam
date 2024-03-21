@@ -29,6 +29,7 @@ import com.hypto.iam.server.utils.measureTimedValue
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import com.hypto.iam.server.utils.policy.PolicyRequest
 import com.hypto.iam.server.utils.policy.PolicyValidator
+import com.hypto.iam.server.utils.policy.PolicyVariables
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.CompressionCodecs
 import io.jsonwebtoken.Jws
@@ -173,6 +174,13 @@ class TokenServiceImpl : KoinComponent, TokenService {
 
         val policyBuilder =
             PolicyBuilder()
+                .withPolicyVariables(
+                    PolicyVariables(
+                        organizationId = requesterPrincipal.organization,
+                        userHrn = requesterPrincipal.hrn.toString(),
+                        userId = (requesterPrincipal.hrn as ResourceHrn).resourceInstance,
+                    ),
+                )
                 .withPolicy(policy)
                 .withPrincipalPolicy(PrincipalPoliciesRecord(null, request.principal, policy.hrn, null))
 
@@ -190,7 +198,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
             organization = requesterPrincipal.organization,
             principal = request.principal ?: requesterPrincipal.hrnStr,
             requester = requesterPrincipal.hrnStr,
-            entitlements = policyBuilder.toString(),
+            entitlements = policyBuilder.build(),
             expiryDate = expiryDate,
         )
     }

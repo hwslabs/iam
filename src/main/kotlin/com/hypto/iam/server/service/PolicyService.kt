@@ -26,6 +26,7 @@ import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
+import com.hypto.iam.server.utils.policy.PolicyVariables
 import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
 import net.pwall.mustache.Template
@@ -70,7 +71,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         }
 
         // TODO: Validate policy statements (actions and resourceTypes)
-        val newPolicyBuilder = PolicyBuilder(policyHrn)
+        val newPolicyBuilder = PolicyBuilder(policyHrn).withPolicyVariables(PolicyVariables(organizationId))
         statements.forEach { newPolicyBuilder.withStatement(it) }
 
         val policyRecord = policyRepo.create(policyHrn, description, newPolicyBuilder.build())
@@ -112,7 +113,7 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
         val policyString =
             if (updatePolicyRequest.statements != null) {
                 // TODO: Validate policy statements (actions and resourceTypes)
-                PolicyBuilder(policyHrn).let { builder ->
+                PolicyBuilder(policyHrn).withPolicyVariables(PolicyVariables(organizationId)).let { builder ->
                     updatePolicyRequest.statements.forEach { builder.withStatement(it) }
                     builder.build()
                 }
