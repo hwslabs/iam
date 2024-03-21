@@ -6,6 +6,7 @@ import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.security.UsernamePasswordCredential
 import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.measureTimedValue
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import com.hypto.iam.server.utils.policy.PolicyVariables
@@ -43,7 +44,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
             val userHrnStr: String = token.body.get(TokenServiceImpl.USER_CLAIM, String::class.java)
             val creatorHrnStr: String? = token.body.get(TokenServiceImpl.ON_BEHALF_CLAIM, String::class.java)
             val entitlements: String = token.body.get(TokenServiceImpl.ENTITLEMENTS_CLAIM, String::class.java)
-            val hrn = HrnFactory.getHrn(userHrnStr)
+            val hrn = ResourceHrn(userHrnStr)
             val organizationId = hrn.organization
             return UserPrincipal(
                 tokenCredential,
@@ -52,7 +53,7 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
                 if (deepCheck && (creatorHrnStr == null)) {
                     principalPolicyService.fetchEntitlements(userHrnStr)
                 } else {
-                    PolicyBuilder(policyStr = entitlements).withPolicyVariables(PolicyVariables(organizationId, userHrnStr))
+                    PolicyBuilder(policyStr = entitlements).withPolicyVariables(PolicyVariables(organizationId, userHrnStr, hrn.resourceInstance))
                 },
             )
         }

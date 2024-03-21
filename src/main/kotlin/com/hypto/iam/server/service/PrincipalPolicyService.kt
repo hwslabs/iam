@@ -6,6 +6,7 @@ import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import com.hypto.iam.server.utils.policy.PolicyVariables
 import mu.KotlinLogging
@@ -21,8 +22,8 @@ class PrincipalPolicyServiceImpl : PrincipalPolicyService, KoinComponent {
 
     override suspend fun fetchEntitlements(userHrn: String): PolicyBuilder {
         val principalPolicies = principalPoliciesRepo.fetchByPrincipalHrn(userHrn)
-        val hrn = HrnFactory.getHrn(userHrn)
-        val policyBuilder = PolicyBuilder().withPolicyVariables(PolicyVariables(organizationId = hrn.organization, userHrn = userHrn))
+        val hrn = ResourceHrn(userHrn)
+        val policyBuilder = PolicyBuilder().withPolicyVariables(PolicyVariables(organizationId = hrn.organization, userHrn = userHrn, userId = hrn.resourceInstance))
         principalPolicies.forEach {
             val policy = policiesRepo.fetchByHrn(it.policyHrn)!!
             logger.info { policy.statements }

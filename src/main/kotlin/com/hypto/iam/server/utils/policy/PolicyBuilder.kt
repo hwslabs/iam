@@ -14,6 +14,7 @@ import java.io.InputStream
 class PolicyVariables(
     val organizationId: String,
     val userHrn: String? = null,
+    val userId: String? = null,
 )
 
 class PolicyBuilder : KoinComponent {

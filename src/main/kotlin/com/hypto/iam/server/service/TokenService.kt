@@ -177,7 +177,8 @@ class TokenServiceImpl : KoinComponent, TokenService {
                 .withPolicyVariables(
                     PolicyVariables(
                         organizationId = requesterPrincipal.organization,
-                        userHrn = request.principal ?: throw IllegalArgumentException("Principal is required"),
+                        userHrn = requesterPrincipal.hrn.toString(),
+                        userId = (requesterPrincipal.hrn as ResourceHrn).resourceInstance,
                     )
                 )
                 .withPolicy(policy)
