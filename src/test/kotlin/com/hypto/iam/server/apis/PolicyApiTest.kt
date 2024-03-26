@@ -2,12 +2,15 @@ package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
+import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
+import com.hypto.iam.server.db.tables.records.PolicyTemplatesRecord
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createAndAttachPolicy
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createResourceActionHrn
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createUser
 import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
+import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.PaginationOptions
@@ -19,6 +22,7 @@ import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
+import com.hypto.iam.server.utils.policy.PolicyBuilder
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -38,6 +42,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
+import java.time.LocalDateTime
 
 class PolicyApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -267,6 +272,91 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     response.contentType(),
                 )
 
+                deleteOrganization(createdOrganization.id)
+            }
+        }
+
+        @Test
+        fun `create policy from template - success`() {
+            testApplication {
+                environment {
+                    config = ApplicationConfig("application-custom.conf")
+                }
+
+                val (createdOrganizationResponse, _) = createOrganization()
+
+                val createdOrganization = createdOrganizationResponse.organization
+                val rootUserToken = createdOrganizationResponse.rootUserToken
+
+                val policyName = "test-policy"
+                val policyTemplateName = "test-policy-template"
+
+                val resourceName = "resource"
+                val (resourceHrn, actionHrn) =
+                    createResourceActionHrn(
+                        createdOrganization.id,
+                        null,
+                        resourceName,
+                        "action",
+                    )
+                val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
+                val policyHrn = ResourceHrn(createdOrganization.id, "", IamResources.POLICY, policyName)
+
+                val policyStr = PolicyBuilder(policyHrn).withStatement(policyStatements[0]).build()
+
+                val policyTemplatesRepo: PolicyTemplatesRepo by inject()
+                val policyTempRecord = PolicyTemplatesRecord()
+                policyTempRecord.apply {
+                    name = policyTemplateName
+                    status = "ACTIVE"
+                    isRootPolicy = false
+                    statements = policyStr // policyStatements.toString()
+                    createdAt = LocalDateTime.now()
+                    updatedAt = LocalDateTime.now()
+                    description = ""
+                    requiredVariables = arrayOf<String>()
+                }
+
+                policyTemplatesRepo.store(policyTempRecord)
+
+                val requestBody = CreatePolicyFromTemplateRequest(policyName, policyTemplateName)
+
+                val response =
+                    client.post(
+                        "/organizations/${createdOrganization.id}/policy_from_template",
+                    ) {
+                        header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                        header(HttpHeaders.Authorization, "Bearer $rootUserToken")
+                        setBody(gson.toJson(requestBody))
+                    }
+                Assertions.assertEquals(HttpStatusCode.Created, response.status)
+                Assertions.assertEquals(
+                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    response.contentType(),
+                )
+                Assertions.assertEquals(
+                    createdOrganization.id,
+                    response.headers[Constants.X_ORGANIZATION_HEADER],
+                )
+
+                val responseBody = gson.fromJson(response.bodyAsText(), Policy::class.java)
+                Assertions.assertEquals(createdOrganization.id, responseBody.organizationId)
+
+                val expectedPolicyHrn =
+                    ResourceHrn(
+                        organization = createdOrganization.id,
+                        resource = IamResources.POLICY,
+                        subOrganization = null,
+                        resourceInstance = policyName,
+                    )
+
+                Assertions.assertEquals(expectedPolicyHrn.toString(), responseBody.hrn)
+                Assertions.assertEquals(policyName, responseBody.name)
+                Assertions.assertEquals(1, responseBody.version)
+                Assertions.assertEquals(policyStatements, responseBody.statements)
+
+                // cleanup
+                policyTempRecord.delete()
                 deleteOrganization(createdOrganization.id)
             }
         }

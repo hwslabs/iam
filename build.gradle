@@ -95,7 +95,8 @@ jacocoTestReport {
                     'com/hypto/iam/server/db/tables/*',
                     'com/hypto/iam/server/models',
                     'com/hypto/iam/server/db/*',
-                    'com/hypto/iam/server/security/Audit*'
+                    'com/hypto/iam/server/security/Audit*',
+                    'com/hypto/iam/server/ExceptionHandler*'
             ])
         }))
     }
