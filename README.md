@@ -25,6 +25,7 @@ Hypto IAM service provides APIs to manage the authentication and authorization o
 * As a last step, run `docker-compose up` to start the service.
 * Secure your applications happily :)
 
+
 ## Tech stack
 * Kotlin 1.6.10
 * Gradle 4.3
@@ -260,6 +261,13 @@ Important gradle tasks to know for working in this repository.
 
 
 You can look all the available tasks using this command `gradlew tasks`
+
+### Making an organization root organization which has permissions to access data across all organizations.
+Root organizations are like administrators used by businesses using IAM to manage all organizations. These root organizations will have previlege to perform CRUD on any resources across any organizations.
+Execute below sql query in postgres to mark an $orgId as root org.
+```sql
+       UPDATE policies SET statements = concat(statements, E'\\n', 'p, hrn:$orgId::iam-policy/admin, hrn:*, hrn:*, allow') WHERE hrn='hrn:$orgId::iam-policy/admin' AND organization_id='$orgId' AND statements not like '%hrn:\\*, hrn:\\*, allow%';
+```
 
 ## 📣 Let's chat
 Join our Slack channel for any new contributions or issues with the project.

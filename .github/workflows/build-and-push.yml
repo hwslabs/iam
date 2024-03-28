@@ -57,7 +57,7 @@ jobs:
         run: |
           docker compose -f docker-compose.yml up -d pg
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           gradle-version: '8.5'
           arguments: build
@@ -83,7 +83,7 @@ jobs:
 
       - name: Build Fat Jar
         if: ${{ steps.check-commit-already-built-and-pushed.outputs.count == 0 && !startsWith(github.ref, 'refs/pull/') }}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v2.4.2
         with:
           arguments: shadowJar
 
