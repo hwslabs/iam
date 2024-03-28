@@ -29,6 +29,8 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import org.koin.ktor.ext.inject
 
+const val ORGANIZATION_ID_REQUIRED = "organization_id required"
+
 @Suppress("ComplexMethod")
 fun Route.policyApi() {
     val policyService: PolicyService by inject()
@@ -41,7 +43,7 @@ fun Route.policyApi() {
         post("/organizations/{organization_id}/policies") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val request = call.receive<CreatePolicyRequest>().validate()
 
             val principal = context.principal<UserPrincipal>()!!
@@ -67,7 +69,7 @@ fun Route.policyApi() {
         post("/organizations/{organization_id}/policy_from_template") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val request = call.receive<CreatePolicyFromTemplateRequest>().validate()
 
             val principal = context.principal<UserPrincipal>()!!
@@ -119,7 +121,7 @@ fun Route.policyApi() {
         delete("/organizations/{organization_id}/policies/{name}") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to delete a policy")
 
             val response = policyService.deletePolicy(organizationId, name)
@@ -139,7 +141,7 @@ fun Route.policyApi() {
         get("/organizations/{organization_id}/policies/{name}") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val name =
                 call.parameters["name"] ?: throw IllegalArgumentException("Required name to get the policy details")
 
@@ -172,7 +174,7 @@ fun Route.policyApi() {
         ),
         "getUserPolicy",
     ) {
-        val organizationId = call.parameters["organization_id"] ?: throw IllegalArgumentException("organization_id required")
+        val organizationId = call.parameters["organization_id"] ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
         val subOrganizationId = call.parameters["sub_organization_name"]
         val userId = call.parameters["user_id"] ?: throw IllegalArgumentException("Required user id to list policies")
 
@@ -203,7 +205,7 @@ fun Route.policyApi() {
         patch("/organizations/{organization_id}/policies/{name}") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val name =
                 call.parameters["name"]
                     ?: throw IllegalArgumentException("Required name to update the policy details")

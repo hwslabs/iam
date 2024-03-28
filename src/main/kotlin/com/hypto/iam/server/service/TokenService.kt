@@ -108,26 +108,26 @@ class TokenServiceImpl : KoinComponent, TokenService {
             // Validate claims
             val body = jws.body
 
-            val issuer: String? = body.get(Claims.ISSUER, String::class.java)
+            val issuer: String? = body[Claims.ISSUER, String::class.java]
             require(issuer != null && issuer == ISSUER) { JWT_INVALID_ISSUER }
 
             // usr is a valid hrn for normal user generated tokens
             // In case of delegate tokens, usr field contains the principal to which the token is delegated to.
             // The principal of the creator of the token will be present in "obof" claim
-            val onBehalfOfUser: String? = body.get(ON_BEHALF_CLAIM, String::class.java)
-            val userHrnStr: String? = body.get(USER_CLAIM, String::class.java)
+            val onBehalfOfUser: String? = body[ON_BEHALF_CLAIM, String::class.java]
+            val userHrnStr: String? = body[USER_CLAIM, String::class.java]
             require(
                 userHrnStr != null &&
                     (HrnFactory.isValid(userHrnStr) || onBehalfOfUser?.let { HrnFactory.isValid(it) } ?: false),
             ) { JWT_INVALID_USER_HRN }
 
-            val organization: String? = body.get(ORGANIZATION_CLAIM, String::class.java)
+            val organization: String? = body[ORGANIZATION_CLAIM, String::class.java]
             require(organization != null) { JWT_INVALID_ORGANIZATION }
 
-            val versionNum: String? = body.get(VERSION_CLAIM, String::class.java)
+            val versionNum: String? = body[VERSION_CLAIM, String::class.java]
             require(versionNum != null) { JWT_INVALID_VERSION_NUMBER }
 
-            val issuedAt: Date? = body.get(Claims.ISSUED_AT, Date::class.java)
+            val issuedAt: Date? = body[Claims.ISSUED_AT, Date::class.java]
             require(issuedAt is Date && issuedAt.toInstant() <= Instant.now()) {
                 String.format(JWT_INVALID_ISSUED_AT, issuedAt)
             }

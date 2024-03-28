@@ -21,6 +21,28 @@ import io.ktor.server.routing.Route
 import org.koin.ktor.ext.inject
 import java.util.UUID
 
+const val USER_ID_REQUIRED = "userId required"
+const val ID_REQUIRED = "id required"
+
+fun getRoutOptionsForGetPatchDeleteCredentials(): List<RouteOption> {
+    return listOf(
+        RouteOption(
+            "/organizations/{organization_id}/users/{userId}/credentials/{id}",
+            resourceNameIndex = 4,
+            resourceInstanceIndex = 5,
+            organizationIdIndex = 1,
+        ),
+        RouteOption(
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
+                "{userId}/credentials/{id}",
+            resourceNameIndex = 6,
+            resourceInstanceIndex = 7,
+            organizationIdIndex = 1,
+            subOrganizationNameIndex = 3,
+        ),
+    )
+}
+
 fun Route.credentialApi() {
     val gson: Gson by inject()
     val credentialService: CredentialService by inject()
@@ -46,9 +68,9 @@ fun Route.credentialApi() {
     ) {
         val organizationId =
             call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+                ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
         val subOrganizationName = call.parameters["sub_organization_name"]
-        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException(USER_ID_REQUIRED)
         val request = call.receive<CreateCredentialRequest>().validate()
 
         val response =
@@ -68,30 +90,15 @@ fun Route.credentialApi() {
     }
 
     deleteWithPermission(
-        listOf(
-            RouteOption(
-                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                resourceNameIndex = 4,
-                resourceInstanceIndex = 5,
-                organizationIdIndex = 1,
-            ),
-            RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
-                    "{userId}/credentials/{id}",
-                resourceNameIndex = 6,
-                resourceInstanceIndex = 7,
-                organizationIdIndex = 1,
-                subOrganizationNameIndex = 3,
-            ),
-        ),
+        getRoutOptionsForGetPatchDeleteCredentials(),
         "deleteCredential",
     ) {
         val organizationId =
             call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+                ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
         val subOrganizationName = call.parameters["sub_organization_name"]
-        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
-        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException(USER_ID_REQUIRED)
+        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException(ID_REQUIRED))
 
         val response = credentialService.deleteCredential(organizationId, subOrganizationName, userId, id)
 
@@ -103,30 +110,15 @@ fun Route.credentialApi() {
     }
 
     getWithPermission(
-        listOf(
-            RouteOption(
-                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                resourceNameIndex = 4,
-                resourceInstanceIndex = 5,
-                organizationIdIndex = 1,
-            ),
-            RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
-                    "{userId}/credentials/{id}",
-                resourceNameIndex = 6,
-                resourceInstanceIndex = 7,
-                organizationIdIndex = 1,
-                subOrganizationNameIndex = 3,
-            ),
-        ),
+        getRoutOptionsForGetPatchDeleteCredentials(),
         "getCredential",
     ) {
         val organizationId =
             call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+                ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
         val subOrganizationName = call.parameters["sub_organization_name"]
-        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
-        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException(USER_ID_REQUIRED)
+        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException(ID_REQUIRED))
 
         val credential = credentialService.getCredentialWithoutSecret(organizationId, subOrganizationName, userId, id)
 
@@ -170,30 +162,15 @@ fun Route.credentialApi() {
     }
 
     patchWithPermission(
-        listOf(
-            RouteOption(
-                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                resourceNameIndex = 4,
-                resourceInstanceIndex = 5,
-                organizationIdIndex = 1,
-            ),
-            RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
-                    "{userId}/credentials/{id}",
-                resourceNameIndex = 6,
-                resourceInstanceIndex = 7,
-                organizationIdIndex = 1,
-                subOrganizationNameIndex = 3,
-            ),
-        ),
+        getRoutOptionsForGetPatchDeleteCredentials(),
         "updateCredential",
     ) {
         val organizationId =
             call.parameters["organization_id"]
-                ?: throw IllegalArgumentException("organization_id required")
+                ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
         val subOrganizationName = call.parameters["sub_organization_name"]
-        val userId = call.parameters["userId"] ?: throw IllegalArgumentException("userId required")
-        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException("id required"))
+        val userId = call.parameters["userId"] ?: throw IllegalArgumentException(USER_ID_REQUIRED)
+        val id = UUID.fromString(call.parameters["id"] ?: throw IllegalArgumentException(ID_REQUIRED))
         val request = call.receive<UpdateCredentialRequest>().validate()
 
         val response =

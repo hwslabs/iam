@@ -37,6 +37,9 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDateTime
 
+const val USER_NOT_FOUND_ERROR_MESSAGE = "Unable to find user"
+const val INVALID_ORG_ID_NAME = "Invalid organization id name."
+
 class UsersServiceImpl : KoinComponent, UsersService {
     private val principalPolicyService: PrincipalPolicyService by inject()
     private val hrnFactory: HrnFactory by inject()
@@ -211,7 +214,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(organizationId, subOrganizationName, IamResources.USER, userName)
         val userRecord =
             userRepo.findByHrn(userHrn.toString())
-                ?: throw EntityNotFoundException("Unable to find user")
+                ?: throw EntityNotFoundException(USER_NOT_FOUND_ERROR_MESSAGE)
         return getUser(userHrn, userRecord)
     }
 
@@ -231,7 +234,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     userRepo.findByEmail(email)
                         ?: throw EntityNotFoundException("User with email - $email not found")
                 organizationRepo.findById(user.organizationId)
-                    ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+                    ?: throw EntityNotFoundException("$INVALID_ORG_ID_NAME $USER_NOT_FOUND_ERROR_MESSAGE")
                 user
             } else {
                 organizationId ?: throw EntityNotFoundException("Organization id is required")
@@ -255,7 +258,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(organizationId, subOrganizationName ?: "", IamResources.USER, userName)
         val userRecord =
             userRepo.findByHrn(userHrn.toString())
-                ?: throw EntityNotFoundException("Unable to find user")
+                ?: throw EntityNotFoundException(USER_NOT_FOUND_ERROR_MESSAGE)
         if (userRecord.loginAccess != true) {
             throw BadRequestException("User - $userName does not have login access")
         }
@@ -283,7 +286,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(user.hrn)
         val userRecord =
             userRepo.findByHrn(userHrn.toString())
-                ?: throw EntityNotFoundException("Unable to find user")
+                ?: throw EntityNotFoundException(USER_NOT_FOUND_ERROR_MESSAGE)
         if (userRecord.loginAccess != true) {
             throw BadRequestException("User - ${userHrn.resourceInstance} does not have login access")
         }
@@ -367,7 +370,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): UserPaginatedResponse {
         val org =
             organizationRepo.findById(organizationId)
-                ?: throw EntityNotFoundException("Invalid organization id name. Unable to get user")
+                ?: throw EntityNotFoundException("$INVALID_ORG_ID_NAME $USER_NOT_FOUND_ERROR_MESSAGE")
 
         val users =
             userRepo.fetchUsers(organizationId, subOrganizationName, paginationContext).map { user ->

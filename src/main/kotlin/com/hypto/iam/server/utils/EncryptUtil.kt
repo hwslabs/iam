@@ -6,7 +6,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.Base64
 import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 data class EncryptedData(
@@ -15,17 +15,23 @@ data class EncryptedData(
 )
 
 object EncryptUtil : KoinComponent {
-    private const val ALGORITHM = "AES/CBC/PKCS5Padding"
+    private const val ALGORITHM = "AES/GCM/NoPadding"
     private const val KEY_ALGORITHM = "AES"
+    private const val TAG_LENGTH_BIT = 128
     private const val KEY_LENGTH = 16
-    private val iv = IvParameterSpec(ByteArray(KEY_LENGTH))
+    private val gcm: GCMParameterSpec
     private val masterKeyCache: MasterKeyCache by inject()
     private val gson: Gson by inject()
+
+    init {
+        val nonce = ByteArray(KEY_LENGTH)
+        gcm = GCMParameterSpec(TAG_LENGTH_BIT, nonce)
+    }
 
     suspend fun encrypt(input: String): String {
         val cipher = Cipher.getInstance(ALGORITHM)
         val (key, keyId) = getSecretKeySpec()
-        cipher.init(Cipher.ENCRYPT_MODE, key, iv)
+        cipher.init(Cipher.ENCRYPT_MODE, key, gcm)
         val cipherText = cipher.doFinal(input.toByteArray())
         return gson.toJson(
             EncryptedData(
@@ -39,7 +45,7 @@ object EncryptUtil : KoinComponent {
         val cipher = Cipher.getInstance(ALGORITHM)
         val encryptedData = gson.fromJson(cipherText, EncryptedData::class.java)
         val (key, _) = getSecretKeySpec(encryptedData.keyId)
-        cipher.init(Cipher.DECRYPT_MODE, key, iv)
+        cipher.init(Cipher.DECRYPT_MODE, key, gcm)
         val plainText = cipher.doFinal(Base64.getDecoder().decode(encryptedData.data))
         return String(plainText)
     }

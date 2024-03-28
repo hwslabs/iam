@@ -231,11 +231,12 @@ const val ORGANIZATION_NAME_REGEX = "^[_a-zA-Z0-9-\\s]*\$"
 const val ORGANIZATION_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _, - and [space] are supported"
 const val CREDENTIALS_EMAIL_INVALID = "Invalid Email"
 const val CREDENTIALS_PASSWORD_INVALID = "Invalid Password"
+const val MAXIMUM_LENGTH_SUPPORTED_MSG = "Maximum length supported for"
 
 val resourceNameCheck =
     Validation {
         minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
-        maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+        maxLength(Constants.MAX_NAME_LENGTH) hint MAXIMUM_LENGTH_SUPPORTED_MSG +
             "name is ${Constants.MAX_NAME_LENGTH} characters"
         pattern(RESOURCE_NAME_REGEX) hint RESOURCE_NAME_REGEX_HINT
     }
@@ -243,7 +244,7 @@ val resourceNameCheck =
 val orgNameCheck =
     Validation {
         minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
-        maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+        maxLength(Constants.MAX_NAME_LENGTH) hint MAXIMUM_LENGTH_SUPPORTED_MSG +
             "name is ${Constants.MAX_NAME_LENGTH} characters"
         pattern(ORGANIZATION_NAME_REGEX) hint ORGANIZATION_NAME_REGEX_HINT
     }
@@ -251,7 +252,7 @@ val orgNameCheck =
 val nameOfUserCheck =
     Validation {
         minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
-        maxLength(Constants.MAX_NAME_LENGTH) hint "Maximum length supported for" +
+        maxLength(Constants.MAX_NAME_LENGTH) hint MAXIMUM_LENGTH_SUPPORTED_MSG +
             "name is ${Constants.MAX_NAME_LENGTH} characters"
         noEndSpaces()
     }
@@ -266,7 +267,7 @@ val phoneNumberCheck =
 val preferredUserNameCheck =
     Validation {
         minLength(Constants.MIN_USERNAME_LENGTH) hint "Minimum length expected is ${Constants.MIN_USERNAME_LENGTH}"
-        maxLength(Constants.MAX_USERNAME_LENGTH) hint "Maximum length supported for" +
+        maxLength(Constants.MAX_USERNAME_LENGTH) hint MAXIMUM_LENGTH_SUPPORTED_MSG +
             "name is ${Constants.MAX_USERNAME_LENGTH} characters"
         pattern(PREFERRED_USERNAME_REGEX) hint PREFERRED_USERNAME_REGEX_HINT
     }
@@ -279,7 +280,7 @@ val emailCheck =
 
 val descriptionCheck =
     Validation {
-        maxLength(Constants.MAX_DESC_LENGTH) hint "Maximum length supported for" +
+        maxLength(Constants.MAX_DESC_LENGTH) hint MAXIMUM_LENGTH_SUPPORTED_MSG +
             "description is ${Constants.MAX_DESC_LENGTH} characters"
     }
 
@@ -518,7 +519,7 @@ val updateUserRequestValidation =
 val createSubOrganizationRequest =
     Validation {
         CreateSubOrganizationRequest::name required {
-            maxLength(MAX_SUB_ORG_LENGTH) hint "Maximum length supported for" +
+            maxLength(MAX_SUB_ORG_LENGTH) hint MAXIMUM_LENGTH_SUPPORTED_MSG +
                 "name is $MAX_SUB_ORG_LENGTH characters"
         }
         CreateSubOrganizationRequest::description ifPresent {
