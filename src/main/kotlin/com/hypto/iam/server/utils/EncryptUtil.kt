@@ -15,7 +15,7 @@ data class EncryptedData(
 )
 
 object EncryptUtil : KoinComponent {
-    private const val ALGORITHM = "AES/CBC/PKCS5Padding"
+    private const val ALGORITHM = "AES/GCM/NoPadding"
     private const val KEY_ALGORITHM = "AES"
     private const val KEY_LENGTH = 16
     private val iv = IvParameterSpec(ByteArray(KEY_LENGTH))
