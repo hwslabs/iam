@@ -40,9 +40,9 @@ class UserPrincipalServiceImpl : KoinComponent, UserPrincipalService {
     ): UserPrincipal =
         measureTimedValue("TokenService.getUserPrincipalByJwtToken.$deepCheck", logger) {
             val token = tokenService.validateJwtToken(tokenCredential.value!!)
-            val userHrnStr: String = token.body.get(TokenServiceImpl.USER_CLAIM, String::class.java)
-            val creatorHrnStr: String? = token.body.get(TokenServiceImpl.ON_BEHALF_CLAIM, String::class.java)
-            val entitlements: String = token.body.get(TokenServiceImpl.ENTITLEMENTS_CLAIM, String::class.java)
+            val userHrnStr: String = token.body[TokenServiceImpl.USER_CLAIM, String::class.java]
+            val creatorHrnStr: String? = token.body[TokenServiceImpl.ON_BEHALF_CLAIM, String::class.java]
+            val entitlements: String = token.body[TokenServiceImpl.ENTITLEMENTS_CLAIM, String::class.java]
             val hrn = ResourceHrn(userHrnStr)
             val organizationId = hrn.organization
             return UserPrincipal(

@@ -32,7 +32,7 @@ fun Route.resourceApi() {
         post("/organizations/{organization_id}/resources") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val request = call.receive<CreateResourceRequest>().validate()
 
             val resource =
@@ -81,7 +81,7 @@ fun Route.resourceApi() {
         delete("/organizations/{organization_id}/resources/{name}") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to delete a resource")
 
             val response = resourceService.deleteResource(organizationId, name)
@@ -101,7 +101,7 @@ fun Route.resourceApi() {
         get("/organizations/{organization_id}/resources/{name}") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to get the resource")
 
             val response = resourceService.getResource(organizationId, name)
@@ -121,7 +121,7 @@ fun Route.resourceApi() {
         patch("/organizations/{organization_id}/resources/{name}") {
             val organizationId =
                 call.parameters["organization_id"]
-                    ?: throw IllegalArgumentException("organization_id required")
+                    ?: throw IllegalArgumentException(ORGANIZATION_ID_REQUIRED)
             val name = call.parameters["name"] ?: throw IllegalArgumentException("Required name to update a resource")
             val request = call.receive<UpdateResourceRequest>().validate()
 
