@@ -12,14 +12,14 @@ object DbExceptionHandler {
         val appExceptions: Map<String, Pair<KClass<out Exception>, String>>,
     )
 
-    private val customExceptions =
+    private val customExceptions: Set<KClass<out Throwable>> =
         setOf(
             BadRequestException::class,
             EntityNotFoundException::class,
             EntityAlreadyExistsException::class,
         )
-    private val duplicateConstraintRegex = "\"(.*)?\"".toRegex()
-    private val foreignKeyConstraintRegex = "foreign key constraint \"(.*)?\"".toRegex()
+    private val duplicateConstraintRegex = "\"(.+)?\"".toRegex()
+    private val foreignKeyConstraintRegex = "foreign key constraint \"(.+)?\"".toRegex()
 
     private val duplicateExceptions = mapOf<String, Pair<KClass<out Exception>, String>>()
 
