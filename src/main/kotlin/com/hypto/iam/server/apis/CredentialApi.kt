@@ -24,6 +24,25 @@ import java.util.UUID
 const val USER_ID_REQUIRED = "userId required"
 const val ID_REQUIRED = "id required"
 
+fun getRoutOptionsForGetPatchDeleteCredentials(): List<RouteOption> {
+    return listOf(
+        RouteOption(
+            "/organizations/{organization_id}/users/{userId}/credentials/{id}",
+            resourceNameIndex = 4,
+            resourceInstanceIndex = 5,
+            organizationIdIndex = 1,
+        ),
+        RouteOption(
+            "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
+                "{userId}/credentials/{id}",
+            resourceNameIndex = 6,
+            resourceInstanceIndex = 7,
+            organizationIdIndex = 1,
+            subOrganizationNameIndex = 3,
+        ),
+    )
+}
+
 fun Route.credentialApi() {
     val gson: Gson by inject()
     val credentialService: CredentialService by inject()
@@ -71,22 +90,7 @@ fun Route.credentialApi() {
     }
 
     deleteWithPermission(
-        listOf(
-            RouteOption(
-                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                resourceNameIndex = 4,
-                resourceInstanceIndex = 5,
-                organizationIdIndex = 1,
-            ),
-            RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
-                    "{userId}/credentials/{id}",
-                resourceNameIndex = 6,
-                resourceInstanceIndex = 7,
-                organizationIdIndex = 1,
-                subOrganizationNameIndex = 3,
-            ),
-        ),
+        getRoutOptionsForGetPatchDeleteCredentials(),
         "deleteCredential",
     ) {
         val organizationId =
@@ -106,22 +110,7 @@ fun Route.credentialApi() {
     }
 
     getWithPermission(
-        listOf(
-            RouteOption(
-                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                resourceNameIndex = 4,
-                resourceInstanceIndex = 5,
-                organizationIdIndex = 1,
-            ),
-            RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
-                    "{userId}/credentials/{id}",
-                resourceNameIndex = 6,
-                resourceInstanceIndex = 7,
-                organizationIdIndex = 1,
-                subOrganizationNameIndex = 3,
-            ),
-        ),
+        getRoutOptionsForGetPatchDeleteCredentials(),
         "getCredential",
     ) {
         val organizationId =
@@ -173,22 +162,7 @@ fun Route.credentialApi() {
     }
 
     patchWithPermission(
-        listOf(
-            RouteOption(
-                "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-                resourceNameIndex = 4,
-                resourceInstanceIndex = 5,
-                organizationIdIndex = 1,
-            ),
-            RouteOption(
-                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
-                    "{userId}/credentials/{id}",
-                resourceNameIndex = 6,
-                resourceInstanceIndex = 7,
-                organizationIdIndex = 1,
-                subOrganizationNameIndex = 3,
-            ),
-        ),
+        getRoutOptionsForGetPatchDeleteCredentials(),
         "updateCredential",
     ) {
         val organizationId =
