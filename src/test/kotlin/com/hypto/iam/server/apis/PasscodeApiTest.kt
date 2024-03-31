@@ -18,7 +18,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -55,7 +54,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
             val responseBody =
@@ -85,7 +84,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
             val responseBody =
@@ -148,7 +147,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
             val responseBody =
@@ -184,7 +183,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 
@@ -220,7 +219,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.BadRequest, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
         }
@@ -262,7 +261,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 

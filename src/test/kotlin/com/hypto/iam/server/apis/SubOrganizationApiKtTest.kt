@@ -22,7 +22,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Test
@@ -31,7 +30,6 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.text.Charsets.UTF_8
 
 @Testcontainers
 internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
@@ -62,7 +60,7 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert API response
             assertEquals(HttpStatusCode.Created, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
@@ -131,7 +129,7 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert API response
             assertEquals(HttpStatusCode.Created, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
@@ -206,7 +204,7 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert API response
             assertEquals(HttpStatusCode.Created, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
@@ -267,7 +265,7 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert API response
             assertEquals(HttpStatusCode.Created, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
             assertEquals(
@@ -326,7 +324,7 @@ internal class SubOrganizationApiKtTest : AbstractContainerBaseTest() {
 
                 // Assert API response
                 assertEquals(HttpStatusCode.Created, response.status)
-                assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+                assertEquals(ContentType.Application.Json, response.contentType())
 
                 assertEquals(subOrgName, responseBody.subOrganization.name, "Sub organization name should match")
                 assertEquals(

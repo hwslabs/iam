@@ -19,7 +19,6 @@ import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -34,7 +33,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-import kotlin.text.Charsets.UTF_8
 
 internal class CredentialApiKtTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
@@ -65,7 +63,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         setBody(gson.toJson(requestBody))
                     }
                 Assertions.assertEquals(HttpStatusCode.Created, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
                 Assertions.assertEquals(
                     createdOrganization.id,
                     response.headers[Constants.X_ORGANIZATION_HEADER],
@@ -105,7 +103,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.Created, response.status)
                 Assertions.assertEquals(
-                    Json.withCharset(UTF_8),
+                    Json,
                     response.contentType(),
                 )
 
@@ -147,7 +145,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
                 Assertions.assertEquals(
-                    Json.withCharset(UTF_8),
+                    Json,
                     response.contentType(),
                 )
                 deleteOrganization(createdOrganization.id)
@@ -187,7 +185,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(
-                    Json.withCharset(UTF_8),
+                    Json,
                     response.contentType(),
                 )
                 deleteOrganization(createdOrganization.id)
@@ -231,7 +229,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
 
                 // Validate that credential has been deleted
                 response =
@@ -281,7 +279,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
 
                 deleteOrganization(createdOrganization.id)
             }
@@ -312,7 +310,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
                     }
                 Assertions.assertEquals(HttpStatusCode.Forbidden, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
                 deleteOrganization(organization1.id)
                 deleteOrganization(organizationResponse2.organization.id)
             }
@@ -343,7 +341,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer ${createdCredentials.secret}")
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
 
                 val responseBody = gson.fromJson(response.bodyAsText(), Credential::class.java)
                 Assertions.assertNull(responseBody.validUntil)
@@ -374,7 +372,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
 
                 deleteOrganization(createdOrganization.id)
             }
@@ -399,7 +397,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
                 deleteOrganization(createdOrganization.id)
             }
         }
@@ -432,7 +430,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
 
                 val responseBody = gson.fromJson(response.bodyAsText(), ListCredentialResponse::class.java)
                 Assertions.assertEquals(2, responseBody.credentials.size)
@@ -463,7 +461,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
             }
         }
 
@@ -486,7 +484,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
-                Assertions.assertEquals(Json.withCharset(UTF_8), response.contentType())
+                Assertions.assertEquals(Json, response.contentType())
 
                 val responseBody = gson.fromJson(response.bodyAsText(), ListCredentialResponse::class.java)
                 Assertions.assertEquals(0, responseBody.credentials.size)

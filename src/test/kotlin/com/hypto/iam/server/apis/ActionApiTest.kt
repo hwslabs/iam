@@ -23,7 +23,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -53,7 +52,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
             val responseBody = gson.fromJson(response.bodyAsText(), Action::class.java)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
             assertEquals(
@@ -88,7 +87,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 
@@ -125,7 +124,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 
@@ -152,7 +151,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(Charsets.UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
             val responseBody = gson.fromJson(response.bodyAsText(), BaseSuccessResponse::class.java)
             assertEquals(true, responseBody.success)
 
@@ -189,7 +188,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 
@@ -224,7 +223,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 

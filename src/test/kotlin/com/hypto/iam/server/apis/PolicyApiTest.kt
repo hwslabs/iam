@@ -34,7 +34,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions
@@ -84,7 +83,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.Created, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 Assertions.assertEquals(
@@ -160,7 +159,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Asset
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
             }
@@ -190,7 +189,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
             }
@@ -228,7 +227,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
             }
@@ -268,7 +267,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 
@@ -331,7 +330,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.Created, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 Assertions.assertEquals(
@@ -415,7 +414,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 
@@ -460,7 +459,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
             }
@@ -520,7 +519,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - first page
                 Assertions.assertEquals(HttpStatusCode.OK, actResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     actResponse.contentType(),
                 )
 
@@ -545,7 +544,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, lastPageResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     lastPageResponse.contentType(),
                 )
 
@@ -575,7 +574,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, emptyPageResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     emptyPageResponse.contentType(),
                 )
 
@@ -615,7 +614,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - first page
                 Assertions.assertEquals(HttpStatusCode.OK, actResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     actResponse.contentType(),
                 )
 
@@ -640,7 +639,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, emptyPageResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     emptyPageResponse.contentType(),
                 )
 
@@ -727,7 +726,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.OK, updatedCreatedPolicyResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     updatedCreatedPolicyResponse.contentType(),
                 )
 
@@ -781,7 +780,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
             }
@@ -843,7 +842,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
             }
@@ -872,7 +871,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
             }
@@ -956,7 +955,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.OK, firstResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     firstResponse.contentType(),
                 )
 
@@ -981,7 +980,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.OK, secondAndLastResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     secondAndLastResponse.contentType(),
                 )
 
@@ -1010,7 +1009,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.OK, emptyPageResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     emptyPageResponse.contentType(),
                 )
 
@@ -1158,7 +1157,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 

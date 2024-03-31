@@ -35,7 +35,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -50,7 +49,6 @@ import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.text.Charsets.UTF_8
 
 @Testcontainers
 internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
@@ -90,7 +88,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert API response
             assertEquals(HttpStatusCode.Created, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             orgId = responseBody.organization.id
             assertEquals(requestBody.name, responseBody.organization.name)
@@ -104,7 +102,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 }
             Assertions.assertEquals(HttpStatusCode.OK, listUsersResponse.status)
             Assertions.assertEquals(
-                ContentType.Application.Json.withCharset(UTF_8),
+                ContentType.Application.Json,
                 listUsersResponse.contentType(),
             )
 
@@ -124,7 +122,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 }
             Assertions.assertEquals(HttpStatusCode.OK, actResponse.status)
             Assertions.assertEquals(
-                ContentType.Application.Json.withCharset(UTF_8),
+                ContentType.Application.Json,
                 actResponse.contentType(),
             )
 
@@ -143,7 +141,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 }
             Assertions.assertEquals(HttpStatusCode.OK, userPoliciesResponse.status)
             Assertions.assertEquals(
-                ContentType.Application.Json.withCharset(UTF_8),
+                ContentType.Application.Json,
                 userPoliciesResponse.contentType(),
             )
 
@@ -245,7 +243,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 
@@ -311,7 +309,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
 
@@ -360,7 +358,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             // Assert
             assertEquals(HttpStatusCode.Created, response.status)
             assertEquals(
-                ContentType.Application.Json.withCharset(UTF_8),
+                ContentType.Application.Json,
                 response.contentType(),
             )
             val responseBody = gson.fromJson(response.bodyAsText(), CreateOrganizationResponse::class.java)
@@ -544,7 +542,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     header(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             val fetchedOrganization = gson.fromJson(response.bodyAsText(), Organization::class.java)
             assertEquals(createdOrganization.organization, fetchedOrganization)
@@ -654,7 +652,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     )
                 }
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             val fetchedOrganization = gson.fromJson(response.bodyAsText(), Organization::class.java)
             assertEquals(updatedOrgName, fetchedOrganization.name)

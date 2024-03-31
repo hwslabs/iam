@@ -15,7 +15,6 @@ import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -63,7 +62,7 @@ class KeyApiTest : AbstractContainerBaseTest() {
                 }
             assertEquals(HttpStatusCode.OK, response.status)
             assertEquals(
-                Json.withCharset(Charsets.UTF_8),
+                Json,
                 response.contentType(),
             )
             val publicKeyResponse = gson.fromJson(response.bodyAsText(), KeyResponse::class.java)

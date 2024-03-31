@@ -32,7 +32,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
@@ -115,7 +114,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 assertEquals(
@@ -179,7 +178,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 assertEquals(
@@ -240,7 +239,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.BadRequest, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 
@@ -311,7 +310,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val responseBody = gson.fromJson(response.bodyAsText(), CreateUserResponse::class.java)
                 assertEquals(HttpStatusCode.Created, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 assertEquals(
@@ -360,7 +359,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.BadRequest, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 
@@ -425,7 +424,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                 val responseBody = gson.fromJson(response.bodyAsText(), User::class.java)
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 
@@ -608,7 +607,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.OK, listUsersResponse.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     listUsersResponse.contentType(),
                 )
 
@@ -671,7 +670,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 
@@ -709,7 +708,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 deleteOrganization(organization.id)
@@ -746,7 +745,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.Unauthorized, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 deleteOrganization(organization.id)
@@ -808,7 +807,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 deleteOrganization(organization.id)
@@ -916,7 +915,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
 
@@ -936,7 +935,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
                 deleteOrganization(organization.id)
@@ -1014,7 +1013,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.OK, resetPasswordResponse.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     resetPasswordResponse.contentType(),
                 )
                 val response = gson.fromJson(resetPasswordResponse.bodyAsText(), BaseSuccessResponse::class.java)
@@ -1106,7 +1105,7 @@ class UserApiTest : AbstractContainerBaseTest() {
                     }
                 assertEquals(HttpStatusCode.OK, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 deleteOrganization(organization.id)
@@ -1192,7 +1191,7 @@ class UserApiTest : AbstractContainerBaseTest() {
 
                 assertEquals(HttpStatusCode.Forbidden, response.status)
                 assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 deleteOrganization(organization.id)

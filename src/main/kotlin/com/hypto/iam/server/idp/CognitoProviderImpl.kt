@@ -152,7 +152,7 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
         try {
             return when (userCredentials) {
                 is PasswordCredentials -> createUserWithPassword(context, identityGroup, userCredentials)
-                is AccessTokenCredentials -> createUserWithAccessToken(context, identityGroup, userCredentials)
+                is AccessTokenCredentials -> TODO("Not implemented")
                 else -> throw UnsupportedCredentialsException("Credential type not supported")
             }
         } catch (e: UsernameExistsException) {
@@ -171,15 +171,6 @@ class CognitoIdentityProviderImpl : IdentityProvider, KoinComponent {
             logger.error(e) { "Error while trying to create user = ${e.message}" }
             throw UnknownException("Unknown error while trying to create user")
         }
-    }
-
-    private fun createUserWithAccessToken(
-        context: RequestContext,
-        identityGroup: IdentityGroup,
-        userCredentials: AccessTokenCredentials,
-    ): User {
-        logger.info("Creating cognito user with access token")
-        TODO("Not implemented")
     }
 
     override suspend fun getUser(

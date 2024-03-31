@@ -1,18 +1,18 @@
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 buildscript {
-    ext.kotlin_version = '1.8.10'
-    ext.ktor_version = '2.2.4'
+    ext.kotlin_version = '1.9.23'
+    ext.ktor_version = '2.3.9'
     ext.koin_version = '3.4.3'
     ext.shadow_version = '8.1.1'
     ext.exposed_version = "0.37.3"
-    ext.jooq_version = '3.16.15'
-    ext.hikari_cp_version = "5.0.1"
-    ext.junit_version = '5.9.2'
-    ext.flyway_version = '9.16.0'
-    ext.casbin_version = '1.32.2'
-    ext.postgres_jdbc_driver = '42.5.4'
-    ext.detekt_version = '1.19.0'
+    ext.jooq_version = '3.16.23'
+    ext.hikari_cp_version = "5.1.0"
+    ext.junit_version = '5.10.0'
+    ext.flyway_version = '9.22.3'
+    ext.casbin_version = '1.55.0'
+    ext.postgres_jdbc_driver = '42.7.3'
+    ext.detekt_version = '1.23.6'
     ext.cohort_version = '1.7.3'
 
     repositories {
@@ -39,7 +39,7 @@ plugins {
     id "io.gitlab.arturbosch.detekt" version "$detekt_version"
     id "org.jlleitschuh.gradle.ktlint" version "12.0.3"
     id "jacoco"
-    id "org.openapi.generator" version "5.3.0"
+    id "org.openapi.generator" version "7.4.0"
     id "com.osacky.doctor" version "0.8.0"
 }
 
@@ -80,9 +80,11 @@ compileTestKotlin {
 test {
     jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
     useJUnitPlatform()
+    maxParallelForks = 2
     testLogging.showStandardStreams(true)
     finalizedBy jacocoTestReport // report is always generated after tests run
 }
+
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
     reports {
@@ -350,8 +352,8 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:$ktor_version")
 
 
-    implementation('ch.qos.logback:logback-classic:1.4.7')
-    implementation('org.codehaus.janino:janino:3.1.8')
+    implementation('ch.qos.logback:logback-classic:1.5.3')
+    implementation('org.codehaus.janino:janino:3.1.12')
     implementation("com.zaxxer:HikariCP:$hikari_cp_version") // DB connection pooling
     implementation("org.flywaydb:flyway-core:$flyway_version") // DB Migrations
     implementation("org.postgresql:postgresql:$postgres_jdbc_driver") // DB JDBC driver
@@ -371,8 +373,8 @@ dependencies {
     implementation "io.insert-koin:koin-logger-slf4j:$koin_version"
 
     // Logging
-    implementation 'io.github.microutils:kotlin-logging:2.1.21'
-    implementation 'org.slf4j:slf4j-simple:1.7.36'
+    implementation 'io.github.microutils:kotlin-logging:3.0.5'
+    implementation 'org.slf4j:slf4j-simple:2.0.12'
 
     // Metrics
     implementation "io.ktor:ktor-server-metrics-micrometer:$ktor_version"
@@ -404,7 +406,7 @@ dependencies {
     implementation("com.sksamuel.cohort:cohort-logback:$cohort_version")
 
     // AWS
-    implementation platform('software.amazon.awssdk:bom:2.18.25')
+    implementation platform('software.amazon.awssdk:bom:2.25.20')
     implementation("software.amazon.awssdk:cognitoidentity")
     implementation("software.amazon.awssdk:cognitoidentityprovider")
     implementation("software.amazon.awssdk:ses")
@@ -416,8 +418,8 @@ dependencies {
     implementation("net.pwall.mustache:kotlin-mustache:0.10")
 
     // OkHttp Client
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     // Test dependencies
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
@@ -427,9 +429,9 @@ dependencies {
     testImplementation('io.mockk:mockk:1.13.4')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
-    testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
-    testImplementation 'org.testcontainers:testcontainers:1.17.6'
-    testImplementation 'org.testcontainers:postgresql:1.17.6'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.7'
+    testImplementation 'org.testcontainers:testcontainers:1.19.7'
+    testImplementation 'org.testcontainers:postgresql:1.19.7'
 }
 
 // configure jOOQ task such that it only executes when something has changed that potentially affects the generated JOOQ sources
