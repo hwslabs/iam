@@ -1,12 +1,10 @@
-formatting:
-  ImportOrdering:
-    layout: '*'
-
 style:
   ForbiddenComment:
     allowedPatterns: 'TODO:'
   MaxLineLength:
     maxLineLength: 200
+  UseCheckOrError:
+    active: false
 
 complexity:
   LongMethod:

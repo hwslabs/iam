@@ -1,7 +1,5 @@
 package com.hypto.iam.server.extensions
 
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.hypto.iam.server.db.tables.pojos.Actions
 import com.hypto.iam.server.db.tables.pojos.AuditEntries
 import com.hypto.iam.server.db.tables.pojos.Credentials
@@ -40,8 +38,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 val hrnFactory = getKoinInstance<HrnFactory>()
-val scopeListTypeToken = object : TypeToken<List<String>>() {}.type
-private val gson: Gson = getKoinInstance()
 
 fun Credential.Companion.from(record: CredentialsRecord): Credential {
     return Credential(

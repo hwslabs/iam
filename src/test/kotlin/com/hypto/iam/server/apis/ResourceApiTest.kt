@@ -21,14 +21,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.withCharset
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import org.testcontainers.junit.jupiter.Testcontainers
-import kotlin.text.Charsets.UTF_8
 
 @Testcontainers
 internal class ResourceApiTest : AbstractContainerBaseTest() {
@@ -54,7 +52,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 }
             val responseBody = gson.fromJson(response.bodyAsText(), Resource::class.java)
             assertEquals(HttpStatusCode.Created, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             assertEquals(resourceName, responseBody.name)
             assertEquals(organization.id, responseBody.organizationId)
@@ -82,7 +80,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             val responseBody = gson.fromJson(response.bodyAsText(), Resource::class.java)
             assertEquals(resourceName, responseBody.name)
@@ -112,7 +110,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             deleteOrganization(organization1.id)
             deleteOrganization(organization2.id)
@@ -136,7 +134,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
             val responseBody = gson.fromJson(response.bodyAsText(), BaseSuccessResponse::class.java)
             assertEquals(true, responseBody.success)
 
@@ -170,7 +168,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                 }
 
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             val responseBody = gson.fromJson(response.bodyAsText(), ResourcePaginatedResponse::class.java)
             assertEquals(responseBody.data!!.size, 2)
@@ -201,7 +199,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
                     setBody(gson.toJson(UpdateResourceRequest(description = "new description")))
                 }
             assertEquals(HttpStatusCode.OK, response.status)
-            assertEquals(ContentType.Application.Json.withCharset(UTF_8), response.contentType())
+            assertEquals(ContentType.Application.Json, response.contentType())
 
             val responseBody = gson.fromJson(response.bodyAsText(), Resource::class.java)
             assertEquals(resource.name, responseBody.name)

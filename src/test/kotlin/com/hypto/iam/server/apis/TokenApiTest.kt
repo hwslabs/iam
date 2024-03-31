@@ -108,7 +108,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -147,7 +147,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -224,7 +224,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -288,7 +288,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, tokenResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
             }
@@ -355,7 +355,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                     Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         tokenResponse.contentType(),
                     )
                     Assertions.assertEquals(
@@ -392,7 +392,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                     Assertions.assertEquals(HttpStatusCode.BadRequest, tokenResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         tokenResponse.contentType(),
                     )
                 }
@@ -424,7 +424,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                     Assertions.assertEquals(HttpStatusCode.BadRequest, tokenResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         tokenResponse.contentType(),
                     )
                 }
@@ -454,7 +454,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, tokenResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         tokenResponse.contentType(),
                     )
                 }
@@ -549,7 +549,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, tokenResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         tokenResponse.contentType(),
                     )
                 }
@@ -579,7 +579,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 Assertions.assertEquals(
@@ -610,7 +610,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 Assertions.assertEquals(HttpStatusCode.OK, loginResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     loginResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -650,7 +650,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -727,7 +727,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -791,7 +791,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, loginResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     loginResponse.contentType(),
                 )
             }
@@ -858,7 +858,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                     Assertions.assertEquals(HttpStatusCode.OK, loginResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         loginResponse.contentType(),
                     )
                     Assertions.assertEquals(
@@ -894,7 +894,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         }
                     Assertions.assertEquals(HttpStatusCode.BadRequest, loginResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         loginResponse.contentType(),
                     )
                 }
@@ -925,7 +925,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         }
                     Assertions.assertEquals(HttpStatusCode.BadRequest, loginResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         loginResponse.contentType(),
                     )
                 }
@@ -955,7 +955,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, loginResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         loginResponse.contentType(),
                     )
                 }
@@ -1050,7 +1050,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                         }
                     Assertions.assertEquals(HttpStatusCode.Unauthorized, loginResponse.status)
                     Assertions.assertEquals(
-                        ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                        ContentType.Application.Json,
                         loginResponse.contentType(),
                     )
                 }
@@ -1081,7 +1081,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -1120,7 +1120,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -1157,7 +1157,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -1188,7 +1188,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -1233,7 +1233,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, validateResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     validateResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -1258,6 +1258,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
     inner class ValidateJwtToken {
         private val masterKeyCache: MasterKeyCache by inject()
 
+        @Suppress("UnusedParameter")
         private fun generateToken(
             createdOrganizationResponse: CreateOrganizationResponse,
             createdUser: RootUser,
@@ -1531,7 +1532,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.OK, tokenResponse.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
                 Assertions.assertEquals(
@@ -1763,7 +1764,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 // Assert
                 Assertions.assertEquals(HttpStatusCode.OK, response.status)
                 Assertions.assertEquals(
-                    ContentType.Application.Json.withCharset(Charsets.UTF_8),
+                    ContentType.Application.Json,
                     response.contentType(),
                 )
                 val responseBody = gson.fromJson(response.bodyAsText(), TokenResponse::class.java)
