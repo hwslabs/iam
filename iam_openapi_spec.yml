@@ -560,6 +560,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/user_name'
         - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/sub_organization_name'
       responses:
         '200':
           $ref: '#/components/responses/BaseSuccessResponse'
