@@ -309,6 +309,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     name = policyTemplateName
                     status = "ACTIVE"
                     isRootPolicy = false
+                    onCreateOrg = false
                     statements = policyStr // policyStatements.toString()
                     createdAt = LocalDateTime.now()
                     updatedAt = LocalDateTime.now()

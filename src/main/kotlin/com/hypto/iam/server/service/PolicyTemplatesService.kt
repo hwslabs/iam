@@ -22,7 +22,7 @@ class PolicyTemplatesServiceImpl : KoinComponent, PolicyTemplatesService {
         user: User,
     ): List<PoliciesRecord> {
         val templateVariablesMap = mapOf(ORGANIZATION_ID_KEY to organizationId, USER_HRN_KEY to user.hrn)
-        val policyTemplates = policyTemplateRepo.fetchActivePolicyTemplates()
+        val policyTemplates = policyTemplateRepo.fetchActivePolicyTemplatesForOrgCreation()
         val adminPolicyNames = policyTemplates.mapNotNullTo(mutableSetOf()) { if (it.isRootPolicy) it.name else null }
 
         val rawPolicyPayloadsList =

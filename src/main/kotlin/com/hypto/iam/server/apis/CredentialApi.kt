@@ -28,15 +28,15 @@ fun getRoutOptionsForGetPatchDeleteCredentials(): List<RouteOption> {
     return listOf(
         RouteOption(
             "/organizations/{organization_id}/users/{userId}/credentials/{id}",
-            resourceNameIndex = 4,
-            resourceInstanceIndex = 5,
+            resourceNameIndex = 2,
+            resourceInstanceIndex = 3,
             organizationIdIndex = 1,
         ),
         RouteOption(
             "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/users/" +
                 "{userId}/credentials/{id}",
-            resourceNameIndex = 6,
-            resourceInstanceIndex = 7,
+            resourceNameIndex = 4,
+            resourceInstanceIndex = 5,
             organizationIdIndex = 1,
             subOrganizationNameIndex = 3,
         ),
