@@ -20,10 +20,11 @@ object PolicyTemplatesRepo : BaseRepo<PolicyTemplatesRecord, PolicyTemplates, St
     /**
      * Fetch records that have `status = 'ACTIVE'`
      */
-    suspend fun fetchActivePolicyTemplates(): Result<PolicyTemplatesRecord> =
+    suspend fun fetchActivePolicyTemplatesForOrgCreation(): Result<PolicyTemplatesRecord> =
         ctx("policy_templates.fetchActive")
             .selectFrom(POLICY_TEMPLATES)
             .where(POLICY_TEMPLATES.STATUS.eq(Status.ACTIVE.value))
+            .and(POLICY_TEMPLATES.ON_CREATE_ORG.eq(true))
             .fetch()
 
     suspend fun fetchActivePolicyByName(name: String): PolicyTemplatesRecord? =
