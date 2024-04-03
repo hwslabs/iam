@@ -1,5 +1,4 @@
-FROM openjdk:11.0.2
-FROM gradle:6.9-jdk11-alpine
+FROM amazoncorretto:17.0.10-alpine
 RUN apk add --no-cache bash openssl
+FROM gradle:8-jdk17-focal
 WORKDIR /iam
-

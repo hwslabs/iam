@@ -1,4 +1,4 @@
-FROM amazoncorretto:17.0.9-alpine
+FROM amazoncorretto:17.0.10-alpine
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
@@ -15,9 +15,12 @@ EXPOSE 8080
 
 COPY /build/libs/hypto-iam-server-1.0.0-all.jar /opt/app/app.jar
 
+COPY /kubernetes/appRunner.sh /opt/app/appRunner.sh
+RUN ["chmod", "+x", "/opt/app/appRunner.sh"]
+
 RUN chown -R appuser:appgroup /opt/app
 RUN chown -R appuser:appgroup /opt/app_logs
 
 USER appuser
 
-CMD java -Xlog:gc*=debug:file=/opt/app_logs/gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/app_logs/heap-dumps -XX:MaxMetaspaceSize=398928K  -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -jar /opt/app/app.jar
+CMD sh -c /opt/app/appRunner.sh
