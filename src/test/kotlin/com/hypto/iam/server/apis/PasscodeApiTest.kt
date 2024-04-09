@@ -21,6 +21,7 @@ import io.ktor.http.contentType
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
@@ -201,7 +202,7 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             val metadata =
                 mapOf<String, Any>(
                     "name" to "test-org" + IdGenerator.randomId(),
-                    "rootUserName" to "test-name" + IdGenerator.randomId(),
+                    "rootUserName" to "test name",
                     "rootUserVerified" to true,
                     "rootUserPreferredUsername" to "user" + IdGenerator.randomId(),
                 )
@@ -275,14 +276,21 @@ internal class PasscodeApiTest : AbstractContainerBaseTest() {
             } coAnswers {
                 PasscodesRecord(
                     "test-id",
-                    LocalDateTime.now(),
+                    LocalDateTime.now().minusDays(1),
                     testEmail,
                     organizationId,
                     VerifyEmailRequest.Purpose.invite.value,
                     LocalDateTime.now(),
                     null,
                     null,
+                    LocalDateTime.now().minusDays(1),
                 )
+            }
+
+            coEvery {
+                passcodeRepo.updateLastSent(any(), any())
+            } coAnswers {
+                mockk()
             }
             val resendEmailResponse =
                 client.post("/organizations/$organizationId/invites/resend") {
