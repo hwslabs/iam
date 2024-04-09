@@ -35,7 +35,7 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
         withTestApplication(Application::handleRequest) {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
-            val name = "test-name" + IdGenerator.randomId()
+            val name = "test name"
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
             val testPhone = "+919626012778"
             val testPassword = "testPassword@Hash1"

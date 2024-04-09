@@ -132,6 +132,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                             this.organizationId = if (purpose == Purpose.signup) null else organizationId
                             this.subOrganizationName = subOrganizationName
                             this.validUntil = validUntil
+                            this.lastSent = LocalDateTime.now()
                             this.purpose = purpose.toString()
                             this.createdAt = LocalDateTime.now()
                             this.metadata = metadata?.let { encryptMetadata(it) }
@@ -336,6 +337,9 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                 purpose = Purpose.invite,
                 email = email,
             ) ?: throw EntityNotFoundException("No invite email found for $email")
+        require(record.lastSent.plusSeconds(appConfig.app.resendInviteWaitTimeSeconds) < LocalDateTime.now()) {
+            "Resend invite email after some time"
+        }
         val link = createPasscodeLink(passcode = record.id, email = email, purpose = Purpose.invite, organizationId = orgId)
 
         val invitingUser = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
@@ -355,6 +359,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                 .build()
         val response = sesClient.sendTemplatedEmail(emailRequest)
         logger.info { "Resent invite email to $email with message id ${response.messageId()}" }
+        passcodeRepo.updateLastSent(record.id, LocalDateTime.now())
         return true
     }
 

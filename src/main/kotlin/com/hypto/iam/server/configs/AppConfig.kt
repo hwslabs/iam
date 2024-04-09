@@ -77,6 +77,7 @@ data class AppConfig(
         val cacheRefreshInterval: Long,
         val passcodeValiditySeconds: Long,
         val passcodeCountLimit: Long,
+        val resendInviteWaitTimeSeconds: Long,
         val baseUrl: String,
         val senderEmailAddress: String,
         val signUpEmailTemplate: String,

@@ -150,4 +150,13 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
                 .execute()
         return count > 0
     }
+
+    suspend fun updateLastSent(
+        id: String,
+        lastSent: LocalDateTime,
+    ) = ctx("passcodes.updateLastSent")
+        .update(PASSCODES)
+        .set(PASSCODES.LAST_SENT, lastSent)
+        .where(PASSCODES.ID.eq(id))
+        .execute()
 }
