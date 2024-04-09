@@ -212,6 +212,7 @@ fun GetDelegateTokenRequest.validate(): GetDelegateTokenRequest {
 
 // Validations used by ValidationBuilders
 
+const val NAME_REGEX = "^[a-zA-Z0-9_\\s]*\$"
 const val RESOURCE_NAME_REGEX = "^[a-zA-Z0-9_-]*\$"
 const val RESOURCE_NAME_REGEX_HINT = "Only characters A..Z, a..z, 0-9, _ and - are supported."
 const val PREFERRED_USERNAME_REGEX = "^[a-zA-Z0-9_]*\$"
@@ -254,6 +255,7 @@ val nameOfUserCheck =
         minLength(Constants.MIN_LENGTH) hint "Minimum length expected is ${Constants.MIN_LENGTH}"
         maxLength(Constants.MAX_NAME_LENGTH) hint MAXIMUM_LENGTH_SUPPORTED_MSG +
             "name is ${Constants.MAX_NAME_LENGTH} characters"
+        pattern(NAME_REGEX) hint "Only characters A..Z, a..z, 0-9, _ and [space] are supported."
         noEndSpaces()
     }
 
