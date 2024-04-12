@@ -3,14 +3,14 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createAndAttachPolicy
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createPolicy
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createResource
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createSubOrganization
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createSubOrganizationUser
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createUser
-import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createAndAttachPolicy
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createPolicy
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createResource
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createSubOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createSubOrganizationUser
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createUser
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.idp.CognitoConstants
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.ChangeUserPasswordRequest
@@ -38,11 +38,14 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.testApplication
+import io.ktor.server.testing.TestApplication
+import io.ktor.test.dispatcher.testSuspend
 import io.mockk.coEvery
 import io.mockk.slot
 import io.mockk.verify
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -65,9 +68,30 @@ import kotlin.test.assertTrue
 class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     private val gson: Gson by inject()
 
+    companion object {
+        lateinit var testApp: TestApplication
+
+        @JvmStatic
+        @BeforeAll
+        fun setupTest() {
+            testApp =
+                TestApplication {
+                    environment {
+                        config = ApplicationConfig("application-custom.conf")
+                    }
+                }
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun teardownTest() {
+            testApp.stop()
+        }
+    }
+
     @Nested
     @DisplayName("Create sub organization user API tests")
-    inner class CreateSuborganizationUserTest {
+    inner class CreateSubOrganizationUserTest {
         @Test
         fun `create user success case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
@@ -82,14 +106,11 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     verified = true,
                     loginAccess = true,
                 )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
@@ -106,10 +127,10 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         .userCreateDate(Instant.now())
                         .build()
 
-                createResource(organization.id, rootUserToken)
+                testApp.createResource(organization.id, rootUserToken)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                     ) {
@@ -133,7 +154,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
                 assertEquals(createUserRequest.verified, responseBody.user.verified)
 
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
@@ -150,14 +171,11 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     verified = true,
                     loginAccess = true,
                 )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
 
                 coEvery {
                     cognitoClient.adminGetUser(any<AdminGetUserRequest>())
@@ -174,10 +192,10 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         .userCreateDate(Instant.now())
                         .build()
 
-                createResource(organization.id, rootUserToken)
+                testApp.createResource(organization.id, rootUserToken)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                     ) {
@@ -201,7 +219,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 assertEquals(User.Status.enabled.toString(), responseBody.user.status.toString())
                 assertEquals(createUserRequest.verified, responseBody.user.verified)
 
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
@@ -223,10 +241,10 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 //                environment {
 //                    config = ApplicationConfig("application-custom.conf")
 //                }
-//                val (organizationResponse, _) = createOrganization(preferredUsername)
+//                val (organizationResponse, _) = testApp.createOrganization(preferredUsername)
 //                val organization = organizationResponse.organization
 //                val rootUserToken = organizationResponse.rootUserToken
-//                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+//                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
 //
 //                coEvery {
 //                    cognitoClient.adminCreateUser(any<AdminCreateUserRequest>())
@@ -237,9 +255,9 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 //                } throws UserNotFoundException.builder()
 //                    .build()
 //
-//                createResource(organization.id, rootUserToken)
+//                testApp.createResource(organization.id, rootUserToken)
 //
-//                val response = client.post(
+//                val response = testApp.client.post(
 //                    "/organizations/${organization
 //                        .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users"
 //                ) {
@@ -253,7 +271,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 //                    response.contentType()
 //                )
 //
-//                deleteOrganization(organization.id)
+//                testApp.deleteOrganization(organization.id)
 //            }
 //        }
 
@@ -270,18 +288,15 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     phone = "+919999999999",
                     loginAccess = true,
                 )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                createResource(organization.id, rootUserToken)
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                testApp.createResource(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                     ) {
@@ -291,7 +306,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     }
 
                 assertEquals(HttpStatusCode.BadRequest, response.status)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
@@ -306,19 +321,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     verified = true,
                     loginAccess = false,
                 )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, rootUser) = createOrganization()
+            testSuspend {
+                val (organizationResponse, rootUser) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
 
-                createResource(organization.id, rootUserToken)
+                testApp.createResource(organization.id, rootUserToken)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                     ) {
@@ -344,7 +356,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 assertEquals(createUserRequest.verified, responseBody.user.verified)
                 assertEquals(createUserRequest.loginAccess, responseBody.user.loginAccess)
 
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
@@ -360,19 +372,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     password = "testPassword@ash",
                     loginAccess = false,
                 )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, rootUser) = createOrganization()
+            testSuspend {
+                val (organizationResponse, rootUser) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
 
-                createResource(organization.id, rootUserToken)
+                testApp.createResource(organization.id, rootUserToken)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                     ) {
@@ -386,7 +395,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     response.contentType(),
                 )
 
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
@@ -397,16 +406,13 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
         @Test
         fun `get user request success case`() {
             val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, subOrgUserCreds) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
@@ -430,7 +436,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 // Get user
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${organization.id}" +
                             "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
                             "/users/${subOrgUser.username}",
@@ -447,7 +453,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 assertEquals(subOrgUser.preferredUsername, responseBody.preferredUsername)
                 assertEquals(true, responseBody.verified)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
@@ -464,17 +470,14 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     phone = "+919626012778",
                     loginAccess = true,
                 )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 // Create user
                 val (user1, _) =
-                    createUser(
+                    testApp.createUser(
                         orgId = organization.id,
                         bearerToken = rootUserToken,
                         createUserRequest = createUserRequest,
@@ -482,7 +485,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 // Get user
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users/${user1.username}",
                     ) {
@@ -490,7 +493,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         header(HttpHeaders.Authorization, "Bearer badSecret")
                     }
                 assertEquals(HttpStatusCode.Unauthorized, response.status)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
@@ -500,27 +503,13 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     inner class DeleteUserTest {
         @Test
         fun `delete user success case`() {
-            val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
-            val createUserRequest =
-                CreateUserRequest(
-                    preferredUsername = "testUserName",
-                    name = "lorem ipsum",
-                    password = "testPassword@Hash1",
-                    email = testEmail,
-                    status = CreateUserRequest.Status.enabled,
-                    phone = "+919626012778",
-                    loginAccess = true,
-                )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                val (subOrgUser, subOrgUserCreds) =
-                    createSubOrganizationUser(
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
+                val (subOrgUser, _) =
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
@@ -529,7 +518,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 // Delete user
                 val response =
-                    client.delete(
+                    testApp.client.delete(
                         "/organizations/${organization.id}" +
                             "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
                             "/users/${subOrgUser.username}",
@@ -544,7 +533,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 verify { get<CognitoIdentityProviderClient>().adminDeleteUser(capture(slot)) }
                 val adminUserRequest = slot.captured
                 assertEquals(subOrgUser.username, adminUserRequest.username())
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
@@ -576,18 +565,15 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     phone = "+919626012778",
                     loginAccess = true,
                 )
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
-                createResource(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
+                testApp.createResource(organization.id, rootUserToken)
 
                 // Create user1
-                client.post(
+                testApp.client.post(
                     "/organizations/${organization
                         .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                 ) {
@@ -597,7 +583,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 }
 
                 // Create user2
-                client.post(
+                testApp.client.post(
                     "/organizations/${organization
                         .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                 ) {
@@ -608,7 +594,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 // List users
                 val listUsersResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization.name}/users",
                     ) {
@@ -623,7 +609,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 val responseBody = gson.fromJson(listUsersResponse.bodyAsText(), UserPaginatedResponse::class.java)
                 assertEquals(responseBody.data!!.size, 2)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
@@ -633,19 +619,16 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     inner class UpdateUserTest {
         @Test
         fun `update user`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val testEmail = "test-user-email" + IdGenerator.randomId() + "@hypto.in"
 
                 // Create sub org user
                 val (subOrgUser, _) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
@@ -676,7 +659,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         .build()
 
                 val response =
-                    client.patch(
+                    testApp.client.patch(
                         "/organizations/${organization.id}" +
                             "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
                             "/users/${subOrgUser.username}",
@@ -691,7 +674,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     response.contentType(),
                 )
 
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
@@ -701,33 +684,28 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     inner class ChangeUserPasswordTest {
         @Test
         fun `change password with wrong old password - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, rootUser) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, subOrgUserCreds) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
                         cognitoClient,
                     )
-                val username = organizationResponse.organization.rootUser.username
-                val samplePolicy =
-                    createAndAttachPolicy(
-                        orgId = organization.id,
-                        username = subOrgUser.username,
-                        bearerToken = rootUserToken,
-                        policyName = "sample-policy2",
-                        subOrgName = subOrganizationResponse.subOrganization.name,
-                        resourceName = "iam-user",
-                        actionName = "changePassword",
-                        resourceInstance = subOrgUser.username,
-                    )
+                testApp.createAndAttachPolicy(
+                    orgId = organization.id,
+                    username = subOrgUser.username,
+                    bearerToken = rootUserToken,
+                    policyName = "sample-policy2",
+                    subOrgName = subOrganizationResponse.subOrganization.name,
+                    resourceName = "iam-user",
+                    actionName = "changePassword",
+                    resourceInstance = subOrgUser.username,
+                )
 
                 coEvery {
                     cognitoClient.adminInitiateAuth(any<AdminInitiateAuthRequest>())
@@ -739,7 +717,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         newPassword = "testPassword@Hash2",
                     )
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization
                             .name}/users/${subOrgUser.username}/change_password",
@@ -753,29 +731,26 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     ContentType.Application.Json,
                     response.contentType(),
                 )
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `user to change password on their own with permission - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, subOrgUserCred) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
                         cognitoClient,
                     )
 
-                createAndAttachPolicy(
+                testApp.createAndAttachPolicy(
                     orgId = organization.id,
                     username = subOrgUser.username,
                     bearerToken = rootUserToken,
@@ -792,7 +767,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         newPassword = "testPassword@Hash2",
                     )
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization
                             .name}/users/${subOrgUser.username}/change_password",
@@ -806,36 +781,33 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     ContentType.Application.Json,
                     response.contentType(),
                 )
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `change password of different user without permission - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser1, subOrgUser1Creds) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
                         cognitoClient,
                     )
                 val (subOrgUser2, subOrgUser2Creds) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
                         cognitoClient,
                     )
 
-                createAndAttachPolicy(
+                testApp.createAndAttachPolicy(
                     orgId = organization.id,
                     username = subOrgUser2.username,
                     bearerToken = subOrgUser2Creds.secret,
@@ -852,7 +824,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         newPassword = "testPassword@Hash2",
                     )
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization
                             .name}/users/${subOrgUser1.username}/change_password",
@@ -862,29 +834,26 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         setBody(gson.toJson(changePasswordRequest))
                     }
                 assertEquals(HttpStatusCode.Forbidden, response.status)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `generate token after changing password - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, rootUser) = createOrganization()
+            testSuspend {
+                val (organizationResponse, rootUser) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, subOrgUserCreds) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
                         cognitoClient,
                     )
                 val samplePolicy =
-                    createAndAttachPolicy(
+                    testApp.createAndAttachPolicy(
                         orgId = organization.id,
                         username = subOrgUser.username,
                         bearerToken = rootUserToken,
@@ -903,7 +872,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         newPassword = "testPassword@Hash2",
                     )
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization
                             .name}/users/${subOrgUser.username}/change_password",
@@ -922,7 +891,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
                 val tokenResponse =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization.id}/sub_organizations/token",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -937,7 +906,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     ContentType.Application.Json,
                     tokenResponse.contentType(),
                 )
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
@@ -947,15 +916,12 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     inner class ResetUserPasswordTest {
         @Test
         fun `reset Password - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (organizationResponse, createdUser) = testApp.createOrganization()
                 val organizationId = organizationResponse.organization.id
-                val subOrganizationResponse = createSubOrganization(organizationId, organizationResponse.rootUserToken)
-                val (subOrgUser, subOrgUserCreds) =
-                    createSubOrganizationUser(
+                val subOrganizationResponse = testApp.createSubOrganization(organizationId, organizationResponse.rootUserToken)
+                val (subOrgUser, _) =
+                    testApp.createSubOrganizationUser(
                         organizationResponse.organization.id,
                         subOrganizationResponse.subOrganization.name,
                         organizationResponse.rootUserToken,
@@ -993,7 +959,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     cognitoClient.listUsers(any<ListUsersRequest>())
                 } returns listUsersResponse
 
-                client.post("/verifyEmail") {
+                testApp.client.post("/verifyEmail") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
                         gson.toJson(
@@ -1008,7 +974,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 }
 
                 val resetPasswordResponse =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/$organizationId/sub_organizations/${subOrganizationResponse.subOrganization
                             .name}/users/resetPassword",
                     ) {
@@ -1028,7 +994,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val response = gson.fromJson(resetPasswordResponse.bodyAsText(), BaseSuccessResponse::class.java)
                 assertTrue(response.success)
 
-                deleteOrganization(organizationId)
+                testApp.deleteOrganization(organizationId)
             }
         }
     }
@@ -1038,23 +1004,20 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     inner class UserAttachPolicyTest {
         @Test
         fun `user to attach policy to a different user with permission - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, subOrgUserCreds) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
                         cognitoClient,
                     )
 
-                createAndAttachPolicy(
+                testApp.createAndAttachPolicy(
                     orgId = organization.id,
                     username = subOrgUser.username,
                     bearerToken = rootUserToken,
@@ -1066,7 +1029,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 )
 
                 val samplePolicy =
-                    createPolicy(
+                    testApp.createPolicy(
                         orgId = organization.id,
                         bearerToken = rootUserToken,
                         policyName = "sample-policy",
@@ -1077,7 +1040,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     )
                 assertEquals(1, samplePolicy.statements.size)
                 val response =
-                    client.patch(
+                    testApp.client.patch(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization
                             .name}/users/${subOrgUser.username}/attach_policies",
@@ -1091,22 +1054,19 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     ContentType.Application.Json,
                     response.contentType(),
                 )
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `user to attach policies to a different user without permission - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, subOrgUserCreds) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
@@ -1114,7 +1074,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     )
 
                 val samplePolicy =
-                    createPolicy(
+                    testApp.createPolicy(
                         orgId = organization.id,
                         bearerToken = rootUserToken,
                         policyName = "sample-policy",
@@ -1125,7 +1085,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     )
                 assertEquals(1, samplePolicy.statements.size)
                 val response =
-                    client.patch(
+                    testApp.client.patch(
                         "/organizations/${organization
                             .id}/sub_organizations/${subOrganizationResponse.subOrganization
                             .name}/users/${subOrgUser.username}/attach_policies",
@@ -1139,7 +1099,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     ContentType.Application.Json,
                     response.contentType(),
                 )
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
@@ -1149,16 +1109,13 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
     inner class CreatePasswordForSubOrganizationUserTest {
         @Test
         fun `create password for sub org user - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, _) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
@@ -1166,7 +1123,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         false,
                     )
 
-                createAndAttachPolicy(
+                testApp.createAndAttachPolicy(
                     orgId = organization.id,
                     username = subOrgUser.username,
                     bearerToken = rootUserToken,
@@ -1179,7 +1136,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 // Create password for sub org user
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization .id}" +
                             "/sub_organizations/${subOrganizationResponse.subOrganization.name}" +
                             "/users/${subOrgUser.username}/create_password",
@@ -1203,7 +1160,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 val createPasswordResponse = gson.fromJson(response.bodyAsText(), TokenResponse::class.java)
 
-                client.post(
+                testApp.client.post(
                     "/organizations/${organization.id}/sub_organizations/token",
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -1240,7 +1197,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                 val authHeader = "Basic ${Base64.getEncoder().encodeToString(authString.encodeToByteArray())}"
 
                 val tokenResponse =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization.id}/sub_organizations/token",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -1255,22 +1212,19 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                     organization.id,
                     tokenResponse.headers[Constants.X_ORGANIZATION_HEADER],
                 )
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `create password for sub org user - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
-                val subOrganizationResponse = createSubOrganization(organization.id, rootUserToken)
+                val subOrganizationResponse = testApp.createSubOrganization(organization.id, rootUserToken)
                 val (subOrgUser, _) =
-                    createSubOrganizationUser(
+                    testApp.createSubOrganizationUser(
                         organization.id,
                         subOrganizationResponse.subOrganization.name,
                         rootUserToken,
@@ -1278,7 +1232,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                         false,
                     )
 
-                createAndAttachPolicy(
+                testApp.createAndAttachPolicy(
                     orgId = organization.id,
                     username = subOrgUser.username,
                     bearerToken = rootUserToken,
@@ -1291,7 +1245,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
 
                 // Create password for sub org user
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${organization .id}" +
                             "/sub_organizations/dummySubOrg" +
                             "/users/${subOrgUser.username}/create_password",
@@ -1306,7 +1260,7 @@ class SubOrganizationUserApiTest : AbstractContainerBaseTest() {
                             contentType(),
                         )
                     }
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }
