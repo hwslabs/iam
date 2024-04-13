@@ -426,7 +426,7 @@ dependencies {
     testImplementation("io.insert-koin:koin-test:$koin_version")
     testImplementation "io.insert-koin:koin-test-junit5:$koin_version"
     testImplementation("org.junit.jupiter:junit-jupiter-api:$junit_version")
-    testImplementation('io.mockk:mockk:1.13.4')
+    testImplementation('io.mockk:mockk:1.13.10')
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junit_version")
 
     testImplementation 'org.testcontainers:junit-jupiter:1.19.7'

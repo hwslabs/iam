@@ -1,10 +1,9 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createResource
-import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
+import com.hypto.iam.server.helpers.BaseSingleAppTest
+import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createResource
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.Resource
@@ -21,31 +20,24 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.testApplication
+import io.ktor.test.dispatcher.testSuspend
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.koin.test.inject
 import org.testcontainers.junit.jupiter.Testcontainers
 
 @Testcontainers
-internal class ResourceApiTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
-
+internal class ResourceApiTest : BaseSingleAppTest() {
     @Test
     fun `create resource success case`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
             val resourceName = "resource-name"
 
             val response =
-                client.post("/organizations/${organization.id}/resources") {
+                testApp.client.post("/organizations/${organization.id}/resources") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(CreateResourceRequest(name = resourceName)))
@@ -64,19 +56,16 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `get resource`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
             val resourceName = "resource-name"
-            createResource(organization.id, rootUserToken, resourceName)
+            testApp.createResource(organization.id, rootUserToken, resourceName)
 
             val response =
-                client.get("/organizations/${organization.id}/resources/$resourceName") {
+                testApp.client.get("/organizations/${organization.id}/resources/$resourceName") {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
@@ -91,22 +80,19 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `get resource failure for unauthorized user access`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse1, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse1, _) = testApp.createOrganization()
             val organization1 = organizationResponse1.organization
             val rootUserToken1 = organizationResponse1.rootUserToken
 
-            val (organizationResponse2, _) = createOrganization()
+            val (organizationResponse2, _) = testApp.createOrganization()
             val organization2 = organizationResponse2.organization
             val rootUserToken2 = organizationResponse2.rootUserToken
 
-            val resource = createResource(organization1.id, rootUserToken1)
+            val resource = testApp.createResource(organization1.id, rootUserToken1)
 
             val response =
-                client.get("/organizations/${organization1.id}/resources/${resource.name}") {
+                testApp.client.get("/organizations/${organization1.id}/resources/${resource.name}") {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
                 }
             assertEquals(HttpStatusCode.Forbidden, response.status)
@@ -119,18 +105,15 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `delete resource`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val resource = createResource(organization.id, rootUserToken)
+            val resource = testApp.createResource(organization.id, rootUserToken)
 
             val response =
-                client.delete("/organizations/${organization.id}/resources/${resource.name}") {
+                testApp.client.delete("/organizations/${organization.id}/resources/${resource.name}") {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             assertEquals(HttpStatusCode.OK, response.status)
@@ -140,7 +123,7 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
             // Check that the resource is no longer available
             val getResourceResponse =
-                client.get("/organizations/${organization.id}/resources/${resource.name}") {
+                testApp.client.get("/organizations/${organization.id}/resources/${resource.name}") {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             assertEquals(HttpStatusCode.NotFound, getResourceResponse.status)
@@ -151,19 +134,16 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `list resources within a organization`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val resource1 = createResource(organization.id, rootUserToken)
-            val resource2 = createResource(organization.id, rootUserToken)
+            val resource1 = testApp.createResource(organization.id, rootUserToken)
+            val resource2 = testApp.createResource(organization.id, rootUserToken)
 
             val response =
-                client.get("/organizations/${organization.id}/resources") {
+                testApp.client.get("/organizations/${organization.id}/resources") {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
 
@@ -181,19 +161,16 @@ internal class ResourceApiTest : AbstractContainerBaseTest() {
 
     @Test
     fun `update resource`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val resource = createResource(organization.id, rootUserToken)
+            val resource = testApp.createResource(organization.id, rootUserToken)
             val newDescription = "new description"
 
             val response =
-                client.patch("/organizations/${organization.id}/resources/${resource.name}") {
+                testApp.client.patch("/organizations/${organization.id}/resources/${resource.name}") {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(gson.toJson(UpdateResourceRequest(description = "new description")))

@@ -1,8 +1,7 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
+import com.hypto.iam.server.helpers.BaseSingleAppTest
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
 import com.hypto.iam.server.models.KeyResponse
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.service.TokenServiceImpl
@@ -15,30 +14,23 @@ import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.testApplication
+import io.ktor.test.dispatcher.testSuspend
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.koin.test.inject
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
 
-class KeyApiTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
-
+class KeyApiTest : BaseSingleAppTest() {
     @Test
     fun `validate token using public key`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
 
             val createTokenCall =
-                client.post("/organizations/${organizationResponse.organization.id}/token") {
+                testApp.client.post("/organizations/${organizationResponse.organization.id}/token") {
                     header(HttpHeaders.ContentType, Json.toString())
                     header(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserToken}")
                 }
@@ -55,7 +47,7 @@ class KeyApiTest : AbstractContainerBaseTest() {
             val kid = jwt.header.getValue(TokenServiceImpl.KEY_ID) as String
 
             val response =
-                client.get(
+                testApp.client.get(
                     "/keys/$kid?format=der",
                 ) {
                     header(HttpHeaders.Authorization, "Bearer ${organizationResponse.rootUserToken}")

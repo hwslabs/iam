@@ -1,6 +1,5 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.ROOT_ORG
 import com.hypto.iam.server.authProviders.GoogleAuthProvider
@@ -9,8 +8,8 @@ import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
+import com.hypto.iam.server.helpers.BaseSingleAppTest
+import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
@@ -37,6 +36,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.testing.testApplication
+import io.ktor.test.dispatcher.testSuspend
 import io.mockk.coEvery
 import io.mockk.mockkObject
 import org.junit.jupiter.api.Assertions
@@ -51,16 +51,12 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 
 @Testcontainers
-internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
+internal class OrganizationApiKtTest : BaseSingleAppTest() {
     private val passcodeService: PasscodeService by inject()
 
     @Test
     fun `create organization with valid root credentials`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test name"
@@ -79,7 +75,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     ),
                 )
             val response =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("X-Api-Key", rootToken)
                     setBody(gson.toJson(requestBody))
@@ -96,7 +92,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert root user creation
             val listUsersResponse =
-                client.get("/organizations/$orgId/users") {
+                testApp.client.get("/organizations/$orgId/users") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer ${responseBody.rootUserToken}")
                 }
@@ -111,7 +107,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert policy creation
             val actResponse =
-                client.get(
+                testApp.client.get(
                     "/organizations/$orgId/policies?pageSize=50",
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -133,7 +129,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Assert policy association
             val userPoliciesResponse =
-                client.get(
+                testApp.client.get(
                     "/organizations/$orgId/users/${responseBody.organization.rootUser.username}/policies",
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -201,10 +197,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization with verify email method`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test name"
@@ -219,7 +212,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     email = testEmail,
                     purpose = VerifyEmailRequest.Purpose.signup,
                 )
-            client.post("/verifyEmail") {
+            testApp.client.post("/verifyEmail") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(gson.toJson(verifyRequestBody))
             }
@@ -235,7 +228,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     ),
                 )
             val response =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("X-Api-Key", testPasscode)
                     setBody(gson.toJson(requestBody))
@@ -323,10 +316,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization using google authorization - success`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             // Arrange
             val googleToken = "test-google-token"
             val name = "test-name"
@@ -349,7 +339,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Act
             val response =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("x-issuer", "google")
                     header(HttpHeaders.Authorization, "Bearer $googleToken")
@@ -374,10 +364,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `create organization using microsoft authorization - fail`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             // Arrange
             val microsoftToken = "test-microsoft-token"
             val name = "test-name"
@@ -401,7 +388,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Act
             val response =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("x-issuer", "microsoft")
                     header(HttpHeaders.Authorization, "Bearer $microsoftToken")
@@ -421,10 +408,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             }
         }
 
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test-name" + IdGenerator.randomId()
@@ -444,7 +428,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                     ),
                 )
             val response =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("X-Api-Key", rootToken)
                     setBody(gson.toJson(requestBody))
@@ -455,10 +439,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `get organization with invalid credentials`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test name"
@@ -467,7 +448,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPassword = "testPassword@Hash1"
 
             val createOrganizationCall =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("X-Api-Key", rootToken)
                     setBody(
@@ -489,7 +470,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
             val response =
-                client.get("/organizations/${createdOrganization.organization.id}") {
+                testApp.client.get("/organizations/${createdOrganization.organization.id}") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer test-bearer-token")
                 }
@@ -503,10 +484,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `get organization success`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test name"
@@ -515,7 +493,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPassword = "testPassword@Hash1"
 
             val createOrganizationCall =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("X-Api-Key", rootToken)
                     setBody(
@@ -537,7 +515,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
             val response =
-                client.get("/organizations/${createdOrganization.organization.id}") {
+                testApp.client.get("/organizations/${createdOrganization.organization.id}") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
                 }
@@ -553,10 +531,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `get organization not found`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test name"
@@ -566,7 +541,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             // Create organization
             val createOrganizationCall =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("X-Api-Key", rootToken)
                     setBody(
@@ -588,7 +563,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
                 gson.fromJson(createOrganizationCall.bodyAsText(), CreateOrganizationResponse::class.java)
 
             val response =
-                client.get("/organizations/inValidOrganizationId") {
+                testApp.client.get("/organizations/inValidOrganizationId") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(
                         HttpHeaders.Authorization,
@@ -603,10 +578,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
     @Test
     fun `update organization name success`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
+        testSuspend {
             val orgName = "test-org" + IdGenerator.randomId()
             val orgDescription = "test-org-description"
             val preferredUsername = "user" + IdGenerator.randomId()
@@ -616,7 +588,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
             val testPassword = "testPassword@Hash1"
 
             val createOrganizationCall =
-                client.post("/organizations") {
+                testApp.client.post("/organizations") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header("X-Api-Key", rootToken)
                     setBody(
@@ -640,7 +612,7 @@ internal class OrganizationApiKtTest : AbstractContainerBaseTest() {
 
             val updatedOrgName = "updated-org" + IdGenerator.randomId()
             val response =
-                client.patch("/organizations/${createdOrganization.organization.id}") {
+                testApp.client.patch("/organizations/${createdOrganization.organization.id}") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer ${createdOrganization.rootUserToken}")
                     setBody(

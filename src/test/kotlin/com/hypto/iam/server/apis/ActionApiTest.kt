@@ -1,8 +1,7 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Constants
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
+import com.hypto.iam.server.helpers.BaseSingleAppTest
 import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createAction
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
@@ -23,39 +22,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.TestApplication
 import io.ktor.test.dispatcher.testSuspend
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.koin.test.inject
 
-class ActionApiTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
-
-    companion object {
-        lateinit var testApp: TestApplication
-
-        @JvmStatic
-        @BeforeAll
-        fun setupTest() {
-            testApp =
-                TestApplication {
-                    environment {
-                        config = ApplicationConfig("application-custom.conf")
-                    }
-                }
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun teardownTest() {
-            testApp.stop()
-        }
-    }
-
+class ActionApiTest : BaseSingleAppTest() {
     @Test
     fun `create action success case1`() {
         testSuspend {

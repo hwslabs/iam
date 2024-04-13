@@ -1,8 +1,7 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
+import com.hypto.iam.server.helpers.BaseSingleAppTest
 import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
 import com.hypto.iam.server.idp.CognitoConstants
@@ -24,7 +23,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.koin.test.inject
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse
@@ -32,9 +30,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType
 import java.time.Instant
 import java.time.LocalDateTime
 
-internal class PasscodeApiTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
-
+internal class PasscodeApiTest : BaseSingleAppTest() {
     @Test
     fun `test verifyEmail api for signup purpose - success`() {
         testApplication {
