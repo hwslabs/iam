@@ -18,7 +18,7 @@ services:
     env_file:
       - ./docker/iam-web/dev.env
   pg:
-    image: postgres:14.1
+    image: postgres:14.1-alpine
     ports:
       - "4921:5432"
     environment:

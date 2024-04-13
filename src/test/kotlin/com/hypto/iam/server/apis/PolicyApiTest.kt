@@ -9,6 +9,7 @@ import com.hypto.iam.server.helpers.DataSetupHelperV3.createAndAttachPolicy
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createResourceActionHrn
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createUser
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateUserRequest
@@ -100,7 +101,7 @@ internal class PolicyApiTest : BaseSingleAppTest() {
                 Assertions.assertEquals(1, responseBody.version)
                 Assertions.assertEquals(policyStatements, responseBody.statements)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -252,7 +253,7 @@ internal class PolicyApiTest : BaseSingleAppTest() {
                     response.contentType(),
                 )
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -334,7 +335,7 @@ internal class PolicyApiTest : BaseSingleAppTest() {
 
                 // cleanup
                 policyTempRecord.delete()
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
     }
@@ -1037,7 +1038,7 @@ internal class PolicyApiTest : BaseSingleAppTest() {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
                 Assertions.assertEquals(HttpStatusCode.Forbidden, response.status)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
@@ -1108,7 +1109,7 @@ internal class PolicyApiTest : BaseSingleAppTest() {
 
                 val responseBody = gson.fromJson(response.bodyAsText(), PolicyPaginatedResponse::class.java)
                 Assertions.assertEquals(0, responseBody.data!!.size)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }

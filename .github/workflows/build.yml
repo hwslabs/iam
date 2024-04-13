@@ -11,11 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - run: mkdir -p ~/image-cache
+      - id: image-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/image-cache
+          key: image-cache-${{ runner.os }}
+#          Make sure to delete the cache from https://github.com/hwslabs/iam/actions/caches when changing images
+      - id: pull-on-cache-miss
+        if: steps.image-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss!"
+          docker pull postgres:14.1-alpine
+          docker save -o ~/image-cache/postgres.tar postgres:14.1-alpine
+          docker pull testcontainers/ryuk:0.6.0
+          docker save -o ~/image-cache/testcontainers.tar testcontainers/ryuk:0.6.0
+      - id: load-image-on-cache-hit
+        if: steps.image-cache.outputs.cache-hit == 'true'
+        run: |
+          echo "Cache hit!"
+          docker load -i ~/image-cache/postgres.tar
+          docker load -i ~/image-cache/testcontainers.tar
+
       - name: Run Postgres
         run: |
           docker-compose -f docker-compose.yml up -d pg

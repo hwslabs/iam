@@ -2,9 +2,9 @@ package com.hypto.iam.server.apis
 
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.helpers.BaseSingleAppTest
-import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createCredential
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.ListCredentialResponse
@@ -66,7 +66,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                 Assertions.assertEquals(Credential.Status.active, responseBody.status)
                 Assertions.assertNotNull(responseBody.secret)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -105,7 +105,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                 Assertions.assertEquals(Credential.Status.active, responseBody.status)
                 Assertions.assertNotNull(responseBody.secret)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -134,7 +134,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                     Json,
                     response.contentType(),
                 )
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -171,7 +171,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                     Json,
                     response.contentType(),
                 )
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
     }
@@ -233,7 +233,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -258,7 +258,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(Json, response.contentType())
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -285,8 +285,8 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.Forbidden, response.status)
                 Assertions.assertEquals(Json, response.contentType())
-                deleteOrganization(organization1.id)
-                deleteOrganization(organizationResponse2.organization.id)
+                testApp.deleteOrganization(organization1.id)
+                testApp.deleteOrganization(organizationResponse2.organization.id)
             }
         }
     }
@@ -319,7 +319,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                 Assertions.assertNull(responseBody.secret)
                 Assertions.assertEquals(Credential.Status.active, responseBody.status)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -342,7 +342,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(Json, response.contentType())
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -363,7 +363,7 @@ internal class CredentialApiKtTest : BaseSingleAppTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
                 Assertions.assertEquals(Json, response.contentType())
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
     }

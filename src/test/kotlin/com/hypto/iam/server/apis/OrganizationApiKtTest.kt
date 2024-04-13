@@ -9,7 +9,7 @@ import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.tables.pojos.Organizations
 import com.hypto.iam.server.db.tables.records.PasscodesRecord
 import com.hypto.iam.server.helpers.BaseSingleAppTest
-import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.CreateOrganizationRequest
 import com.hypto.iam.server.models.CreateOrganizationResponse
 import com.hypto.iam.server.models.Organization
@@ -145,7 +145,7 @@ internal class OrganizationApiKtTest : BaseSingleAppTest() {
             Assertions.assertEquals(1, policies.data?.size)
             Assertions.assertEquals("admin", policies.data!![0].name)
 
-            deleteOrganization(orgId)
+            testApp.deleteOrganization(orgId)
         }
     }
 
@@ -244,7 +244,7 @@ internal class OrganizationApiKtTest : BaseSingleAppTest() {
             assertEquals(requestBody.name, responseBody.organization.name)
             assertEquals(10, responseBody.organization.id.length)
 
-            deleteOrganization(orgId)
+            testApp.deleteOrganization(orgId)
         }
     }
 
@@ -310,7 +310,7 @@ internal class OrganizationApiKtTest : BaseSingleAppTest() {
             assertEquals(orgName, responseBody.organization.name)
             assertEquals(10, responseBody.organization.id.length)
 
-            deleteOrganization(orgId)
+            testApp.deleteOrganization(orgId)
         }
     }
 
@@ -358,7 +358,7 @@ internal class OrganizationApiKtTest : BaseSingleAppTest() {
 
             // Cleanup
             val orgId = responseBody.organization.id
-            deleteOrganization(orgId)
+            testApp.deleteOrganization(orgId)
         }
     }
 
@@ -478,7 +478,7 @@ internal class OrganizationApiKtTest : BaseSingleAppTest() {
             assertFalse(response.headers.contains(HttpHeaders.ContentType))
             assertNull(response.headers[Constants.X_ORGANIZATION_HEADER])
 
-            deleteOrganization(createdOrganization.organization.id)
+            testApp.deleteOrganization(createdOrganization.organization.id)
         }
     }
 
@@ -525,7 +525,7 @@ internal class OrganizationApiKtTest : BaseSingleAppTest() {
             val fetchedOrganization = gson.fromJson(response.bodyAsText(), Organization::class.java)
             assertEquals(createdOrganization.organization, fetchedOrganization)
 
-            deleteOrganization(createdOrganization.organization.id)
+            testApp.deleteOrganization(createdOrganization.organization.id)
         }
     }
 
@@ -572,7 +572,7 @@ internal class OrganizationApiKtTest : BaseSingleAppTest() {
                 }
             // These assertions
             assertEquals(HttpStatusCode.Forbidden, response.status)
-            deleteOrganization(createdOrganization.organization.id)
+            testApp.deleteOrganization(createdOrganization.organization.id)
         }
     }
 

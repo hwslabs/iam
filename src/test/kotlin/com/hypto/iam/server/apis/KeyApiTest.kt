@@ -2,6 +2,7 @@ package com.hypto.iam.server.apis
 
 import com.hypto.iam.server.helpers.BaseSingleAppTest
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.KeyResponse
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.service.TokenServiceImpl
@@ -70,6 +71,8 @@ class KeyApiTest : BaseSingleAppTest() {
             assertDoesNotThrow {
                 Jwts.parserBuilder().setSigningKey(publicKey).build().parseClaimsJws(token)
             }
+
+            testApp.deleteOrganization(organizationResponse.organization.id)
         }
     }
 }

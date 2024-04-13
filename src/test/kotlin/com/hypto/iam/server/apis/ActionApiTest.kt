@@ -2,10 +2,10 @@ package com.hypto.iam.server.apis
 
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.helpers.BaseSingleAppTest
-import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createAction
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createResource
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.ActionPaginatedResponse
 import com.hypto.iam.server.models.BaseSuccessResponse
@@ -55,7 +55,7 @@ class ActionApiTest : BaseSingleAppTest() {
             assertEquals(organization.id, responseBody.organizationId)
             assertEquals("", responseBody.description)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -85,7 +85,7 @@ class ActionApiTest : BaseSingleAppTest() {
             assertEquals(organization.id, responseBody.organizationId)
             assertEquals(resource.name, responseBody.resourceName)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -114,8 +114,8 @@ class ActionApiTest : BaseSingleAppTest() {
                 response.contentType(),
             )
 
-            deleteOrganization(organization1.id)
-            deleteOrganization(organization2.id)
+            testApp.deleteOrganization(organization1.id)
+            testApp.deleteOrganization(organization2.id)
         }
     }
 
@@ -147,7 +147,7 @@ class ActionApiTest : BaseSingleAppTest() {
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -177,7 +177,7 @@ class ActionApiTest : BaseSingleAppTest() {
             assert(responseBody.data!!.contains(action1))
             assert(responseBody.data!!.contains(action2))
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -209,7 +209,7 @@ class ActionApiTest : BaseSingleAppTest() {
             assertEquals(resource.name, responseBody.resourceName)
             assertEquals(newDescription, responseBody.description)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 }

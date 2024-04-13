@@ -1,9 +1,9 @@
 package com.hypto.iam.server.apis
 
 import com.hypto.iam.server.helpers.BaseSingleAppTest
-import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
 import com.hypto.iam.server.helpers.DataSetupHelperV3.createResource
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.Resource
@@ -50,7 +50,7 @@ internal class ResourceApiTest : BaseSingleAppTest() {
             assertEquals(organization.id, responseBody.organizationId)
             assertEquals("", responseBody.description)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -74,7 +74,7 @@ internal class ResourceApiTest : BaseSingleAppTest() {
             val responseBody = gson.fromJson(response.bodyAsText(), Resource::class.java)
             assertEquals(resourceName, responseBody.name)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -98,8 +98,8 @@ internal class ResourceApiTest : BaseSingleAppTest() {
             assertEquals(HttpStatusCode.Forbidden, response.status)
             assertEquals(ContentType.Application.Json, response.contentType())
 
-            deleteOrganization(organization1.id)
-            deleteOrganization(organization2.id)
+            testApp.deleteOrganization(organization1.id)
+            testApp.deleteOrganization(organization2.id)
         }
     }
 
@@ -128,7 +128,7 @@ internal class ResourceApiTest : BaseSingleAppTest() {
                 }
             assertEquals(HttpStatusCode.NotFound, getResourceResponse.status)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -155,7 +155,7 @@ internal class ResourceApiTest : BaseSingleAppTest() {
             assert(responseBody.data!!.contains(resource1))
             assert(responseBody.data!!.contains(resource2))
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
@@ -182,7 +182,7 @@ internal class ResourceApiTest : BaseSingleAppTest() {
             assertEquals(resource.name, responseBody.name)
             assertEquals(newDescription, responseBody.description)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 }
