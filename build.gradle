@@ -13,7 +13,8 @@ buildscript {
     ext.casbin_version = '1.55.0'
     ext.postgres_jdbc_driver = '42.7.3'
     ext.detekt_version = '1.23.6'
-    ext.cohort_version = '1.7.3'
+    ext.cohort_version = '2.3.1'
+    ext.ktlint_version = '1.2.1'
 
     repositories {
         google()
@@ -37,7 +38,7 @@ plugins {
     id 'org.flywaydb.flyway' version "$flyway_version"
     id 'nu.studer.jooq' version '7.1'
     id "io.gitlab.arturbosch.detekt" version "$detekt_version"
-    id "org.jlleitschuh.gradle.ktlint" version "12.0.3"
+    id "org.jlleitschuh.gradle.ktlint" version "12.1.0"
     id "jacoco"
     id "org.openapi.generator" version "7.4.0"
     id "com.osacky.doctor" version "0.8.0"
@@ -313,6 +314,7 @@ detekt {
 //}
 
 ktlint {
+    version.set("1.2.1")
     verbose.set(true)
     outputToConsole.set(true)
     coloredOutput.set(true)
@@ -325,14 +327,13 @@ ktlint {
 }
 
 dependencies {
-//    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:$detekt_version")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version")
     implementation("io.ktor:ktor-server-cio:$ktor_version")
     implementation("io.ktor:ktor-server-metrics:$ktor_version")
     implementation("io.ktor:ktor-server-locations:$ktor_version")
-//    implementation("io.ktor:ktor-gson:$ktor_version")
-    implementation("io.ktor:ktor-client-core:$ktor_version")
+
     implementation("io.ktor:ktor-client-apache:$ktor_version")
+
     // Ktor features
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-gson:$ktor_version")
@@ -350,7 +351,6 @@ dependencies {
     implementation("io.ktor:ktor-server-double-receive:$ktor_version")
 
     implementation("io.ktor:ktor-server-auth:$ktor_version")
-
 
     implementation('ch.qos.logback:logback-classic:1.5.3')
     implementation('org.codehaus.janino:janino:3.1.12')
@@ -393,15 +393,15 @@ dependencies {
     implementation('io.konform:konform:0.4.0')
 
     // AWS Lambda
-    implementation('com.amazonaws:aws-lambda-java-core:1.2.2')
-    implementation("com.amazonaws:aws-lambda-java-events:3.11.0")
+    implementation('com.amazonaws:aws-lambda-java-core:1.2.3')
+    implementation("com.amazonaws:aws-lambda-java-events:3.11.4")
 
     // Hoplite
-    implementation('com.sksamuel.hoplite:hoplite-json:2.7.2')
+    implementation('com.sksamuel.hoplite:hoplite-json:2.7.5')
 
     // Cohort
     implementation("com.sksamuel.cohort:cohort-core:$cohort_version")
-    implementation("com.sksamuel.cohort:cohort-ktor2:$cohort_version")
+//    implementation("com.sksamuel.cohort:cohort-ktor:1.7.3")
     implementation("com.sksamuel.cohort:cohort-hikari:$cohort_version")
     implementation("com.sksamuel.cohort:cohort-logback:$cohort_version")
 
@@ -415,7 +415,7 @@ dependencies {
     implementation("com.github.hwslabs:txman:0.1.6")
 
     //Mustache Template
-    implementation("net.pwall.mustache:kotlin-mustache:0.10")
+    implementation("net.pwall.mustache:kotlin-mustache:0.12")
 
     // OkHttp Client
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -455,13 +455,13 @@ tasks.named('generateJooq').configure {
 compileKotlin.dependsOn clean, ktlintFormat, tasks.named("detekt"), generateJooq, generateOpenAPIModels
 
 gradle.taskGraph.whenReady { graph ->
-  def shadowJarEnabled = gradle.startParameter.taskRequests
-    .find {it.args.find {it.contains("shadowJar")} != null  } != null
+    def shadowJarEnabled = gradle.startParameter.taskRequests
+            .find {it.args.find {it.contains("shadowJar")} != null  } != null
     println(gradle.startParameter.taskRequests)
     println(shadowJarEnabled)
-  if (!shadowJarEnabled) {
-    gradle.startParameter.excludedTaskNames += "shadowJar"
-    shadowJar.enabled = false
-    distZip.enabled = false
-  }
+    if (!shadowJarEnabled) {
+        gradle.startParameter.excludedTaskNames += "shadowJar"
+        shadowJar.enabled = false
+        distZip.enabled = false
+    }
 }
