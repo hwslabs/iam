@@ -30,11 +30,11 @@ import com.hypto.iam.server.di.repositoryModule
 import com.hypto.iam.server.security.Authorization
 import com.hypto.iam.server.service.DatabaseFactory.pool
 import com.hypto.iam.server.utils.ApplicationIdUtil
+import com.sksamuel.cohort.Cohort
 import com.sksamuel.cohort.HealthCheckRegistry
 import com.sksamuel.cohort.db.DatabaseConnectionHealthCheck
 import com.sksamuel.cohort.hikari.HikariDataSourceManager
 import com.sksamuel.cohort.hikari.HikariPendingThreadsHealthCheck
-import com.sksamuel.cohort.ktor.Cohort
 import com.sksamuel.cohort.logback.LogbackManager
 import com.sksamuel.cohort.threads.ThreadDeadlockHealthCheck
 import io.ktor.serialization.gson.gson

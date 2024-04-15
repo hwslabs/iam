@@ -1,15 +1,15 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.db.repositories.PolicyTemplatesRepo
 import com.hypto.iam.server.db.tables.records.PolicyTemplatesRecord
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createAndAttachPolicy
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createResourceActionHrn
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createUser
-import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
+import com.hypto.iam.server.helpers.BaseSingleAppTest
+import com.hypto.iam.server.helpers.DataSetupHelper.deleteOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createAndAttachPolicy
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createResourceActionHrn
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createUser
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.CreatePolicyRequest
 import com.hypto.iam.server.models.CreateUserRequest
@@ -34,8 +34,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.testApplication
+import io.ktor.test.dispatcher.testSuspend
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -43,19 +42,14 @@ import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import java.time.LocalDateTime
 
-class PolicyApiTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
-
+internal class PolicyApiTest : BaseSingleAppTest() {
     @Nested
     @DisplayName("Create policy API tests")
     inner class CreatePolicyTest {
         @Test
         fun `valid policy - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, _) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, _) = testApp.createOrganization()
 
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
@@ -64,7 +58,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -74,7 +68,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/policies",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -107,24 +101,21 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(1, responseBody.version)
                 Assertions.assertEquals(policyStatements, responseBody.statements)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `policy name already in use`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createOrganizationResponse, _) = createOrganization()
+                val (createOrganizationResponse, _) = testApp.createOrganization()
                 val createdOrganization = createOrganizationResponse.organization
 
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -133,7 +124,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
-                client.post(
+                testApp.client.post(
                     "/organizations/${createOrganizationResponse.organization.id}/policies",
                 ) {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -146,7 +137,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createOrganizationResponse.organization.id}/policies",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -167,17 +158,14 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `policy without statements - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createOrganizationResponse, _) = createOrganization()
+            testSuspend {
+                val (createOrganizationResponse, _) = testApp.createOrganization()
 
                 val policyName = "SamplePolicy"
                 val requestBody = CreatePolicyRequest(policyName, listOf())
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createOrganizationResponse.organization.id}/policies",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -197,11 +185,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `policy with too many policy statements - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createOrganizationResponse, _) = createOrganization()
+            testSuspend {
+                val (createOrganizationResponse, _) = testApp.createOrganization()
 
                 val policyName = "SamplePolicy"
 //                val policyStatements = mutableListOf<PolicyStatement>()
@@ -215,7 +200,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     )
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createOrganizationResponse.organization.id}/policies",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -235,11 +220,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `create policy with different org in principal - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, _) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, _) = testApp.createOrganization()
 
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
@@ -248,7 +230,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         "randomId",
                         null,
                         resourceName,
@@ -258,7 +240,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/policies",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -271,18 +253,14 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     response.contentType(),
                 )
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `create policy from template - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-
-                val (createdOrganizationResponse, _) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, _) = testApp.createOrganization()
 
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
@@ -292,7 +270,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -322,7 +300,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyFromTemplateRequest(policyName, policyTemplateName)
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/policy_from_template",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -357,7 +335,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // cleanup
                 policyTempRecord.delete()
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
     }
@@ -367,18 +345,15 @@ class PolicyApiTest : AbstractContainerBaseTest() {
     inner class GetPolicyTest {
         @Test
         fun `existing policy - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createOrganizationResponse, _) = createOrganization()
+                val (createOrganizationResponse, _) = testApp.createOrganization()
                 val createdOrganization = createOrganizationResponse.organization
 
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -388,7 +363,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createOrganizationResponse.organization.id}/policies",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -403,7 +378,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createOrganizationResponse.organization.id}/policies/${createdPolicy.name}",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -439,16 +414,13 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `non existing policy`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createOrganizationResponse, _) = createOrganization()
+                val (createOrganizationResponse, _) = testApp.createOrganization()
 
                 // Act
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createOrganizationResponse.organization.id}/policies/non_existing_policy",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -472,17 +444,14 @@ class PolicyApiTest : AbstractContainerBaseTest() {
     inner class ListPoliciesTest {
         @Test
         fun `existing policy - first page, more pages available`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createOrganizationResponse, _) = createOrganization()
+                val (createOrganizationResponse, _) = testApp.createOrganization()
                 val createdOrganization = createOrganizationResponse.organization
 
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -493,7 +462,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // We create 2 policies in addition to 1 ADMIN_ROOT_POLICY.
                 // So, list API must return 3 policies in total.
                 (1..2).forEach {
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createOrganizationResponse.organization.id}/policies",
                     ) {
                         val requestBody = CreatePolicyRequest("SamplePolicy$it", policyStatements)
@@ -508,7 +477,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val actResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createOrganizationResponse.organization.id}/policies?pageSize=2",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -533,7 +502,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - Last page
 
                 val lastPageResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createOrganizationResponse.organization.id}/policies?" +
                             "pageSize=3&nextToken=${responseBody.nextToken}",
                     ) {
@@ -563,7 +532,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - Empty page
 
                 val emptyPageResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createOrganizationResponse.organization.id}/policies?" +
                             "pageSize=2&nextToken=${responseBody2.nextToken}",
                     ) {
@@ -594,16 +563,13 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `no policies available (Just root policy)`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createOrganizationResponse, _) = createOrganization()
+                val (createOrganizationResponse, _) = testApp.createOrganization()
 
                 // Act
                 val actResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createOrganizationResponse.organization.id}/policies?pageSize=2",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -628,7 +594,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 // Assert - Empty page
 
                 val emptyPageResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createOrganizationResponse.organization.id}/policies?" +
                             "pageSize=2&nextToken=${responseBody.nextToken}",
                     ) {
@@ -663,12 +629,9 @@ class PolicyApiTest : AbstractContainerBaseTest() {
     inner class UpdatePoliciesTest {
         @Test
         fun `update policy`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createdOrganizationResponse, _) = createOrganization()
+                val (createdOrganizationResponse, _) = testApp.createOrganization()
 
                 // Create a policy
                 val createdOrganization = createdOrganizationResponse.organization
@@ -676,7 +639,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -684,7 +647,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     )
 
                 val actResponse =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/policies",
                     ) {
                         val policyStatements =
@@ -713,7 +676,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         ),
                     )
                 val updatedCreatedPolicyResponse =
-                    client.patch(
+                    testApp.client.patch(
                         "/organizations/${createdOrganization.id}/policies/$policyName",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -739,12 +702,9 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `update non-existent policy`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createdOrganizationResponse, _) = createOrganization()
+                val (createdOrganizationResponse, _) = testApp.createOrganization()
 
                 // Act
 
@@ -752,7 +712,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val createdOrganization = createdOrganizationResponse.organization
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -767,7 +727,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         ),
                     )
                 val response =
-                    client.patch(
+                    testApp.client.patch(
                         "/organizations/${createdOrganization.id}/policies/non_existent_policy",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -793,19 +753,16 @@ class PolicyApiTest : AbstractContainerBaseTest() {
     inner class DeletePolicyTest {
         @Test
         fun `delete existing policy`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createOrganizationResponse, _) = createOrganization()
+                val (createOrganizationResponse, _) = testApp.createOrganization()
 
                 val createdOrganization = createOrganizationResponse.organization
 
                 val policyName = "samplePolicy"
                 val resourceName = "resource"
                 val (resourceHrn, actionHrn) =
-                    createResourceActionHrn(
+                    testApp.createResourceActionHrn(
                         createdOrganization.id,
                         null,
                         resourceName,
@@ -816,7 +773,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                 val requestBody = CreatePolicyRequest(policyName, policyStatements)
 
                 val createPolicyCall =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createOrganizationResponse.organization.id}/policies",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -831,7 +788,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Act
                 val response =
-                    client.delete(
+                    testApp.client.delete(
                         "/organizations/${createOrganizationResponse.organization.id}/policies/${createdPolicy.name}",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -851,16 +808,13 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `delete non existent policy`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createOrganizationResponse, _) = createOrganization()
+                val (createOrganizationResponse, _) = testApp.createOrganization()
 
                 // Act
                 val response =
-                    client.delete(
+                    testApp.client.delete(
                         "/organizations/${createOrganizationResponse.organization.id}/policies/non_existent+policy",
                     ) {
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -884,23 +838,20 @@ class PolicyApiTest : AbstractContainerBaseTest() {
     inner class GetPoliciesByUserTest {
         @Test
         fun `get policies of a user`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
+            testSuspend {
                 // Arrange
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val username = createdOrganizationResponse.organization.rootUser.username
 
                 (1..2).forEach {
                     val response =
-                        client.post(
+                        testApp.client.post(
                             "/organizations/${createdOrganization.id}/policies",
                         ) {
                             val resourceName = "resource"
                             val (resourceHrn, actionHrn) =
-                                createResourceActionHrn(
+                                testApp.createResourceActionHrn(
                                     createdOrganization.id,
                                     null,
                                     resourceName,
@@ -922,7 +873,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                     // Associate policy to a user
                     val associatedResponse =
-                        client.patch(
+                        testApp.client.patch(
                             "/organizations/${createdOrganization.id}/users/" +
                                 "${createdOrganizationResponse.organization.rootUser.username}/attach_policies",
                         ) {
@@ -943,7 +894,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // First page
                 val firstResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$username" +
                             "/policies?pageSize=$pageSize",
                     ) {
@@ -968,7 +919,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Second and last page with results
                 val secondAndLastResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$username" +
                             "/policies?pageSize=$pageSize${nextToken?.let { "&nextToken=$it" }}",
                     ) {
@@ -997,7 +948,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 // Empty page
                 val emptyPageResponse =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$username" +
                             "/policies?pageSize=$pageSize${nextToken?.let { "&nextToken=$it" }}",
                     ) {
@@ -1028,11 +979,8 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
         @Test
         fun `user to list policies of other user without permission - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
 
@@ -1049,7 +997,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     )
 
                 val (user1, _) =
-                    createUser(
+                    testApp.createUser(
                         organization.id,
                         rootUserToken,
                         createUser1Request,
@@ -1067,12 +1015,12 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         loginAccess = true,
                     )
                 val (user2, credential) =
-                    createUser(
+                    testApp.createUser(
                         organization.id,
                         rootUserToken,
                         createUser2Request,
                     )
-                createAndAttachPolicy(
+                testApp.createAndAttachPolicy(
                     orgId = organization.id,
                     username = user2.username,
                     bearerToken = rootUserToken,
@@ -1083,24 +1031,21 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     resourceInstance = user2.username,
                 )
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${organization.id}/users/${user1.username}/policies",
                     ) {
                         header(HttpHeaders.Authorization, "Bearer ${credential.secret}")
                         header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     }
                 Assertions.assertEquals(HttpStatusCode.Forbidden, response.status)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
 
         @Test
         fun `user to list policy of a user with permission - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse, _) = testApp.createOrganization()
                 val organization = organizationResponse.organization
                 val rootUserToken = organizationResponse.rootUserToken
 
@@ -1117,7 +1062,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     )
 
                 val (user1, _) =
-                    createUser(
+                    testApp.createUser(
                         organization.id,
                         rootUserToken,
                         createUser1Request,
@@ -1134,12 +1079,12 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                         loginAccess = true,
                     )
                 val (user2, credential) =
-                    createUser(
+                    testApp.createUser(
                         organization.id,
                         rootUserToken,
                         createUser2Request,
                     )
-                createAndAttachPolicy(
+                testApp.createAndAttachPolicy(
                     orgId = organization.id,
                     username = user2.username,
                     bearerToken = rootUserToken,
@@ -1150,7 +1095,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
                     resourceInstance = user1.username,
                 )
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${organization.id}/users/${user1.username}/policies",
                     ) {
                         header(HttpHeaders.Authorization, "Bearer ${credential.secret}")
@@ -1164,7 +1109,7 @@ class PolicyApiTest : AbstractContainerBaseTest() {
 
                 val responseBody = gson.fromJson(response.bodyAsText(), PolicyPaginatedResponse::class.java)
                 Assertions.assertEquals(0, responseBody.data!!.size)
-                deleteOrganization(organization.id)
+                testApp.deleteOrganization(organization.id)
             }
         }
     }

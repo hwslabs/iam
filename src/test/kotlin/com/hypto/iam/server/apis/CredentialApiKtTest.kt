@@ -1,11 +1,10 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Constants
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createCredential
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
-import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
+import com.hypto.iam.server.helpers.BaseSingleAppTest
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createCredential
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.CreateCredentialRequest
 import com.hypto.iam.server.models.Credential
 import com.hypto.iam.server.models.ListCredentialResponse
@@ -19,14 +18,12 @@ import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.testApplication
+import io.ktor.test.dispatcher.testSuspend
 import io.mockk.coEvery
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.koin.test.inject
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException
 import java.time.LocalDateTime
@@ -34,19 +31,14 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-internal class CredentialApiKtTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
-
+internal class CredentialApiKtTest : BaseSingleAppTest() {
     @Nested
     @DisplayName("Create credential API tests")
     inner class CreateCredentialTest {
         @Test
         fun `without expiry - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
 
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
@@ -55,7 +47,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 // Actual test
                 val requestBody = CreateCredentialRequest()
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -74,17 +66,14 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(Credential.Status.active, responseBody.status)
                 Assertions.assertNotNull(responseBody.secret)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `with expiry - success`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
@@ -94,7 +83,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -116,17 +105,14 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(Credential.Status.active, responseBody.status)
                 Assertions.assertNotNull(responseBody.secret)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `expiry date in past - failure`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
@@ -136,7 +122,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 val requestBody = CreateCredentialRequest(now.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
 
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -148,7 +134,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     Json,
                     response.contentType(),
                 )
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
@@ -165,18 +151,15 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 )
             } throws UserNotFoundException.builder().message("User does not exist.").build()
 
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, _) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, _) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
 
                 val expiry = LocalDateTime.now().plusDays(1)
                 val requestBody = CreateCredentialRequest(expiry.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                 val response =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/users/$invalidUserName/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -188,7 +171,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     Json,
                     response.contentType(),
                 )
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
     }
@@ -198,17 +181,14 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
     inner class DeleteCredentialTest {
         @Test
         fun `delete existing credential`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val createCredentialCall =
-                    client.post(
+                    testApp.client.post(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -221,7 +201,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 // Delete Credential
                 var response =
-                    client.delete(
+                    testApp.client.delete(
                         "/organizations/${createdOrganization.id}/users/" +
                             "$userName/credentials/${credentialsToDelete.id}",
                     ) {
@@ -233,7 +213,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 // Validate that credential has been deleted
                 response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/" +
                             "$userName/credentials/${credentialsToDelete.id}",
                     ) {
@@ -244,7 +224,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 // Validate that using deleted credentials returns 401
                 response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/" +
                             "$userName/credentials/${credentialsToDelete.id}",
                     ) {
@@ -253,17 +233,14 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.Unauthorized, response.status)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `credential not found`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
@@ -272,7 +249,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
                 // Delete Credential
                 val response =
-                    client.delete(
+                    testApp.client.delete(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -281,29 +258,26 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(Json, response.contentType())
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `unauthorized access`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (organizationResponse1, user1) = createOrganization()
-                val (organizationResponse2, _) = createOrganization()
+            testSuspend {
+                val (organizationResponse1, user1) = testApp.createOrganization()
+                val (organizationResponse2, _) = testApp.createOrganization()
                 val user1Name = organizationResponse1.organization.rootUser.username
 
                 val organization1 = organizationResponse1.organization
                 val rootUserToken1 = organizationResponse1.rootUserToken
-                val credential1 = createCredential(organization1.id, user1Name, rootUserToken1)
+                val credential1 = testApp.createCredential(organization1.id, user1Name, rootUserToken1)
 
                 val rootUserToken2 = organizationResponse2.rootUserToken
 
                 // Delete Credential
                 val response =
-                    client.delete(
+                    testApp.client.delete(
                         "/organizations/${organization1.id}/users/$user1Name/credentials/${credential1.id}",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -311,8 +285,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.Forbidden, response.status)
                 Assertions.assertEquals(Json, response.contentType())
-                deleteOrganization(organization1.id)
-                deleteOrganization(organizationResponse2.organization.id)
+                testApp.deleteOrganization(organization1.id)
+                testApp.deleteOrganization(organizationResponse2.organization.id)
             }
         }
     }
@@ -322,19 +296,16 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
     inner class GetCredentialTest {
         @Test
         fun `success - response does not have secret`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
-                val createdCredentials = createCredential(createdOrganization.id, userName, rootUserToken)
+                val createdCredentials = testApp.createCredential(createdOrganization.id, userName, rootUserToken)
 
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/${createdCredentials.id}",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -348,24 +319,21 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertNull(responseBody.secret)
                 Assertions.assertEquals(Credential.Status.active, responseBody.status)
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `not found`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
                 val nonExistentCredentialId = UUID.randomUUID().toString()
 
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/$nonExistentCredentialId",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -374,23 +342,20 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 Assertions.assertEquals(HttpStatusCode.NotFound, response.status)
                 Assertions.assertEquals(Json, response.contentType())
 
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
 
         @Test
         fun `invalid credential id`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials/inValid_credential_id",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -398,7 +363,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                     }
                 Assertions.assertEquals(HttpStatusCode.BadRequest, response.status)
                 Assertions.assertEquals(Json, response.contentType())
-                deleteOrganization(createdOrganization.id)
+                testApp.deleteOrganization(createdOrganization.id)
             }
         }
     }
@@ -408,22 +373,19 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
     inner class ListCredentialTest {
         @Test
         fun `list credentials of a user`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val credential1 =
-                    createCredential(createdOrganization.id, userName, rootUserToken)
+                    testApp.createCredential(createdOrganization.id, userName, rootUserToken)
                 val credential2 =
-                    createCredential(createdOrganization.id, userName, rootUserToken)
+                    testApp.createCredential(createdOrganization.id, userName, rootUserToken)
 
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -441,11 +403,8 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
         @Test
         fun `list credentials for unknown user`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, _) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, _) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
 
@@ -454,7 +413,7 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
                 } throws UserNotFoundException.builder().message("User does not exist.").build()
 
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/unknown_user/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())
@@ -467,17 +426,14 @@ internal class CredentialApiKtTest : AbstractContainerBaseTest() {
 
         @Test
         fun `return empty list for credentials list api`() {
-            testApplication {
-                environment {
-                    config = ApplicationConfig("application-custom.conf")
-                }
-                val (createdOrganizationResponse, createdUser) = createOrganization()
+            testSuspend {
+                val (createdOrganizationResponse, createdUser) = testApp.createOrganization()
                 val createdOrganization = createdOrganizationResponse.organization
                 val rootUserToken = createdOrganizationResponse.rootUserToken
                 val userName = createdOrganizationResponse.organization.rootUser.username
 
                 val response =
-                    client.get(
+                    testApp.client.get(
                         "/organizations/${createdOrganization.id}/users/$userName/credentials",
                     ) {
                         header(HttpHeaders.ContentType, Json.toString())

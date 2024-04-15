@@ -1,12 +1,11 @@
 package com.hypto.iam.server.apis
 
-import com.google.gson.Gson
 import com.hypto.iam.server.Constants
-import com.hypto.iam.server.helpers.AbstractContainerBaseTest
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createAction
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createOrganization
-import com.hypto.iam.server.helpers.DataSetupHelperV2.createResource
-import com.hypto.iam.server.helpers.DataSetupHelperV2.deleteOrganization
+import com.hypto.iam.server.helpers.BaseSingleAppTest
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createAction
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createOrganization
+import com.hypto.iam.server.helpers.DataSetupHelperV3.createResource
+import com.hypto.iam.server.helpers.DataSetupHelperV3.deleteOrganization
 import com.hypto.iam.server.models.Action
 import com.hypto.iam.server.models.ActionPaginatedResponse
 import com.hypto.iam.server.models.BaseSuccessResponse
@@ -23,28 +22,21 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.testing.testApplication
+import io.ktor.test.dispatcher.testSuspend
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.koin.test.inject
 
-class ActionApiTest : AbstractContainerBaseTest() {
-    private val gson: Gson by inject()
-
+class ActionApiTest : BaseSingleAppTest() {
     @Test
     fun `create action success case1`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
 
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
-            val resource = createResource(organization.id, rootUserToken)
+            val resource = testApp.createResource(organization.id, rootUserToken)
             val response =
-                client.post("/organizations/${organization.id}/resources/${resource.name}/actions") {
+                testApp.client.post("/organizations/${organization.id}/resources/${resource.name}/actions") {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                     setBody(gson.toJson(CreateActionRequest(name = "test-action")))
@@ -63,24 +55,21 @@ class ActionApiTest : AbstractContainerBaseTest() {
             assertEquals(organization.id, responseBody.organizationId)
             assertEquals("", responseBody.description)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
     @Test
     fun `get action`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val (action, resource) = createAction(organization.id, null, rootUserToken)
+            val (action, resource) = testApp.createAction(organization.id, null, rootUserToken)
 
             val response =
-                client.get(
+                testApp.client.get(
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
                 ) {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -96,28 +85,25 @@ class ActionApiTest : AbstractContainerBaseTest() {
             assertEquals(organization.id, responseBody.organizationId)
             assertEquals(resource.name, responseBody.resourceName)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
     @Test
     fun `get action failure for unauthorized user access`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse1, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse1, _) = testApp.createOrganization()
             val organization1 = organizationResponse1.organization
             val rootUserToken1 = organizationResponse1.rootUserToken
 
-            val (organizationResponse2, _) = createOrganization()
+            val (organizationResponse2, _) = testApp.createOrganization()
             val organization2 = organizationResponse2.organization
             val rootUserToken2 = organizationResponse2.rootUserToken
 
-            val (action, resource) = createAction(organization1.id, null, rootUserToken1)
+            val (action, resource) = testApp.createAction(organization1.id, null, rootUserToken1)
 
             val response =
-                client.get(
+                testApp.client.get(
                     "/organizations/${organization1.id}/resources/${resource.name}/actions/${action.name}",
                 ) {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken2")
@@ -128,24 +114,21 @@ class ActionApiTest : AbstractContainerBaseTest() {
                 response.contentType(),
             )
 
-            deleteOrganization(organization1.id)
-            deleteOrganization(organization2.id)
+            testApp.deleteOrganization(organization1.id)
+            testApp.deleteOrganization(organization2.id)
         }
     }
 
     @Test
     fun `delete action`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val (action, resource) = createAction(organization.id, null, rootUserToken)
+            val (action, resource) = testApp.createAction(organization.id, null, rootUserToken)
             var response =
-                client.delete(
+                testApp.client.delete(
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
                 ) {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -157,31 +140,28 @@ class ActionApiTest : AbstractContainerBaseTest() {
 
             // Check that the action is not available
             response =
-                client.get(
+                testApp.client.get(
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
                 ) {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
                 }
             assertEquals(HttpStatusCode.NotFound, response.status)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
     @Test
     fun `list actions for a resource`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val (action1, resource) = createAction(organization.id, null, rootUserToken)
-            val (action2, _) = createAction(organization.id, resource, rootUserToken)
+            val (action1, resource) = testApp.createAction(organization.id, null, rootUserToken)
+            val (action2, _) = testApp.createAction(organization.id, resource, rootUserToken)
             val response =
-                client.get(
+                testApp.client.get(
                     "/organizations/${organization.id}/resources/${resource.name}/actions",
                 ) {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -197,24 +177,21 @@ class ActionApiTest : AbstractContainerBaseTest() {
             assert(responseBody.data!!.contains(action1))
             assert(responseBody.data!!.contains(action2))
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 
     @Test
     fun `update action`() {
-        testApplication {
-            environment {
-                config = ApplicationConfig("application-custom.conf")
-            }
-            val (organizationResponse, _) = createOrganization()
+        testSuspend {
+            val (organizationResponse, _) = testApp.createOrganization()
             val organization = organizationResponse.organization
             val rootUserToken = organizationResponse.rootUserToken
 
-            val (action, resource) = createAction(organization.id, null, rootUserToken)
+            val (action, resource) = testApp.createAction(organization.id, null, rootUserToken)
             val newDescription = "new description"
             val response =
-                client.patch(
+                testApp.client.patch(
                     "/organizations/${organization.id}/resources/${resource.name}/actions/${action.name}",
                 ) {
                     header(HttpHeaders.Authorization, "Bearer $rootUserToken")
@@ -232,7 +209,7 @@ class ActionApiTest : AbstractContainerBaseTest() {
             assertEquals(resource.name, responseBody.resourceName)
             assertEquals(newDescription, responseBody.description)
 
-            deleteOrganization(organization.id)
+            testApp.deleteOrganization(organization.id)
         }
     }
 }

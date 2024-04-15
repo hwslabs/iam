@@ -7,13 +7,15 @@ import com.hypto.iam.server.models.RootUser
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.utils.IdGenerator
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.server.application.Application
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -32,7 +34,10 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
             }
         }
 
-        withTestApplication(Application::handleRequest) {
+        testApplication {
+            environment {
+                config = ApplicationConfig("application-custom.conf")
+            }
             val orgName = "test-org" + IdGenerator.randomId()
             val preferredUsername = "user" + IdGenerator.randomId()
             val name = "test name"
@@ -51,16 +56,14 @@ class ExceptionHandlerTest : AbstractContainerBaseTest() {
                         phone = testPhone,
                     ),
                 )
-            with(
-                handleRequest(HttpMethod.Post, "/organizations") {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    addHeader("X-Api-Key", rootToken)
+            val response =
+                client.post("/organizations") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    header("X-Api-Key", rootToken)
                     setBody(gson.toJson(requestBody))
-                },
-            ) {
-                Assertions.assertEquals("{\"message\":\"Internal Server Error Occurred\"}", response.content)
-                Assertions.assertEquals(500, response.status()?.value)
-            }
+                }
+            Assertions.assertEquals("{\"message\":\"Internal Server Error Occurred\"}", response.bodyAsText())
+            Assertions.assertEquals(HttpStatusCode.InternalServerError, response.status)
         }
     }
 }
