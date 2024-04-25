@@ -87,6 +87,11 @@ jobs:
         with:
           arguments: shadowJar
 
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -96,12 +101,13 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ github.repository }}
           IMAGE_TAG: ${{ github.sha }}
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
         run: |
           repository=$(echo $REPOSITORY | cut -d '/' -f2)
           docker build -t $REGISTRY/$repository:$IMAGE_TAG -f kubernetes/Dockerfile .
-          docker tag $REGISTRY/$repository:$IMAGE_TAG $REGISTRY/$repository:latest
+          docker tag $REGISTRY/$repository:$IMAGE_TAG $REGISTRY/$repository:$BRANCH
           docker push $REGISTRY/$repository:$IMAGE_TAG
-          docker push $REGISTRY/$repository:latest
+          docker push $REGISTRY/$repository:$BRANCH
 
   stop-runner:
     name: Stop self-hosted EC2 runner
