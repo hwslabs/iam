@@ -350,16 +350,19 @@ class UsersServiceImpl : KoinComponent, UsersService {
             user.createdBy,
             true,
         )
-        userAuthRepo.create(
-            hrn = user.hrn,
-            providerName = TokenServiceImpl.ISSUER,
-            authMetadata = null,
-        )
-        userRepo.update(
-            hrn = user.hrn,
-            verified = true,
-            loginAccess = true,
-        )
+        txMan.wrap {
+            userAuthRepo.create(
+                hrn = user.hrn,
+                providerName = TokenServiceImpl.ISSUER,
+                authMetadata = null,
+            )
+            userRepo.update(
+                hrn = user.hrn,
+                verified = true,
+                loginAccess = true,
+            )
+            passcodeRepo.deleteByEmailAndPurpose(user.email!!, VerifyEmailRequest.Purpose.invite)
+        }
         return getUser(organizationId, subOrganizationName, userId)
     }
 
