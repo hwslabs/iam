@@ -6,6 +6,7 @@ import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
 import com.hypto.iam.server.utils.policy.PolicyValidator
+import io.ktor.http.decodeURLPart
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.BaseApplicationPlugin
 import io.ktor.server.application.call
@@ -172,7 +173,7 @@ fun getResourceHrnFunc(
     subOrganizationIdIndex: Int? = null,
 ): (ApplicationRequest) -> ResourceHrn {
     return { request ->
-        val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
+        val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR).map { it.decodeURLPart() }
         ResourceHrn(
             pathSegments[organizationIdIndex],
             subOrganizationIdIndex?.let { pathSegments[it] },
@@ -183,15 +184,12 @@ fun getResourceHrnFunc(
 }
 
 fun getResourceHrnFunc(templateInput: RouteOption): (ApplicationRequest) -> ResourceHrn {
-    return { request ->
-        val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR)
-        ResourceHrn(
-            pathSegments[templateInput.organizationIdIndex],
-            templateInput.subOrganizationNameIndex?.let { pathSegments[it] },
-            IamResources.resourceMap[pathSegments[templateInput.resourceNameIndex]]!!,
-            pathSegments[templateInput.resourceInstanceIndex],
-        )
-    }
+    return getResourceHrnFunc(
+        templateInput.resourceNameIndex,
+        templateInput.resourceInstanceIndex,
+        templateInput.organizationIdIndex,
+        templateInput.subOrganizationNameIndex,
+    )
 }
 
 fun Route.withPermission(
