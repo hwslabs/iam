@@ -1693,6 +1693,8 @@ paths:
       operationId: getTokenForOrg
       parameters:
         - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/GetTokenForSubOrgRequest'
       responses:
         '200':
           $ref: '#/components/responses/TokenResponse'
@@ -1736,7 +1738,6 @@ paths:
       security:
         - basicAuth: [ ]
         - bearerAuth: [ ]
-
 
   /token:
     post:
@@ -2376,6 +2377,17 @@ components:
           examples:
             GetDelegateTokenRequest:
               $ref: '#/components/examples/GetDelegateTokenRequest'
+
+    GetTokenForSubOrgRequest:
+      description: Payload to generate a token for sub organization user
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GetTokenForSubOrgRequest'
+          examples:
+            GetTokenForSubOrgRequest:
+              $ref: '#/components/examples/GetTokenForSubOrgRequest'
 
   responses:
     BaseSuccessResponse:
@@ -3271,6 +3283,11 @@ components:
             action: hrn:XlK5h64gND::invoice$view
             effect: allow
 
+    GetTokenForSubOrgRequest:
+      summary: A sample GetTokenForSubOrgRequest
+      value:
+        email: email@email.com
+
   schemas:
     # Requests
     CreateOrganizationRequest:
@@ -3668,8 +3685,6 @@ components:
       description: payload to generate a delegate_token
       type: object
       additionalProperties: false
-      required:
-        - policy
       properties:
         principal:
           description: Principal to delegate the token to. Will default to the requestor if not provided
@@ -4290,6 +4305,16 @@ components:
           enum:
             - asc
             - desc
+
+    GetTokenForSubOrgRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          maxLength: 320
 
 externalDocs:
   description: Find out more about IAM

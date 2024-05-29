@@ -25,6 +25,7 @@ import com.hypto.iam.server.models.CreateSubOrganizationRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
+import com.hypto.iam.server.models.GetTokenForSubOrgRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResendInviteRequest
@@ -208,6 +209,10 @@ fun UsernamePasswordCredential.validate(): UsernamePasswordCredential {
 
 fun GetDelegateTokenRequest.validate(): GetDelegateTokenRequest {
     return getDelegateTokenRequestValidation.validateAndThrowOnFailure(this)
+}
+
+fun GetTokenForSubOrgRequest.validate(): GetTokenForSubOrgRequest {
+    return getTokenForSubOrgRequest.validateAndThrowOnFailure(this)
 }
 
 // Validations used by ValidationBuilders
@@ -575,6 +580,11 @@ val usernamePasswordCredentialValidation =
         UsernamePasswordCredential::password required {
             run(credentialPasswordCheck)
         }
+    }
+
+val getTokenForSubOrgRequest =
+    Validation {
+        GetTokenForSubOrgRequest::email required {}
     }
 
 val getDelegateTokenRequestValidation =
