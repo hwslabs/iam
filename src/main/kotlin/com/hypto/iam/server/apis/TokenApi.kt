@@ -8,16 +8,13 @@ import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.post
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.GetTokenForSubOrgRequest
-import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.TokenResponse
-import com.hypto.iam.server.models.ValidationRequest
 import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
-import com.hypto.iam.server.service.ValidationService
 import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyRequest
@@ -80,18 +77,20 @@ suspend fun generateTokenForSubOrgEmail(
     val orgId = principal.organization
     val resourceHrn = ResourceHrn(organization = orgId, resource = "organizations", resourceInstance = orgId)
     val actionHrn = ActionHrn(organization = orgId, resource = resourceHrn.resource, action = "getSubOrgToken")
-    val permission = policyValidator.validate(
-        principal.policies,
-        PolicyRequest(principal.hrn.toString(), resourceHrn.toString(), actionHrn.toString())
-    )
+    val permission =
+        policyValidator.validate(
+            principal.policies,
+            PolicyRequest(principal.hrn.toString(), resourceHrn.toString(), actionHrn.toString()),
+        )
     if (!permission) {
         throw AuthenticationException("User does not have permission to get token for sub org")
     }
 
-    val user = userRepo.findSubOrgByEmail(
-        organizationId = principal.organization,
-        email = request.email
-    ) ?: throw AuthenticationException("Sub org user with email ${request.email} not found")
+    val user =
+        userRepo.findSubOrgByEmail(
+            organizationId = principal.organization,
+            email = request.email,
+        ) ?: throw AuthenticationException("Sub org user with email ${request.email} not found")
     val responseContentType = context.request.accept()
     val jwt = tokenService.generateJwtToken(ResourceHrn(user.hrn))
     when (responseContentType) {

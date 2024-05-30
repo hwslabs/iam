@@ -3685,6 +3685,8 @@ components:
       description: payload to generate a delegate_token
       type: object
       additionalProperties: false
+      required:
+        - policy
       properties:
         principal:
           description: Principal to delegate the token to. Will default to the requestor if not provided
