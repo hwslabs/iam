@@ -7,6 +7,7 @@ import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.post
 import com.hypto.iam.server.models.GetDelegateTokenRequest
+import com.hypto.iam.server.models.GetTokenForSubOrgRequest
 import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
@@ -14,7 +15,10 @@ import com.hypto.iam.server.security.OAuthUserPrincipal
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.TokenService
+import com.hypto.iam.server.utils.ActionHrn
 import com.hypto.iam.server.utils.ResourceHrn
+import com.hypto.iam.server.utils.policy.PolicyRequest
+import com.hypto.iam.server.utils.policy.PolicyValidator
 import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -24,6 +28,7 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
 import io.ktor.server.request.accept
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveNullable
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 
@@ -31,6 +36,7 @@ private val tokenService: TokenService = getKoinInstance()
 private val gson: Gson = getKoinInstance()
 private val userRepo = getKoinInstance<UserRepo>()
 private val userAuthRepo = getKoinInstance<UserAuthRepo>()
+private val policyValidator = getKoinInstance<PolicyValidator>()
 
 @Suppress("ThrowsCount")
 suspend fun generateToken(
@@ -56,6 +62,47 @@ suspend fun generateToken(
         else ->
             call.respondText(
                 text = gson.toJson(response),
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK,
+            )
+    }
+}
+
+suspend fun generateTokenForSubOrgEmail(
+    request: GetTokenForSubOrgRequest,
+    call: ApplicationCall,
+    context: ApplicationCall,
+) {
+    val principal = context.principal<UserPrincipal>()!!
+    val orgId = principal.organization
+    val resourceHrn = ResourceHrn(organization = orgId, resource = "organizations", resourceInstance = orgId)
+    val actionHrn = ActionHrn(organization = orgId, resource = resourceHrn.resource, action = "getSubOrgToken")
+    val permission =
+        policyValidator.validate(
+            principal.policies,
+            PolicyRequest(principal.hrn.toString(), resourceHrn.toString(), actionHrn.toString()),
+        )
+    if (!permission) {
+        throw AuthenticationException("User does not have permission to get token for sub org")
+    }
+
+    val user =
+        userRepo.findSubOrgByEmail(
+            organizationId = principal.organization,
+            email = request.email,
+        ) ?: throw AuthenticationException("Sub org user with email ${request.email} not found")
+    val responseContentType = context.request.accept()
+    val jwt = tokenService.generateJwtToken(ResourceHrn(user.hrn))
+    when (responseContentType) {
+        ContentType.Text.Plain.toString() ->
+            call.respondText(
+                text = jwt.token,
+                contentType = ContentType.Text.Plain,
+                status = HttpStatusCode.OK,
+            )
+        else ->
+            call.respondText(
+                text = gson.toJson(jwt),
                 contentType = ContentType.Application.Json,
                 status = HttpStatusCode.OK,
             )
@@ -108,7 +155,12 @@ suspend fun generateTokenOauth(
 fun Route.tokenApi() {
     authenticate("basic-auth", "bearer-auth") {
         post("/organizations/{organization_id}/token") {
-            generateToken(call, context)
+            val request = kotlin.runCatching { call.receiveNullable<GetTokenForSubOrgRequest>() }.getOrNull()?.validate()
+            if (request != null) {
+                generateTokenForSubOrgEmail(request, call, context)
+            } else {
+                generateToken(call, context)
+            }
         }
     }
 
