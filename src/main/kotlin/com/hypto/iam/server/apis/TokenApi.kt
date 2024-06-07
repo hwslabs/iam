@@ -92,7 +92,7 @@ suspend fun generateTokenForSubOrgEmail(
             email = request.email,
         ) ?: throw AuthenticationException("Sub org user with email ${request.email} not found")
     val responseContentType = context.request.accept()
-    val jwt = tokenService.generateJwtToken(ResourceHrn(user.hrn))
+    val jwt = tokenService.generateJwtToken(ResourceHrn(user.hrn), expiryInSeconds = request.expiry?.toLong())
     when (responseContentType) {
         ContentType.Text.Plain.toString() ->
             call.respondText(

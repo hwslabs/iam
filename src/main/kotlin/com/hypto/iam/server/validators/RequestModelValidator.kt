@@ -46,6 +46,7 @@ import io.konform.validation.jsonschema.maxItems
 import io.konform.validation.jsonschema.maxLength
 import io.konform.validation.jsonschema.minItems
 import io.konform.validation.jsonschema.minLength
+import io.konform.validation.jsonschema.minimum
 import io.konform.validation.jsonschema.pattern
 import io.konform.validation.onEach
 
@@ -585,6 +586,9 @@ val usernamePasswordCredentialValidation =
 val getTokenForSubOrgRequest =
     Validation {
         GetTokenForSubOrgRequest::email required {}
+        GetTokenForSubOrgRequest::expiry ifPresent {
+            minimum(1)
+        }
     }
 
 val getDelegateTokenRequestValidation =
