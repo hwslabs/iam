@@ -56,7 +56,10 @@ private val logger = KotlinLogging.logger("service.TokenService")
  * Service which holds logic related to Organization operations
  */
 interface TokenService {
-    suspend fun generateJwtToken(userHrn: Hrn): TokenResponse
+    suspend fun generateJwtToken(
+        userHrn: Hrn,
+        expiryInSeconds: Long? = null,
+    ): TokenResponse
 
     suspend fun validateJwtToken(token: String): Jws<Claims>
 
@@ -203,14 +206,21 @@ class TokenServiceImpl : KoinComponent, TokenService {
         )
     }
 
-    override suspend fun generateJwtToken(userHrn: Hrn): TokenResponse =
+    override suspend fun generateJwtToken(
+        userHrn: Hrn,
+        expiryInSeconds: Long?,
+    ): TokenResponse =
         measureTimedValue("TokenService.generateJwtToken", logger) {
             require(userHrn is ResourceHrn) { "The input hrn must be a userHrn" }
             generateJwtTokenWithPolicy(
                 userHrn.organization,
                 userHrn.toString(),
                 entitlements = principalPolicyService.fetchEntitlements(userHrn.toString()).toString(),
-                expiryDate = Date.from(Instant.now().plusSeconds(appConfig.app.jwtTokenValidity)),
+                expiryDate =
+                    Date.from(
+                        Instant.now()
+                            .plusSeconds(expiryInSeconds ?: appConfig.app.jwtTokenValidity),
+                    ),
             )
         }
 

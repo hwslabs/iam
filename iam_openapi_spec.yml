@@ -4315,8 +4315,13 @@ components:
         - email
       properties:
         email:
+          description: Email of the sub organization user to get token for
           type: string
           maxLength: 320
+        expiry:
+          description: |
+            Expiry in seconds from the time of generation. If not provided, the token will have the expiry of 24 hours
+          type: integer
 
 externalDocs:
   description: Find out more about IAM
