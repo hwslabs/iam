@@ -1,5 +1,6 @@
 package com.hypto.iam.server.db.repositories
 
+import com.hypto.iam.server.db.Tables.AUTH_PROVIDER
 import com.hypto.iam.server.db.tables.LinkUsers.LINK_USERS
 import com.hypto.iam.server.db.tables.pojos.LinkUsers
 import com.hypto.iam.server.db.tables.records.LinkUsersRecord
@@ -19,25 +20,33 @@ object LinkUsersRepo : BaseRepo<LinkUsersRecord, LinkUsers, String>() {
             .fetchOne()
 
     suspend fun fetchSubordinateUsers(
-        leaderUserHrn: String,
+        organizationId: String,
+        masterUserHrn: String,
         context: PaginationContext,
     ): Map<String, LinkUsersRecord> {
         return ctx("linkUsers.fetchSubordinateUsers")
             .selectFrom(LINK_USERS)
-            .where(LINK_USERS.LEADER_USER_HRN.eq(leaderUserHrn))
-            .paginate(LINK_USERS.SUBORDINATE_USER_HRN, context)
-            .fetchMap(LINK_USERS.SUBORDINATE_USER_HRN)
+            .where(
+                LINK_USERS.ORGANIZATION_ID.eq(organizationId),
+                LINK_USERS.MASTER_USER.eq(masterUserHrn),
+            )
+            .paginate(LINK_USERS.SUBORDINATE_USER, context)
+            .fetchMap(LINK_USERS.SUBORDINATE_USER)
     }
 
-    suspend fun fetchLeaderUsers(
+    suspend fun fetchMasterUsers(
+        organizationId: String,
         subordinateUserHrn: String,
         context: PaginationContext,
     ): Map<String, LinkUsersRecord> {
-        return ctx("linkUsers.fetchLeaderUsers")
+        return ctx("linkUsers.fetchMasterUsers")
             .selectFrom(LINK_USERS)
-            .where(LINK_USERS.SUBORDINATE_USER_HRN.eq(subordinateUserHrn))
-            .paginate(LINK_USERS.LEADER_USER_HRN, context)
-            .fetchMap(LINK_USERS.LEADER_USER_HRN)
+            .where(
+                LINK_USERS.ORGANIZATION_ID.eq(organizationId),
+                LINK_USERS.SUBORDINATE_USER.eq(subordinateUserHrn),
+            )
+            .paginate(LINK_USERS.MASTER_USER, context)
+            .fetchMap(LINK_USERS.MASTER_USER)
     }
 
     suspend fun deleteById(id: String): Boolean {

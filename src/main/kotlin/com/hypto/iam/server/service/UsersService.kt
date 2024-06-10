@@ -68,6 +68,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val userPrincipalService: UserPrincipalService by inject()
     private val linkUsersRepo: LinkUsersRepo by inject()
     private val tokenService: TokenService by inject()
+//    private val passcodeService: PasscodeService by inject()
 
     @Suppress("CyclomaticComplexMethod", "ComplexMethod")
     override suspend fun createUser(
@@ -560,43 +561,28 @@ class UsersServiceImpl : KoinComponent, UsersService {
         request: LinkUserRequest,
     ): TokenResponse {
         val inviteeHrn =
-            when (request.type) {
-                LinkUserRequest.Type.EMAIL_APPROVAL -> throw BadRequestException("WILL BE IMPLEMENTED IN USER LINKS V2")
-                LinkUserRequest.Type.USERNAME_PASSWORD -> {
-                    val config = request.usernamePasswordConfig!!
-                    if (config.organizationId != null) {
-                        userPrincipalService.getUserPrincipalByCredentials(
-                            organizationId = config.organizationId,
-                            subOrganizationId = config.subOrganizationId,
-                            userName = config.email.lowercase(),
-                            password = config.password,
-                        ).hrn
-                    } else {
-                        require(appConfig.app.uniqueUsersAcrossOrganizations) {
-                            "Email not unique across organizations. Please use link user passcode"
-                        }
-                        userPrincipalService.getUserPrincipalByCredentials(
-                            UsernamePasswordCredential(config.email.lowercase(), config.password),
-                        ).hrn
-                    }
+            if (request.email != null && request.password != null) {
+                if (!appConfig.app.uniqueUsersAcrossOrganizations) {
+                    throw BadRequestException("Email not unique across organizations. Please use link user passcode")
                 }
-                LinkUserRequest.Type.TOKEN_CREDENTIAL -> {
-                    val token = request.tokenCredentialConfig!!.token
-                    if (isIamJWT(token)) {
-                        userPrincipalService.getUserPrincipalByJwtToken(TokenCredential(token, TokenType.JWT)).hrn
-                    } else {
-                        userPrincipalService.getUserPrincipalByRefreshToken(TokenCredential(token, TokenType.CREDENTIAL))?.hrn
-                            ?: throw BadRequestException("Invalid token credentials")
-                    }
+                userPrincipalService.getUserPrincipalByCredentials(
+                    UsernamePasswordCredential(request.email.lowercase(), request.password),
+                ).hrn
+            } else {
+                if (isIamJWT(request.tokenCredential!!)) {
+                    userPrincipalService.getUserPrincipalByJwtToken(TokenCredential(request.tokenCredential, TokenType.JWT)).hrn
+                } else {
+                    userPrincipalService.getUserPrincipalByRefreshToken(TokenCredential(request.tokenCredential, TokenType.CREDENTIAL))?.hrn
+                        ?: throw BadRequestException("Invalid token credentials")
                 }
             }
-        require(principal.hrn != inviteeHrn) { "Leader and subordinate can't be the same user" }
         val now = LocalDateTime.now()
         val record =
             LinkUsersRecord().apply {
-                id = IdGenerator.timeBasedRandomId(length = 20L)
-                leaderUserHrn = principal.hrnStr
-                subordinateUserHrn = inviteeHrn.toString()
+                id = IdGenerator.timeBasedRandomId()
+                organizationId = principal.organization
+                masterUser = principal.hrnStr
+                subordinateUser = inviteeHrn.toString()
                 createdAt = now
                 updatedAt = now
             }
@@ -604,48 +590,49 @@ class UsersServiceImpl : KoinComponent, UsersService {
         return tokenService.generateJwtToken(inviteeHrn, principal.hrn)
     }
 
-    override suspend fun listUserLinks(
+    override suspend fun listMasterUsers(
         principal: UserPrincipal,
         context: PaginationContext,
     ): LinkUsersPaginatedResponse {
-        return when (context.additionalParams?.get("role") as String?) {
-            "LEADER" -> listLeaderUsers(principal, context)
-            "SUBORDINATE" -> listSubordinateUsers(principal, context)
-            else -> throw IllegalArgumentException("Invalid value found for query param role")
-        }
-    }
-
-    private suspend fun listLeaderUsers(
-        principal: UserPrincipal,
-        context: PaginationContext,
-    ): LinkUsersPaginatedResponse {
-        val linkUserRecords = linkUsersRepo.fetchLeaderUsers(principal.hrnStr, context)
+        val linkUserRecords =
+            linkUsersRepo.fetchMasterUsers(
+                principal.organization,
+                principal.hrnStr,
+                context,
+            )
         val userRecordsMap = userRepo.findByHrns(linkUserRecords.keys.toList())
-        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.leaderUserHrn, context)
+        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.masterUser, context)
         return LinkUsersPaginatedResponse(
             data =
-                userRecordsMap.map {
-                    val linkUserRecord = linkUserRecords[it.key]!!
-                    val userHrn = ResourceHrn(it.key)
-                    LinkUserResponse(
-                        id = linkUserRecord.id!!,
-                        name = it.value.name ?: "",
-                        organizationId = userHrn.organization,
-                        email = it.value.email,
-                    )
-                },
+            userRecordsMap.map {
+                val linkUserRecord = linkUserRecords[it.key]!!
+                val userHrn = ResourceHrn(it.key)
+                LinkUserResponse(
+                    id = linkUserRecord.id!!,
+                    hrn = it.key,
+                    username = userHrn.resourceInstance.toString(),
+                    preferredUsername = it.value.preferredUsername,
+                    name = it.value.name ?: "",
+                    organizationId = userHrn.organization,
+                )
+            },
             nextToken = newContext.nextToken,
             context = newContext.toOptions(),
         )
     }
 
-    private suspend fun listSubordinateUsers(
+    override suspend fun listSubordinateUsers(
         principal: UserPrincipal,
         context: PaginationContext,
     ): LinkUsersPaginatedResponse {
-        val linkUserRecords = linkUsersRepo.fetchSubordinateUsers(principal.hrnStr, context)
+        val linkUserRecords =
+            linkUsersRepo.fetchSubordinateUsers(
+                principal.organization,
+                principal.hrnStr,
+                context,
+            )
         val userRecordsMap = userRepo.findByHrns(linkUserRecords.keys.toList())
-        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.subordinateUserHrn, context)
+        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.subordinateUser, context)
         return LinkUsersPaginatedResponse(
             data =
                 userRecordsMap.map {
@@ -653,9 +640,11 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     val userHrn = ResourceHrn(it.key)
                     LinkUserResponse(
                         id = linkUserRecord.id!!,
+                        hrn = it.key,
+                        username = userHrn.resourceInstance.toString(),
+                        preferredUsername = it.value.preferredUsername,
                         name = it.value.name ?: "",
                         organizationId = userHrn.organization,
-                        email = it.value.email,
                     )
                 },
             nextToken = newContext.nextToken,
@@ -667,17 +656,17 @@ class UsersServiceImpl : KoinComponent, UsersService {
         principal: UserPrincipal,
         linkId: String,
     ): TokenResponse {
-        val leaderUserHrn = principal.claims?.get(ON_BEHALF_CLAIM) as String? ?: principal.hrnStr
+        val masterUserHrn = principal.claims?.get(ON_BEHALF_CLAIM) as String? ?: principal.hrnStr
         val record =
             linkUsersRepo.getById(linkId)
                 ?: throw EntityNotFoundException("Invalid user link id")
-        require(record.leaderUserHrn == leaderUserHrn) {
+        require(record.masterUser == masterUserHrn) {
             "User doesn't have permission to switch"
         }
-        return if (record.leaderUserHrn == principal.hrnStr) {
-            tokenService.generateJwtToken(ResourceHrn(record.subordinateUserHrn), principal.hrn)
+        return if (record.masterUser == principal.hrnStr) {
+            tokenService.generateJwtToken(ResourceHrn(record.subordinateUser), principal.hrn)
         } else {
-            tokenService.generateJwtToken(ResourceHrn(record.leaderUserHrn))
+            tokenService.generateJwtToken(ResourceHrn(record.masterUser))
         }
     }
 
@@ -689,8 +678,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
             linkUsersRepo.getById(linkId)
                 ?: throw EntityNotFoundException("Invalid user link id")
         val userHrn = principal.hrnStr
-        require(record.leaderUserHrn == userHrn || record.subordinateUserHrn == userHrn) {
-            "Only the leader or the subordinated user can delete the link"
+        require(record.masterUser == userHrn || record.subordinateUser == userHrn) {
+            "Only the master or the subordinated user can delete the link"
         }
         return BaseSuccessResponse(linkUsersRepo.deleteById(linkId))
     }
@@ -792,7 +781,12 @@ interface UsersService {
         request: LinkUserRequest,
     ): TokenResponse
 
-    suspend fun listUserLinks(
+    suspend fun listMasterUsers(
+        principal: UserPrincipal,
+        context: PaginationContext,
+    ): LinkUsersPaginatedResponse
+
+    suspend fun listSubordinateUsers(
         principal: UserPrincipal,
         context: PaginationContext,
     ): LinkUsersPaginatedResponse

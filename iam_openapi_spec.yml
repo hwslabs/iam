@@ -1282,17 +1282,43 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/master_users:
     get:
       tags:
         - User Management
-      summary: List user links based on the role.
-      description: |
-        Each user link is associated with a leader user and a subordinate user. This API allows to list all users 
-        of a certain role[LEADER/SUBORDINATE] linked with the current user.
-      operationId: listUserLinks
+      summary: List master users who are authorized to access this organization
+      description: List master users who are authorized to access this organization
+      operationId: listMasterUsers
       parameters:
         - $ref: '#/components/parameters/organization_id'
-        - $ref: '#/components/parameters/role'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '200':
+          $ref: '#/components/responses/LinkUsersPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/subordinate_users:
+    get:
+      tags:
+        - User Management
+      summary: List subordinate users of whom the current user has access
+      description: List subordinate users of whom the current user has access
+      operationId: listSubordinateUsers
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
         - $ref: '#/components/parameters/next_token'
         - $ref: '#/components/parameters/page_size'
         - $ref: '#/components/parameters/sort_order'
@@ -1313,7 +1339,7 @@ paths:
           $ref: '#/components/responses/ErrorResponse'
 
   /organizations/{organization_id}/user_links/{user_link_id}:
-    post:
+    get:
       tags:
         - User Management
       summary: Get authentication details for switching user
@@ -2149,9 +2175,9 @@ components:
         application/json:
           schema:
             type: string
-            maxLength: 20
+            maxLength: 10
             pattern: ^[A-Za-z0-9]{10}$
-            example: "IFXNLQHFYDDBKASUEABR"
+            example: "IFXNLQHFYD"
 
     credential_id:
       in: path
@@ -2174,19 +2200,6 @@ components:
             type: string
             maxLength: 50
             example: "1f44ada7-7196-4f2d-8380-4c76f8bddec2"
-#    Required in query param
-    role:
-      in: query
-      name: role
-      required: true
-      content:
-        application/json:
-          schema:
-            type: string
-            enum:
-              - LEADER
-              - SUBORDINATE
-            example: "LEADER"
 
     format:
       in: query
@@ -3051,10 +3064,8 @@ components:
     LinkUserRequest:
       summary: sample set user password request
       value:
-        type: USERNAME_PASSWORD
-        usernamePasswordConfig:
-          email: acme@acme.com
-          password: Password@123
+        email: acme@acme.com
+        password: Password@123
 
     CreateCredentialRequest:
       summary: sample create credential request
@@ -3275,6 +3286,8 @@ components:
       value:
         data:
           - id: IFXNLQHFYD
+            hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+            username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
             name: Lorem Ipsum
             organizationId: XlK5h64gND
             email: bob@acme.com
@@ -3688,52 +3701,15 @@ components:
       description: Payload to link a user to another user of same/different organization
       type: object
       additionalProperties: false
-      required:
-        - type
       properties:
-        type:
+        email:
           type: string
-          enum:
-            - EMAIL_APPROVAL
-            - USERNAME_PASSWORD
-            - TOKEN_CREDENTIAL
-        emailApprovalConfig:
-          type: object
-          title: EmailApprovalConfig
-          additionalProperties: false
-          required:
-            - email
-          properties:
-            email:
-              type: string
-              maxLength: 320
-        usernamePasswordConfig:
-          type: object
-          title: UsernamePasswordConfig
-          additionalProperties: false
-          required:
-            - email
-            - password
-          properties:
-            email:
-              type: string
-              maxLength: 320
-            password:
-              type: string
-              maxLength: 100
-            organizationId:
-              type: string
-            subOrganizationId:
-              type: string
-        tokenCredentialConfig:
-          type: object
-          title: TokenCredentialConfig
-          additionalProperties: false
-          required:
-            - token
-          properties:
-            token:
-              type: string
+          maxLength: 100
+        password:
+          type: string
+          maxLength: 100
+        tokenCredential:
+          type: string
 
     CreateResourceRequest:
       description: Payload to create resource
@@ -4059,11 +4035,21 @@ components:
       additionalProperties: false
       required:
         - id
+        - hrn
+        - username
         - name
         - organizationId
       properties:
         id:
           type: string
+        hrn:
+          type: string
+        username:
+          type: string
+          maxLength: 50
+        preferredUsername:
+          type: string
+          maxLength: 50
         name:
           type: string
           maxLength: 50
