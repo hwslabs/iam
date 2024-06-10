@@ -11,6 +11,7 @@ import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.ActionRepo
 import com.hypto.iam.server.db.repositories.AuthProviderRepo
 import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.db.repositories.LinkUsersRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
@@ -104,6 +105,7 @@ val repositoryModule =
         single { AuthProviderRepo }
         single { UserAuthRepo }
         single { SubOrganizationRepo }
+        single { LinkUsersRepo }
     }
 
 val controllerModule =

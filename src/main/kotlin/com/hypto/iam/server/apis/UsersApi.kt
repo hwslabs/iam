@@ -16,6 +16,7 @@ import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.CreateUserResponse
+import com.hypto.iam.server.models.LinkUserRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
@@ -44,6 +45,7 @@ import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import org.koin.ktor.ext.inject
 
 fun Route.createUsersApi() {
@@ -89,7 +91,7 @@ fun Route.createUsersApi() {
             val passcode =
                 passcodeRepo.getValidPasscodeById(
                     principal.tokenCredential.value!!,
-                    VerifyEmailRequest.Purpose.invite,
+                    VerifyEmailRequest.Purpose.invite.toString(),
                     organizationId = organizationId,
                 ) ?: throw AuthenticationException("Invalid passcode")
             require(passcode.email == request.email) { "Email in passcode does not match email in request" }
@@ -462,7 +464,7 @@ fun Route.createUserPasswordApi() {
             val passcode =
                 passcodeRepo.getValidPasscodeById(
                     principal.tokenCredential.value!!,
-                    VerifyEmailRequest.Purpose.invite,
+                    VerifyEmailRequest.Purpose.invite.toString(),
                     organizationId = organizationId,
                 ) ?: throw AuthenticationException("Invalid passcode")
             require(passcode.email == inviteeUser.email) { "Email in passcode does not match email in request" }
@@ -481,6 +483,152 @@ fun Route.createUserPasswordApi() {
             text = gson.toJson(tokenResponse),
             contentType = ContentType.Application.Json,
             status = HttpStatusCode.Created,
+        )
+    }
+}
+
+fun Route.linkUserApi() {
+    val gson: Gson by inject()
+    val usersService: UsersService by inject()
+
+    postWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/user_links",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+                organizationIdIndex = 1,
+            ),
+        ),
+        "linkUser",
+    ) {
+        val organizationId = call.parameters["organization_id"]!!
+        val principal = call.principal<UserPrincipal>()!!
+        require(principal.hrn.organization == organizationId) {
+            "Organization id in path and token are not matching. Invalid token"
+        }
+        val request = call.receive<LinkUserRequest>().validate()
+        val tokenResponse = usersService.linkUser(principal, request)
+        call.respondText(
+            text = gson.toJson(tokenResponse),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created,
+        )
+    }
+
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/master_users",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+                organizationIdIndex = 1,
+            ),
+        ),
+        "listMasterUsers",
+    ) {
+        val organizationId = call.parameters["organization_id"]!!
+        val principal = call.principal<UserPrincipal>()!!
+        require(principal.hrn.organization == organizationId) {
+            "Organization id in path and token are not matching. Invalid token"
+        }
+        val nextToken = call.request.queryParameters["next_token"]
+        val pageSize = call.request.queryParameters["page_size"]
+        val sortOrder = call.request.queryParameters["sort_order"]
+        val context =
+            PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+            )
+        val response = usersService.listMasterUsers(principal, context)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
+        )
+    }
+
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/subordinate_users",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+                organizationIdIndex = 1,
+            ),
+        ),
+        "listSubordinateUsers",
+    ) {
+        val organizationId = call.parameters["organization_id"]!!
+        val principal = call.principal<UserPrincipal>()!!
+        require(principal.hrn.organization == organizationId) {
+            "Organization id in path and token are not matching. Invalid token"
+        }
+        val nextToken = call.request.queryParameters["next_token"]
+        val pageSize = call.request.queryParameters["page_size"]
+        val sortOrder = call.request.queryParameters["sort_order"]
+        val context =
+            PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+            )
+        val response = usersService.listSubordinateUsers(principal, context)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
+        )
+    }
+
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/user_links/{user_link_id}",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1,
+            ),
+        ),
+        "switchUser",
+    ) {
+        val organizationId = call.parameters["organization_id"]!!
+        val linkId = call.parameters["user_link_id"]!!
+        val principal = call.principal<UserPrincipal>()!!
+        require(principal.hrn.organization == organizationId) {
+            "Organization id in path and token are not matching. Invalid token"
+        }
+        val response = usersService.switchUser(principal, linkId)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
+        )
+    }
+
+    deleteWithPermission(
+        listOf(
+            RouteOption(
+                "/organizations/{organization_id}/user_links/{user_link_id}",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1,
+            ),
+        ),
+        "deleteUserLink",
+    ) {
+        val organizationId = call.parameters["organization_id"]!!
+        val linkId = call.parameters["user_link_id"]!!
+        val principal = call.principal<UserPrincipal>()!!
+        require(principal.hrn.organization == organizationId) {
+            "Organization id in path and token are not matching. Invalid token"
+        }
+        val response = usersService.deleteUserLink(principal, linkId)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
         )
     }
 }

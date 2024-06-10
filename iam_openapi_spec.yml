@@ -1255,6 +1255,139 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
+  /organizations/{organization_id}/user_links:
+    post:
+      tags:
+        - User Management
+      summary: Link one user with another user of same/different organization
+      description: Link one user with another user of same/different organization
+      operationId: linkUser
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+      requestBody:
+        $ref: '#/components/requestBodies/LinkUserRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/master_users:
+    get:
+      tags:
+        - User Management
+      summary: List master users who are authorized to access this organization
+      description: List master users who are authorized to access this organization
+      operationId: listMasterUsers
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '200':
+          $ref: '#/components/responses/LinkUsersPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/subordinate_users:
+    get:
+      tags:
+        - User Management
+      summary: List subordinate users of whom the current user has access
+      description: List subordinate users of whom the current user has access
+      operationId: listSubordinateUsers
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/next_token'
+        - $ref: '#/components/parameters/page_size'
+        - $ref: '#/components/parameters/sort_order'
+      responses:
+        '200':
+          $ref: '#/components/responses/LinkUsersPaginatedResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
+  /organizations/{organization_id}/user_links/{user_link_id}:
+    get:
+      tags:
+        - User Management
+      summary: Get authentication details for switching user
+      description: Get authentication details for switching user
+      operationId: switchUser
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/user_link_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      tags:
+        - User Management
+      summary: Delete an user link
+      description: Delete an user link
+      operationId: deleteUserLink
+      parameters:
+        - $ref: '#/components/parameters/organization_id'
+        - $ref: '#/components/parameters/user_link_id'
+      responses:
+        '200':
+          $ref: '#/components/responses/BaseSuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+        default:
+          $ref: '#/components/responses/ErrorResponse'
+
 
   # resource
   /organizations/{organization_id}/resources:
@@ -2034,6 +2167,18 @@ components:
             type: string
             example: "customer_1"
 
+    user_link_id:
+      in: path
+      name: user_link_id
+      required: true
+      content:
+        application/json:
+          schema:
+            type: string
+            maxLength: 10
+            pattern: ^[A-Za-z0-9]{10}$
+            example: "IFXNLQHFYD"
+
     credential_id:
       in: path
       name: credential_id
@@ -2239,6 +2384,17 @@ components:
           examples:
             UpdateCredentialRequest:
               $ref: '#/components/examples/UpdateCredentialRequest'
+
+    LinkUserRequest:
+      description: Payload to link a user to another user of same/different organization
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinkUserRequest'
+          examples:
+            LinkUserRequest:
+              $ref: '#/components/examples/LinkUserRequest'
 
     CreateResourceRequest:
       description: Payload to create resource
@@ -2724,6 +2880,22 @@ components:
             UserPaginatedResponse:
               $ref: '#/components/examples/UserPaginatedResponse'
 
+    LinkUsersPaginatedResponse:
+      description: Response for list users linked with the current user
+      headers:
+        X-Iam-User-Organization:
+          schema:
+            type: string
+          description: Organization Id of the authenticated user
+          example: XlK5h64gND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LinkUsersPaginatedResponse'
+          examples:
+            LinkUsersPaginatedResponse:
+              $ref: '#/components/examples/LinkUsersPaginatedResponse'
+
     UserAuthMethodsResponse:
       description: Response for list user auth methods request
       headers:
@@ -2888,6 +3060,12 @@ components:
       value:
         issuer: google
         token: <JWT token or Access token provided by the auth provider>
+
+    LinkUserRequest:
+      summary: sample set user password request
+      value:
+        email: acme@acme.com
+        password: Password@123
 
     CreateCredentialRequest:
       summary: sample create credential request
@@ -3099,6 +3277,20 @@ components:
             loginAccess: true
             createdBy: hrn:Xghfdksd::iam-user/johnny314
             createdAt: 2020-01-01T00:00:00.000Z
+        nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
+        context:
+          pageSize: 10
+          sortOrder: asc
+
+    LinkUsersPaginatedResponse:
+      value:
+        data:
+          - id: IFXNLQHFYD
+            hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+            username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
+            name: Lorem Ipsum
+            organizationId: XlK5h64gND
+            email: bob@acme.com
         nextToken: eyJsYXN0SXRlbUlkIjogInN0cmluZyIsICJwYWdlU2l6ZSI6IDEyMywgInNvcnRPcmRlciI6ICJhc2MifQ==
         context:
           pageSize: 10
@@ -3505,6 +3697,20 @@ components:
             - active
             - inactive
 
+    LinkUserRequest:
+      description: Payload to link a user to another user of same/different organization
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          maxLength: 100
+        password:
+          type: string
+          maxLength: 100
+        tokenCredential:
+          type: string
+
     CreateResourceRequest:
       description: Payload to create resource
       type: object
@@ -3823,6 +4029,51 @@ components:
           maxItems: 100
           items:
             $ref: '#/components/schemas/UserAuthMethod'
+
+    LinkUserResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - hrn
+        - username
+        - name
+        - organizationId
+      properties:
+        id:
+          type: string
+        hrn:
+          type: string
+        username:
+          type: string
+          maxLength: 50
+        preferredUsername:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 50
+        organizationId:
+          type: string
+          maxLength: 50
+        email:
+          type: string
+          maxLength: 320
+
+    LinkUsersPaginatedResponse:
+      type: object
+      additionalProperties: false
+      properties:
+        data:
+          type: array
+          minItems: 0
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/LinkUserResponse'
+        nextToken:
+          type: string
+        context:
+          $ref: '#/components/schemas/PaginationOptions'
 
     PolicyPaginatedResponse:
       type: object

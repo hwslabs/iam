@@ -26,6 +26,7 @@ import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.GetTokenForSubOrgRequest
+import com.hypto.iam.server.models.LinkUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResendInviteRequest
@@ -214,6 +215,10 @@ fun GetDelegateTokenRequest.validate(): GetDelegateTokenRequest {
 
 fun GetTokenForSubOrgRequest.validate(): GetTokenForSubOrgRequest {
     return getTokenForSubOrgRequest.validateAndThrowOnFailure(this)
+}
+
+fun LinkUserRequest.validate(): LinkUserRequest {
+    return linkUserRequestValidation.validateAndThrowOnFailure(this)
 }
 
 // Validations used by ValidationBuilders
@@ -594,4 +599,18 @@ val getTokenForSubOrgRequest =
 val getDelegateTokenRequestValidation =
     Validation {
         GetDelegateTokenRequest::policy required {}
+    }
+
+val linkUserRequestValidation =
+    Validation<LinkUserRequest> {
+        LinkUserRequest::email ifPresent {
+            run(emailCheck)
+        }
+        LinkUserRequest::password ifPresent {
+            run(passwordCheck)
+        }
+        LinkUserRequest::tokenCredential ifPresent {}
+        addConstraint("Any one of username/password or tokenCredential is required") {
+            (it.email != null && it.password != null) xor (it.tokenCredential != null)
+        }
     }

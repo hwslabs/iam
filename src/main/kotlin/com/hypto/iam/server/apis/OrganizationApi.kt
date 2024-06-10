@@ -59,10 +59,10 @@ fun Route.createOrganizationApi() {
         }
 
         call.principal<ApiPrincipal>()?.let { apiPrincipal ->
-            val passcodeStr = apiPrincipal.tokenCredential?.value!!
+            val passcodeStr = apiPrincipal.tokenCredential.value!!
 
             val apiRequest = kotlin.runCatching { call.receiveNullable<CreateOrganizationRequest>() }.getOrNull()
-            val passcode = passcodeRepo.getValidPasscodeById(passcodeStr, VerifyEmailRequest.Purpose.signup)
+            val passcode = passcodeRepo.getValidPasscodeById(passcodeStr, VerifyEmailRequest.Purpose.signup.toString())
             val passcodeMetadata = passcode?.metadata
             if (passcodeMetadata != null && apiRequest != null) {
                 throw BadRequestException(

@@ -5,10 +5,12 @@ package com.hypto.iam.server.service
 import com.google.gson.Gson
 import com.hypto.iam.server.configs.AppConfig
 import com.hypto.iam.server.db.repositories.CredentialsRepo
+import com.hypto.iam.server.db.repositories.LinkUsersRepo
 import com.hypto.iam.server.db.repositories.OrganizationRepo
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
+import com.hypto.iam.server.db.tables.records.LinkUsersRecord
 import com.hypto.iam.server.db.tables.records.UsersRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
@@ -22,13 +24,24 @@ import com.hypto.iam.server.idp.PasswordCredentials
 import com.hypto.iam.server.idp.RequestContext
 import com.hypto.iam.server.idp.UserAlreadyExistException
 import com.hypto.iam.server.models.BaseSuccessResponse
+import com.hypto.iam.server.models.LinkUserRequest
+import com.hypto.iam.server.models.LinkUserResponse
+import com.hypto.iam.server.models.LinkUsersPaginatedResponse
+import com.hypto.iam.server.models.TokenResponse
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.AuthenticationException
+import com.hypto.iam.server.security.TokenCredential
+import com.hypto.iam.server.security.TokenType
+import com.hypto.iam.server.security.UserPrincipal
+import com.hypto.iam.server.security.UsernamePasswordCredential
+import com.hypto.iam.server.security.isIamJWT
+import com.hypto.iam.server.service.TokenServiceImpl.Companion.ON_BEHALF_CLAIM
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.IamResources
+import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.EMAIL_REGEX
 import com.txman.TxMan
@@ -52,6 +65,10 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val passcodeRepo: PasscodeRepo by inject()
     private val userAuthRepo: UserAuthRepo by inject()
     private val credentialRepo: CredentialsRepo by inject()
+    private val userPrincipalService: UserPrincipalService by inject()
+    private val linkUsersRepo: LinkUsersRepo by inject()
+    private val tokenService: TokenService by inject()
+//    private val passcodeService: PasscodeService by inject()
 
     @Suppress("CyclomaticComplexMethod", "ComplexMethod")
     override suspend fun createUser(
@@ -538,6 +555,134 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val userHrn = ResourceHrn(userRecord.organizationId, "", IamResources.USER, user.username)
         return getUser(userHrn, userRecord)
     }
+
+    override suspend fun linkUser(
+        principal: UserPrincipal,
+        request: LinkUserRequest,
+    ): TokenResponse {
+        val inviteeHrn =
+            if (request.email != null && request.password != null) {
+                if (!appConfig.app.uniqueUsersAcrossOrganizations) {
+                    throw BadRequestException("Email not unique across organizations. Please use link user passcode")
+                }
+                userPrincipalService.getUserPrincipalByCredentials(
+                    UsernamePasswordCredential(request.email.lowercase(), request.password),
+                ).hrn
+            } else {
+                if (isIamJWT(request.tokenCredential!!)) {
+                    userPrincipalService.getUserPrincipalByJwtToken(TokenCredential(request.tokenCredential, TokenType.JWT)).hrn
+                } else {
+                    userPrincipalService.getUserPrincipalByRefreshToken(TokenCredential(request.tokenCredential, TokenType.CREDENTIAL))?.hrn
+                        ?: throw BadRequestException("Invalid token credentials")
+                }
+            }
+        val now = LocalDateTime.now()
+        val record =
+            LinkUsersRecord().apply {
+                id = IdGenerator.timeBasedRandomId()
+                organizationId = principal.organization
+                masterUser = principal.hrnStr
+                subordinateUser = inviteeHrn.toString()
+                createdAt = now
+                updatedAt = now
+            }
+        linkUsersRepo.store(record)
+        return tokenService.generateJwtToken(inviteeHrn, principal.hrn)
+    }
+
+    override suspend fun listMasterUsers(
+        principal: UserPrincipal,
+        context: PaginationContext,
+    ): LinkUsersPaginatedResponse {
+        val linkUserRecords =
+            linkUsersRepo.fetchMasterUsers(
+                principal.organization,
+                principal.hrnStr,
+                context,
+            )
+        val userRecordsMap = userRepo.findByHrns(linkUserRecords.keys.toList())
+        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.masterUser, context)
+        return LinkUsersPaginatedResponse(
+            data =
+            userRecordsMap.map {
+                val linkUserRecord = linkUserRecords[it.key]!!
+                val userHrn = ResourceHrn(it.key)
+                LinkUserResponse(
+                    id = linkUserRecord.id!!,
+                    hrn = it.key,
+                    username = userHrn.resourceInstance.toString(),
+                    preferredUsername = it.value.preferredUsername,
+                    name = it.value.name ?: "",
+                    organizationId = userHrn.organization,
+                )
+            },
+            nextToken = newContext.nextToken,
+            context = newContext.toOptions(),
+        )
+    }
+
+    override suspend fun listSubordinateUsers(
+        principal: UserPrincipal,
+        context: PaginationContext,
+    ): LinkUsersPaginatedResponse {
+        val linkUserRecords =
+            linkUsersRepo.fetchSubordinateUsers(
+                principal.organization,
+                principal.hrnStr,
+                context,
+            )
+        val userRecordsMap = userRepo.findByHrns(linkUserRecords.keys.toList())
+        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.subordinateUser, context)
+        return LinkUsersPaginatedResponse(
+            data =
+                userRecordsMap.map {
+                    val linkUserRecord = linkUserRecords[it.key]!!
+                    val userHrn = ResourceHrn(it.key)
+                    LinkUserResponse(
+                        id = linkUserRecord.id!!,
+                        hrn = it.key,
+                        username = userHrn.resourceInstance.toString(),
+                        preferredUsername = it.value.preferredUsername,
+                        name = it.value.name ?: "",
+                        organizationId = userHrn.organization,
+                    )
+                },
+            nextToken = newContext.nextToken,
+            context = newContext.toOptions(),
+        )
+    }
+
+    override suspend fun switchUser(
+        principal: UserPrincipal,
+        linkId: String,
+    ): TokenResponse {
+        val masterUserHrn = principal.claims?.get(ON_BEHALF_CLAIM) as String? ?: principal.hrnStr
+        val record =
+            linkUsersRepo.getById(linkId)
+                ?: throw EntityNotFoundException("Invalid user link id")
+        require(record.masterUser == masterUserHrn) {
+            "User doesn't have permission to switch"
+        }
+        return if (record.masterUser == principal.hrnStr) {
+            tokenService.generateJwtToken(ResourceHrn(record.subordinateUser), principal.hrn)
+        } else {
+            tokenService.generateJwtToken(ResourceHrn(record.masterUser))
+        }
+    }
+
+    override suspend fun deleteUserLink(
+        principal: UserPrincipal,
+        linkId: String,
+    ): BaseSuccessResponse {
+        val record =
+            linkUsersRepo.getById(linkId)
+                ?: throw EntityNotFoundException("Invalid user link id")
+        val userHrn = principal.hrnStr
+        require(record.masterUser == userHrn || record.subordinateUser == userHrn) {
+            "Only the master or the subordinated user can delete the link"
+        }
+        return BaseSuccessResponse(linkUsersRepo.deleteById(linkId))
+    }
 }
 
 /**
@@ -629,5 +774,30 @@ interface UsersService {
         userName: String,
         oldPassword: String,
         newPassword: String,
+    ): BaseSuccessResponse
+
+    suspend fun linkUser(
+        principal: UserPrincipal,
+        request: LinkUserRequest,
+    ): TokenResponse
+
+    suspend fun listMasterUsers(
+        principal: UserPrincipal,
+        context: PaginationContext,
+    ): LinkUsersPaginatedResponse
+
+    suspend fun listSubordinateUsers(
+        principal: UserPrincipal,
+        context: PaginationContext,
+    ): LinkUsersPaginatedResponse
+
+    suspend fun switchUser(
+        principal: UserPrincipal,
+        linkId: String,
+    ): TokenResponse
+
+    suspend fun deleteUserLink(
+        principal: UserPrincipal,
+        linkId: String,
     ): BaseSuccessResponse
 }
