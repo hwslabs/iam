@@ -45,7 +45,12 @@ fun <R : Record, T> getSort(
     }
 }
 
-class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrder: SortOrder = SortOrder.asc) {
+class PaginationContext(
+    val lastItemId: String?,
+    val pageSize: Int,
+    val sortOrder: SortOrder = SortOrder.asc,
+    val additionalParams: Map<String, Any>? = null,
+) {
     companion object {
         val gson: Gson = getKoinInstance()
 
@@ -62,6 +67,7 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
                 jsonObject.get(PaginationContext::lastItemId.name).asString,
                 jsonObject.get(PaginationContext::pageSize.name).asInt,
                 SortOrder.valueOf(jsonObject.get(PaginationContext::sortOrder.name).asString),
+                gson.fromJson<Map<String, Any>>(jsonObject.get(PaginationContext::additionalParams.name).toString(), Map::class.java),
             )
         }
 
@@ -69,6 +75,7 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
             nextToken: String?,
             pageSize: Int?,
             sortOrder: SortOrder?,
+            additionalParams: Map<String, Any>? = null,
         ): PaginationContext {
             require(pageSize == null || pageSize <= PAGINATION_MAX_PAGE_SIZE) {
                 "Page Size must be less than or equal to $PAGINATION_MAX_PAGE_SIZE"
@@ -81,6 +88,7 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
                 lastItemId = null,
                 pageSize = pageSize ?: PAGINATION_DEFAULT_PAGE_SIZE,
                 sortOrder = sortOrder ?: PAGINATION_DEFAULT_SORT_ORDER,
+                additionalParams = additionalParams,
             )
         }
 
@@ -88,7 +96,7 @@ class PaginationContext(val lastItemId: String?, val pageSize: Int, val sortOrde
             lastItemId: String?,
             oldContext: PaginationContext,
         ): PaginationContext {
-            return PaginationContext(lastItemId, oldContext.pageSize, oldContext.sortOrder)
+            return PaginationContext(lastItemId, oldContext.pageSize, oldContext.sortOrder, oldContext.additionalParams)
         }
     }
 
