@@ -51,14 +51,14 @@ fun Route.delete(
 fun Route.getWithPermission(
     routeOptions: List<RouteOption>,
     action: String,
+    validateOrgIdFromPath: Boolean = true,
     body: suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit,
 ) {
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getResourceHrnFunc(
-                routeOption,
-            ),
+            getResourceHrnFunc(routeOption),
+            validateOrgIdFromPath,
         ) {
             get(routeOption.pathTemplate, body)
         }
@@ -68,14 +68,14 @@ fun Route.getWithPermission(
 fun Route.patchWithPermission(
     routeOptions: List<RouteOption>,
     action: String,
+    validateOrgIdFromPath: Boolean = true,
     body: suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit,
 ) {
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getResourceHrnFunc(
-                routeOption,
-            ),
+            getResourceHrnFunc(routeOption),
+            validateOrgIdFromPath,
         ) {
             patch(routeOption.pathTemplate, body)
         }
@@ -85,14 +85,14 @@ fun Route.patchWithPermission(
 fun Route.postWithPermission(
     routeOptions: List<RouteOption>,
     action: String,
+    validateOrgIdFromPath: Boolean = true,
     body: suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit,
 ) {
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getResourceHrnFunc(
-                routeOption,
-            ),
+            getResourceHrnFunc(routeOption),
+            validateOrgIdFromPath,
         ) {
             post(routeOption.pathTemplate, body)
         }
@@ -102,14 +102,14 @@ fun Route.postWithPermission(
 fun Route.deleteWithPermission(
     routeOptions: List<RouteOption>,
     action: String,
+    validateOrgIdFromPath: Boolean = true,
     body: suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit,
 ) {
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getResourceHrnFunc(
-                routeOption,
-            ),
+            getResourceHrnFunc(routeOption),
+            validateOrgIdFromPath,
         ) {
             delete(routeOption.pathTemplate, body)
         }
@@ -120,6 +120,6 @@ data class RouteOption(
     val pathTemplate: String,
     val resourceNameIndex: Int,
     val resourceInstanceIndex: Int,
-    val organizationIdIndex: Int,
+    val organizationIdIndex: Int? = null,
     val subOrganizationNameIndex: Int? = null,
 )
