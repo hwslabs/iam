@@ -1,6 +1,6 @@
 package com.hypto.iam.server.extensions
 
-import com.hypto.iam.server.security.getAuthorizationDetails
+import com.hypto.iam.server.security.getResourceHrnFunc
 import com.hypto.iam.server.security.withPermission
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.routing.Route
@@ -57,7 +57,7 @@ fun Route.getWithPermission(
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getAuthorizationDetails(routeOption),
+            getResourceHrnFunc(routeOption),
             validateOrgIdFromPath,
         ) {
             get(routeOption.pathTemplate, body)
@@ -74,7 +74,7 @@ fun Route.patchWithPermission(
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getAuthorizationDetails(routeOption),
+            getResourceHrnFunc(routeOption),
             validateOrgIdFromPath,
         ) {
             patch(routeOption.pathTemplate, body)
@@ -91,7 +91,7 @@ fun Route.postWithPermission(
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getAuthorizationDetails(routeOption),
+            getResourceHrnFunc(routeOption),
             validateOrgIdFromPath,
         ) {
             post(routeOption.pathTemplate, body)
@@ -108,7 +108,7 @@ fun Route.deleteWithPermission(
     for (routeOption in routeOptions) {
         withPermission(
             action,
-            getAuthorizationDetails(routeOption),
+            getResourceHrnFunc(routeOption),
             validateOrgIdFromPath,
         ) {
             delete(routeOption.pathTemplate, body)
