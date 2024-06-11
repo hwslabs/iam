@@ -1285,8 +1285,10 @@ paths:
     get:
       tags:
         - User Management
-      summary: List user links based on the role
-      description: List user links based on the role
+      summary: List user links based on the role.
+      description: |
+        Each user link is associated with a leader user and a subordinate user. This API allows to list all users 
+        of a certain role[LEADER/SUBORDINATE] linked with the current user.
       operationId: listUserLinks
       parameters:
         - $ref: '#/components/parameters/organization_id'
@@ -3049,8 +3051,10 @@ components:
     LinkUserRequest:
       summary: sample set user password request
       value:
-        email: acme@acme.com
-        password: Password@123
+        type: USERNAME_PASSWORD
+        usernamePasswordConfig:
+          email: acme@acme.com
+          password: Password@123
 
     CreateCredentialRequest:
       summary: sample create credential request
@@ -3271,8 +3275,6 @@ components:
       value:
         data:
           - id: IFXNLQHFYD
-            hrn: hrn:XlK5h64gND::iam-user/3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
-            username: 3d9e0a90-38d5-49d8-b34d-fdbe2e6cf8f2
             name: Lorem Ipsum
             organizationId: XlK5h64gND
             email: bob@acme.com
@@ -3692,12 +3694,12 @@ components:
         type:
           type: string
           enum:
-            - REQUEST_ACCESS
-            - LOGIN_CREDENTIAL
+            - EMAIL_APPROVAL
+            - USERNAME_PASSWORD
             - TOKEN_CREDENTIAL
-        requestAccessConfig:
+        emailApprovalConfig:
           type: object
-          title: RequestAccessConfig
+          title: EmailApprovalConfig
           additionalProperties: false
           required:
             - email
@@ -3705,9 +3707,9 @@ components:
             email:
               type: string
               maxLength: 320
-        loginCredentialConfig:
+        usernamePasswordConfig:
           type: object
-          title: LoginCredentialConfig
+          title: UsernamePasswordConfig
           additionalProperties: false
           required:
             - email
@@ -3724,9 +3726,9 @@ components:
           title: TokenCredentialConfig
           additionalProperties: false
           required:
-            - tokenCredential
+            - token
           properties:
-            tokenCredential:
+            token:
               type: string
 
     CreateResourceRequest:
@@ -4053,21 +4055,11 @@ components:
       additionalProperties: false
       required:
         - id
-        - hrn
-        - username
         - name
         - organizationId
       properties:
         id:
           type: string
-        hrn:
-          type: string
-        username:
-          type: string
-          maxLength: 50
-        preferredUsername:
-          type: string
-          maxLength: 50
         name:
           type: string
           maxLength: 50

@@ -561,17 +561,17 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): TokenResponse {
         val inviteeHrn =
             when (request.type) {
-                LinkUserRequest.Type.REQUEST_ACCESS -> throw BadRequestException("WILL BE IMPLEMENTED IN USER LINKS V2")
-                LinkUserRequest.Type.LOGIN_CREDENTIAL -> {
+                LinkUserRequest.Type.EMAIL_APPROVAL -> throw BadRequestException("WILL BE IMPLEMENTED IN USER LINKS V2")
+                LinkUserRequest.Type.USERNAME_PASSWORD -> {
                     if (!appConfig.app.uniqueUsersAcrossOrganizations) {
                         throw BadRequestException("Email not unique across organizations. Please use link user passcode")
                     }
                     userPrincipalService.getUserPrincipalByCredentials(
-                        UsernamePasswordCredential(request.loginCredentialConfig!!.email.lowercase(), request.loginCredentialConfig.password),
+                        UsernamePasswordCredential(request.usernamePasswordConfig!!.email.lowercase(), request.usernamePasswordConfig.password),
                     ).hrn
                 }
                 LinkUserRequest.Type.TOKEN_CREDENTIAL -> {
-                    val token = request.tokenCredentialConfig!!.tokenCredential
+                    val token = request.tokenCredentialConfig!!.token
                     if (isIamJWT(token)) {
                         userPrincipalService.getUserPrincipalByJwtToken(TokenCredential(token, TokenType.JWT)).hrn
                     } else {
@@ -619,11 +619,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     val userHrn = ResourceHrn(it.key)
                     LinkUserResponse(
                         id = linkUserRecord.id!!,
-                        hrn = it.key,
-                        username = userHrn.resourceInstance.toString(),
-                        preferredUsername = it.value.preferredUsername,
                         name = it.value.name ?: "",
                         organizationId = userHrn.organization,
+                        email = it.value.email,
                     )
                 },
             nextToken = newContext.nextToken,
@@ -645,11 +643,9 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     val userHrn = ResourceHrn(it.key)
                     LinkUserResponse(
                         id = linkUserRecord.id!!,
-                        hrn = it.key,
-                        username = userHrn.resourceInstance.toString(),
-                        preferredUsername = it.value.preferredUsername,
                         name = it.value.name ?: "",
                         organizationId = userHrn.organization,
+                        email = it.value.email,
                     )
                 },
             nextToken = newContext.nextToken,
