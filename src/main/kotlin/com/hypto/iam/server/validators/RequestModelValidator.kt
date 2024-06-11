@@ -24,13 +24,12 @@ import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateSubOrganizationRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.EmailApprovalConfig
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.GetTokenForSubOrgRequest
 import com.hypto.iam.server.models.LinkUserRequest
-import com.hypto.iam.server.models.LoginCredentialConfig
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
-import com.hypto.iam.server.models.RequestAccessConfig
 import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.ResourceAction
@@ -42,6 +41,7 @@ import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.models.UpdateResourceRequest
 import com.hypto.iam.server.models.UpdateUserRequest
+import com.hypto.iam.server.models.UsernamePasswordConfig
 import com.hypto.iam.server.models.ValidationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.UsernamePasswordCredential
@@ -225,8 +225,8 @@ fun LinkUserRequest.validate(): LinkUserRequest {
         oneOf(
             this@validate,
             listOf(
-                LinkUserRequest::requestAccessConfig,
-                LinkUserRequest::loginCredentialConfig,
+                LinkUserRequest::emailApprovalConfig,
+                LinkUserRequest::usernamePasswordConfig,
                 LinkUserRequest::tokenCredentialConfig,
             ),
         )
@@ -614,57 +614,57 @@ val getDelegateTokenRequestValidation =
         GetDelegateTokenRequest::policy required {}
     }
 
-val requestAccessConfigValidation =
+val emailApprovalConfigValidation =
     Validation {
-        RequestAccessConfig::email required {
+        EmailApprovalConfig::email required {
             run(emailCheck)
         }
     }
 
-val loginCredentialConfigValidation =
+val usernamePasswordConfigValidation =
     Validation {
-        LoginCredentialConfig::email required {
+        UsernamePasswordConfig::email required {
             run(emailCheck)
         }
-        LoginCredentialConfig::password required {
+        UsernamePasswordConfig::password required {
             run(passwordCheck)
         }
     }
 
 val tokenCredentialConfigValidation =
     Validation {
-        TokenCredentialConfig::tokenCredential required {}
+        TokenCredentialConfig::token required {}
     }
 
 val linkUserRequestValidation =
     Validation<LinkUserRequest> {
         LinkUserRequest::type required {}
-        LinkUserRequest::requestAccessConfig ifPresent {
-            run(requestAccessConfigValidation)
+        LinkUserRequest::emailApprovalConfig ifPresent {
+            run(emailApprovalConfigValidation)
         }
-        LinkUserRequest::loginCredentialConfig ifPresent {
-            run(loginCredentialConfigValidation)
+        LinkUserRequest::usernamePasswordConfig ifPresent {
+            run(usernamePasswordConfigValidation)
         }
         LinkUserRequest::tokenCredentialConfig ifPresent {
             run(tokenCredentialConfigValidation)
         }
-        addConstraint("Only Request Access config is required for request access type") {
-            if (it.type == LinkUserRequest.Type.REQUEST_ACCESS) {
-                it.requestAccessConfig != null && it.loginCredentialConfig == null && it.tokenCredentialConfig == null
+        addConstraint("Only Email Approval config is required for request access type") {
+            if (it.type == LinkUserRequest.Type.EMAIL_APPROVAL) {
+                it.emailApprovalConfig != null && it.usernamePasswordConfig == null && it.tokenCredentialConfig == null
             } else {
                 true
             }
         }
-        addConstraint("Only Login Credential config is required for login credential type") {
-            if (it.type == LinkUserRequest.Type.LOGIN_CREDENTIAL) {
-                it.loginCredentialConfig != null && it.requestAccessConfig == null && it.tokenCredentialConfig == null
+        addConstraint("Only Username Password config is required for login credential type") {
+            if (it.type == LinkUserRequest.Type.USERNAME_PASSWORD) {
+                it.usernamePasswordConfig != null && it.emailApprovalConfig == null && it.tokenCredentialConfig == null
             } else {
                 true
             }
         }
         addConstraint("Only Token Credential config is required for token credential type") {
             if (it.type == LinkUserRequest.Type.TOKEN_CREDENTIAL) {
-                it.tokenCredentialConfig != null && it.requestAccessConfig == null && it.loginCredentialConfig == null
+                it.tokenCredentialConfig != null && it.emailApprovalConfig == null && it.usernamePasswordConfig == null
             } else {
                 true
             }

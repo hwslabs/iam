@@ -67,7 +67,7 @@ class PaginationContext(
                 jsonObject.get(PaginationContext::lastItemId.name).asString,
                 jsonObject.get(PaginationContext::pageSize.name).asInt,
                 SortOrder.valueOf(jsonObject.get(PaginationContext::sortOrder.name).asString),
-                gson.fromJson<Map<String, Any>>(jsonObject.get(PaginationContext::additionalParams.name).toString(), Map::class.java),
+                jsonObject.get(PaginationContext::additionalParams.name)?.let { gson.fromJson<Map<String, Any>>(it.toString(), Map::class.java) },
             )
         }
 
