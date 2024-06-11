@@ -45,7 +45,6 @@ import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
 import org.koin.ktor.ext.inject
 
 fun Route.createUsersApi() {
@@ -91,7 +90,7 @@ fun Route.createUsersApi() {
             val passcode =
                 passcodeRepo.getValidPasscodeById(
                     principal.tokenCredential.value!!,
-                    VerifyEmailRequest.Purpose.invite.toString(),
+                    VerifyEmailRequest.Purpose.invite,
                     organizationId = organizationId,
                 ) ?: throw AuthenticationException("Invalid passcode")
             require(passcode.email == request.email) { "Email in passcode does not match email in request" }
@@ -464,7 +463,7 @@ fun Route.createUserPasswordApi() {
             val passcode =
                 passcodeRepo.getValidPasscodeById(
                     principal.tokenCredential.value!!,
-                    VerifyEmailRequest.Purpose.invite.toString(),
+                    VerifyEmailRequest.Purpose.invite,
                     organizationId = organizationId,
                 ) ?: throw AuthenticationException("Invalid passcode")
             require(passcode.email == inviteeUser.email) { "Email in passcode does not match email in request" }
@@ -499,8 +498,15 @@ fun Route.linkUserApi() {
                 resourceInstanceIndex = 1,
                 organizationIdIndex = 1,
             ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/user_links",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
+                organizationIdIndex = 1,
+                subOrganizationNameIndex = 3,
+            ),
         ),
-        "linkUser",
+        "createUserLink",
     ) {
         val organizationId = call.parameters["organization_id"]!!
         val principal = call.principal<UserPrincipal>()!!
@@ -519,46 +525,20 @@ fun Route.linkUserApi() {
     getWithPermission(
         listOf(
             RouteOption(
-                "/organizations/{organization_id}/master_users",
+                "/organizations/{organization_id}/user_links",
                 resourceNameIndex = 0,
                 resourceInstanceIndex = 1,
                 organizationIdIndex = 1,
             ),
-        ),
-        "listMasterUsers",
-    ) {
-        val organizationId = call.parameters["organization_id"]!!
-        val principal = call.principal<UserPrincipal>()!!
-        require(principal.hrn.organization == organizationId) {
-            "Organization id in path and token are not matching. Invalid token"
-        }
-        val nextToken = call.request.queryParameters["next_token"]
-        val pageSize = call.request.queryParameters["page_size"]
-        val sortOrder = call.request.queryParameters["sort_order"]
-        val context =
-            PaginationContext.from(
-                nextToken,
-                pageSize?.toInt(),
-                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
-            )
-        val response = usersService.listMasterUsers(principal, context)
-        call.respondText(
-            text = gson.toJson(response),
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK,
-        )
-    }
-
-    getWithPermission(
-        listOf(
             RouteOption(
-                "/organizations/{organization_id}/subordinate_users",
-                resourceNameIndex = 0,
-                resourceInstanceIndex = 1,
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/user_links",
+                resourceNameIndex = 2,
+                resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
+                subOrganizationNameIndex = 3,
             ),
         ),
-        "listSubordinateUsers",
+        "listUserLinks",
     ) {
         val organizationId = call.parameters["organization_id"]!!
         val principal = call.principal<UserPrincipal>()!!
@@ -568,13 +548,18 @@ fun Route.linkUserApi() {
         val nextToken = call.request.queryParameters["next_token"]
         val pageSize = call.request.queryParameters["page_size"]
         val sortOrder = call.request.queryParameters["sort_order"]
+        val role = call.request.queryParameters["role"]
+        require(role != null && (role == "LEADER" || role == "SUBORDINATE")) {
+            "Invalid value found for role"
+        }
         val context =
             PaginationContext.from(
                 nextToken,
                 pageSize?.toInt(),
                 sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+                mapOf("role" to role),
             )
-        val response = usersService.listSubordinateUsers(principal, context)
+        val response = usersService.listUserLinks(principal, context)
         call.respondText(
             text = gson.toJson(response),
             contentType = ContentType.Application.Json,
@@ -582,13 +567,20 @@ fun Route.linkUserApi() {
         )
     }
 
-    getWithPermission(
+    postWithPermission(
         listOf(
             RouteOption(
                 "/organizations/{organization_id}/user_links/{user_link_id}",
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/user_links/{user_link_id}",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1,
+                subOrganizationNameIndex = 3,
             ),
         ),
         "switchUser",
@@ -614,6 +606,13 @@ fun Route.linkUserApi() {
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
+            ),
+            RouteOption(
+                "/organizations/{organization_id}/sub_organizations/{sub_organization_name}/user_links/{user_link_id}",
+                resourceNameIndex = 4,
+                resourceInstanceIndex = 5,
+                organizationIdIndex = 1,
+                subOrganizationNameIndex = 3,
             ),
         ),
         "deleteUserLink",

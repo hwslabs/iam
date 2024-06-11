@@ -54,7 +54,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
 
     suspend fun getValidPasscodeById(
         id: String,
-        purpose: String,
+        purpose: VerifyEmailRequest.Purpose,
         email: String? = null,
         organizationId: String? = null,
     ): PasscodesRecord? {
@@ -62,7 +62,7 @@ object PasscodeRepo : BaseRepo<PasscodesRecord, Passcodes, String>() {
             .selectFrom(PASSCODES)
             .where(
                 PASSCODES.ID.eq(id),
-                PASSCODES.PURPOSE.eq(purpose),
+                PASSCODES.PURPOSE.eq(purpose.toString()),
                 PASSCODES.VALID_UNTIL.ge(LocalDateTime.now()),
             ).apply {
                 email?.let {

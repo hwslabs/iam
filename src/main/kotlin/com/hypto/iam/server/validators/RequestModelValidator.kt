@@ -27,12 +27,15 @@ import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.GetTokenForSubOrgRequest
 import com.hypto.iam.server.models.LinkUserRequest
+import com.hypto.iam.server.models.LoginCredentialConfig
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
+import com.hypto.iam.server.models.RequestAccessConfig
 import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.TokenCredentialConfig
 import com.hypto.iam.server.models.UpdateActionRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
@@ -218,6 +221,16 @@ fun GetTokenForSubOrgRequest.validate(): GetTokenForSubOrgRequest {
 }
 
 fun LinkUserRequest.validate(): LinkUserRequest {
+    Validation {
+        oneOf(
+            this@validate,
+            listOf(
+                LinkUserRequest::requestAccessConfig,
+                LinkUserRequest::loginCredentialConfig,
+                LinkUserRequest::tokenCredentialConfig,
+            ),
+        )
+    }.validateAndThrowOnFailure(this)
     return linkUserRequestValidation.validateAndThrowOnFailure(this)
 }
 
@@ -601,16 +614,59 @@ val getDelegateTokenRequestValidation =
         GetDelegateTokenRequest::policy required {}
     }
 
-val linkUserRequestValidation =
-    Validation<LinkUserRequest> {
-        LinkUserRequest::email ifPresent {
+val requestAccessConfigValidation =
+    Validation {
+        RequestAccessConfig::email required {
             run(emailCheck)
         }
-        LinkUserRequest::password ifPresent {
+    }
+
+val loginCredentialConfigValidation =
+    Validation {
+        LoginCredentialConfig::email required {
+            run(emailCheck)
+        }
+        LoginCredentialConfig::password required {
             run(passwordCheck)
         }
-        LinkUserRequest::tokenCredential ifPresent {}
-        addConstraint("Any one of username/password or tokenCredential is required") {
-            (it.email != null && it.password != null) xor (it.tokenCredential != null)
+    }
+
+val tokenCredentialConfigValidation =
+    Validation {
+        TokenCredentialConfig::tokenCredential required {}
+    }
+
+val linkUserRequestValidation =
+    Validation<LinkUserRequest> {
+        LinkUserRequest::type required {}
+        LinkUserRequest::requestAccessConfig ifPresent {
+            run(requestAccessConfigValidation)
+        }
+        LinkUserRequest::loginCredentialConfig ifPresent {
+            run(loginCredentialConfigValidation)
+        }
+        LinkUserRequest::tokenCredentialConfig ifPresent {
+            run(tokenCredentialConfigValidation)
+        }
+        addConstraint("Only Request Access config is required for request access type") {
+            if (it.type == LinkUserRequest.Type.REQUEST_ACCESS) {
+                it.requestAccessConfig != null && it.loginCredentialConfig == null && it.tokenCredentialConfig == null
+            } else {
+                true
+            }
+        }
+        addConstraint("Only Login Credential config is required for login credential type") {
+            if (it.type == LinkUserRequest.Type.LOGIN_CREDENTIAL) {
+                it.loginCredentialConfig != null && it.requestAccessConfig == null && it.tokenCredentialConfig == null
+            } else {
+                true
+            }
+        }
+        addConstraint("Only Token Credential config is required for token credential type") {
+            if (it.type == LinkUserRequest.Type.TOKEN_CREDENTIAL) {
+                it.tokenCredentialConfig != null && it.requestAccessConfig == null && it.loginCredentialConfig == null
+            } else {
+                true
+            }
         }
     }

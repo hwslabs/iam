@@ -1,6 +1,5 @@
 package com.hypto.iam.server.db.repositories
 
-import com.hypto.iam.server.db.Tables.AUTH_PROVIDER
 import com.hypto.iam.server.db.tables.LinkUsers.LINK_USERS
 import com.hypto.iam.server.db.tables.pojos.LinkUsers
 import com.hypto.iam.server.db.tables.records.LinkUsersRecord
@@ -20,33 +19,25 @@ object LinkUsersRepo : BaseRepo<LinkUsersRecord, LinkUsers, String>() {
             .fetchOne()
 
     suspend fun fetchSubordinateUsers(
-        organizationId: String,
-        masterUserHrn: String,
+        leaderUserHrn: String,
         context: PaginationContext,
     ): Map<String, LinkUsersRecord> {
         return ctx("linkUsers.fetchSubordinateUsers")
             .selectFrom(LINK_USERS)
-            .where(
-                LINK_USERS.ORGANIZATION_ID.eq(organizationId),
-                LINK_USERS.MASTER_USER.eq(masterUserHrn),
-            )
+            .where(LINK_USERS.LEADER_USER.eq(leaderUserHrn))
             .paginate(LINK_USERS.SUBORDINATE_USER, context)
             .fetchMap(LINK_USERS.SUBORDINATE_USER)
     }
 
-    suspend fun fetchMasterUsers(
-        organizationId: String,
+    suspend fun fetchLeaderUsers(
         subordinateUserHrn: String,
         context: PaginationContext,
     ): Map<String, LinkUsersRecord> {
-        return ctx("linkUsers.fetchMasterUsers")
+        return ctx("linkUsers.fetchLeaderUsers")
             .selectFrom(LINK_USERS)
-            .where(
-                LINK_USERS.ORGANIZATION_ID.eq(organizationId),
-                LINK_USERS.SUBORDINATE_USER.eq(subordinateUserHrn),
-            )
-            .paginate(LINK_USERS.MASTER_USER, context)
-            .fetchMap(LINK_USERS.MASTER_USER)
+            .where(LINK_USERS.SUBORDINATE_USER.eq(subordinateUserHrn))
+            .paginate(LINK_USERS.LEADER_USER, context)
+            .fetchMap(LINK_USERS.LEADER_USER)
     }
 
     suspend fun deleteById(id: String): Boolean {
