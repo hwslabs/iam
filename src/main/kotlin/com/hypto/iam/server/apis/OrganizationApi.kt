@@ -9,7 +9,7 @@ import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.OAuthUserPrincipal
-import com.hypto.iam.server.security.getResourceHrnFunc
+import com.hypto.iam.server.security.getAuthorizationDetails
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.OrganizationsService
 import com.hypto.iam.server.service.PasscodeService
@@ -132,7 +132,7 @@ fun Route.getAndUpdateOrganizationApi() {
     route("/organizations/{id}") {
         withPermission(
             "getOrganization",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+            getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             get {
                 val id = call.parameters["id"]!!
@@ -147,7 +147,7 @@ fun Route.getAndUpdateOrganizationApi() {
 
         withPermission(
             "updateOrganization",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+            getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             patch {
                 val id = call.parameters["id"]!!

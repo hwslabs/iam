@@ -5,7 +5,7 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateResourceRequest
-import com.hypto.iam.server.security.getResourceHrnFunc
+import com.hypto.iam.server.security.getAuthorizationDetails
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.ResourceService
 import com.hypto.iam.server.validators.validate
@@ -27,7 +27,7 @@ fun Route.resourceApi() {
 
     withPermission(
         "createResource",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/resources") {
             val organizationId =
@@ -47,7 +47,7 @@ fun Route.resourceApi() {
 
     withPermission(
         "listResource",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources") {
             val organizationId =
@@ -76,7 +76,7 @@ fun Route.resourceApi() {
 
     withPermission(
         "deletePermission",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         delete("/organizations/{organization_id}/resources/{name}") {
             val organizationId =
@@ -96,7 +96,7 @@ fun Route.resourceApi() {
 
     withPermission(
         "getResource",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources/{name}") {
             val organizationId =
@@ -116,7 +116,7 @@ fun Route.resourceApi() {
 
     withPermission(
         "updateResource",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         patch("/organizations/{organization_id}/resources/{name}") {
             val organizationId =

@@ -563,12 +563,22 @@ class UsersServiceImpl : KoinComponent, UsersService {
             when (request.type) {
                 LinkUserRequest.Type.EMAIL_APPROVAL -> throw BadRequestException("WILL BE IMPLEMENTED IN USER LINKS V2")
                 LinkUserRequest.Type.USERNAME_PASSWORD -> {
-                    if (!appConfig.app.uniqueUsersAcrossOrganizations) {
-                        throw BadRequestException("Email not unique across organizations. Please use link user passcode")
+                    val config = request.usernamePasswordConfig!!
+                    if (config.organizationId != null) {
+                        userPrincipalService.getUserPrincipalByCredentials(
+                            organizationId = config.organizationId,
+                            subOrganizationId = config.subOrganizationId,
+                            userName = config.email.lowercase(),
+                            password = config.password,
+                        ).hrn
+                    } else {
+                        require(appConfig.app.uniqueUsersAcrossOrganizations) {
+                            "Email not unique across organizations. Please use link user passcode"
+                        }
+                        userPrincipalService.getUserPrincipalByCredentials(
+                            UsernamePasswordCredential(config.email.lowercase(), config.password),
+                        ).hrn
                     }
-                    userPrincipalService.getUserPrincipalByCredentials(
-                        UsernamePasswordCredential(request.usernamePasswordConfig!!.email.lowercase(), request.usernamePasswordConfig.password),
-                    ).hrn
                 }
                 LinkUserRequest.Type.TOKEN_CREDENTIAL -> {
                     val token = request.tokenCredentialConfig!!.token
@@ -585,8 +595,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val record =
             LinkUsersRecord().apply {
                 id = IdGenerator.timeBasedRandomId(length = 20L)
-                leaderUser = principal.hrnStr
-                subordinateUser = inviteeHrn.toString()
+                leaderUserHrn = principal.hrnStr
+                subordinateUserHrn = inviteeHrn.toString()
                 createdAt = now
                 updatedAt = now
             }
@@ -611,7 +621,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): LinkUsersPaginatedResponse {
         val linkUserRecords = linkUsersRepo.fetchLeaderUsers(principal.hrnStr, context)
         val userRecordsMap = userRepo.findByHrns(linkUserRecords.keys.toList())
-        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.leaderUser, context)
+        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.leaderUserHrn, context)
         return LinkUsersPaginatedResponse(
             data =
                 userRecordsMap.map {
@@ -635,7 +645,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     ): LinkUsersPaginatedResponse {
         val linkUserRecords = linkUsersRepo.fetchSubordinateUsers(principal.hrnStr, context)
         val userRecordsMap = userRepo.findByHrns(linkUserRecords.keys.toList())
-        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.subordinateUser, context)
+        val newContext = PaginationContext.from(linkUserRecords.entries.lastOrNull()?.value?.subordinateUserHrn, context)
         return LinkUsersPaginatedResponse(
             data =
                 userRecordsMap.map {
@@ -661,13 +671,13 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val record =
             linkUsersRepo.getById(linkId)
                 ?: throw EntityNotFoundException("Invalid user link id")
-        require(record.leaderUser == leaderUserHrn) {
+        require(record.leaderUserHrn == leaderUserHrn) {
             "User doesn't have permission to switch"
         }
-        return if (record.leaderUser == principal.hrnStr) {
-            tokenService.generateJwtToken(ResourceHrn(record.subordinateUser), principal.hrn)
+        return if (record.leaderUserHrn == principal.hrnStr) {
+            tokenService.generateJwtToken(ResourceHrn(record.subordinateUserHrn), principal.hrn)
         } else {
-            tokenService.generateJwtToken(ResourceHrn(record.leaderUser))
+            tokenService.generateJwtToken(ResourceHrn(record.leaderUserHrn))
         }
     }
 
@@ -679,7 +689,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             linkUsersRepo.getById(linkId)
                 ?: throw EntityNotFoundException("Invalid user link id")
         val userHrn = principal.hrnStr
-        require(record.leaderUser == userHrn || record.subordinateUser == userHrn) {
+        require(record.leaderUserHrn == userHrn || record.subordinateUserHrn == userHrn) {
             "Only the leader or the subordinated user can delete the link"
         }
         return BaseSuccessResponse(linkUsersRepo.deleteById(linkId))

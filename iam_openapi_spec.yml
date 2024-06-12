@@ -3721,6 +3721,10 @@ components:
             password:
               type: string
               maxLength: 100
+            organizationId:
+              type: string
+            subOrganizationId:
+              type: string
         tokenCredentialConfig:
           type: object
           title: TokenCredentialConfig

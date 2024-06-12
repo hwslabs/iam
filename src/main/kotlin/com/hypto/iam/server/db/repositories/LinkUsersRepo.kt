@@ -24,9 +24,9 @@ object LinkUsersRepo : BaseRepo<LinkUsersRecord, LinkUsers, String>() {
     ): Map<String, LinkUsersRecord> {
         return ctx("linkUsers.fetchSubordinateUsers")
             .selectFrom(LINK_USERS)
-            .where(LINK_USERS.LEADER_USER.eq(leaderUserHrn))
-            .paginate(LINK_USERS.SUBORDINATE_USER, context)
-            .fetchMap(LINK_USERS.SUBORDINATE_USER)
+            .where(LINK_USERS.LEADER_USER_HRN.eq(leaderUserHrn))
+            .paginate(LINK_USERS.SUBORDINATE_USER_HRN, context)
+            .fetchMap(LINK_USERS.SUBORDINATE_USER_HRN)
     }
 
     suspend fun fetchLeaderUsers(
@@ -35,9 +35,9 @@ object LinkUsersRepo : BaseRepo<LinkUsersRecord, LinkUsers, String>() {
     ): Map<String, LinkUsersRecord> {
         return ctx("linkUsers.fetchLeaderUsers")
             .selectFrom(LINK_USERS)
-            .where(LINK_USERS.SUBORDINATE_USER.eq(subordinateUserHrn))
-            .paginate(LINK_USERS.LEADER_USER, context)
-            .fetchMap(LINK_USERS.LEADER_USER)
+            .where(LINK_USERS.SUBORDINATE_USER_HRN.eq(subordinateUserHrn))
+            .paginate(LINK_USERS.LEADER_USER_HRN, context)
+            .fetchMap(LINK_USERS.LEADER_USER_HRN)
     }
 
     suspend fun deleteById(id: String): Boolean {

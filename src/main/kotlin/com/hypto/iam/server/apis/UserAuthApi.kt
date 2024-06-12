@@ -3,7 +3,7 @@ package com.hypto.iam.server.apis
 import com.google.gson.Gson
 import com.hypto.iam.server.models.AddUserAuthMethodRequest
 import com.hypto.iam.server.security.UserPrincipal
-import com.hypto.iam.server.security.getResourceHrnFunc
+import com.hypto.iam.server.security.getAuthorizationDetails
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.UserAuthService
 import com.hypto.iam.server.validators.validate
@@ -25,7 +25,7 @@ fun Route.userAuthApi() {
 
     withPermission(
         "getUserAuth",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/users/{id}/auth_methods") {
             val organizationId = call.parameters["organization_id"]!!
@@ -41,7 +41,7 @@ fun Route.userAuthApi() {
 
     withPermission(
         "addUserAuthMethod",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/users/{id}/auth_methods") {
             val organizationId = call.parameters["organization_id"]!!
