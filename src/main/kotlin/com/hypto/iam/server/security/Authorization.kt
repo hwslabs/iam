@@ -200,7 +200,7 @@ private fun Route.authorizedRoute(
     return authorizedRoute
 }
 
-fun getResourceHrnFunc(
+fun getAuthorizationDetails(
     resourceNameIndex: Int,
     resourceInstanceIndex: Int,
     organizationIdIndex: Int? = null,
@@ -218,8 +218,8 @@ fun getResourceHrnFunc(
     }
 }
 
-fun getResourceHrnFunc(templateInput: RouteOption): (ApplicationRequest) -> AuthorizationDetails {
-    return getResourceHrnFunc(
+fun getAuthorizationDetails(templateInput: RouteOption): (ApplicationRequest) -> AuthorizationDetails {
+    return getAuthorizationDetails(
         templateInput.resourceNameIndex,
         templateInput.resourceInstanceIndex,
         templateInput.organizationIdIndex,
