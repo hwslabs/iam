@@ -44,6 +44,7 @@ import com.hypto.iam.server.utils.IamResources
 import com.hypto.iam.server.utils.IdGenerator
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.EMAIL_REGEX
+import com.hypto.iam.server.validators.RequestAccessMetadata
 import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
 import org.koin.core.component.KoinComponent
@@ -53,6 +54,7 @@ import java.time.LocalDateTime
 const val USER_NOT_FOUND_ERROR_MESSAGE = "Unable to find user"
 const val INVALID_ORG_ID_NAME = "Invalid organization id name."
 
+@Suppress("LargeClass")
 class UsersServiceImpl : KoinComponent, UsersService {
     private val principalPolicyService: PrincipalPolicyService by inject()
     private val hrnFactory: HrnFactory by inject()
@@ -68,6 +70,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
     private val userPrincipalService: UserPrincipalService by inject()
     private val linkUsersRepo: LinkUsersRepo by inject()
     private val tokenService: TokenService by inject()
+    private val passcodeService: PasscodeService by inject()
 
     @Suppress("CyclomaticComplexMethod", "ComplexMethod")
     override suspend fun createUser(
@@ -559,9 +562,20 @@ class UsersServiceImpl : KoinComponent, UsersService {
         principal: UserPrincipal,
         request: LinkUserRequest,
     ): TokenResponse {
-        val inviteeHrn =
+        val (inviterHrn, inviteeHrn) =
             when (request.type) {
-                LinkUserRequest.Type.EMAIL_APPROVAL -> throw BadRequestException("WILL BE IMPLEMENTED IN USER LINKS V2")
+                LinkUserRequest.Type.PASSCODE -> {
+                    val passcode =
+                        passcodeRepo.getValidPasscodeById(
+                            request.passcodeConfig!!.passcode,
+                            VerifyEmailRequest.Purpose.request_access,
+                            organizationId = principal.organization,
+                        ) ?: throw AuthenticationException("Invalid passcode")
+                    val user = getUser(principal.hrn as ResourceHrn)
+                    require(passcode.email == user.email) { "Email in passcode does not match with your email" }
+                    val metadata = RequestAccessMetadata(passcodeService.decryptMetadata(passcode.metadata))
+                    metadata.inviterUserHrn to principal.hrn
+                }
                 LinkUserRequest.Type.USERNAME_PASSWORD -> {
                     val config = request.usernamePasswordConfig!!
                     if (config.organizationId != null) {
@@ -582,21 +596,23 @@ class UsersServiceImpl : KoinComponent, UsersService {
                 }
                 LinkUserRequest.Type.TOKEN_CREDENTIAL -> {
                     val token = request.tokenCredentialConfig!!.token
-                    if (isIamJWT(token)) {
-                        userPrincipalService.getUserPrincipalByJwtToken(TokenCredential(token, TokenType.JWT)).hrn
-                    } else {
-                        userPrincipalService.getUserPrincipalByRefreshToken(TokenCredential(token, TokenType.CREDENTIAL))?.hrn
-                            ?: throw BadRequestException("Invalid token credentials")
-                    }
+                    val inviteeHrn =
+                        if (isIamJWT(token)) {
+                            userPrincipalService.getUserPrincipalByJwtToken(TokenCredential(token, TokenType.JWT)).hrn
+                        } else {
+                            userPrincipalService.getUserPrincipalByRefreshToken(TokenCredential(token, TokenType.CREDENTIAL))?.hrn
+                                ?: throw BadRequestException("Invalid token credentials")
+                        }
+                    principal.hrnStr to inviteeHrn
                 }
             }
-        require(principal.hrn != inviteeHrn) { "Leader and subordinate can't be the same user" }
+        require(inviterHrn != inviteeHrn.toString()) { "Leader and subordinate can't be the same user" }
         val now = LocalDateTime.now()
         val record =
             LinkUsersRecord().apply {
                 id = IdGenerator.timeBasedRandomId(length = 20L)
-                leaderUserHrn = principal.hrnStr
-                subordinateUserHrn = inviteeHrn.toString()
+                leaderUser = inviterHrn
+                subordinateUser = inviteeHrn.toString()
                 createdAt = now
                 updatedAt = now
             }

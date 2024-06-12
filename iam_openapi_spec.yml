@@ -3694,17 +3694,17 @@ components:
         type:
           type: string
           enum:
-            - EMAIL_APPROVAL
+            - PASSCODE
             - USERNAME_PASSWORD
             - TOKEN_CREDENTIAL
-        emailApprovalConfig:
+        passcodeConfig:
           type: object
-          title: EmailApprovalConfig
+          title: PasscodeConfig
           additionalProperties: false
           required:
-            - email
+            - passcode
           properties:
-            email:
+            passcode:
               type: string
               maxLength: 320
         usernamePasswordConfig:
@@ -3882,6 +3882,7 @@ components:
             - reset
             - signup
             - invite
+            - request_access
         metadata:
           type: object
           description: |

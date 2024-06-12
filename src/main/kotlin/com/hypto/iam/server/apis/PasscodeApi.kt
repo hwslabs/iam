@@ -15,6 +15,7 @@ import com.hypto.iam.server.service.UsersService
 import com.hypto.iam.server.utils.HrnFactory
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.InviteMetadata
+import com.hypto.iam.server.validators.RequestAccessMetadata
 import com.hypto.iam.server.validators.validate
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -65,7 +66,7 @@ fun Route.createPasscodeApi() {
         // Validations
         principal?.let {
             if (request.organizationId != null) {
-                require(it.organization == request.organizationId) {
+                require(it.organization == request.organizationId || request.purpose == VerifyEmailRequest.Purpose.request_access) {
                     "Does not have permission to call api for organization ${request.organizationId}"
                 }
             }
@@ -73,6 +74,10 @@ fun Route.createPasscodeApi() {
         if (request.purpose == VerifyEmailRequest.Purpose.invite) {
             requireNotNull(principal) { "User must be logged in for invite purpose" }
             val inviteMetadata = InviteMetadata(request.metadata!!)
+            require(inviteMetadata.inviterUserHrn == principal.hrnStr) { "Does not support cross user invites" }
+        } else if (request.purpose == VerifyEmailRequest.Purpose.request_access) {
+            requireNotNull(principal) { "User must be logged in for invite purpose" }
+            val inviteMetadata = RequestAccessMetadata(request.metadata!!)
             require(inviteMetadata.inviterUserHrn == principal.hrnStr) { "Does not support cross user invites" }
         }
 

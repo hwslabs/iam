@@ -21,6 +21,7 @@ import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.utils.ApplicationIdUtil
 import com.hypto.iam.server.utils.EncryptUtil
+import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.validators.InviteMetadata
 import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
@@ -53,6 +54,13 @@ data class InviteUserTemplateData(
     val subOrganizationName: String?,
 )
 
+data class RequestAccessTemplateData(
+    val link: String,
+    val nameOfUser: String,
+    val organizationName: String,
+    val subOrganizationName: String?,
+)
+
 private val logger = KotlinLogging.logger("service.TokenService")
 
 class PasscodeServiceImpl : KoinComponent, PasscodeService {
@@ -79,6 +87,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return gson.fromJson(metadataJson, Map::class.java) as Map<String, Any>
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override suspend fun verifyEmail(
         email: String,
         userHrn: String?,
@@ -121,6 +130,20 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             }
         }
 
+        if (purpose == Purpose.request_access) {
+            // Clean-up old invites
+            val oldInviteRecord =
+                passcodeRepo.getValidPasscodeCount(
+                    email,
+                    Purpose.invite,
+                    organizationId!!,
+                    subOrganizationName,
+                )
+            if (oldInviteRecord > 0) {
+                passcodeRepo.deleteByEmailAndPurpose(email, purpose, organizationId)
+            }
+        }
+
         val validUntil = LocalDateTime.now().plusSeconds(appConfig.app.passcodeValiditySeconds)
         val response =
             try {
@@ -150,6 +173,15 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                                 passcode.id,
                                 principal ?: throw AuthorizationException("User is not authorized"),
                             )
+                        Purpose.request_access ->
+                            sendRequestAccessPasscode(
+                                email,
+                                userHrn,
+                                organizationId!!,
+                                subOrganizationName,
+                                passcode.id,
+                                principal ?: throw AuthorizationException("User is not authorized"),
+                            )
                     }
                 }
             } catch (e: DataAccessException) {
@@ -159,6 +191,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         return BaseSuccessResponse(response)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun createPasscodeLink(
         passcode: String,
         email: String,
@@ -185,6 +218,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                         Purpose.signup -> appConfig.onboardRoutes.signup
                         Purpose.reset -> appConfig.onboardRoutes.reset
                         Purpose.invite -> appConfig.onboardRoutes.invite
+                        Purpose.request_access -> appConfig.onboardRoutes.requestAccess
                     }
                 }
                 else -> {
@@ -192,6 +226,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                         Purpose.signup -> appConfig.subOrgConfig.onboardRoutes.signup
                         Purpose.reset -> appConfig.subOrgConfig.onboardRoutes.reset
                         Purpose.invite -> appConfig.subOrgConfig.onboardRoutes.invite
+                        Purpose.request_access -> appConfig.subOrgConfig.onboardRoutes.requestAccess
                     }
                 }
             }
@@ -360,6 +395,53 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val response = sesClient.sendTemplatedEmail(emailRequest)
         logger.info { "Resent invite email to $email with message id ${response.messageId()}" }
         passcodeRepo.updateLastSent(record.id, LocalDateTime.now())
+        return true
+    }
+
+    @Suppress("ThrowsCount")
+    private suspend fun sendRequestAccessPasscode(
+        email: String,
+        userHrn: String?,
+        orgId: String,
+        subOrganizationName: String?,
+        passcode: String,
+        principal: UserPrincipal,
+    ): Boolean {
+        val templateName =
+            if (subOrganizationName.isNullOrEmpty()) {
+                appConfig.app.requestAccessEmailTemplate
+            } else {
+                appConfig.subOrgConfig.requestAccessEmailTemplate
+            }
+        val inviteeUser =
+            userHrn?.let { usersService.getUser(ResourceHrn(it)) }
+                ?: usersService.getUserByEmail(null, null, email)
+        require(inviteeUser.loginAccess) {
+            "Requesting access of another user can be done only if the invitee has login access"
+        }
+        val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.request_access)
+        val user = userRepo.findByHrn(principal.hrnStr) ?: throw EntityNotFoundException("User not found")
+        if (!user.loginAccess) {
+            throw AuthorizationException("User token does not have login access")
+        }
+        val organization =
+            organizationRepo.findById(orgId) ?: throw EntityNotFoundException("Organization id - $orgId not found")
+        subOrganizationName?.let {
+            subOrganizationRepo.fetchById(orgId, it)
+                ?: throw EntityNotFoundException("Sub organization id - $subOrganizationName not found")
+        }
+
+        val nameOfUser = user.name ?: user.preferredUsername ?: user.email
+        val templateData = RequestAccessTemplateData(link, nameOfUser, organization.name, subOrganizationName)
+        val emailRequest =
+            SendTemplatedEmailRequest.builder()
+                .source(appConfig.app.senderEmailAddress)
+                .template(templateName)
+                .templateData(gson.toJson(templateData))
+                .destination(Destination.builder().toAddresses(email).build())
+                .build()
+        val response = sesClient.sendTemplatedEmail(emailRequest)
+        logger.info { "Email sent to $email with message id ${response.messageId()}" }
         return true
     }
 

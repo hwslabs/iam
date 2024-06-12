@@ -42,7 +42,8 @@
     "sign_up_email_template": "<placeholder for signup user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
     "invite_user_email_template": "<placeholder for invite user template name>",
-    "unique_users_across_organizations": false
+    "request_access_email_template": "<placeholder for request access template name>",
+    "unique_users_across_organizations": true
   },
   "aws": {
     "region": "us-east-1",
@@ -55,12 +56,14 @@
   "onboardRoutes": {
     "signup": "/signup",
     "reset": "/organizations/users/resetPassword",
-    "invite": "/organizations/users/verifyUser"
+    "invite": "/organizations/users/verifyUser",
+    "requestAccess": "/user_links"
   },
   "sub_org_config": {
     "base_url": "<placeholder for sub org base url>",
     "invite_user_email_template": "<placeholder for invite user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
+    "request_access_email_template": "<placeholder for request access template name>",
     "onboardRoutes": {
       "signup": "/signup",
       "reset": "/reset",
