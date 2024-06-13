@@ -16,6 +16,7 @@ import com.hypto.iam.server.models.ChangeUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
 import com.hypto.iam.server.models.CreateUserResponse
+import com.hypto.iam.server.models.LinkUserRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
@@ -409,7 +410,7 @@ fun Route.resetPasswordApi() {
     ) {
         val organizationId = call.parameters["organization_id"]
         val subOrganizationName = call.parameters["sub_organization_name"]
-        val passcodeStr = call.principal<ApiPrincipal>()!!.tokenCredential.value!!
+        call.principal<ApiPrincipal>()!!.tokenCredential.value!!
         val request = call.receive<ResetPasswordRequest>().validate()
         val user = usersService.getUserByEmail(organizationId!!, subOrganizationName, request.email)
         val response = usersService.setUserPassword(organizationId, subOrganizationName, user, request.password)
@@ -481,6 +482,108 @@ fun Route.createUserPasswordApi() {
             text = gson.toJson(tokenResponse),
             contentType = ContentType.Application.Json,
             status = HttpStatusCode.Created,
+        )
+    }
+}
+
+fun Route.linkUserApi() {
+    val gson: Gson by inject()
+    val usersService: UsersService by inject()
+
+    postWithPermission(
+        listOf(
+            RouteOption(
+                "/user_links",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+            ),
+        ),
+        action = "createUserLink",
+        validateOrgIdFromPath = false,
+    ) {
+        val principal = call.principal<UserPrincipal>()!!
+        val request = call.receive<LinkUserRequest>().validate()
+        val tokenResponse = usersService.linkUser(principal, request)
+        call.respondText(
+            text = gson.toJson(tokenResponse),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.Created,
+        )
+    }
+
+    getWithPermission(
+        listOf(
+            RouteOption(
+                "/user_links",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+            ),
+        ),
+        action = "listUserLinks",
+        validateOrgIdFromPath = false,
+    ) {
+        val principal = call.principal<UserPrincipal>()!!
+        val nextToken = call.request.queryParameters["next_token"]
+        val pageSize = call.request.queryParameters["page_size"]
+        val sortOrder = call.request.queryParameters["sort_order"]
+        val role = call.request.queryParameters["role"]
+        require(role != null && (role == "LEADER" || role == "SUBORDINATE")) {
+            "Invalid value found for role"
+        }
+        val context =
+            PaginationContext.from(
+                nextToken,
+                pageSize?.toInt(),
+                sortOrder?.let { PaginationOptions.SortOrder.valueOf(it) },
+                mapOf("role" to role),
+            )
+        val response = usersService.listUserLinks(principal, context)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
+        )
+    }
+
+    postWithPermission(
+        listOf(
+            RouteOption(
+                "/user_links/{user_link_id}",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+            ),
+        ),
+        action = "switchUser",
+        validateOrgIdFromPath = false,
+    ) {
+        val linkId = call.parameters["user_link_id"]!!
+        val principal = call.principal<UserPrincipal>()!!
+        val response = usersService.switchUser(principal, linkId)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
+        )
+    }
+
+    deleteWithPermission(
+        listOf(
+            RouteOption(
+                "/user_links/{user_link_id}",
+                resourceNameIndex = 0,
+                resourceInstanceIndex = 1,
+            ),
+        ),
+        action = "deleteUserLink",
+        validateOrgIdFromPath = false,
+    ) {
+        val linkId = call.parameters["user_link_id"]!!
+        val principal = call.principal<UserPrincipal>()!!
+        val response = usersService.deleteUserLink(principal, linkId)
+        call.respondText(
+            text = gson.toJson(response),
+            contentType = ContentType.Application.Json,
+            status = HttpStatusCode.OK,
         )
     }
 }

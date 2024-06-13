@@ -33,6 +33,17 @@ const val URL_SEPARATOR = '/'
 
 private val logger = KotlinLogging.logger { }
 
+/**
+ * This data class is used to store all the information required to perform user authorization checks before allowing any action
+ */
+
+data class AuthorizationDetails(
+    val organization: String? = null,
+    val subOrganization: String? = null,
+    val resource: String,
+    val resourceInstance: String?,
+)
+
 class AuthorizationException(override val message: String) : Exception(message)
 
 /**
@@ -45,17 +56,18 @@ class Authorization(config: Configuration) : KoinComponent {
 
     class Configuration : KoinComponent
 
-    @Suppress("ThrowsCount")
+    @Suppress("ThrowsCount", "CyclomaticComplexMethod")
     fun interceptPipeline(
         pipeline: ApplicationCallPipeline,
         any: Set<Action>? = null,
         all: Set<Action>? = null,
         none: Set<Action>? = null,
-        getResourceHrn: (ApplicationRequest) -> ResourceHrn,
+        getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+        validateOrgIdFromPath: Boolean,
     ) {
         pipeline.insertPhaseBefore(ApplicationCallPipeline.Call, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
-            val resourceHrn = getResourceHrn(context.request)
+            val resourceHrnFromUrl = getResourceHrn(context.request)
             val userPrincipal = call.authentication.principal<UserPrincipal>()
             val apiPrincipal = call.authentication.principal<ApiPrincipal>()
             if (userPrincipal == null && apiPrincipal == null) {
@@ -63,22 +75,42 @@ class Authorization(config: Configuration) : KoinComponent {
             }
             val (principalHrn, policies) =
                 if (userPrincipal != null) {
-                    Pair(userPrincipal.hrnStr, userPrincipal.policies)
+                    if (validateOrgIdFromPath) {
+                        userPrincipal.hrn as ResourceHrn
+                        checkNotNull(resourceHrnFromUrl.organization) { "Organization Id is missing from the path" }
+                        if (resourceHrnFromUrl.organization != userPrincipal.organization) {
+                            throw AuthorizationException("Organization id in path and token are not matching. Invalid token")
+                        }
+//                        User hrn without subOrganization can access all subOrganization resources as per his/her policies
+                        if (!userPrincipal.hrn.subOrganization.isNullOrEmpty() && resourceHrnFromUrl.subOrganization != userPrincipal.hrn.subOrganization) {
+                            throw AuthorizationException("SubOrganization id in path and token are not matching. Invalid token")
+                        }
+                    }
+                    Pair(userPrincipal.hrn, userPrincipal.policies)
                 } else if (apiPrincipal != null) {
                     Pair(
-                        ResourceHrn(apiPrincipal.organization, null, apiPrincipal.organization, null).toString(),
+                        ResourceHrn(apiPrincipal.organization, null, apiPrincipal.organization, null),
                         apiPrincipal.policies ?: throw AuthorizationException("User not authorized"),
                     )
                 } else {
                     throw AuthenticationException("Principal not valid")
                 }
 
+            principalHrn as ResourceHrn
+            val resourceHrn =
+                ResourceHrn(
+                    organization = resourceHrnFromUrl.organization ?: principalHrn.organization,
+                    subOrganization = resourceHrnFromUrl.subOrganization ?: principalHrn.subOrganization,
+                    resource = resourceHrnFromUrl.resource,
+                    resourceInstance = resourceHrnFromUrl.resourceInstance,
+                )
+
             val denyReasons = mutableListOf<String>()
             all?.let {
                 val policyRequests =
                     all.map {
                         val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
-                        PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
+                        PolicyRequest(principalHrn.toString(), resourceHrn.toString(), actionHrn.toString())
                     }.toList()
                 if (!policyValidator.validate(policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn lacks one or more permission(s) -" +
@@ -90,7 +122,7 @@ class Authorization(config: Configuration) : KoinComponent {
                 val policyRequests =
                     any.map {
                         val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
-                        PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
+                        PolicyRequest(principalHrn.toString(), resourceHrn.toString(), actionHrn.toString())
                     }.toList()
                 if (!policyValidator.validateAny(policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn has none of the permission(s) -" +
@@ -102,7 +134,7 @@ class Authorization(config: Configuration) : KoinComponent {
                 val policyRequests =
                     none.map {
                         val actionHrn = ActionHrn(resourceHrn.organization, null, resourceHrn.resource, it)
-                        PolicyRequest(principalHrn, resourceHrn.toString(), actionHrn.toString())
+                        PolicyRequest(principalHrn.toString(), resourceHrn.toString(), actionHrn.toString())
                     }.toList()
                 if (!policyValidator.validateNone(policies.stream(), policyRequests)) {
                     denyReasons += "Principal $principalHrn shouldn't have these permission(s) -" +
@@ -145,7 +177,8 @@ private fun Route.authorizedRoute(
     any: Set<Action>? = null,
     all: Set<Action>? = null,
     none: Set<Action>? = null,
-    getResourceHrn: (ApplicationRequest) -> ResourceHrn,
+    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    validateOrgIdFromPath: Boolean,
     build: Route.() -> Unit,
 ): Route {
     val description =
@@ -161,30 +194,32 @@ private fun Route.authorizedRoute(
         all,
         none,
         getResourceHrn,
+        validateOrgIdFromPath,
     )
     authorizedRoute.build()
     return authorizedRoute
 }
 
-fun getResourceHrnFunc(
+fun getAuthorizationDetails(
     resourceNameIndex: Int,
     resourceInstanceIndex: Int,
-    organizationIdIndex: Int,
+    organizationIdIndex: Int? = null,
     subOrganizationIdIndex: Int? = null,
-): (ApplicationRequest) -> ResourceHrn {
+): (ApplicationRequest) -> AuthorizationDetails {
+//    Adding empty string for subOrganization as ResourceHrnRegex stores empty string when split using regex groups
     return { request ->
         val pathSegments = request.path().trim(URL_SEPARATOR).split(URL_SEPARATOR).map { it.decodeURLPart() }
-        ResourceHrn(
-            pathSegments[organizationIdIndex],
-            subOrganizationIdIndex?.let { pathSegments[it] },
+        AuthorizationDetails(
+            organizationIdIndex?.let { pathSegments[it] },
+            subOrganizationIdIndex?.let { pathSegments[it] } ?: "",
             IamResources.resourceMap[pathSegments[resourceNameIndex]]!!,
             pathSegments[resourceInstanceIndex],
         )
     }
 }
 
-fun getResourceHrnFunc(templateInput: RouteOption): (ApplicationRequest) -> ResourceHrn {
-    return getResourceHrnFunc(
+fun getAuthorizationDetails(templateInput: RouteOption): (ApplicationRequest) -> AuthorizationDetails {
+    return getAuthorizationDetails(
         templateInput.resourceNameIndex,
         templateInput.resourceInstanceIndex,
         templateInput.organizationIdIndex,
@@ -194,24 +229,28 @@ fun getResourceHrnFunc(templateInput: RouteOption): (ApplicationRequest) -> Reso
 
 fun Route.withPermission(
     action: Action,
-    getResourceHrn: (ApplicationRequest) -> ResourceHrn,
+    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(all = setOf(action), getResourceHrn = getResourceHrn, build = build)
+) = authorizedRoute(all = setOf(action), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
 
 fun Route.withAllPermission(
     vararg action: Action,
-    getResourceHrn: (ApplicationRequest) -> ResourceHrn,
+    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(all = action.toSet(), getResourceHrn = getResourceHrn, build = build)
+) = authorizedRoute(all = action.toSet(), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
 
 fun Route.withAnyPermission(
     vararg action: Action,
-    getResourceHrn: (ApplicationRequest) -> ResourceHrn,
+    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(any = action.toSet(), getResourceHrn = getResourceHrn, build = build)
+) = authorizedRoute(any = action.toSet(), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
 
 fun Route.withoutPermission(
     action: Action,
-    getResourceHrn: (ApplicationRequest) -> ResourceHrn,
+    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(none = setOf(action), getResourceHrn = getResourceHrn, build = build)
+) = authorizedRoute(none = setOf(action), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)

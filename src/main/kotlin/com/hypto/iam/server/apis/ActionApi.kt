@@ -5,7 +5,7 @@ import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.models.CreateActionRequest
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateActionRequest
-import com.hypto.iam.server.security.getResourceHrnFunc
+import com.hypto.iam.server.security.getAuthorizationDetails
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.ActionService
 import com.hypto.iam.server.validators.validate
@@ -27,7 +27,7 @@ fun Route.actionApi() {
 
     withPermission(
         "createAction",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/resources/{resource_name}/actions") {
             val organizationId = call.parameters["organization_id"]
@@ -47,7 +47,7 @@ fun Route.actionApi() {
 
     withPermission(
         "listAction",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources/{resource_name}/actions") {
             val organizationId = call.parameters["organization_id"]
@@ -75,7 +75,7 @@ fun Route.actionApi() {
 
     withPermission(
         "getAction",
-        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
             val organizationId = call.parameters["organization_id"]
@@ -94,7 +94,7 @@ fun Route.actionApi() {
 
     withPermission(
         "updateAction",
-        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
     ) {
         patch("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
             val organizationId = call.parameters["organization_id"]
@@ -115,7 +115,7 @@ fun Route.actionApi() {
 
     withPermission(
         "deleteAction",
-        getResourceHrnFunc(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 4, resourceInstanceIndex = 5, organizationIdIndex = 1),
     ) {
         delete("/organizations/{organization_id}/resources/{resource_name}/actions/{action_name}") {
             val organizationId = call.parameters["organization_id"]

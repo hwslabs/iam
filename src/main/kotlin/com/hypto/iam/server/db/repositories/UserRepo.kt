@@ -29,6 +29,13 @@ object UserRepo : BaseRepo<UsersRecord, Users, String>() {
             .and(USERS.DELETED.eq(false))
             .fetchOne()
 
+    suspend fun findByHrns(hrn: List<String>): Map<String, UsersRecord> =
+        ctx("users.findByHrns")
+            .selectFrom(USERS)
+            .where(USERS.HRN.`in`(hrn))
+            .and(USERS.DELETED.eq(false))
+            .fetchMap(USERS.HRN)
+
     suspend fun fetchUsers(
         organizationId: String,
         subOrganizationName: String?,

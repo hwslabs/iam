@@ -91,14 +91,14 @@ interface UserPrincipalService {
     suspend fun getUserPrincipalByJwtToken(
         tokenCredential: TokenCredential,
         deepCheck: Boolean = false,
-    ): UserPrincipal?
+    ): UserPrincipal
 
     suspend fun getUserPrincipalByCredentials(
         organizationId: String,
         subOrganizationId: String?,
         userName: String,
         password: String,
-    ): UserPrincipal?
+    ): UserPrincipal
 
     suspend fun getUserPrincipalByCredentials(credentials: UsernamePasswordCredential): UserPrincipal
 }

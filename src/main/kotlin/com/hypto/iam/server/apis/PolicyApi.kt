@@ -12,7 +12,7 @@ import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.security.UserPrincipal
-import com.hypto.iam.server.security.getResourceHrnFunc
+import com.hypto.iam.server.security.getAuthorizationDetails
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.PolicyService
 import com.hypto.iam.server.validators.validate
@@ -38,7 +38,7 @@ fun Route.policyApi() {
 
     withPermission(
         "createPolicy",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/policies") {
             val organizationId =
@@ -64,7 +64,7 @@ fun Route.policyApi() {
 
     withPermission(
         "createPolicyFromTemplate",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         post("/organizations/{organization_id}/policy_from_template") {
             val organizationId =
@@ -87,7 +87,7 @@ fun Route.policyApi() {
 
     withPermission(
         "listPolicy",
-        getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/policies") {
             val organizationId =
@@ -116,7 +116,7 @@ fun Route.policyApi() {
 
     withPermission(
         "deletePolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         delete("/organizations/{organization_id}/policies/{name}") {
             val organizationId =
@@ -136,7 +136,7 @@ fun Route.policyApi() {
 
     withPermission(
         "getPolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         get("/organizations/{organization_id}/policies/{name}") {
             val organizationId =
@@ -200,7 +200,7 @@ fun Route.policyApi() {
 
     withPermission(
         "updatePolicy",
-        getResourceHrnFunc(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
+        getAuthorizationDetails(resourceNameIndex = 2, resourceInstanceIndex = 3, organizationIdIndex = 1),
     ) {
         patch("/organizations/{organization_id}/policies/{name}") {
             val organizationId =

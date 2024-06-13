@@ -6,7 +6,7 @@ import com.hypto.iam.server.models.CreateSubOrganizationRequest
 import com.hypto.iam.server.models.CreateSubOrganizationResponse
 import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.UpdateOrganizationRequest
-import com.hypto.iam.server.security.getResourceHrnFunc
+import com.hypto.iam.server.security.getAuthorizationDetails
 import com.hypto.iam.server.security.withPermission
 import com.hypto.iam.server.service.SubOrganizationService
 import com.hypto.iam.server.validators.validate
@@ -39,7 +39,7 @@ fun Route.subOrganizationsApi() {
     route("/organizations/{organization_id}/sub_organizations") {
         withPermission(
             "listSubOrganizations",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+            getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             get {
                 val organizationId =
@@ -67,7 +67,7 @@ fun Route.subOrganizationsApi() {
 
         withPermission(
             "createSubOrganization",
-            getResourceHrnFunc(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
+            getAuthorizationDetails(resourceNameIndex = 0, resourceInstanceIndex = 1, organizationIdIndex = 1),
         ) {
             post {
                 val organizationId =
@@ -93,7 +93,7 @@ fun Route.subOrganizationsApi() {
     route("/organizations/{org_id}/sub_organizations/{sub_organization_name}") {
         withPermission(
             "deleteSubOrganization",
-            getResourceHrnFunc(
+            getAuthorizationDetails(
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
@@ -114,7 +114,7 @@ fun Route.subOrganizationsApi() {
 
         withPermission(
             "getSubOrganization",
-            getResourceHrnFunc(
+            getAuthorizationDetails(
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,
@@ -135,7 +135,7 @@ fun Route.subOrganizationsApi() {
 
         withPermission(
             "updateSubOrganization",
-            getResourceHrnFunc(
+            getAuthorizationDetails(
                 resourceNameIndex = 2,
                 resourceInstanceIndex = 3,
                 organizationIdIndex = 1,

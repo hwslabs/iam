@@ -24,20 +24,24 @@ import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateSubOrganizationRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
+import com.hypto.iam.server.models.EmailApprovalConfig
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.GetTokenForSubOrgRequest
+import com.hypto.iam.server.models.LinkUserRequest
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.TokenCredentialConfig
 import com.hypto.iam.server.models.UpdateActionRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
 import com.hypto.iam.server.models.UpdateOrganizationRequest
 import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.models.UpdateResourceRequest
 import com.hypto.iam.server.models.UpdateUserRequest
+import com.hypto.iam.server.models.UsernamePasswordConfig
 import com.hypto.iam.server.models.ValidationRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.UsernamePasswordCredential
@@ -214,6 +218,20 @@ fun GetDelegateTokenRequest.validate(): GetDelegateTokenRequest {
 
 fun GetTokenForSubOrgRequest.validate(): GetTokenForSubOrgRequest {
     return getTokenForSubOrgRequest.validateAndThrowOnFailure(this)
+}
+
+fun LinkUserRequest.validate(): LinkUserRequest {
+    Validation {
+        oneOf(
+            this@validate,
+            listOf(
+                LinkUserRequest::emailApprovalConfig,
+                LinkUserRequest::usernamePasswordConfig,
+                LinkUserRequest::tokenCredentialConfig,
+            ),
+        )
+    }.validateAndThrowOnFailure(this)
+    return linkUserRequestValidation.validateAndThrowOnFailure(this)
 }
 
 // Validations used by ValidationBuilders
@@ -594,4 +612,61 @@ val getTokenForSubOrgRequest =
 val getDelegateTokenRequestValidation =
     Validation {
         GetDelegateTokenRequest::policy required {}
+    }
+
+val emailApprovalConfigValidation =
+    Validation {
+        EmailApprovalConfig::email required {
+            run(emailCheck)
+        }
+    }
+
+val usernamePasswordConfigValidation =
+    Validation {
+        UsernamePasswordConfig::email required {
+            run(emailCheck)
+        }
+        UsernamePasswordConfig::password required {
+            run(passwordCheck)
+        }
+    }
+
+val tokenCredentialConfigValidation =
+    Validation {
+        TokenCredentialConfig::token required {}
+    }
+
+val linkUserRequestValidation =
+    Validation<LinkUserRequest> {
+        LinkUserRequest::type required {}
+        LinkUserRequest::emailApprovalConfig ifPresent {
+            run(emailApprovalConfigValidation)
+        }
+        LinkUserRequest::usernamePasswordConfig ifPresent {
+            run(usernamePasswordConfigValidation)
+        }
+        LinkUserRequest::tokenCredentialConfig ifPresent {
+            run(tokenCredentialConfigValidation)
+        }
+        addConstraint("Only Email Approval config is required for request access type") {
+            if (it.type == LinkUserRequest.Type.EMAIL_APPROVAL) {
+                it.emailApprovalConfig != null && it.usernamePasswordConfig == null && it.tokenCredentialConfig == null
+            } else {
+                true
+            }
+        }
+        addConstraint("Only Username Password config is required for login credential type") {
+            if (it.type == LinkUserRequest.Type.USERNAME_PASSWORD) {
+                it.usernamePasswordConfig != null && it.emailApprovalConfig == null && it.tokenCredentialConfig == null
+            } else {
+                true
+            }
+        }
+        addConstraint("Only Token Credential config is required for token credential type") {
+            if (it.type == LinkUserRequest.Type.TOKEN_CREDENTIAL) {
+                it.tokenCredentialConfig != null && it.emailApprovalConfig == null && it.usernamePasswordConfig == null
+            } else {
+                true
+            }
+        }
     }
