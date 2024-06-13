@@ -62,12 +62,12 @@ class Authorization(config: Configuration) : KoinComponent {
         any: Set<Action>? = null,
         all: Set<Action>? = null,
         none: Set<Action>? = null,
-        getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+        getAuthorizationDetails: (ApplicationRequest) -> AuthorizationDetails,
         validateOrgIdFromPath: Boolean,
     ) {
         pipeline.insertPhaseBefore(ApplicationCallPipeline.Call, authorizationPhase)
         pipeline.intercept(authorizationPhase) {
-            val resourceHrnFromUrl = getResourceHrn(context.request)
+            val resourceHrnFromUrl = getAuthorizationDetails(context.request)
             val userPrincipal = call.authentication.principal<UserPrincipal>()
             val apiPrincipal = call.authentication.principal<ApiPrincipal>()
             if (userPrincipal == null && apiPrincipal == null) {
@@ -177,7 +177,7 @@ private fun Route.authorizedRoute(
     any: Set<Action>? = null,
     all: Set<Action>? = null,
     none: Set<Action>? = null,
-    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    getAuthorizationDetails: (ApplicationRequest) -> AuthorizationDetails,
     validateOrgIdFromPath: Boolean,
     build: Route.() -> Unit,
 ): Route {
@@ -193,7 +193,7 @@ private fun Route.authorizedRoute(
         any,
         all,
         none,
-        getResourceHrn,
+        getAuthorizationDetails,
         validateOrgIdFromPath,
     )
     authorizedRoute.build()
@@ -229,28 +229,28 @@ fun getAuthorizationDetails(templateInput: RouteOption): (ApplicationRequest) ->
 
 fun Route.withPermission(
     action: Action,
-    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    getAuthorizationDetails: (ApplicationRequest) -> AuthorizationDetails,
     validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(all = setOf(action), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
+) = authorizedRoute(all = setOf(action), getAuthorizationDetails = getAuthorizationDetails, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
 
 fun Route.withAllPermission(
     vararg action: Action,
-    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    getAuthorizationDetails: (ApplicationRequest) -> AuthorizationDetails,
     validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(all = action.toSet(), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
+) = authorizedRoute(all = action.toSet(), getAuthorizationDetails = getAuthorizationDetails, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
 
 fun Route.withAnyPermission(
     vararg action: Action,
-    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    getAuthorizationDetails: (ApplicationRequest) -> AuthorizationDetails,
     validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(any = action.toSet(), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
+) = authorizedRoute(any = action.toSet(), getAuthorizationDetails = getAuthorizationDetails, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
 
 fun Route.withoutPermission(
     action: Action,
-    getResourceHrn: (ApplicationRequest) -> AuthorizationDetails,
+    getAuthorizationDetails: (ApplicationRequest) -> AuthorizationDetails,
     validateOrgIdFromPath: Boolean = true,
     build: Route.() -> Unit,
-) = authorizedRoute(none = setOf(action), getResourceHrn = getResourceHrn, validateOrgIdFromPath = validateOrgIdFromPath, build = build)
+) = authorizedRoute(none = setOf(action), getAuthorizationDetails = getAuthorizationDetails, validateOrgIdFromPath = validateOrgIdFromPath, build = build)

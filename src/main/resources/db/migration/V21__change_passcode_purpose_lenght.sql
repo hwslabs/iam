@@ -1,0 +1,2 @@
+ALTER TABLE passcodes
+    ALTER COLUMN purpose TYPE VARCHAR (20);

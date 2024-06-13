@@ -569,7 +569,6 @@ class UsersServiceImpl : KoinComponent, UsersService {
                         passcodeRepo.getValidPasscodeById(
                             request.passcodeConfig!!.passcode,
                             VerifyEmailRequest.Purpose.request_access,
-                            organizationId = principal.organization,
                         ) ?: throw AuthenticationException("Invalid passcode")
                     val user = getUser(principal.hrn as ResourceHrn)
                     require(passcode.email == user.email) { "Email in passcode does not match with your email" }
@@ -588,7 +587,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
                             ).hrn
                         } else {
                             require(appConfig.app.uniqueUsersAcrossOrganizations) {
-                                "Email not unique across organizations. Please use link user passcode"
+                                "Email not unique across organizations. Please use passcode or token credential type"
                             }
                             userPrincipalService.getUserPrincipalByCredentials(
                                 UsernamePasswordCredential(config.email.lowercase(), config.password),
