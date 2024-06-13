@@ -272,6 +272,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
+                            "requestAccessTemplateId",
                             false,
                         )
                     }
@@ -319,6 +320,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
+                            "requestAccessTemplateId",
                             true,
                         )
                     }
@@ -777,6 +779,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
+                            "requestAccessTemplateId",
                             false,
                         )
                     }
@@ -824,6 +827,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                             "signupTemplateId",
                             "inviteUserTemplateId",
                             "resetPasswordTemplateId",
+                            "requestAccessTemplateId",
                             true,
                         )
                     }
