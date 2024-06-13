@@ -1255,7 +1255,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/user_links:
+  /user_links:
     post:
       tags:
         - User Management
@@ -1312,7 +1312,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/user_links/{user_link_id}:
+  /user_links/{user_link_id}:
     post:
       tags:
         - User Management
