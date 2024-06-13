@@ -32,7 +32,7 @@ jobs:
         with:
           mode: start
           github-token: ${{ secrets.RUNNER_MANAGER_GH_PERSONAL_ACCESS_TOKEN }}
-          ec2-image-id: ami-0db7f93ce0cf659ff # AMI architecure is arm64
+          ec2-image-id: ami-0b7130cf8d331f3df # AMI architecure is arm64
           ec2-instance-type: 't4g.large'
           subnet-id: ${{ secrets.RUNNER_MANAGER_SUBNET_ID }}
           security-group-id: ${{ secrets.RUNNER_MANAGER_SECURITY_GROUP_ID }}
