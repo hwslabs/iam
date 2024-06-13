@@ -43,7 +43,7 @@
     "reset_password_email_template": "<placeholder for reset password template name>",
     "invite_user_email_template": "<placeholder for invite user template name>",
     "request_access_email_template": "<placeholder for request access template name>",
-    "unique_users_across_organizations": true
+    "unique_users_across_organizations": false
   },
   "aws": {
     "region": "us-east-1",
