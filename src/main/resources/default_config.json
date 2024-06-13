@@ -67,7 +67,8 @@
     "onboardRoutes": {
       "signup": "/signup",
       "reset": "/reset",
-      "invite": "/invite"
+      "invite": "/invite",
+      "requestAccess": "/user_links"
     }
   },
   "cognito": {
