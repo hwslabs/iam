@@ -578,21 +578,23 @@ class UsersServiceImpl : KoinComponent, UsersService {
                 }
                 LinkUserRequest.Type.USERNAME_PASSWORD -> {
                     val config = request.usernamePasswordConfig!!
-                    if (config.organizationId != null) {
-                        userPrincipalService.getUserPrincipalByCredentials(
-                            organizationId = config.organizationId,
-                            subOrganizationId = config.subOrganizationId,
-                            userName = config.email.lowercase(),
-                            password = config.password,
-                        ).hrn
-                    } else {
-                        require(appConfig.app.uniqueUsersAcrossOrganizations) {
-                            "Email not unique across organizations. Please use link user passcode"
+                    val inviteeHrn =
+                        if (config.organizationId != null) {
+                            userPrincipalService.getUserPrincipalByCredentials(
+                                organizationId = config.organizationId,
+                                subOrganizationId = config.subOrganizationId,
+                                userName = config.email.lowercase(),
+                                password = config.password,
+                            ).hrn
+                        } else {
+                            require(appConfig.app.uniqueUsersAcrossOrganizations) {
+                                "Email not unique across organizations. Please use link user passcode"
+                            }
+                            userPrincipalService.getUserPrincipalByCredentials(
+                                UsernamePasswordCredential(config.email.lowercase(), config.password),
+                            ).hrn
                         }
-                        userPrincipalService.getUserPrincipalByCredentials(
-                            UsernamePasswordCredential(config.email.lowercase(), config.password),
-                        ).hrn
-                    }
+                    principal.hrnStr to inviteeHrn
                 }
                 LinkUserRequest.Type.TOKEN_CREDENTIAL -> {
                     val token = request.tokenCredentialConfig!!.token
@@ -611,8 +613,8 @@ class UsersServiceImpl : KoinComponent, UsersService {
         val record =
             LinkUsersRecord().apply {
                 id = IdGenerator.timeBasedRandomId(length = 20L)
-                leaderUser = inviterHrn
-                subordinateUser = inviteeHrn.toString()
+                leaderUserHrn = inviterHrn
+                subordinateUserHrn = inviteeHrn.toString()
                 createdAt = now
                 updatedAt = now
             }
