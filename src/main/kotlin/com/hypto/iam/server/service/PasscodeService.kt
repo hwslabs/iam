@@ -176,7 +176,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                                 principal ?: throw AuthorizationException("User is not authorized"),
                             )
                         Purpose.link_user ->
-                            sendRequestAccessPasscode(
+                            sendLinkUserPasscode(
                                 email,
                                 userHrn,
                                 organizationId!!,
@@ -220,7 +220,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                         Purpose.signup -> appConfig.onboardRoutes.signup
                         Purpose.reset -> appConfig.onboardRoutes.reset
                         Purpose.invite -> appConfig.onboardRoutes.invite
-                        Purpose.link_user -> appConfig.onboardRoutes.requestAccess
+                        Purpose.link_user -> appConfig.onboardRoutes.linkUser
                     }
                 }
                 else -> {
@@ -228,7 +228,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                         Purpose.signup -> appConfig.subOrgConfig.onboardRoutes.signup
                         Purpose.reset -> appConfig.subOrgConfig.onboardRoutes.reset
                         Purpose.invite -> appConfig.subOrgConfig.onboardRoutes.invite
-                        Purpose.link_user -> appConfig.subOrgConfig.onboardRoutes.requestAccess
+                        Purpose.link_user -> appConfig.subOrgConfig.onboardRoutes.linkUser
                     }
                 }
             }
@@ -401,7 +401,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
     }
 
     @Suppress("ThrowsCount")
-    private suspend fun sendRequestAccessPasscode(
+    private suspend fun sendLinkUserPasscode(
         email: String,
         userHrn: String?,
         orgId: String,
@@ -431,9 +431,9 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         val templateData = RequestAccessTemplateData(link, nameOfUser, organization.name, subOrganizationName)
         val templateName =
             if (subOrganizationName.isNullOrEmpty()) {
-                appConfig.app.requestAccessEmailTemplate
+                appConfig.app.linkUserEmailTemplate
             } else {
-                appConfig.subOrgConfig.requestAccessEmailTemplate
+                appConfig.subOrgConfig.linkUserEmailTemplate
             }
         val emailRequest =
             SendTemplatedEmailRequest.builder()
