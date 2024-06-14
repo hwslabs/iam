@@ -412,7 +412,7 @@ dependencies {
     implementation("software.amazon.awssdk:ses")
 
     // TxMan
-    implementation("com.github.hwslabs:txman:0.1.6")
+    implementation("com.github.TogaiHQ:txman:0.1.6")
 
     //Mustache Template
     implementation("net.pwall.mustache:kotlin-mustache:0.12")
