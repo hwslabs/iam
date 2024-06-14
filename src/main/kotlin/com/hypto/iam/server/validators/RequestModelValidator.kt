@@ -24,10 +24,10 @@ import com.hypto.iam.server.models.CreateResourceRequest
 import com.hypto.iam.server.models.CreateSubOrganizationRequest
 import com.hypto.iam.server.models.CreateUserPasswordRequest
 import com.hypto.iam.server.models.CreateUserRequest
-import com.hypto.iam.server.models.EmailApprovalConfig
 import com.hypto.iam.server.models.GetDelegateTokenRequest
 import com.hypto.iam.server.models.GetTokenForSubOrgRequest
 import com.hypto.iam.server.models.LinkUserRequest
+import com.hypto.iam.server.models.PasscodeConfig
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.ResendInviteRequest
@@ -225,7 +225,7 @@ fun LinkUserRequest.validate(): LinkUserRequest {
         oneOf(
             this@validate,
             listOf(
-                LinkUserRequest::emailApprovalConfig,
+                LinkUserRequest::passcodeConfig,
                 LinkUserRequest::usernamePasswordConfig,
                 LinkUserRequest::tokenCredentialConfig,
             ),
@@ -614,11 +614,9 @@ val getDelegateTokenRequestValidation =
         GetDelegateTokenRequest::policy required {}
     }
 
-val emailApprovalConfigValidation =
+val passcodeConfigValidation =
     Validation {
-        EmailApprovalConfig::email required {
-            run(emailCheck)
-        }
+        PasscodeConfig::passcode required {}
     }
 
 val usernamePasswordConfigValidation =
@@ -639,8 +637,8 @@ val tokenCredentialConfigValidation =
 val linkUserRequestValidation =
     Validation<LinkUserRequest> {
         LinkUserRequest::type required {}
-        LinkUserRequest::emailApprovalConfig ifPresent {
-            run(emailApprovalConfigValidation)
+        LinkUserRequest::passcodeConfig ifPresent {
+            run(passcodeConfigValidation)
         }
         LinkUserRequest::usernamePasswordConfig ifPresent {
             run(usernamePasswordConfigValidation)
@@ -648,23 +646,23 @@ val linkUserRequestValidation =
         LinkUserRequest::tokenCredentialConfig ifPresent {
             run(tokenCredentialConfigValidation)
         }
-        addConstraint("Only Email Approval config is required for request access type") {
-            if (it.type == LinkUserRequest.Type.EMAIL_APPROVAL) {
-                it.emailApprovalConfig != null && it.usernamePasswordConfig == null && it.tokenCredentialConfig == null
+        addConstraint("Only Passcode config is required for passcode type") {
+            if (it.type == LinkUserRequest.Type.PASSCODE) {
+                it.passcodeConfig != null && it.usernamePasswordConfig == null && it.tokenCredentialConfig == null
             } else {
                 true
             }
         }
         addConstraint("Only Username Password config is required for login credential type") {
             if (it.type == LinkUserRequest.Type.USERNAME_PASSWORD) {
-                it.usernamePasswordConfig != null && it.emailApprovalConfig == null && it.tokenCredentialConfig == null
+                it.usernamePasswordConfig != null && it.passcodeConfig == null && it.tokenCredentialConfig == null
             } else {
                 true
             }
         }
         addConstraint("Only Token Credential config is required for token credential type") {
             if (it.type == LinkUserRequest.Type.TOKEN_CREDENTIAL) {
-                it.tokenCredentialConfig != null && it.emailApprovalConfig == null && it.usernamePasswordConfig == null
+                it.tokenCredentialConfig != null && it.passcodeConfig == null && it.usernamePasswordConfig == null
             } else {
                 true
             }

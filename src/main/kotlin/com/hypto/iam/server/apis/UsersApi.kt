@@ -495,7 +495,7 @@ fun Route.linkUserApi() {
             RouteOption(
                 "/user_links",
                 resourceNameIndex = 0,
-                resourceInstanceIndex = 1,
+                resourceInstanceIndex = 0,
             ),
         ),
         action = "createUserLink",
@@ -516,7 +516,7 @@ fun Route.linkUserApi() {
             RouteOption(
                 "/user_links",
                 resourceNameIndex = 0,
-                resourceInstanceIndex = 1,
+                resourceInstanceIndex = 0,
             ),
         ),
         action = "listUserLinks",

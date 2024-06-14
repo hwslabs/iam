@@ -42,6 +42,7 @@
     "sign_up_email_template": "<placeholder for signup user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
     "invite_user_email_template": "<placeholder for invite user template name>",
+    "link_user_email_template": "<placeholder for linking user template name>",
     "unique_users_across_organizations": false
   },
   "aws": {
@@ -55,16 +56,19 @@
   "onboardRoutes": {
     "signup": "/signup",
     "reset": "/organizations/users/resetPassword",
-    "invite": "/organizations/users/verifyUser"
+    "invite": "/organizations/users/verifyUser",
+    "linkUser": "/user_links"
   },
   "sub_org_config": {
     "base_url": "<placeholder for sub org base url>",
     "invite_user_email_template": "<placeholder for invite user template name>",
     "reset_password_email_template": "<placeholder for reset password template name>",
+    "link_user_email_template": "<placeholder for linking user template name>",
     "onboardRoutes": {
       "signup": "/signup",
       "reset": "/reset",
-      "invite": "/invite"
+      "invite": "/invite",
+      "linkUser": "/user_links"
     }
   },
   "cognito": {

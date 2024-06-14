@@ -1255,7 +1255,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/user_links:
+  /user_links:
     post:
       tags:
         - User Management
@@ -1312,7 +1312,7 @@ paths:
         default:
           $ref: '#/components/responses/ErrorResponse'
 
-  /organizations/{organization_id}/user_links/{user_link_id}:
+  /user_links/{user_link_id}:
     post:
       tags:
         - User Management
@@ -3694,17 +3694,17 @@ components:
         type:
           type: string
           enum:
-            - EMAIL_APPROVAL
+            - PASSCODE
             - USERNAME_PASSWORD
             - TOKEN_CREDENTIAL
-        emailApprovalConfig:
+        passcodeConfig:
           type: object
-          title: EmailApprovalConfig
+          title: PasscodeConfig
           additionalProperties: false
           required:
-            - email
+            - passcode
           properties:
-            email:
+            passcode:
               type: string
               maxLength: 320
         usernamePasswordConfig:
@@ -3882,6 +3882,7 @@ components:
             - reset
             - signup
             - invite
+            - link_user
         metadata:
           type: object
           description: |

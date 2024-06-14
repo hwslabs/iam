@@ -23,6 +23,10 @@ data class InviteMetadata(val map: Map<String, Any>) {
     val policies: List<String> by map
 }
 
+data class RequestAccessMetadata(val map: Map<String, Any>) {
+    val inviterUserHrn: String by map
+}
+
 data class VerifyEmailSignUpMetadata(
     val metadata: SignUpMetadata,
 )

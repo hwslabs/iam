@@ -44,6 +44,7 @@ data class AppConfig(
         val baseUrl: String,
         val inviteUserEmailTemplate: String,
         val resetPasswordEmailTemplate: String,
+        val linkUserEmailTemplate: String,
         val onboardRoutes: OnboardRoutes,
     )
 
@@ -83,6 +84,7 @@ data class AppConfig(
         val signUpEmailTemplate: String,
         val inviteUserEmailTemplate: String,
         val resetPasswordEmailTemplate: String,
+        val linkUserEmailTemplate: String,
         val uniqueUsersAcrossOrganizations: Boolean,
     ) {
         val isDevelopment: Boolean
@@ -113,7 +115,7 @@ data class AppConfig(
 
     data class PostHook(val signup: String)
 
-    data class OnboardRoutes(val signup: String, val reset: String, val invite: String)
+    data class OnboardRoutes(val signup: String, val reset: String, val invite: String, val linkUser: String)
 
     companion object {
         val configuration: AppConfig =
