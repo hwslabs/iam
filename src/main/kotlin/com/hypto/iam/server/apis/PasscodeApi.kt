@@ -66,7 +66,7 @@ fun Route.createPasscodeApi() {
         // Validations
         principal?.let {
             if (request.organizationId != null) {
-                require(it.organization == request.organizationId || request.purpose == VerifyEmailRequest.Purpose.request_access) {
+                require(it.organization == request.organizationId || request.purpose == VerifyEmailRequest.Purpose.link_user) {
                     "Does not have permission to call api for organization ${request.organizationId}"
                 }
             }
@@ -75,7 +75,7 @@ fun Route.createPasscodeApi() {
             requireNotNull(principal) { "User must be logged in for invite purpose" }
             val inviteMetadata = InviteMetadata(request.metadata!!)
             require(inviteMetadata.inviterUserHrn == principal.hrnStr) { "Does not support cross user invites" }
-        } else if (request.purpose == VerifyEmailRequest.Purpose.request_access) {
+        } else if (request.purpose == VerifyEmailRequest.Purpose.link_user) {
             requireNotNull(principal) { "User must be logged in for invite purpose" }
             val inviteMetadata = RequestAccessMetadata(request.metadata!!)
             require(inviteMetadata.inviterUserHrn == principal.hrnStr) { "Does not support cross user invites" }

@@ -132,12 +132,12 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
             }
         }
 
-        if (purpose == Purpose.request_access) {
+        if (purpose == Purpose.link_user) {
             // Clean-up old invites
             val oldInviteRecord =
                 passcodeRepo.getValidPasscodeCount(
                     email,
-                    Purpose.invite,
+                    Purpose.link_user,
                     organizationId!!,
                     subOrganizationName,
                 )
@@ -175,7 +175,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                                 passcode.id,
                                 principal ?: throw AuthorizationException("User is not authorized"),
                             )
-                        Purpose.request_access ->
+                        Purpose.link_user ->
                             sendRequestAccessPasscode(
                                 email,
                                 userHrn,
@@ -220,7 +220,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                         Purpose.signup -> appConfig.onboardRoutes.signup
                         Purpose.reset -> appConfig.onboardRoutes.reset
                         Purpose.invite -> appConfig.onboardRoutes.invite
-                        Purpose.request_access -> appConfig.onboardRoutes.requestAccess
+                        Purpose.link_user -> appConfig.onboardRoutes.requestAccess
                     }
                 }
                 else -> {
@@ -228,7 +228,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
                         Purpose.signup -> appConfig.subOrgConfig.onboardRoutes.signup
                         Purpose.reset -> appConfig.subOrgConfig.onboardRoutes.reset
                         Purpose.invite -> appConfig.subOrgConfig.onboardRoutes.invite
-                        Purpose.request_access -> appConfig.subOrgConfig.onboardRoutes.requestAccess
+                        Purpose.link_user -> appConfig.subOrgConfig.onboardRoutes.requestAccess
                     }
                 }
             }
@@ -427,7 +427,7 @@ class PasscodeServiceImpl : KoinComponent, PasscodeService {
         }
 
         val nameOfUser = user.name ?: user.preferredUsername ?: user.email
-        val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.request_access)
+        val link = createPasscodeLink(passcode = passcode, email = email, purpose = Purpose.link_user)
         val templateData = RequestAccessTemplateData(link, nameOfUser, organization.name, subOrganizationName)
         val templateName =
             if (subOrganizationName.isNullOrEmpty()) {

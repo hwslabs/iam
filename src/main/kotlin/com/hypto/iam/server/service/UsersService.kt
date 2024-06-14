@@ -568,7 +568,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
                     val passcode =
                         passcodeRepo.getValidPasscodeById(
                             request.passcodeConfig!!.passcode,
-                            VerifyEmailRequest.Purpose.request_access,
+                            VerifyEmailRequest.Purpose.link_user,
                         ) ?: throw AuthenticationException("Invalid passcode")
                     val user = getUser(principal.hrn as ResourceHrn)
                     require(passcode.email == user.email) { "Email in passcode does not match with your email" }

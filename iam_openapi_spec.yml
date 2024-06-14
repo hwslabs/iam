@@ -3882,7 +3882,7 @@ components:
             - reset
             - signup
             - invite
-            - request_access
+            - link_user
         metadata:
           type: object
           description: |
