@@ -3555,7 +3555,6 @@ components:
       type: object
       additionalProperties: false
       required:
-        - name
         - status
       properties:
         preferredUsername:
@@ -3572,6 +3571,10 @@ components:
           type: string
           maxLength: 320
           pattern: ^\S+@\S+\.\S+$
+        issuerName:
+          type: string
+        issuerToken:
+          type: string
         phone:
           type: string
           maxLength: 30

@@ -497,11 +497,13 @@ val policyAssociationRequestValidation =
 
 val createUserRequestValidation =
     Validation<CreateUserRequest> {
-        addConstraint("Email and password is mandatory for Users with loginAccess") {
-            return@addConstraint (
-                (it.loginAccess == true && !it.email.isNullOrEmpty() && !it.password.isNullOrEmpty()) ||
-                    !(it.loginAccess ?: false)
-            )
+        addConstraint("Either email/password or issuerName/issuerToken is required for users with login access") {
+            if (it.loginAccess == true) {
+                (!it.email.isNullOrEmpty() && !it.password.isNullOrEmpty()) xor
+                    (!it.issuerName.isNullOrEmpty() && !it.issuerToken.isNullOrEmpty())
+            } else {
+                true
+            }
         }
 
         addConstraint("Password is not required for Users without loginAccess") {
@@ -512,10 +514,22 @@ val createUserRequestValidation =
             )
         }
 
+        addConstraint("Password is not required for OAuth login") {
+            if (!it.issuerToken.isNullOrEmpty()) {
+                it.password.isNullOrEmpty()
+            } else {
+                true
+            }
+        }
+
+        addConstraint("Name is required for password login") {
+            return@addConstraint !it.issuerToken.isNullOrEmpty() || !it.name.isNullOrEmpty()
+        }
+
         CreateUserRequest::preferredUsername ifPresent {
             run(preferredUserNameCheck)
         }
-        CreateUserRequest::name required {
+        CreateUserRequest::name ifPresent {
             run(nameOfUserCheck)
         }
         CreateUserRequest::email ifPresent {
