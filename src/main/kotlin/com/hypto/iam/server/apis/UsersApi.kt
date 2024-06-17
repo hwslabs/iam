@@ -22,6 +22,7 @@ import com.hypto.iam.server.models.PaginationOptions
 import com.hypto.iam.server.models.PolicyAssociationRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
+import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
 import com.hypto.iam.server.security.AuthMetadata
@@ -133,6 +134,7 @@ fun Route.createUsersApi() {
                 createdBy = call.principal<UserPrincipal>()?.hrnStr,
                 verified = verified,
                 loginAccess = loginAccess,
+                status = User.Status.valueOf(request.status.value),
                 policies = policies,
             )
         if (loginAccess) {

@@ -514,8 +514,12 @@ val createUserRequestValidation =
             )
         }
 
-        addConstraint("Password is not required for Oauth login") {
-            return@addConstraint (!it.issuerToken.isNullOrEmpty()) xor (!it.password.isNullOrEmpty())
+        addConstraint("Password is not required for OAuth login") {
+            if (!it.issuerToken.isNullOrEmpty()) {
+                it.password.isNullOrEmpty()
+            } else {
+                true
+            }
         }
 
         addConstraint("Name is required for password login") {

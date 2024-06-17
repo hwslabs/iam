@@ -85,6 +85,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
         password: String?,
         createdBy: String?,
         verified: Boolean,
+        status: User.Status,
         policies: List<String>?,
     ): User {
         if (email == null && subOrganizationName != null) {
@@ -139,7 +140,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
                         this.hrn = userHrn.toString()
                         this.organizationId = organizationId
                         this.email = email
-                        this.status = User.Status.enabled.value
+                        this.status = status.value
                         this.verified = verified
                         this.deleted = false
                         this.createdAt = LocalDateTime.now()
@@ -730,6 +731,7 @@ interface UsersService {
         password: String?,
         createdBy: String?,
         verified: Boolean,
+        status: User.Status = User.Status.enabled,
         policies: List<String>? = null,
     ): User
 

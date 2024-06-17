@@ -3554,6 +3554,8 @@ components:
       description: Payload to create ledger account
       type: object
       additionalProperties: false
+      required:
+        - status
       properties:
         preferredUsername:
           type: string
@@ -3576,6 +3578,11 @@ components:
         phone:
           type: string
           maxLength: 30
+        status:
+          type: string
+          enum:
+            - enabled
+            - disabled
         verified:
           type: boolean
         loginAccess:
