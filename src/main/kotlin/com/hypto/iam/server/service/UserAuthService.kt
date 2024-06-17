@@ -8,7 +8,6 @@ import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.UserAuthMethod
 import com.hypto.iam.server.models.UserAuthMethodsResponse
-import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
@@ -44,7 +43,7 @@ class UserAuthServiceImpl : KoinComponent, UserAuthService {
         userAuthRepo.fetchByUserHrnAndProviderName(user.hrn, issuer) ?: userAuthRepo.create(
             user.hrn,
             issuer,
-            oAuthUserPrincipal.metadata?.let { AuthMetadata.toJsonB(it) },
+            oAuthUserPrincipal.metadata?.toJsonB(),
         )
         return BaseSuccessResponse(true)
     }

@@ -3,6 +3,7 @@
 package com.hypto.iam.server.apis
 
 import com.google.gson.Gson
+import com.hypto.iam.server.authProviders.AuthProviderRegistry
 import com.hypto.iam.server.db.repositories.PasscodeRepo
 import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.extensions.PaginationContext
@@ -23,8 +24,10 @@ import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.UpdateUserRequest
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.ApiPrincipal
+import com.hypto.iam.server.security.AuthMetadata
 import com.hypto.iam.server.security.AuthenticationException
 import com.hypto.iam.server.security.IamPrincipal
+import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
 import com.hypto.iam.server.service.PasscodeService
@@ -42,6 +45,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.principal
+import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
@@ -85,6 +89,10 @@ fun Route.createUsersApi() {
         var verified: Boolean = request.verified ?: false
         var loginAccess: Boolean = request.loginAccess ?: false
         var policies: List<String>? = null
+        var name = request.name
+        var email = request.email
+        var authMetadata: AuthMetadata? = null
+        var issuer: String = TokenServiceImpl.ISSUER
 
         if (principal.tokenCredential.type == TokenType.PASSCODE) {
             val passcode =
@@ -97,6 +105,18 @@ fun Route.createUsersApi() {
             verified = true
             loginAccess = true
             policies = InviteMetadata(passcodeService.decryptMetadata(passcode.metadata!!)).policies
+            request.issuerName?.let {
+                val oAuthUserPrincipal =
+                    AuthProviderRegistry.getProvider(it)?.getProfileDetails(TokenCredential(request.issuerToken!!, TokenType.OAUTH))
+                        ?: throw BadRequestException("No auth provider found for issuer $it")
+                require(request.email == null || request.email == oAuthUserPrincipal.email) {
+                    "Email from issuer token is different from the email in request"
+                }
+                name = name ?: oAuthUserPrincipal.name
+                email = oAuthUserPrincipal.email
+                authMetadata = oAuthUserPrincipal.metadata
+                issuer = it
+            }
         }
 
         val username = idGenerator.username()
@@ -106,8 +126,8 @@ fun Route.createUsersApi() {
                 subOrganizationName = subOrganizationName,
                 username = username,
                 preferredUsername = request.preferredUsername,
-                name = request.name,
-                email = request.email,
+                name = name,
+                email = email,
                 phoneNumber = request.phone ?: "",
                 password = request.password,
                 createdBy = call.principal<UserPrincipal>()?.hrnStr,
@@ -118,8 +138,8 @@ fun Route.createUsersApi() {
         if (loginAccess) {
             userAuthRepo.create(
                 hrn = user.hrn,
-                providerName = TokenServiceImpl.ISSUER,
-                authMetadata = null,
+                providerName = issuer,
+                authMetadata = authMetadata?.toJsonB(),
             )
         }
         val token = tokenService.generateJwtToken(ResourceHrn(user.hrn))
