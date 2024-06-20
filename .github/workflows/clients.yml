@@ -33,7 +33,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          repository: hwslabs/iam-java-client
+          repository: togaihq/iam-java-client
           path: client
           persist-credentials: false
           fetch-depth: 0
