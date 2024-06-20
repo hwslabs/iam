@@ -1,6 +1,7 @@
 package com.hypto.iam.server.service
 
 import com.hypto.iam.server.Constants.Companion.SECONDS_IN_DAY
+import com.hypto.iam.server.Constants.Companion.USER_ID
 import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ISSUED_AT
 import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ISSUER
 import com.hypto.iam.server.ErrorMessageStrings.JWT_INVALID_ORGANIZATION
@@ -11,6 +12,7 @@ import com.hypto.iam.server.db.repositories.MasterKeysRepo
 import com.hypto.iam.server.db.repositories.MasterKeysRepo.Status
 import com.hypto.iam.server.db.repositories.PoliciesRepo
 import com.hypto.iam.server.db.tables.pojos.MasterKeys
+import com.hypto.iam.server.db.tables.records.PoliciesRecord
 import com.hypto.iam.server.db.tables.records.PrincipalPoliciesRecord
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
@@ -47,6 +49,7 @@ import java.security.PublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
+import java.time.LocalDateTime
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 
@@ -60,6 +63,7 @@ interface TokenService {
         userHrn: Hrn,
         requesterHrn: Hrn? = null,
         expiryInSeconds: Long? = null,
+        userLinkId: String? = null,
     ): TokenResponse
 
     suspend fun validateJwtToken(token: String): Jws<Claims>
@@ -76,6 +80,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
     private val masterKeyCache: MasterKeyCache by inject()
     private val policyValidator: PolicyValidator by inject()
     private val policiesRepo: PoliciesRepo by inject()
+    private val policyService: PolicyService by inject()
 
     companion object {
         const val ISSUER = "https://iam.hypto.com"
@@ -87,6 +92,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
         const val KEY_ID = "kid"
         const val VERSION_NUM = "1.0"
         const val ON_BEHALF_CLAIM = "obof"
+        const val USER_LINK_CLAIM = "usrlink"
     }
 
     /**
@@ -171,9 +177,35 @@ class TokenServiceImpl : KoinComponent, TokenService {
         }
 
         // Get policy and custom craft JWT token
+        val delegatePrincipal = request.principal?.let { hrnFactory.getHrn(it) } ?: requesterPrincipal.hrn
         val policy =
-            policiesRepo.fetchByHrn(policyHrn)
-                ?: throw EntityNotFoundException("Cannot find policy: $policyHrn")
+            if (request.templateName != null) {
+                request.templateVariables?.get(USER_ID)?.let {
+                    require(it == delegatePrincipal.toString()) {
+                        "User Id in template variable doesn't match the user id of the delegate"
+                    }
+                }
+                policyService.getRawPolicyAndUserHrnFromTemplate(
+                    organizationId = requesterPrincipal.organization,
+                    policyName = policyHrn,
+                    templateName = request.templateName,
+                    templateVariables = request.templateVariables,
+                    checkForDuplicates = false,
+                ).first.let {
+                    PoliciesRecord(
+                        it.hrn.toString(),
+                        it.hrn.organization,
+                        1,
+                        it.statements,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        it.description,
+                    )
+                }
+            } else {
+                policiesRepo.fetchByHrn(policyHrn)
+                    ?: throw EntityNotFoundException("Cannot find policy: $policyHrn")
+            }
         logger.info { policy.statements }
 
         val policyBuilder =
@@ -186,7 +218,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
                     ),
                 )
                 .withPolicy(policy)
-                .withPrincipalPolicy(PrincipalPoliciesRecord(null, request.principal, policy.hrn, null))
+                .withPrincipalPolicy(PrincipalPoliciesRecord(null, delegatePrincipal.toString(), policy.hrn, null))
 
         /**
          * Expiry in seconds from the time of generation.
@@ -200,7 +232,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
 
         return generateJwtTokenWithPolicy(
             organization = requesterPrincipal.organization,
-            principal = request.principal ?: requesterPrincipal.hrnStr,
+            principal = delegatePrincipal.toString(),
             requester = requesterPrincipal.hrnStr,
             entitlements = policyBuilder.build(),
             expiryDate = expiryDate,
@@ -211,6 +243,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
         userHrn: Hrn,
         requesterHrn: Hrn?,
         expiryInSeconds: Long?,
+        userLinkId: String?,
     ): TokenResponse =
         measureTimedValue("TokenService.generateJwtToken", logger) {
             require(userHrn is ResourceHrn) { "The input hrn must be a userHrn" }
@@ -218,6 +251,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
                 organization = userHrn.organization,
                 principal = userHrn.toString(),
                 requester = requesterHrn?.toString(),
+                userLinkId = userLinkId,
                 entitlements = principalPolicyService.fetchEntitlements(userHrn.toString()).toString(),
                 expiryDate =
                     Date.from(
@@ -231,6 +265,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
         organization: String,
         principal: String,
         requester: String? = null,
+        userLinkId: String? = null,
         entitlements: String,
         expiryDate: Date,
     ): TokenResponse {
@@ -250,6 +285,7 @@ class TokenServiceImpl : KoinComponent, TokenService {
                 .claim(ORGANIZATION_CLAIM, organization)
                 .claim(ENTITLEMENTS_CLAIM, entitlements)
                 .apply { requester?.let { claim(ON_BEHALF_CLAIM, it) } }
+                .apply { userLinkId?.let { claim(USER_LINK_CLAIM, it) } }
                 .signWith(signingKey.privateKey, SignatureAlgorithm.ES256)
                 // TODO: [IMPORTANT] Uncomment before taking to prod
                 // Eventually move to Brotli from GZIP:

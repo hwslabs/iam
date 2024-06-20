@@ -3937,6 +3937,13 @@ components:
             Policy with which to generate the delegate token.
             Can be just the name of the policy if it is in the requestors organization or a complete policy resourceHrn
           type: string
+        templateName:
+          type: string
+          maxLength: 512
+        templateVariables:
+          type: object
+          additionalProperties:
+            type: string
 
 
     # Responses:

@@ -17,6 +17,7 @@ import com.hypto.iam.server.exceptions.EntityAlreadyExistsException
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.extensions.PaginationContext
 import com.hypto.iam.server.extensions.from
+import com.hypto.iam.server.extensions.hrnFactory
 import com.hypto.iam.server.models.BaseSuccessResponse
 import com.hypto.iam.server.models.CreatePolicyFromTemplateRequest
 import com.hypto.iam.server.models.Policy
@@ -24,6 +25,7 @@ import com.hypto.iam.server.models.PolicyPaginatedResponse
 import com.hypto.iam.server.models.PolicyStatement
 import com.hypto.iam.server.models.UpdatePolicyRequest
 import com.hypto.iam.server.utils.IamResources
+import com.hypto.iam.server.utils.IamResources.POLICY
 import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import com.hypto.iam.server.utils.policy.PolicyVariables
@@ -175,62 +177,94 @@ class PolicyServiceImpl : KoinComponent, PolicyService {
     }
 
     @Suppress("ComplexMethod")
-    override suspend fun createPolicyFromTemplate(
+    override suspend fun getRawPolicyAndUserHrnFromTemplate(
         organizationId: String,
-        request: CreatePolicyFromTemplateRequest,
-    ): Policy {
+        policyName: String,
+        templateName: String,
+        templateVariables: Map<String, String>?,
+        checkForDuplicates: Boolean,
+    ): Pair<RawPolicyPayload, String?> {
         val policyTemplate =
-            policyTemplatesRepo.fetchActivePolicyByName(request.templateName)
-                ?: throw EntityNotFoundException("Policy Template [${request.templateName}] not found")
+            policyTemplatesRepo.fetchActivePolicyByName(templateName)
+                ?: throw EntityNotFoundException("Policy Template [$templateName] not found")
         if (policyTemplate.isRootPolicy == true) {
             throw BadRequestException("Can't create policies from root policies")
         }
         val policyTemplateVariables = policyTemplate.requiredVariables.asList()
-        val requestTemplateVariables = request.templateVariables?.keys ?: emptySet()
+        val requestTemplateVariables = templateVariables?.keys ?: emptySet()
         if (policyTemplateVariables.isNotEmpty()) {
             require(policyTemplateVariables.size == requestTemplateVariables.size && policyTemplateVariables.containsAll(requestTemplateVariables)) {
                 "Some template variables are missing. Required variables $policyTemplateVariables"
             }
         }
 //        Not adding subOrg in policyHrn as it is an entity of an organization
-        val policyHrn = ResourceHrn(organizationId, null, IamResources.POLICY, request.name)
-        if (policyRepo.existsById(policyHrn.toString())) {
-            throw EntityAlreadyExistsException("Policy with name [${request.name}] already exists")
+        val policyHrn =
+            if (hrnFactory.isValid(policyName)) {
+                ResourceHrn(policyName)
+            } else {
+                ResourceHrn(
+                    organization = organizationId,
+                    resource = POLICY,
+                    resourceInstance = policyName,
+                )
+            }
+        if (checkForDuplicates && policyRepo.existsById(policyHrn.toString())) {
+            throw EntityAlreadyExistsException("Policy with name [$policyName] already exists")
         }
+
         val template =
             try {
                 Template.parse(policyTemplate.statements)
             } catch (e: MustacheParserException) {
-                throw IllegalStateException("Invalid template ${request.templateName} - ${e.localizedMessage}", e)
+                throw IllegalStateException("Invalid template $templateName - ${e.localizedMessage}", e)
             }
         val templateVariablesMap = mutableMapOf<String, String>()
-        request.templateVariables?.forEach {
+        templateVariables?.forEach {
             when (it.key) {
-                USER_ID ->
-                    templateVariablesMap[USER_HRN_KEY] =
+                USER_ID -> {
+                    val userHrn =
                         ResourceHrn(
                             organizationId,
-                            request.templateVariables[SUB_ORGANIZATION_ID_KEY]?.let { escapeRegexMetaCharacters(it) },
+                            templateVariables[SUB_ORGANIZATION_ID_KEY]?.let { escapeRegexMetaCharacters(it) },
                             IamResources.USER,
                             it.value,
                         ).toString()
+                    userRepo.findByHrn(userHrn) ?: throw EntityNotFoundException("Unable to find user [$userHrn]")
+                    templateVariablesMap[USER_HRN_KEY] = userHrn
+                }
                 else -> templateVariablesMap[it.key] = escapeRegexMetaCharacters(it.value)
             }
         }
         templateVariablesMap[ORGANIZATION_ID_KEY] = organizationId
-        templateVariablesMap[POLICY_NAME] = request.name
-        val rawPolicyPayload =
+        templateVariablesMap[POLICY_NAME] = policyName
+
+        return Pair(
             RawPolicyPayload(
                 hrn = policyHrn,
                 description = policyTemplate.description,
                 statements = template.processToString(templateVariablesMap),
+            ),
+            templateVariablesMap[USER_HRN_KEY],
+        )
+    }
+
+    override suspend fun createPolicyFromTemplate(
+        organizationId: String,
+        request: CreatePolicyFromTemplateRequest,
+    ): Policy {
+        val (rawPolicyPayload, userHrn) =
+            getRawPolicyAndUserHrnFromTemplate(
+                organizationId = organizationId,
+                policyName = request.name,
+                templateName = request.templateName,
+                templateVariables = request.templateVariables,
+                checkForDuplicates = true,
             )
         val principalPoliciesRecord =
-            templateVariablesMap[USER_HRN_KEY]?.let {
-                userRepo.findByHrn(it) ?: throw EntityNotFoundException("Unable to find user [$it]")
+            userHrn?.let {
                 PrincipalPoliciesRecord()
                     .setPrincipalHrn(it)
-                    .setPolicyHrn(policyHrn.toString())
+                    .setPolicyHrn(rawPolicyPayload.hrn.toString())
                     .setCreatedAt(LocalDateTime.now())
             }
 
@@ -284,6 +318,14 @@ interface PolicyService {
         organizationId: String,
         rawPolicyPayloadsList: List<RawPolicyPayload>,
     ): List<PoliciesRecord>
+
+    suspend fun getRawPolicyAndUserHrnFromTemplate(
+        organizationId: String,
+        policyName: String,
+        templateName: String,
+        templateVariables: Map<String, String>?,
+        checkForDuplicates: Boolean = true,
+    ): Pair<RawPolicyPayload, String?>
 
     suspend fun createPolicyFromTemplate(
         organizationId: String,

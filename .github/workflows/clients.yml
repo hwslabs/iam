@@ -55,7 +55,7 @@ jobs:
           github_token: ${{ secrets.CLIENT_GEN_TOKEN }}
           directory: client
           message: "Update OpenApi spec"
-          repository: hwslabs/iam-java-client
+          repository: TogaiHQ/iam-java-client
           branch: main
 
 
