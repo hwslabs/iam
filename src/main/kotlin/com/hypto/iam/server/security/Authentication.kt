@@ -6,12 +6,14 @@ import com.google.gson.JsonParseException
 import com.hypto.iam.server.Constants
 import com.hypto.iam.server.Constants.Companion.AUTHORIZATION_HEADER
 import com.hypto.iam.server.Constants.Companion.X_API_KEY_HEADER
+import com.hypto.iam.server.Constants.Companion.X_ORGANIZATION_HEADER
 import com.hypto.iam.server.di.getKoinInstance
 import com.hypto.iam.server.extensions.MagicNumber
 import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
+import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import io.jsonwebtoken.Claims
 import io.ktor.http.auth.HttpAuthHeader
@@ -309,17 +311,25 @@ fun bearerAuthValidation(
     userPrincipalService: UserPrincipalService,
 ): suspend ApplicationCall.(tokenCredential: TokenCredential) -> UserPrincipal? {
     return { tokenCredential ->
+        val organizationId = request.headers[X_ORGANIZATION_HEADER]
         if (tokenCredential.value == null) {
             null
         }
         try {
-            when (tokenCredential.type) {
-                TokenType.CREDENTIAL ->
-                    userPrincipalService.getUserPrincipalByRefreshToken(
-                        tokenCredential,
-                    )
-                TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
-                else -> null
+            val userPrincipal =
+                when (tokenCredential.type) {
+                    TokenType.CREDENTIAL ->
+                        userPrincipalService.getUserPrincipalByRefreshToken(
+                            tokenCredential,
+                        )
+                    TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
+                    else -> null
+                }
+            if (userPrincipal != null && organizationId != null) {
+                val userHrn = userPrincipal.hrn as ResourceHrn
+                userPrincipal.copy(hrnStr = ResourceHrn(organizationId, userHrn.subOrganization, userHrn.resource!!, userHrn.resourceInstance).toString())
+            } else {
+                userPrincipal
             }
         } catch (e: Exception) {
             null
