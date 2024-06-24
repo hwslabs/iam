@@ -13,7 +13,6 @@ import com.hypto.iam.server.service.TokenServiceImpl
 import com.hypto.iam.server.service.UserPrincipalService
 import com.hypto.iam.server.utils.Hrn
 import com.hypto.iam.server.utils.HrnFactory
-import com.hypto.iam.server.utils.ResourceHrn
 import com.hypto.iam.server.utils.policy.PolicyBuilder
 import io.jsonwebtoken.Claims
 import io.ktor.http.auth.HttpAuthHeader

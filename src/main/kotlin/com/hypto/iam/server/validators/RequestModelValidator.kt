@@ -624,6 +624,7 @@ val getTokenForSubOrgRequest =
         }
     }
 
+@Suppress("MagicNumber")
 val getDelegateTokenRequestValidation =
     Validation {
         GetDelegateTokenRequest::policy required {}
