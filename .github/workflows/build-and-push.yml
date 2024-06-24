@@ -6,11 +6,195 @@ on:
     branches: [ "main", "release" ]
   pull_request:
 
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.ECR_PUSH_USER_AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.ECR_PUSH_USER_AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.ECR_PUSH_USER_AWS_REGION }}
+
 jobs:
-  build-and-publish:
-    uses: TogaiHQ/github-action-workflows/.github/workflows/kotlin-build-and-push-image.yml@main
-    with:
-      ec2-instance-type: t4g.large
-      java-version: '17'
-      gradle-version: '8.5'
-    secrets: inherit
+  start-runner:
+    name: Start self-hosted EC2 runner
+    runs-on: ubuntu-latest
+    outputs:
+      label: ${{ steps.start-ec2-runner.outputs.label }}
+      ec2-instance-id: ${{ steps.start-ec2-runner.outputs.ec2-instance-id }}
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.RUNNER_MANAGER_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.RUNNER_MANAGER_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.RUNNER_MANAGER_AWS_REGION }}
+
+      - name: Start EC2 runner
+        id: start-ec2-runner
+        uses: TogaiHQ/ec2-github-runner@main
+        with:
+          mode: start
+          github-token: ${{ secrets.RUNNER_MANAGER_GH_PERSONAL_ACCESS_TOKEN }}
+          ec2-image-id: ami-0b7130cf8d331f3df # AMI architecure is arm64
+          ec2-instance-type: 't4g.large'
+          subnet-id: ${{ secrets.RUNNER_MANAGER_SUBNET_ID }}
+          security-group-id: ${{ secrets.RUNNER_MANAGER_SECURITY_GROUP_ID }}
+          runner-home-dir: /home/ubuntu/actions-runner
+          assign-public-ip-to-instance: "true"
+          is-spot-instance: "false"
+          key-name: github-runner-keypair
+          aws-resource-tags: '[{"Key":"Feature", "Value":"Continuous Integration"},{"Key":"Repository", "Value":"${{ github.repository }}"}]'
+
+  build:
+    needs: start-runner # required to start the main job when the runner is ready
+    runs-on: ${{ needs.start-runner.outputs.label }} # run the job on the newly created runner
+    steps:
+      - name: Extract repository name
+        shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          repository=$(echo $REPOSITORY | cut -d '/' -f2)
+          echo "repository=$repository" >> $GITHUB_OUTPUT
+        id: extract_repository
+
+
+      - name: Configure AWS CLI
+        shell: bash
+        env:
+          aws_access_key_id: ${{ secrets.ECR_PUSH_USER_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.ECR_PUSH_USER_AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.ECR_PUSH_USER_AWS_REGION }}
+        run: |
+          aws_install_rc=/tmp/aws-install-rc
+          echo 'function aws() {
+            docker run --rm -v $HOME/.aws:/root/.aws -v $(pwd):/aws public.ecr.aws/aws-cli/aws-cli@sha256:06f95828509d83f5899d373e054ab1ed91dc84b03cf665f755b668cbaf38b822 ${@}
+          }' > $aws_install_rc
+          source $aws_install_rc
+          aws configure set aws_access_key_id $aws_access_key_id
+          aws configure set aws_secret_access_key $aws_secret_access_key
+          aws configure set default.region $aws_region
+
+      - name: Check if the image with the commit SHA exists in the Amazon ECR repository
+        id: get-count-ecr-sha-tag-image
+        env:
+          REPOSITORY: ${{ steps.extract_repository.outputs.repository }}
+        shell: bash
+        run: |
+          set +e
+
+          source /tmp/aws-install-rc
+          echo $REPOSITORY
+          aws ecr describe-images --repository-name $REPOSITORY --image-ids imageTag=${{ github.sha }} 2>&1
+          status=$?
+          echo "status=$status"
+          if [ $status -eq 0 ]; then
+            echo "count=1" >> $GITHUB_OUTPUT
+          else
+            echo "count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout code
+        if: ${{ steps.get-count-ecr-sha-tag-image.outputs.count == 0 }}
+        uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+          ssh-key: ${{ secrets.GIT_CLONE_SSH_KEY }}
+
+      - name: Set up JDK 17
+        if: ${{ steps.get-count-ecr-sha-tag-image.outputs.count == 0 }}
+        uses: actions/setup-java@v3.10.0
+        with:
+          java-version: 17
+          distribution: "temurin"
+
+      - name: Run Any Components Required for Build
+        if: ${{ steps.get-count-ecr-sha-tag-image.outputs.count == 0 }}
+        shell: bash
+        run: |
+          FILE="docker-compose.yml"
+          if test -f "$FILE"; then
+            docker compose up --detach --wait --wait-timeout 60
+          else
+            echo "$FILE not found. Assuming there are no components to run"
+          fi
+
+      - name: Build with Gradle
+        if: ${{ steps.get-count-ecr-sha-tag-image.outputs.count == 0 }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.5'
+          arguments: build
+
+      - name: Upload build reports as a workflow artifact on failure
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: build-reports
+          path: build/reports
+
+      - name: Upload JaCoCo coverage report as a workflow artifact on failure
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: jacoco-report
+          path: build/jacoco/test/jacocoTestReport.csv
+
+      - name: Build Fat Jar
+        if: ${{ steps.get-count-ecr-sha-tag-image.outputs.count == 0 }}
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: shadowJar
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag with commit SHA and push docker image to Amazon ECR
+        if: ${{ steps.get-count-ecr-sha-tag-image.outputs.count == 0 }}
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ steps.extract_repository.outputs.repository }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG -f kubernetes/Dockerfile .
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
+      - name: Add branch name to the ECR image with commit SHA
+        env:
+          REPOSITORY: ${{ steps.extract_repository.outputs.repository }}
+          IMAGE_TAG: ${{ github.sha }}
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        shell: bash 
+        run: |
+          source /tmp/aws-install-rc
+
+          DIGEST=$(aws ecr batch-get-image --repository-name $REPOSITORY --image-ids=imageTag=$IMAGE_TAG --output json | jq --raw-output '.images[0].imageId.imageDigest')
+          aws ecr batch-get-image --repository-name $REPOSITORY --image-ids imageTag=$IMAGE_TAG --output json | jq --raw-output '.images[].imageManifest' | cat > manifest.json
+          sed -z '$ s/\n$//' manifest.json > manifest.json.tmp && mv manifest.json.tmp manifest.json
+          aws ecr put-image --repository-name $REPOSITORY --image-tag $BRANCH --image-manifest file://manifest.json --image-manifest-media-type application/vnd.docker.distribution.manifest.v2+json --image-digest $DIGEST
+
+  stop-runner:
+    name: Stop self-hosted EC2 runner
+    needs:
+      - start-runner # required to get output from the start-runner job
+      - build # required to wait when the main job is done
+    runs-on: ubuntu-latest
+    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.RUNNER_MANAGER_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.RUNNER_MANAGER_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.RUNNER_MANAGER_AWS_REGION }}
+
+      - name: Stop EC2 runner
+        uses: TogaiHQ/ec2-github-runner@main
+        with:
+          mode: stop
+          github-token: ${{ secrets.RUNNER_MANAGER_GH_PERSONAL_ACCESS_TOKEN }}
+          label: ${{ needs.start-runner.outputs.label }}
+          ec2-instance-id: ${{ needs.start-runner.outputs.ec2-instance-id }}
