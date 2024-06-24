@@ -61,6 +61,7 @@ jobs:
           echo "${{ secrets.GIT_CLONE_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan github.com >> ~/.ssh/known_hosts
+          ssh-add ~/.ssh/id_rsa
 
       - name: Push changes to iam-java-client
         shell: bash
