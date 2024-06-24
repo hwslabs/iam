@@ -2,7 +2,7 @@ name: Client
 
 on:
   workflow_run:
-    workflows: [ Build ]
+    workflows: [ Build and Push Image ]
     types: [ completed ]
     branches: [ main ]
 
