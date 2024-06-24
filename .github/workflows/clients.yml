@@ -52,11 +52,9 @@ jobs:
       - name: Push changes
         uses: actions-js/push@v1.3
         with:
-          github_token: ${{ secrets.CLIENT_GEN_TOKEN }}
+          github_token: ${{ secrets.GIT_CLONE_SSH_KEY }}
           directory: client
           message: "Update OpenApi spec"
           repository: TogaiHQ/iam-java-client
           branch: main
-
-
 
