@@ -716,10 +716,7 @@ class UsersServiceImpl : KoinComponent, UsersService {
             if (record.leaderUserHrn != obofHrn || record.subordinateUserHrn != principal.hrnStr) {
                 throw AuthorizationException("User is not authorized for this switch-user")
             }
-            tokenService.generateJwtToken(
-                userHrn = ResourceHrn(record.leaderUserHrn),
-                userLinkId = linkId,
-            )
+            tokenService.generateJwtToken(userHrn = ResourceHrn(record.leaderUserHrn))
         }
     }
 
