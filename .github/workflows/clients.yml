@@ -28,30 +28,40 @@ jobs:
     needs: check
     if: ${{ needs.check.outputs.openapi == 'true' }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout iam
+        uses: actions/checkout@v3
         with:
           path: iam
-          ssh-key: ${{ secrets.GIT_CLONE_SSH_KEY }}
-      - name: Checkout
+
+      - name: Checkout iam-java-client
         uses: actions/checkout@v3
         with:
           repository: togaihq/iam-java-client
           path: client
-          ssh-key: ${{ secrets.GIT_CLONE_SSH_KEY }}
-          persist-credentials: true
           fetch-depth: 0
+
       - name: Move the spec file
         run: |
           mv iam/iam_openapi_spec.yml client/iam_openapi_spec.yml
+
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
           java-version: '17'
           distribution: 'temurin'
+          
       - name: Generate Files
         working-directory: client
         run: |
           gradle --stacktrace --debug generateClient
+
+      - name: Store SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GIT_CLONE_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
       - name: Push changes to iam-java-client
         shell: bash
         run: |
