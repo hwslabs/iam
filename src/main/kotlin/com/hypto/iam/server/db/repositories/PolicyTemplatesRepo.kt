@@ -27,12 +27,21 @@ object PolicyTemplatesRepo : BaseRepo<PolicyTemplatesRecord, PolicyTemplates, St
             .and(POLICY_TEMPLATES.ON_CREATE_ORG.eq(true))
             .fetch()
 
-    suspend fun fetchActivePolicyByName(name: String): PolicyTemplatesRecord? =
-        ctx("policy_templates.fetchActivePolicyByName")
+    suspend fun fetchActivePolicyTemplateByName(name: String): PolicyTemplatesRecord? =
+        ctx("policy_templates.fetchActivePolicyTemplateByName")
             .selectFrom(POLICY_TEMPLATES)
             .where(
                 POLICY_TEMPLATES.NAME.eq(name),
                 POLICY_TEMPLATES.STATUS.eq(Status.ACTIVE.value),
             )
             .fetchOne()
+
+    suspend fun fetchActivePolicyTemplateByNames(templateNames: List<String>): Map<String, PolicyTemplatesRecord> =
+        ctx("policy_templates.fetchActivePolicyTemplateByNames")
+            .selectFrom(POLICY_TEMPLATES)
+            .where(
+                POLICY_TEMPLATES.NAME.`in`(templateNames),
+                POLICY_TEMPLATES.STATUS.eq(Status.ACTIVE.value),
+            )
+            .fetchMap(POLICY_TEMPLATES.NAME)
 }

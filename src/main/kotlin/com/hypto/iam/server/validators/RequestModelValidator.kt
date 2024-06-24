@@ -34,6 +34,7 @@ import com.hypto.iam.server.models.ResendInviteRequest
 import com.hypto.iam.server.models.ResetPasswordRequest
 import com.hypto.iam.server.models.ResourceAction
 import com.hypto.iam.server.models.RootUser
+import com.hypto.iam.server.models.TemplateNameAndVariables
 import com.hypto.iam.server.models.TokenCredentialConfig
 import com.hypto.iam.server.models.UpdateActionRequest
 import com.hypto.iam.server.models.UpdateCredentialRequest
@@ -626,6 +627,13 @@ val getTokenForSubOrgRequest =
 val getDelegateTokenRequestValidation =
     Validation {
         GetDelegateTokenRequest::policy required {}
+        GetDelegateTokenRequest::policyTemplateConfig ifPresent {
+            maxItems(5)
+            onEach {
+                TemplateNameAndVariables::templateName required {}
+                TemplateNameAndVariables::templateVariables ifPresent {}
+            }
+        }
     }
 
 val passcodeConfigValidation =

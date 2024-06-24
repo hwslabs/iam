@@ -12,6 +12,7 @@ import com.hypto.iam.server.db.repositories.UserAuthRepo
 import com.hypto.iam.server.db.repositories.UserRepo
 import com.hypto.iam.server.db.tables.records.LinkUsersRecord
 import com.hypto.iam.server.db.tables.records.UsersRecord
+import com.hypto.iam.server.exceptions.DbExceptionHandler
 import com.hypto.iam.server.exceptions.EntityNotFoundException
 import com.hypto.iam.server.exceptions.InternalException
 import com.hypto.iam.server.extensions.PaginationContext
@@ -33,6 +34,7 @@ import com.hypto.iam.server.models.User
 import com.hypto.iam.server.models.UserPaginatedResponse
 import com.hypto.iam.server.models.VerifyEmailRequest
 import com.hypto.iam.server.security.AuthenticationException
+import com.hypto.iam.server.security.AuthorizationException
 import com.hypto.iam.server.security.TokenCredential
 import com.hypto.iam.server.security.TokenType
 import com.hypto.iam.server.security.UserPrincipal
@@ -47,6 +49,7 @@ import com.hypto.iam.server.validators.EMAIL_REGEX
 import com.hypto.iam.server.validators.RequestAccessMetadata
 import com.txman.TxMan
 import io.ktor.server.plugins.BadRequestException
+import org.jooq.exception.DataAccessException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.LocalDateTime
@@ -611,12 +614,16 @@ class UsersServiceImpl : KoinComponent, UsersService {
         require(inviterHrn != inviteeHrn.toString()) { "Leader and subordinate can't be the same user" }
         val now = LocalDateTime.now()
         val record =
-            LinkUsersRecord().apply {
-                id = IdGenerator.timeBasedRandomId(length = 20L)
-                leaderUserHrn = inviterHrn
-                subordinateUserHrn = inviteeHrn.toString()
-                createdAt = now
-                updatedAt = now
+            try {
+                LinkUsersRecord().apply {
+                    id = IdGenerator.timeBasedRandomId(length = 20L)
+                    leaderUserHrn = inviterHrn
+                    subordinateUserHrn = inviteeHrn.toString()
+                    createdAt = now
+                    updatedAt = now
+                }
+            } catch (e: DataAccessException) {
+                throw DbExceptionHandler.mapToApplicationException(e)
             }
         linkUsersRepo.store(record)
         return tokenService.generateJwtToken(inviteeHrn, principal.hrn)
@@ -685,17 +692,34 @@ class UsersServiceImpl : KoinComponent, UsersService {
         principal: UserPrincipal,
         linkId: String,
     ): TokenResponse {
-        val leaderUserHrn = principal.claims?.get(ON_BEHALF_CLAIM) as String? ?: principal.hrnStr
         val record =
             linkUsersRepo.getById(linkId)
                 ?: throw EntityNotFoundException("Invalid user link id")
-        require(record.leaderUserHrn == leaderUserHrn) {
-            "User doesn't have permission to switch"
-        }
-        return if (record.leaderUserHrn == principal.hrnStr) {
-            tokenService.generateJwtToken(ResourceHrn(record.subordinateUserHrn), principal.hrn)
+
+        val obofHrn = principal.claims?.get(ON_BEHALF_CLAIM) as String?
+        /**
+         * Case1: OBOF is null
+         *      If current user is the leader user, he/she is authorized to switch
+         * Case2: OBOF is not null [Subordinate user is trying to switch back to leader or parent user]
+         *      Only if current user == subOrdinate user and obof == leader user
+         */
+        return if (obofHrn == null) {
+            if (record.leaderUserHrn != principal.hrnStr) {
+                throw AuthorizationException("User is not authorized for this switch-user")
+            }
+            tokenService.generateJwtToken(
+                userHrn = ResourceHrn(record.subordinateUserHrn),
+                requesterHrn = principal.hrn,
+                userLinkId = linkId,
+            )
         } else {
-            tokenService.generateJwtToken(ResourceHrn(record.leaderUserHrn))
+            if (record.leaderUserHrn != obofHrn || record.subordinateUserHrn != principal.hrnStr) {
+                throw AuthorizationException("User is not authorized for this switch-user")
+            }
+            tokenService.generateJwtToken(
+                userHrn = ResourceHrn(record.leaderUserHrn),
+                userLinkId = linkId,
+            )
         }
     }
 

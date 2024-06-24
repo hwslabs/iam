@@ -311,7 +311,7 @@ fun bearerAuthValidation(
     userPrincipalService: UserPrincipalService,
 ): suspend ApplicationCall.(tokenCredential: TokenCredential) -> UserPrincipal? {
     return { tokenCredential ->
-        val organizationId = request.headers[X_ORGANIZATION_HEADER]
+//        val organizationId = request.headers[X_ORGANIZATION_HEADER]
         if (tokenCredential.value == null) {
             null
         }
@@ -325,12 +325,12 @@ fun bearerAuthValidation(
                     TokenType.JWT -> userPrincipalService.getUserPrincipalByJwtToken(tokenCredential)
                     else -> null
                 }
-            if (userPrincipal != null && organizationId != null) {
-                val userHrn = userPrincipal.hrn as ResourceHrn
-                userPrincipal.copy(hrnStr = ResourceHrn(organizationId, userHrn.subOrganization, userHrn.resource!!, userHrn.resourceInstance).toString())
-            } else {
-                userPrincipal
-            }
+//            if (userPrincipal != null && organizationId != null) {
+//                val userHrn = userPrincipal.hrn as ResourceHrn
+//                userPrincipal.copy(hrnStr = ResourceHrn(organizationId, userHrn.subOrganization, userHrn.resource!!, userHrn.resourceInstance).toString())
+//            } else {
+            userPrincipal
+//            }
         } catch (e: Exception) {
             null
         }

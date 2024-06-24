@@ -1519,12 +1519,13 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
 
                 val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
+                val dummyDelegate = "hrn:dummyOrg::iam-user/06544e89-49a4-490e-bea4-fd0f53d0be80"
 
                 // Test DelegateToken call
                 val requestBody =
                     GetDelegateTokenRequest(
                         policy = createdPolicy.hrn,
-                        principal = "dummyDelegate",
+                        principal = dummyDelegate,
                         expiry = 100L,
                     )
                 val tokenResponse =
@@ -1555,7 +1556,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Assertion permissions to principal by validating
                 val claims = Jwts.parserBuilder().build().parseClaimsJwt(tokenWithoutSignaturePart).body as Claims
-                Assertions.assertEquals(claims.get("usr", String::class.java) as String, "dummyDelegate")
+                Assertions.assertEquals(claims.get("usr", String::class.java) as String, dummyDelegate)
                 Assertions.assertEquals(
                     claims.get("org", String::class.java) as String,
                     createdOrganization.organization.id,
@@ -1571,7 +1572,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 Assertions.assertTrue(
                     (claims.get("entitlements", String::class.java) as String)
-                        .contains("g, dummyDelegate, ${createdPolicy.hrn}"),
+                        .contains("g, $dummyDelegate, ${createdPolicy.hrn}"),
                 )
             }
         }
@@ -1596,6 +1597,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     )
                 val policyStatements = listOf(PolicyStatement(resourceHrn, actionHrn, PolicyStatement.Effect.allow))
                 val createPolictRequest = CreatePolicyRequest(policyName, policyStatements)
+                val dummyDelegate = "hrn:dummyOrg::iam-user/06544e89-49a4-490e-bea4-fd0f53d0be80"
 
                 val createPolicyCall =
                     client.post(
@@ -1615,7 +1617,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
                 val requestBody =
                     GetDelegateTokenRequest(
                         policy = createdPolicy.hrn,
-                        principal = "dummyDelegate",
+                        principal = dummyDelegate,
                         expiry = 100L,
                     )
                 val tokenResponse =
@@ -1676,12 +1678,13 @@ class TokenApiTest : AbstractContainerBaseTest() {
                     }
 
                 val createdPolicy = gson.fromJson(createPolicyCall.bodyAsText(), Policy::class.java)
+                val dummyDelegate = "hrn:dummyOrg::iam-user/06544e89-49a4-490e-bea4-fd0f53d0be80"
 
                 // Test DelegateToken call
                 val requestBody =
                     GetDelegateTokenRequest(
                         policy = createdPolicy.hrn,
-                        principal = "dummyDelegate",
+                        principal = dummyDelegate,
                     )
                 val tokenResponse =
                     client.post(
@@ -1707,7 +1710,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 // Assertion permissions to principal by validating
                 val claims = Jwts.parserBuilder().build().parseClaimsJwt(tokenWithoutSignaturePart).body as Claims
-                Assertions.assertEquals(claims.get("usr", String::class.java) as String, "dummyDelegate")
+                Assertions.assertEquals(claims.get("usr", String::class.java) as String, dummyDelegate)
                 Assertions.assertEquals(
                     claims.get("org", String::class.java) as String,
                     createdOrganization.organization.id,
@@ -1720,7 +1723,7 @@ class TokenApiTest : AbstractContainerBaseTest() {
 
                 Assertions.assertTrue(
                     (claims.get("entitlements", String::class.java) as String)
-                        .contains("g, dummyDelegate, ${createdPolicy.hrn}"),
+                        .contains("g, $dummyDelegate, ${createdPolicy.hrn}"),
                 )
             }
         }

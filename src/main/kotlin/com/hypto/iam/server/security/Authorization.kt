@@ -75,17 +75,17 @@ class Authorization(config: Configuration) : KoinComponent {
             }
             val (principalHrn, policies) =
                 if (userPrincipal != null) {
-                    if (validateOrgIdFromPath) {
-                        userPrincipal.hrn as ResourceHrn
-                        checkNotNull(resourceHrnFromUrl.organization) { "Organization Id is missing from the path" }
-                        if (resourceHrnFromUrl.organization != userPrincipal.organization) {
-                            throw AuthorizationException("Organization id in path and token are not matching. Invalid token")
-                        }
-//                        User hrn without subOrganization can access all subOrganization resources as per his/her policies
-                        if (!userPrincipal.hrn.subOrganization.isNullOrEmpty() && resourceHrnFromUrl.subOrganization != userPrincipal.hrn.subOrganization) {
-                            throw AuthorizationException("SubOrganization id in path and token are not matching. Invalid token")
-                        }
-                    }
+//                    if (validateOrgIdFromPath) {
+//                        userPrincipal.hrn as ResourceHrn
+//                        checkNotNull(resourceHrnFromUrl.organization) { "Organization Id is missing from the path" }
+//                        if (resourceHrnFromUrl.organization != userPrincipal.organization) {
+//                            throw AuthorizationException("Organization id in path and token are not matching. Invalid token")
+//                        }
+// //                        User hrn without subOrganization can access all subOrganization resources as per his/her policies
+//                        if (!userPrincipal.hrn.subOrganization.isNullOrEmpty() && resourceHrnFromUrl.subOrganization != userPrincipal.hrn.subOrganization) {
+//                            throw AuthorizationException("SubOrganization id in path and token are not matching. Invalid token")
+//                        }
+//                    }
                     Pair(userPrincipal.hrn, userPrincipal.policies)
                 } else if (apiPrincipal != null) {
                     Pair(
