@@ -1,7 +1,6 @@
 name: Client
 
 on:
-  workflow_dispatch:
   workflow_run:
     workflows: [ Build and Push Image ]
     types: [ completed ]
@@ -38,6 +37,7 @@ jobs:
         with:
           repository: togaihq/iam-java-client
           path: client
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Move the spec file
@@ -54,21 +54,11 @@ jobs:
         working-directory: client
         run: |
           gradle --stacktrace --debug generateClient
-
-      - name: Store SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.GIT_CLONE_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan github.com >> ~/.ssh/known_hosts
-          ssh-add ~/.ssh/id_rsa
-
-      - name: Push changes to iam-java-client
-        shell: bash
-        run: |
-          cd client
-          git config --global user.email "engg+github-togai-admin-bot@togai.com"
-          git config --global user.name "togai-admin-bot"
-          git add .
-          git commit -m "Update OpenApi spec"
-          git push origin main
+      - name: Push changes
+        uses: actions-js/push@v1.3
+        with:
+          github_token: ${{ secrets.CLIENT_GEN_TOKEN }}
+          directory: client
+          message: "Update OpenApi spec"
+          repository: togaihq/iam-java-client
+          branch: main
