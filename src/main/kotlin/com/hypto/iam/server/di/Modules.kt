@@ -137,7 +137,7 @@ val applicationModule =
         single { EncryptUtil }
         single { ApplicationIdUtil.Generator }
         single { ApplicationIdUtil.Validator }
-        single { PolicyValidator }
+        single { PolicyValidator() }
         single { AppConfig.configuration }
         single { MasterKeyCache }
         single { CognitoIdentityProviderImpl() } bind IdentityProvider::class
