@@ -1,4 +1,4 @@
-FROM amazoncorretto:17.0.10-alpine
+FROM amazoncorretto:17.0.18-alpine
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
